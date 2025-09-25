@@ -2,8 +2,8 @@
  * Custom Semantic-Release plugin to update server.json version
  */
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
 
 function updateServerJson(pluginConfig, context) {
   const { nextRelease, logger } = context;
@@ -17,7 +17,7 @@ function updateServerJson(pluginConfig, context) {
   try {
     const serverJson = JSON.parse(fs.readFileSync(serverJsonPath, 'utf8'));
     serverJson.version = nextRelease.version;
-    
+
     fs.writeFileSync(serverJsonPath, JSON.stringify(serverJson, null, 2) + '\n');
     logger.log(`Updated server.json version to ${nextRelease.version}`);
   } catch (error) {
@@ -26,6 +26,6 @@ function updateServerJson(pluginConfig, context) {
   }
 }
 
-module.exports = {
+export default {
   prepare: updateServerJson
 };
