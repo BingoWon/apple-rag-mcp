@@ -1,3 +1,10 @@
+## [3.0.1](https://github.com/BingoWon/apple-rag-mcp/compare/v3.0.0...v3.0.1) (2025-09-26)
+
+
+### Bug Fixes
+
+* add build step before deployment in CI workflow ([e474a22](https://github.com/BingoWon/apple-rag-mcp/commit/e474a227ced60839f2cf0a84eccc681bac5982b4))
+
 # [3.0.0](https://github.com/BingoWon/apple-rag-mcp/compare/v2.9.1...v3.0.0) (2025-09-25)
 
 
