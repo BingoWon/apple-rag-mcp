@@ -45,26 +45,6 @@ Click the button above and Cursor will automatically configure everything for yo
 - **Authentication:** `Optional` (MCP Token for higher limits)
 - **MCP Token:** Get yours at [apple-rag.com](https://apple-rag.com) for increased quota
 
-### Option 3: Self-Hosted Deployment
-
-Want to run your own instance? See our [Deployment Guide](DEPLOYMENT.md) for complete setup instructions.
-
-**Quick Setup:**
-```bash
-# Clone and setup
-git clone https://github.com/your-org/apple-rag-mcp.git
-cd apple-rag-mcp
-pnpm install
-
-# Configure environment
-cp .dev.vars.example .dev.vars
-# Edit .dev.vars with your configuration
-
-# Deploy to Cloudflare Workers
-pnpm setup-secrets
-pnpm deploy
-```
-
 **Supported Clients:** Cursor, Claude Desktop, Cline, and all MCP-compatible tools.
 
 > **Note:** No MCP Token required to start! You get free queries without any authentication. Add an MCP Token later for higher usage limits.
