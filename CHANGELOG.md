@@ -6,6 +6,14 @@
 * simplify deployment workflow ([1ebb758](https://github.com/BingoWon/apple-rag-mcp/commit/1ebb75821b1116cb8ca1ca0725978d1434403039))
 * test patch release workflow ([15d1126](https://github.com/BingoWon/apple-rag-mcp/commit/15d1126b92fba30c72fd67aa9613848f42540610))
 
+## [4.0.1](https://github.com/BingoWon/apple-rag-mcp/compare/v4.0.0...v4.0.1) (2025-09-30)
+
+
+### Bug Fixes
+
+* simplify deployment workflow ([1ebb758](https://github.com/BingoWon/apple-rag-mcp/commit/1ebb75821b1116cb8ca1ca0725978d1434403039))
+* test patch release workflow ([15d1126](https://github.com/BingoWon/apple-rag-mcp/commit/15d1126b92fba30c72fd67aa9613848f42540610))
+
 # [4.0.0](https://github.com/BingoWon/apple-rag-mcp/compare/v3.0.1...v4.0.0) (2025-09-30)
 
 
