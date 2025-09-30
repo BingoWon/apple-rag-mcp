@@ -1,3 +1,10 @@
+## [4.0.2](https://github.com/BingoWon/apple-rag-mcp/compare/v4.0.1...v4.0.2) (2025-09-30)
+
+
+### Bug Fixes
+
+* remove duplicate v4.0.1 entry in CHANGELOG.md ([45a7748](https://github.com/BingoWon/apple-rag-mcp/commit/45a7748716b6e7e07436056bd035b258226553da))
+
 ## [4.0.1](https://github.com/BingoWon/apple-rag-mcp/compare/v4.0.0...v4.0.1) (2025-09-30)
 
 
