@@ -1,3 +1,15 @@
+# [4.0.0](https://github.com/BingoWon/apple-rag-mcp/compare/v3.0.1...v4.0.0) (2025-09-30)
+
+
+### Features
+
+* migrate to Cloudflare Workers Secrets for secure configuration ([98b8bba](https://github.com/BingoWon/apple-rag-mcp/commit/98b8bbac930bcbfb0efe40e5adb4da854ccb6c0b))
+
+
+### BREAKING CHANGES
+
+* Environment variables moved from wrangler.toml to Cloudflare Secrets
+
 ## [3.0.1](https://github.com/BingoWon/apple-rag-mcp/compare/v3.0.0...v3.0.1) (2025-09-26)
 
 
