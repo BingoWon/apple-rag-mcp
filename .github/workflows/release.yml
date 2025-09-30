@@ -45,13 +45,38 @@ jobs:
       - name: Build project
         run: pnpm run build
 
-      - name: Deploy to Development
+      - name: Setup secrets for Development
         if: success()
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
           pnpm install -g wrangler
-          pnpm run deploy:dev
+          echo "${{ secrets.RAG_DB_HOST }}" | wrangler secret put RAG_DB_HOST --env development
+          echo "${{ secrets.RAG_DB_PORT }}" | wrangler secret put RAG_DB_PORT --env development
+          echo "${{ secrets.RAG_DB_DATABASE }}" | wrangler secret put RAG_DB_DATABASE --env development
+          echo "${{ secrets.RAG_DB_USER }}" | wrangler secret put RAG_DB_USER --env development
+          echo "${{ secrets.RAG_DB_PASSWORD }}" | wrangler secret put RAG_DB_PASSWORD --env development
+          echo "${{ secrets.RAG_DB_SSLMODE }}" | wrangler secret put RAG_DB_SSLMODE --env development
+          echo "${{ secrets.TELEGRAM_BOT_URL }}" | wrangler secret put TELEGRAM_BOT_URL --env development
+
+      - name: Deploy to Development
+        if: success()
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: pnpm run deploy:dev
+
+      - name: Setup secrets for Production
+        if: success()
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          echo "${{ secrets.RAG_DB_HOST }}" | wrangler secret put RAG_DB_HOST --env production
+          echo "${{ secrets.RAG_DB_PORT }}" | wrangler secret put RAG_DB_PORT --env production
+          echo "${{ secrets.RAG_DB_DATABASE }}" | wrangler secret put RAG_DB_DATABASE --env production
+          echo "${{ secrets.RAG_DB_USER }}" | wrangler secret put RAG_DB_USER --env production
+          echo "${{ secrets.RAG_DB_PASSWORD }}" | wrangler secret put RAG_DB_PASSWORD --env production
+          echo "${{ secrets.RAG_DB_SSLMODE }}" | wrangler secret put RAG_DB_SSLMODE --env production
+          echo "${{ secrets.TELEGRAM_BOT_URL }}" | wrangler secret put TELEGRAM_BOT_URL --env production
 
       - name: Deploy to Production
         if: success()

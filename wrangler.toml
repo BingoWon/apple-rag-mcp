@@ -1,0 +1,26 @@
+main = "dist/src/worker.js"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+[observability]
+enabled = true
+head_sampling_rate = 1
+
+[placement]
+mode = "smart"
+
+[env.development]
+name = "apple-rag-mcp-dev"
+
+[[env.development.d1_databases]]
+binding = "DB"
+database_name = "apple-rag-db-dev"
+database_id = "5042640e-d698-4197-a285-6fe81d39e3e7"
+
+[env.production]
+name = "apple-rag-mcp"
+
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "apple-rag-db"
+database_id = "d8e71dd7-2ceb-42f7-8f57-ea732d00c768"
