@@ -1,3 +1,10 @@
+# [4.1.0](https://github.com/BingoWon/apple-rag-mcp/compare/v4.0.2...v4.1.0) (2025-10-04)
+
+
+### Features
+
+* configure semantic-release to trigger patch releases for docs and style commits ([0f1c4ae](https://github.com/BingoWon/apple-rag-mcp/commit/0f1c4ae9bcd15651d89ac86e1ce67ca3c107de30))
+
 ## [4.0.2](https://github.com/BingoWon/apple-rag-mcp/compare/v4.0.1...v4.0.2) (2025-09-30)
 
 
