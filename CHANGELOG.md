@@ -1,3 +1,10 @@
+## [4.1.1](https://github.com/BingoWon/apple-rag-mcp/compare/v4.1.0...v4.1.1) (2025-10-04)
+
+
+### Bug Fixes
+
+* add keep_vars to preserve Cloudflare Secrets on deploy ([d840d06](https://github.com/BingoWon/apple-rag-mcp/commit/d840d06108118ca881252a80fb2000f6a71e1f94))
+
 # [4.1.0](https://github.com/BingoWon/apple-rag-mcp/compare/v4.0.2...v4.1.0) (2025-10-04)
 
 
