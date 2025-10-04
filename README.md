@@ -6,6 +6,8 @@
 
 [![Install MCP Server](https://cursor.com/deeplink/mcp-install-light.svg)](https://cursor.com/en/install-mcp?name=apple-rag-mcp&config=eyJ1cmwiOiJodHRwczovL21jcC5hcHBsZS1yYWcuY29tIn0%3D)
 
+[![Install in VS Code](https://img.shields.io/badge/VS_Code-Apple_RAG_MCP-0098FF?style=flat&logo=visualstudiocode&logoColor=ffffff)](vscode:mcp/install?%7B%22name%22%3A%22apple-rag-mcp%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fmcp.apple-rag.com%22%7D) [![Install in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-Apple_RAG_MCP-24bfa5?style=flat&logo=visualstudiocode&logoColor=ffffff)](vscode-insiders:mcp/install?%7B%22name%22%3A%22apple-rag-mcp%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fmcp.apple-rag.com%22%7D)
+
 [🌐 Learn More](https://apple-rag.com) • [🚀 Get Started](https://apple-rag.com/register) • [📊 Dashboard](https://apple-rag.com/overview)
 
 </div>
@@ -20,11 +22,13 @@ A cutting-edge **Retrieval-Augmented Generation (RAG) system** combining Apple's
 
 ## 🚀 Quick Start
 
-### Option 1: One-Click Cursor Setup (Recommended)
+### Option 1: One-Click Setup (Recommended)
 
 [![Install MCP Server](https://cursor.com/deeplink/mcp-install-light.svg)](https://cursor.com/en/install-mcp?name=apple-rag-mcp&config=eyJ1cmwiOiJodHRwczovL21jcC5hcHBsZS1yYWcuY29tIn0%3D)
 
-Click the button above and Cursor will automatically configure everything for you in seconds.
+[![Install in VS Code](https://img.shields.io/badge/VS_Code-Apple_RAG_MCP-0098FF?style=flat&logo=visualstudiocode&logoColor=ffffff)](vscode:mcp/install?%7B%22name%22%3A%22apple-rag-mcp%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fmcp.apple-rag.com%22%7D) [![Install in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-Apple_RAG_MCP-24bfa5?style=flat&logo=visualstudiocode&logoColor=ffffff)](vscode-insiders:mcp/install?%7B%22name%22%3A%22apple-rag-mcp%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fmcp.apple-rag.com%22%7D)
+
+Click the button above and your editor will automatically configure everything for you in seconds.
 
 ### Option 2: Manual Setup for Other MCP Clients
 
@@ -40,7 +44,7 @@ Click the button above and Cursor will automatically configure everything for yo
 ```
 
 **Manual Configuration Parameters:**
-- **MCP Type:** `Streamable HTTP`
+- **MCP Type:** `Streamable HTTP / SSE`
 - **URL:** `https://mcp.apple-rag.com`
 - **Authentication:** `Optional` (MCP Token for higher limits)
 - **MCP Token:** Get yours at [apple-rag.com](https://apple-rag.com) for increased quota
@@ -93,18 +97,11 @@ Start immediately with no MCP Token required. Get an MCP Token for higher usage 
 - **🛡️ Secure & Private** - Your queries stay private
 - **🌐 Universal MCP** - Works with any MCP-compatible client
 
-## 🤝 Community & Support
-
-- **🌐 Dashboard:** [apple-rag.com](https://apple-rag.com)
-- **📖 Documentation:** Complete setup guides and examples
-- **💬 Support:** Get help through our web dashboard
-- **⭐ GitHub:** Star this repo if you find it useful!
-
 <div align="center">
 
 **Ready to supercharge your AI agents with Apple expertise?**
 
-[🚀 Get Started Now](https://apple-rag.com) • [⭐ Star on GitHub](https://github.com/BingoWon/apple-rag-mcp)
+[🚀 Get Started Now](https://apple-rag.com)
 
 *Made with ❤️ for the Apple developer community*
 
