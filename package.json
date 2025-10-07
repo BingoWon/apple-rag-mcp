@@ -9,7 +9,7 @@
     "deploy:prod": "wrangler deploy --env production",
     "build": "tsc",
     "type-check": "tsc --noEmit",
-    "fmt": "biome check --write"
+    "fmt": "biome check --write --unsafe ."
   },
   "keywords": [
     "mcp",
