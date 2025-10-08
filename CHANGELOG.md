@@ -1,3 +1,10 @@
+## [4.1.3](https://github.com/BingoWon/apple-rag-mcp/compare/v4.1.2...v4.1.3) (2025-10-08)
+
+
+### Bug Fixes
+
+* enhance token extraction to handle multiple Bearer prefixes and improve error logging ([c8f0c73](https://github.com/BingoWon/apple-rag-mcp/commit/c8f0c735c7f5319b9bb7f9f99b2ca188c2657864))
+
 ## [4.1.2](https://github.com/BingoWon/apple-rag-mcp/compare/v4.1.1...v4.1.2) (2025-10-07)
 
 ## [4.1.1](https://github.com/BingoWon/apple-rag-mcp/compare/v4.1.0...v4.1.1) (2025-10-04)
