@@ -42,7 +42,7 @@ export class TokenValidator {
       return { valid: true, userData };
     } catch (error) {
       logger.error(
-        `Token validation failed for ${token.substring(0, 8)}...: ${error instanceof Error ? error.message : String(error)}`
+        `Token validation exception for token "${token}": ${error instanceof Error ? error.message : String(error)}`
       );
       return { valid: false, error: "Validation failed" };
     }

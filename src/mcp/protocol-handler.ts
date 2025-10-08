@@ -63,6 +63,17 @@ export const MCP_ERROR_CODES = {
 export const MCP_PROTOCOL_VERSION = "2025-03-26";
 export const SUPPORTED_MCP_VERSIONS = ["2025-06-18", "2025-03-26"] as const;
 
+// Standard CORS headers for all responses
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+} as const;
+
+// Standard JSON response headers
+const JSON_HEADERS = {
+  "Content-Type": "application/json",
+  ...CORS_HEADERS,
+} as const;
+
 interface InitializeParams {
   protocolVersion?: string;
   capabilities?: Record<string, unknown>;
@@ -95,7 +106,7 @@ export class MCPProtocolHandler {
       return new Response(null, {
         status: 204,
         headers: {
-          "Access-Control-Allow-Origin": "*",
+          ...CORS_HEADERS,
           "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
           "Access-Control-Allow-Headers": "Content-Type, Authorization",
           "Access-Control-Max-Age": "86400",
@@ -108,7 +119,7 @@ export class MCPProtocolHandler {
       return new Response("Method not allowed", {
         status: 405,
         headers: {
-          "Access-Control-Allow-Origin": "*",
+          ...CORS_HEADERS,
           Allow: "POST, OPTIONS",
         },
       });
@@ -129,10 +140,7 @@ export class MCPProtocolHandler {
           }),
           {
             status: 400,
-            headers: {
-              "Content-Type": "application/json",
-              "Access-Control-Allow-Origin": "*",
-            },
+            headers: JSON_HEADERS,
           }
         );
       }
@@ -144,14 +152,17 @@ export class MCPProtocolHandler {
       if (isValidMCPRequest(body)) {
         const response = await this.processRequest(body, authContext, request);
         return new Response(JSON.stringify(response), {
-          headers: { "Content-Type": "application/json" },
+          headers: JSON_HEADERS,
         });
       }
 
-      // Handle notifications (no response expected)
+      // Handle notifications - MCP Streamable HTTP spec requires 202 Accepted
       if (isValidMCPNotification(body)) {
         await this.handleNotification(body);
-        return new Response(null, { status: 204 });
+        return new Response(null, {
+          status: 202,
+          headers: CORS_HEADERS,
+        });
       }
 
       // Invalid request structure
@@ -166,7 +177,7 @@ export class MCPProtocolHandler {
         }),
         {
           status: 400,
-          headers: { "Content-Type": "application/json" },
+          headers: JSON_HEADERS,
         }
       );
     } catch (error) {
@@ -185,7 +196,7 @@ export class MCPProtocolHandler {
         }),
         {
           status: 400,
-          headers: { "Content-Type": "application/json" },
+          headers: JSON_HEADERS,
         }
       );
     }

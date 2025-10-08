@@ -18,11 +18,16 @@ export class AuthMiddleware {
 
   /**
    * Extract Bearer token from Authorization header
+   * Handles multiple "Bearer" prefixes and validates token format
    */
   private extractBearerToken(authHeader?: string): string | null {
     if (!authHeader) return null;
-    const match = authHeader.match(/^Bearer\s+(.+)$/i);
-    return match ? match[1] : null;
+
+    // Remove all "Bearer " prefixes (case-insensitive, supports multiple)
+    const token = authHeader.replace(/^(Bearer\s+)+/gi, "").trim();
+
+    // Only return if it matches valid token format
+    return /^at_[a-f0-9]{32}$/.test(token) ? token : null;
   }
 
   /**
@@ -51,8 +56,8 @@ export class AuthMiddleware {
         };
       }
 
-      logger.info(
-        `Token validation failed for ${token.substring(0, 8)}... from IP ${clientIP}: ${validation.error}`
+      logger.error(
+        `Token validation failed. Raw header: "${authHeader}", Extracted token: "${token}", IP: ${clientIP}, Error: ${validation.error}`
       );
     }
 
