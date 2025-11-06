@@ -1,3 +1,10 @@
+## [4.1.4](https://github.com/BingoWon/apple-rag-mcp/compare/v4.1.3...v4.1.4) (2025-11-06)
+
+
+### Bug Fixes
+
+* remove legacy SSE support ([82224c0](https://github.com/BingoWon/apple-rag-mcp/commit/82224c06beefb200171bb9efa411987fcc0723e8))
+
 ## [4.1.3](https://github.com/BingoWon/apple-rag-mcp/compare/v4.1.2...v4.1.3) (2025-10-08)
 
 
