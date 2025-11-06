@@ -57,48 +57,15 @@ export default {
         });
       }
 
-      // Handle GET requests for SSE streams (VPS compatibility)
+      // Reject other GET requests to the MCP endpoint
       if (request.method === "GET" && url.pathname === "/") {
-        const acceptHeader = request.headers.get("accept");
-        if (acceptHeader?.includes("text/event-stream")) {
-          // SSE stream support for VPS compatibility
-          return new Response(
-            new ReadableStream({
-              start(controller) {
-                // Send initial connection message
-                controller.enqueue(new TextEncoder().encode(": connected\n\n"));
-
-                // Keep connection alive with periodic heartbeat
-                const heartbeat = setInterval(() => {
-                  try {
-                    controller.enqueue(
-                      new TextEncoder().encode(": heartbeat\n\n")
-                    );
-                  } catch (_error) {
-                    clearInterval(heartbeat);
-                  }
-                }, 30000);
-
-                // Handle client disconnect
-                setTimeout(() => {
-                  clearInterval(heartbeat);
-                  controller.close();
-                }, 300000); // 5 minutes timeout
-              },
-            }),
-            {
-              status: 200,
-              headers: {
-                "Content-Type": "text/event-stream",
-                "Cache-Control": "no-cache",
-                Connection: "keep-alive",
-                "Access-Control-Allow-Origin": "*",
-              },
-            }
-          );
-        } else {
-          return new Response("Method Not Allowed", { status: 405 });
-        }
+        return new Response("Method Not Allowed", {
+          status: 405,
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            Allow: "POST, OPTIONS",
+          },
+        });
       }
 
       // Handle POST /manifest requests (VPS compatibility)

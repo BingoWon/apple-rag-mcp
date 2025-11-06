@@ -74,23 +74,6 @@ export class SearchTool {
     // Update result_count for processing
     result_count = adjustedResultCount;
 
-    // Check if request wants SSE
-    const isSSE = httpRequest.headers
-      .get("accept")
-      ?.includes("text/event-stream");
-
-    if (isSSE) {
-      // Handle SSE request
-      return await this.handleSSE(
-        id,
-        query,
-        result_count,
-        authContext,
-        httpRequest,
-        wasAdjusted
-      );
-    }
-
     try {
       // Rate limiting check
       const clientIP = this.extractClientIP(httpRequest);
@@ -131,7 +114,7 @@ export class SearchTool {
         query,
         result_count,
         authContext,
-        this.extractClientIP(httpRequest),
+        clientIP,
         startTime
       );
 
@@ -145,104 +128,6 @@ export class SearchTool {
     } catch (error) {
       logger.error(
         `RAG query failed for query "${query}" (result_count: ${result_count}): ${error instanceof Error ? error.message : String(error)}`
-      );
-
-      return createErrorResponse(
-        id,
-        MCP_ERROR_CODES.INTERNAL_ERROR,
-        APP_CONSTANTS.SEARCH_FAILED_ERROR
-      );
-    }
-  }
-
-  /**
-   * Handle search with Server-Sent Events (SSE)
-   */
-  private async handleSSE(
-    id: string | number,
-    query: string,
-    resultCount: number,
-    authContext: AuthContext,
-    httpRequest: Request,
-    wasAdjusted: boolean
-  ): Promise<MCPResponse> {
-    const startTime = Date.now();
-    const ipAddress = this.extractClientIP(httpRequest);
-
-    // Clean the query to remove temporal information for SSE as well
-    const originalQuery = query;
-    query = cleanQuerySafely(query);
-
-    // Log query cleaning if significant changes were made
-    if (query !== originalQuery) {
-      logger.info(
-        `Query cleaned for SSE search: "${originalQuery}" -> "${query}"`
-      );
-    }
-
-    try {
-      // Rate limiting check for SSE
-      const rateLimitResult = await this.services.rateLimit.checkLimits(
-        ipAddress,
-        authContext
-      );
-
-      if (!rateLimitResult.allowed) {
-        // Log rate-limited SSE request to database
-        await this.logSearch(
-          authContext,
-          query,
-          { count: 0 },
-          0,
-          ipAddress,
-          429,
-          "RATE_LIMIT_EXCEEDED"
-        );
-
-        const rateLimitMessage = this.buildRateLimitMessage(
-          rateLimitResult,
-          authContext
-        );
-        return createErrorResponse(
-          id,
-          MCP_ERROR_CODES.RATE_LIMIT_EXCEEDED,
-          rateLimitMessage
-        );
-      }
-
-      // Send progress notification (simulated for Worker environment)
-      logger.info(
-        `SSE search progress for query "${query}" (progress: 0.1, stage: starting_rag_query, authenticated: ${authContext.isAuthenticated})`
-      );
-
-      // Execute RAG query with progress tracking
-      const ragResult = await this.services.rag.query({
-        query,
-        result_count: resultCount,
-      });
-
-      const responseTime = Date.now() - startTime;
-
-      // Log search
-      await this.logSearch(
-        authContext,
-        query,
-        ragResult,
-        responseTime,
-        ipAddress
-      );
-
-      // Format and return response
-      const formattedResponse = formatRAGResponse(
-        ragResult,
-        authContext.isAuthenticated,
-        wasAdjusted
-      );
-
-      return createSuccessResponse(id, formattedResponse);
-    } catch (error) {
-      logger.error(
-        `SSE search failed for query "${query}" (length: ${query.length}, result_count: ${resultCount}, authenticated: ${authContext.isAuthenticated}): ${error instanceof Error ? error.message : String(error)}`
       );
 
       return createErrorResponse(
