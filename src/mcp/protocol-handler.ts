@@ -300,7 +300,7 @@ export class MCPProtocolHandler {
             query: {
               type: "string",
               description:
-                "Search query for Apple's official developer documentation and video content. Focus on technical concepts, APIs, frameworks, features, and version numbers rather than temporal information.",
+                "Search query for Apple's official developer documentation and video content. Queries must be written in English and focus on technical concepts, APIs, frameworks, features, and version numbers rather than temporal information.",
               minLength: 1,
               maxLength: 10000,
             },
