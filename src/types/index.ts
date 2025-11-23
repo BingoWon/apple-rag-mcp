@@ -20,6 +20,9 @@ export interface WorkerEnv {
 
   // Telegram Bot
   TELEGRAM_BOT_URL: string;
+
+  // DeepInfra
+  DEEPINFRA_API_KEY: string;
 }
 
 // MCP Protocol Types

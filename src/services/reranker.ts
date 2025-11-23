@@ -1,11 +1,10 @@
 /**
- * Modern SiliconFlow Reranker Service - MCP Optimized
- * High-performance document reranking with unified multi-key failover
+ * DeepInfra Reranker Service - MCP Optimized
+ * Single provider reranking (no fallback)
  */
 
 import { logger } from "../utils/logger.js";
-import { SiliconFlowService } from "./siliconflow-base.js";
-import { SILICONFLOW_CONFIG } from "./siliconflow-config.js";
+import { DeepInfraService } from "./deepinfra-base.js";
 
 interface RerankerInput {
   query: string;
@@ -14,29 +13,17 @@ interface RerankerInput {
 }
 
 interface RerankerPayload {
-  model: "Qwen/Qwen3-Reranker-8B";
-  query: string;
+  queries: [string];
   documents: string[];
-  instruction: "Please rerank the documents based on the query.";
   top_n: number;
-  return_documents: true;
 }
 
 export interface RerankerResult {
-  document: {
-    text: string;
-  };
-  index: number;
-  relevance_score: number;
+  scores: number[];
 }
 
 export interface RerankerResponse {
-  id: string;
-  results: RerankerResult[];
-  tokens: {
-    input_tokens: number;
-    output_tokens: number;
-  };
+  scores: number[];
 }
 
 export interface RankedDocument {
@@ -45,15 +32,15 @@ export interface RankedDocument {
   relevanceScore: number;
 }
 
-export class RerankerService extends SiliconFlowService<
+export class RerankerService extends DeepInfraService<
   RerankerInput,
   RerankerResponse,
   RankedDocument[]
 > {
-  protected readonly endpoint = "/rerank";
+  protected readonly endpoint = "/v1/inference/Qwen/Qwen3-Reranker-8B";
 
   /**
-   * Rerank documents based on query relevance with multi-key failover
+   * Rerank documents based on query relevance
    */
   async rerank(
     query: string,
@@ -80,7 +67,7 @@ export class RerankerService extends SiliconFlowService<
       topN: validTopN,
     };
 
-    return this.callWithFailover(input, "Document reranking");
+    return this.call(input, "Document reranking");
   }
 
   /**
@@ -88,28 +75,36 @@ export class RerankerService extends SiliconFlowService<
    */
   protected buildPayload(input: RerankerInput): RerankerPayload {
     return {
-      model: SILICONFLOW_CONFIG.RERANKER_MODEL,
-      query: input.query,
+      queries: [input.query],
       documents: input.documents,
-      instruction: SILICONFLOW_CONFIG.RERANKER_INSTRUCTION,
       top_n: input.topN,
-      return_documents: true,
     };
   }
 
   /**
    * Process API response and return ranked documents
    */
-  protected processResponse(response: RerankerResponse): RankedDocument[] {
-    if (!response.results || response.results.length === 0) {
-      throw new Error("No reranking results received from SiliconFlow API");
+  protected processResponse(
+    response: RerankerResponse,
+    input: RerankerInput
+  ): RankedDocument[] {
+    if (!response.scores || response.scores.length === 0) {
+      throw new Error("No reranking results received from DeepInfra API");
     }
 
-    return response.results.map((item) => ({
-      content: item.document.text,
-      originalIndex: item.index,
-      relevanceScore: item.relevance_score,
+    const scores = response.scores;
+    const count = Math.min(input.topN, scores.length, input.documents.length);
+
+    // Pair scores with documents, then sort descending by score
+    const paired = input.documents.map((doc, index) => ({
+      content: doc,
+      originalIndex: index,
+      relevanceScore: scores[index] ?? 0,
     }));
+
+    return paired
+      .sort((a, b) => b.relevanceScore - a.relevanceScore)
+      .slice(0, count);
   }
 
   /**

@@ -8,6 +8,7 @@ import type {
   RAGQuery,
   RAGResult,
   SearchResult,
+  WorkerEnv,
 } from "../types/index.js";
 import { logger } from "../utils/logger.js";
 import { DatabaseService } from "./database.js";
@@ -21,11 +22,11 @@ export class RAGService {
   private readonly reranker: RerankerService;
   private readonly searchEngine: SearchEngine;
 
-  constructor(config: AppConfig, db: D1Database) {
+  constructor(config: AppConfig, db: D1Database, env: WorkerEnv) {
     // Initialize all services immediately with D1 database
     this.database = new DatabaseService(config);
-    this.embedding = new EmbeddingService(db);
-    this.reranker = new RerankerService(db);
+    this.embedding = new EmbeddingService(db, env.DEEPINFRA_API_KEY);
+    this.reranker = new RerankerService(db, env.DEEPINFRA_API_KEY);
     this.searchEngine = new SearchEngine(
       this.database,
       this.embedding,

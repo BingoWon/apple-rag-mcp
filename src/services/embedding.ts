@@ -1,12 +1,11 @@
 /**
  * Modern Embedding Service - MCP Optimized
- * SiliconFlow API integration with unified multi-key failover
+ * DeepInfra API integration (single provider, no fallback)
  */
 
 import type { EmbeddingService as IEmbeddingService } from "../types/index.js";
 import { logger } from "../utils/logger.js";
-import { SiliconFlowService } from "./siliconflow-base.js";
-import { SILICONFLOW_CONFIG } from "./siliconflow-config.js";
+import { DEEPINFRA_CONFIG, DeepInfraService } from "./deepinfra-base.js";
 
 interface EmbeddingInput {
   text: string;
@@ -25,13 +24,13 @@ interface EmbeddingResponse {
 }
 
 export class EmbeddingService
-  extends SiliconFlowService<EmbeddingInput, EmbeddingResponse, number[]>
+  extends DeepInfraService<EmbeddingInput, EmbeddingResponse, number[]>
   implements IEmbeddingService
 {
-  protected readonly endpoint = "/embeddings";
+  protected readonly endpoint = "/v1/openai/embeddings";
 
   /**
-   * Create embedding with multi-key failover
+   * Create embedding (single provider)
    */
   async createEmbedding(text: string): Promise<number[]> {
     if (!text?.trim()) {
@@ -39,7 +38,7 @@ export class EmbeddingService
     }
 
     const input: EmbeddingInput = { text: text.trim() };
-    return this.callWithFailover(input, "Embedding generation");
+    return this.call(input, "Embedding generation");
   }
 
   /**
@@ -47,7 +46,7 @@ export class EmbeddingService
    */
   protected buildPayload(input: EmbeddingInput): EmbeddingPayload {
     return {
-      model: SILICONFLOW_CONFIG.EMBEDDING_MODEL,
+      model: DEEPINFRA_CONFIG.EMBEDDING_MODEL,
       input: input.text,
       encoding_format: "float",
     };
@@ -56,7 +55,10 @@ export class EmbeddingService
   /**
    * Process API response and return normalized embedding
    */
-  protected processResponse(response: EmbeddingResponse): number[] {
+  protected processResponse(
+    response: EmbeddingResponse,
+    _input: EmbeddingInput
+  ): number[] {
     const embedding = this.extractEmbedding(response);
     return this.normalizeL2(embedding);
   }
@@ -68,11 +70,11 @@ export class EmbeddingService
     const embedding = response.data?.[0]?.embedding;
 
     if (!embedding || !Array.isArray(embedding)) {
-      throw new Error("No embedding data received from SiliconFlow API");
+      throw new Error("No embedding data received from DeepInfra API");
     }
 
     if (embedding.length === 0) {
-      throw new Error("Empty embedding received from SiliconFlow API");
+      throw new Error("Empty embedding received from DeepInfra API");
     }
 
     return embedding;
