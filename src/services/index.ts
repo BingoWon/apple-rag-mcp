@@ -17,9 +17,9 @@ export async function createServices(env: WorkerEnv): Promise<Services> {
     // Convert Worker env to app config
     const config = createAppConfig(env);
 
-    // Initialize services with D1 database for key management
+    // Initialize services
     const auth = new AuthMiddleware(env.DB);
-    const rag = new RAGService(config, env.DB, env);
+    const rag = new RAGService(config, env);
     const rateLimit = new RateLimitService(env.DB);
     const logger = new ToolCallLogger(env.DB);
 

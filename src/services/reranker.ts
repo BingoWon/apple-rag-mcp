@@ -18,10 +18,6 @@ interface RerankerPayload {
   top_n: number;
 }
 
-export interface RerankerResult {
-  scores: number[];
-}
-
 export interface RerankerResponse {
   scores: number[];
 }

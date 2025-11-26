@@ -22,11 +22,10 @@ export class RAGService {
   private readonly reranker: RerankerService;
   private readonly searchEngine: SearchEngine;
 
-  constructor(config: AppConfig, db: D1Database, env: WorkerEnv) {
-    // Initialize all services immediately with D1 database
+  constructor(config: AppConfig, env: WorkerEnv) {
     this.database = new DatabaseService(config);
-    this.embedding = new EmbeddingService(db, env.DEEPINFRA_API_KEY);
-    this.reranker = new RerankerService(db, env.DEEPINFRA_API_KEY);
+    this.embedding = new EmbeddingService(env.DEEPINFRA_API_KEY);
+    this.reranker = new RerankerService(env.DEEPINFRA_API_KEY);
     this.searchEngine = new SearchEngine(
       this.database,
       this.embedding,

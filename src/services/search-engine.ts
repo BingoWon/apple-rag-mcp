@@ -175,26 +175,14 @@ export class SearchEngine {
         resultCount,
       });
 
-      const duration = Date.now() - startTime;
       logger.info(
-        `Semantic search completed (${(duration / 1000).toFixed(1)}s): ${results.length} results`
+        `Semantic search completed (${((Date.now() - startTime) / 1000).toFixed(1)}s): ${results.length} results`
       );
 
       return results;
     } catch (error) {
-      const duration = Date.now() - startTime;
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      const isServiceOverload =
-        errorMessage.includes("503") || errorMessage.includes("overloaded");
-
       logger.error(
-        `Semantic search failed (duration: ${duration}ms, query_length: ${query.length}, result_count: ${resultCount}, service_overload: ${isServiceOverload}): ${errorMessage}`
-      );
-
-      // Return empty results as fallback - let keyword search handle the query
-      logger.warn(
-        `Semantic search failed${isServiceOverload ? " due to API overload" : ""}, falling back to keyword-only search`
+        `Semantic search failed, falling back to keyword-only: ${error instanceof Error ? error.message : String(error)}`
       );
       return [];
     }
@@ -214,20 +202,15 @@ export class SearchEngine {
         resultCount,
       });
 
-      const duration = Date.now() - startTime;
       logger.info(
-        `Keyword search completed (${(duration / 1000).toFixed(1)}s): ${results.length} results`
+        `Keyword search completed (${((Date.now() - startTime) / 1000).toFixed(1)}s): ${results.length} results`
       );
 
       return results;
     } catch (error) {
-      const duration = Date.now() - startTime;
       logger.error(
-        `Keyword search failed (duration: ${duration}ms, query_length: ${query.length}, result_count: ${resultCount}): ${error instanceof Error ? error.message : String(error)}`
+        `Keyword search failed: ${error instanceof Error ? error.message : String(error)}`
       );
-
-      // Return empty results as fallback
-      logger.warn(`Keyword search failed, returning empty results`);
       return [];
     }
   }
