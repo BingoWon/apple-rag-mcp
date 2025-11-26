@@ -46,13 +46,11 @@ export class SearchTool {
       );
     }
 
-    // Clean the query to remove temporal information
-    const originalQuery = query;
-    query = cleanQuerySafely(query);
+    const requestedQuery = query;
+    const actualQuery = cleanQuerySafely(query);
 
-    // Log query cleaning if significant changes were made
-    if (query !== originalQuery) {
-      logger.info(`Query cleaned for search: "${originalQuery}" -> "${query}"`);
+    if (actualQuery !== requestedQuery) {
+      logger.info(`Query cleaned: "${requestedQuery}" -> "${actualQuery}"`);
     }
 
     // Validate and clamp result_count parameter
@@ -87,7 +85,8 @@ export class SearchTool {
 
         await this.logSearch(
           authContext,
-          query,
+          requestedQuery,
+          actualQuery,
           { count: 0 },
           0,
           clientIP,
@@ -104,7 +103,8 @@ export class SearchTool {
       }
 
       const ragResult = await this.processQuery(
-        query,
+        requestedQuery,
+        actualQuery,
         result_count,
         authContext,
         clientIP,
@@ -121,7 +121,7 @@ export class SearchTool {
       return createSuccessResponse(id, formattedResponse);
     } catch (error) {
       logger.error(
-        `RAG query failed for query "${query}" (result_count: ${result_count}): ${error instanceof Error ? error.message : String(error)}`
+        `RAG query failed for "${actualQuery}": ${error instanceof Error ? error.message : String(error)}`
       );
 
       return createErrorResponse(
@@ -133,7 +133,8 @@ export class SearchTool {
   }
 
   private async processQuery(
-    query: string,
+    requestedQuery: string,
+    actualQuery: string,
     resultCount: number,
     authContext: AuthContext,
     ipAddress: string,
@@ -141,7 +142,7 @@ export class SearchTool {
     startTime: number
   ) {
     const ragResult = await this.services.rag.query({
-      query,
+      query: actualQuery,
       result_count: resultCount,
     });
 
@@ -149,7 +150,8 @@ export class SearchTool {
 
     await this.logSearch(
       authContext,
-      query,
+      requestedQuery,
+      actualQuery,
       ragResult,
       totalResponseTime,
       ipAddress,
@@ -161,7 +163,8 @@ export class SearchTool {
 
   private async logSearch(
     authContext: AuthContext,
-    searchQuery: string,
+    requestedQuery: string,
+    actualQuery: string,
     ragResult: { count?: number },
     responseTime: number,
     ipAddress: string,
@@ -174,7 +177,8 @@ export class SearchTool {
     try {
       await this.services.logger.logSearch({
         userId: authContext.userId || `anon_${ipAddress}`,
-        searchQuery,
+        requestedQuery,
+        actualQuery,
         resultCount: ragResult?.count || 0,
         responseTimeMs: responseTime,
         ipAddress,

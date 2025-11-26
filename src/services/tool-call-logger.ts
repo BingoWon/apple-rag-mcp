@@ -7,7 +7,8 @@ import { logger } from "../utils/logger.js";
 export interface SearchLogEntry {
   userId: string;
   mcpToken?: string | null;
-  searchQuery: string;
+  requestedQuery: string;
+  actualQuery: string;
   resultCount: number;
   responseTimeMs: number;
   statusCode?: number;
@@ -73,13 +74,14 @@ export class ToolCallLogger {
       const result = await this.d1
         .prepare(
           `INSERT INTO search_logs
-         (user_id, mcp_token, search_query, result_count, response_time_ms, status_code, error_code, ip_address, country_code, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+         (user_id, mcp_token, requested_query, actual_query, result_count, response_time_ms, status_code, error_code, ip_address, country_code, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
         )
         .bind(
           entry.userId,
           entry.mcpToken,
-          entry.searchQuery,
+          entry.requestedQuery,
+          entry.actualQuery,
           entry.resultCount,
           entry.responseTimeMs,
           entry.statusCode,
