@@ -1,3 +1,10 @@
+# [4.2.0](https://github.com/BingoWon/apple-rag-mcp/compare/v4.1.7...v4.2.0) (2025-11-26)
+
+
+### Features
+
+* add country_code tracking from Cloudflare ([d1777bb](https://github.com/BingoWon/apple-rag-mcp/commit/d1777bba8c93553878d32b79c067cf46d952de1f))
+
 ## [4.1.7](https://github.com/BingoWon/apple-rag-mcp/compare/v4.1.6...v4.1.7) (2025-11-26)
 
 ## [4.1.6](https://github.com/BingoWon/apple-rag-mcp/compare/v4.1.5...v4.1.6) (2025-11-23)
