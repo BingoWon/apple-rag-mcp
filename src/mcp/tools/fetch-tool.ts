@@ -3,13 +3,12 @@
  * Handles MCP fetch tool requests for content retrieval
  */
 
-import type {
-  AuthContext,
-  MCPResponse,
-  RateLimitResult,
-  Services,
-} from "../../types/index.js";
+import type { AuthContext, MCPResponse, Services } from "../../types/index.js";
 import { logger } from "../../utils/logger.js";
+import {
+  buildRateLimitMessage,
+  extractClientInfo,
+} from "../../utils/request-info.js";
 import {
   convertYouTubeShortUrl,
   validateAndNormalizeUrl,
@@ -19,7 +18,7 @@ import {
   createSuccessResponse,
   formatFetchResponse,
 } from "../formatters/response-formatter.js";
-import { APP_CONSTANTS, MCP_ERROR_CODES } from "../protocol-handler.js";
+import { MCP_ERROR_CODES } from "../protocol-handler.js";
 
 export interface FetchToolArgs {
   url: string;
@@ -49,7 +48,7 @@ export class FetchTool {
       );
     }
 
-    const { ip: ipAddress, country: countryCode } = this.extractClientInfo(httpRequest);
+    const { ip: ipAddress, country: countryCode } = extractClientInfo(httpRequest);
 
     const rateLimitResult = await this.services.rateLimit.checkLimits(
       ipAddress,
@@ -69,14 +68,10 @@ export class FetchTool {
         "RATE_LIMIT_EXCEEDED"
       );
 
-      const rateLimitMessage = this.buildRateLimitMessage(
-        rateLimitResult,
-        authContext
-      );
       return createErrorResponse(
         id,
         MCP_ERROR_CODES.RATE_LIMIT_EXCEEDED,
-        rateLimitMessage
+        buildRateLimitMessage(rateLimitResult, authContext)
       );
     }
 
@@ -202,34 +197,4 @@ export class FetchTool {
     }
   }
 
-  /**
-   * Build rate limit message
-   */
-  private buildRateLimitMessage(
-    rateLimitResult: RateLimitResult,
-    authContext: AuthContext
-  ): string {
-    if (rateLimitResult.limitType === "minute") {
-      const resetTime = new Date(rateLimitResult.minuteResetAt!);
-      const waitSeconds = Math.ceil((resetTime.getTime() - Date.now()) / 1000);
-
-      return authContext.isAuthenticated
-        ? `Rate limit reached for ${rateLimitResult.planType} plan (${rateLimitResult.minuteLimit} queries per minute). Please wait ${waitSeconds} seconds before trying again.`
-        : `Rate limit reached for anonymous access (${rateLimitResult.minuteLimit} query per minute). Please wait ${waitSeconds} seconds before trying again. Subscribe at ${APP_CONSTANTS.SUBSCRIPTION_URL} for higher limits.`;
-    } else {
-      return authContext.isAuthenticated
-        ? `Weekly limit reached for ${rateLimitResult.planType} plan (${rateLimitResult.limit} queries per week). Upgrade to Pro at ${APP_CONSTANTS.SUBSCRIPTION_URL} for higher limits.`
-        : `Weekly limit reached for anonymous access (${rateLimitResult.limit} queries per week). Subscribe at ${APP_CONSTANTS.SUBSCRIPTION_URL} for higher limits.`;
-    }
-  }
-
-  private extractClientInfo(request: Request): { ip: string; country: string | null } {
-    const ip =
-      request.headers.get("cf-connecting-ip") ||
-      request.headers.get("x-forwarded-for") ||
-      request.headers.get("x-real-ip") ||
-      "unknown";
-    const country = (request as Request & { cf?: { country?: string } }).cf?.country || null;
-    return { ip, country };
-  }
 }
