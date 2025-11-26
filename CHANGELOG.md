@@ -1,3 +1,5 @@
+## [4.2.1](https://github.com/BingoWon/apple-rag-mcp/compare/v4.2.0...v4.2.1) (2025-11-26)
+
 # [4.2.0](https://github.com/BingoWon/apple-rag-mcp/compare/v4.1.7...v4.2.0) (2025-11-26)
 
 
