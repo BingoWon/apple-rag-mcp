@@ -1,3 +1,10 @@
+# [4.3.0](https://github.com/BingoWon/apple-rag-mcp/compare/v4.2.1...v4.3.0) (2025-11-26)
+
+
+### Features
+
+* add requested_query and actual_query fields for search logs ([470bae8](https://github.com/BingoWon/apple-rag-mcp/commit/470bae81f3d082b3dfa0272fea5141da564b0c41))
+
 ## [4.2.1](https://github.com/BingoWon/apple-rag-mcp/compare/v4.2.0...v4.2.1) (2025-11-26)
 
 # [4.2.0](https://github.com/BingoWon/apple-rag-mcp/compare/v4.1.7...v4.2.0) (2025-11-26)
