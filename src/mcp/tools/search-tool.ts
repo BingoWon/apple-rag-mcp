@@ -75,26 +75,24 @@ export class SearchTool {
     result_count = adjustedResultCount;
 
     try {
-      // Rate limiting check
-      const clientIP = this.extractClientIP(httpRequest);
+      const { ip: clientIP, country: countryCode } = this.extractClientInfo(httpRequest);
       const rateLimitResult = await this.services.rateLimit.checkLimits(
         clientIP,
         authContext
       );
 
       if (!rateLimitResult.allowed) {
-        // Log rate limit hit
         logger.info(
           `Rate limit exceeded for user ${authContext.userId || `anon_${clientIP}`} (authenticated: ${authContext.isAuthenticated}, limit_type: ${rateLimitResult.limitType}, limit: ${rateLimitResult.limit}, remaining: ${rateLimitResult.remaining}, plan_type: ${rateLimitResult.planType})`
         );
 
-        // Log rate-limited request to database
         await this.logSearch(
           authContext,
           query,
           { count: 0 },
           0,
           clientIP,
+          countryCode,
           429,
           "RATE_LIMIT_EXCEEDED"
         );
@@ -115,6 +113,7 @@ export class SearchTool {
         result_count,
         authContext,
         clientIP,
+        countryCode,
         startTime
       );
 
@@ -138,17 +137,14 @@ export class SearchTool {
     }
   }
 
-  /**
-   * Process RAG query - unified business logic
-   */
   private async processQuery(
     query: string,
     resultCount: number,
     authContext: AuthContext,
     ipAddress: string,
+    countryCode: string | null,
     startTime: number
   ) {
-    // Execute RAG query
     const ragResult = await this.services.rag.query({
       query,
       result_count: resultCount,
@@ -156,27 +152,25 @@ export class SearchTool {
 
     const totalResponseTime = Date.now() - startTime;
 
-    // Log search to database
     await this.logSearch(
       authContext,
       query,
       ragResult,
       totalResponseTime,
-      ipAddress
+      ipAddress,
+      countryCode
     );
 
     return ragResult;
   }
 
-  /**
-   * Log search operation
-   */
   private async logSearch(
     authContext: AuthContext,
     searchQuery: string,
     ragResult: { count?: number },
     responseTime: number,
     ipAddress: string,
+    countryCode: string | null,
     statusCode: number = 200,
     errorCode?: string
   ): Promise<void> {
@@ -189,13 +183,14 @@ export class SearchTool {
         resultCount: ragResult?.count || 0,
         responseTimeMs: responseTime,
         ipAddress,
+        countryCode,
         statusCode,
         errorCode,
         mcpToken: authContext.token || null,
       });
     } catch (error) {
       logger.error(
-        `Failed to log search to database for query "${searchQuery}" (user_id: ${authContext.userId || `anon_${ipAddress}`}): ${error instanceof Error ? error.message : String(error)}`
+        `Failed to log search: ${error instanceof Error ? error.message : String(error)}`
       );
     }
   }
@@ -221,15 +216,13 @@ export class SearchTool {
     }
   }
 
-  /**
-   * Extract client IP address from Worker request
-   */
-  private extractClientIP(request: Request): string {
-    return (
+  private extractClientInfo(request: Request): { ip: string; country: string | null } {
+    const ip =
       request.headers.get("cf-connecting-ip") ||
       request.headers.get("x-forwarded-for") ||
       request.headers.get("x-real-ip") ||
-      "unknown"
-    );
+      "unknown";
+    const country = (request as Request & { cf?: { country?: string } }).cf?.country || null;
+    return { ip, country };
   }
 }

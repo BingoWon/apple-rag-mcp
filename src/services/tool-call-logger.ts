@@ -13,6 +13,7 @@ export interface SearchLogEntry {
   statusCode?: number;
   errorCode?: string | null;
   ipAddress?: string;
+  countryCode?: string | null;
 }
 
 export interface FetchLogEntry {
@@ -25,6 +26,7 @@ export interface FetchLogEntry {
   statusCode?: number;
   errorCode?: string | null;
   ipAddress?: string;
+  countryCode?: string | null;
 }
 
 export class ToolCallLogger {
@@ -67,12 +69,12 @@ export class ToolCallLogger {
    */
   private async executeSearchLog(entry: SearchLogEntry): Promise<void> {
     try {
-      const now = new Date().toISOString(); // Generate UTC timestamp with timezone info
+      const now = new Date().toISOString();
       const result = await this.d1
         .prepare(
           `INSERT INTO search_logs
-         (user_id, mcp_token, search_query, result_count, response_time_ms, status_code, error_code, ip_address, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+         (user_id, mcp_token, search_query, result_count, response_time_ms, status_code, error_code, ip_address, country_code, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
         )
         .bind(
           entry.userId,
@@ -83,6 +85,7 @@ export class ToolCallLogger {
           entry.statusCode,
           entry.errorCode || null,
           entry.ipAddress || null,
+          entry.countryCode || null,
           now
         )
         .run();
@@ -91,7 +94,6 @@ export class ToolCallLogger {
         throw new Error("D1 search log execution failed");
       }
     } catch (error) {
-      // Re-throw for caller's catch block
       throw new Error(
         `D1 search logging failed: ${error instanceof Error ? error.message : String(error)}`
       );
@@ -103,12 +105,12 @@ export class ToolCallLogger {
    */
   private async executeFetchLog(entry: FetchLogEntry): Promise<void> {
     try {
-      const now = new Date().toISOString(); // Generate UTC timestamp with timezone info
+      const now = new Date().toISOString();
       const result = await this.d1
         .prepare(
           `INSERT INTO fetch_logs
-         (user_id, mcp_token, requested_url, actual_url, page_id, response_time_ms, status_code, error_code, ip_address, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+         (user_id, mcp_token, requested_url, actual_url, page_id, response_time_ms, status_code, error_code, ip_address, country_code, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
         )
         .bind(
           entry.userId,
@@ -120,6 +122,7 @@ export class ToolCallLogger {
           entry.statusCode,
           entry.errorCode || null,
           entry.ipAddress || null,
+          entry.countryCode || null,
           now
         )
         .run();
@@ -128,7 +131,6 @@ export class ToolCallLogger {
         throw new Error("D1 fetch log execution failed");
       }
     } catch (error) {
-      // Re-throw for caller's catch block
       throw new Error(
         `D1 fetch logging failed: ${error instanceof Error ? error.message : String(error)}`
       );

@@ -49,16 +49,14 @@ export class FetchTool {
       );
     }
 
-    const ipAddress = this.extractClientIP(httpRequest);
+    const { ip: ipAddress, country: countryCode } = this.extractClientInfo(httpRequest);
 
-    // Rate limiting check
     const rateLimitResult = await this.services.rateLimit.checkLimits(
       ipAddress,
       authContext
     );
 
     if (!rateLimitResult.allowed) {
-      // Log rate-limited fetch request to database
       await this.logFetch(
         authContext,
         url,
@@ -66,6 +64,7 @@ export class FetchTool {
         "",
         0,
         ipAddress,
+        countryCode,
         429,
         "RATE_LIMIT_EXCEEDED"
       );
@@ -103,7 +102,6 @@ export class FetchTool {
       const responseTime = Date.now() - startTime;
 
       if (!page) {
-        // Log failed fetch
         await this.logFetch(
           authContext,
           url,
@@ -111,6 +109,7 @@ export class FetchTool {
           "",
           responseTime,
           ipAddress,
+          countryCode,
           404,
           "NOT_FOUND"
         );
@@ -122,14 +121,14 @@ export class FetchTool {
         );
       }
 
-      // Log successful fetch
       await this.logFetch(
         authContext,
         url,
         processedUrl,
         page.id,
         responseTime,
-        ipAddress
+        ipAddress,
+        countryCode
       );
 
       // Format response with professional styling
@@ -146,7 +145,6 @@ export class FetchTool {
     } catch (error) {
       const responseTime = Date.now() - startTime;
 
-      // Log failed fetch
       await this.logFetch(
         authContext,
         url,
@@ -154,12 +152,13 @@ export class FetchTool {
         "",
         responseTime,
         ipAddress,
+        countryCode,
         500,
         "FETCH_FAILED"
       );
 
       logger.error(
-        `Fetch failed for URL ${url}: ${error instanceof Error ? error.message : String(error)} (authenticated: ${authContext.isAuthenticated})`
+        `Fetch failed for URL ${url}: ${error instanceof Error ? error.message : String(error)}`
       );
 
       return createErrorResponse(
@@ -170,9 +169,6 @@ export class FetchTool {
     }
   }
 
-  /**
-   * Log fetch operation
-   */
   private async logFetch(
     authContext: AuthContext,
     requestedUrl: string,
@@ -180,6 +176,7 @@ export class FetchTool {
     pageId: string,
     responseTime: number,
     ipAddress: string,
+    countryCode: string | null,
     statusCode: number = 200,
     errorCode?: string
   ): Promise<void> {
@@ -193,6 +190,7 @@ export class FetchTool {
         pageId,
         responseTimeMs: responseTime,
         ipAddress,
+        countryCode,
         statusCode,
         errorCode,
         mcpToken: authContext.token || null,
@@ -225,15 +223,13 @@ export class FetchTool {
     }
   }
 
-  /**
-   * Extract client IP address from Worker request
-   */
-  private extractClientIP(request: Request): string {
-    return (
+  private extractClientInfo(request: Request): { ip: string; country: string | null } {
+    const ip =
       request.headers.get("cf-connecting-ip") ||
       request.headers.get("x-forwarded-for") ||
       request.headers.get("x-real-ip") ||
-      "unknown"
-    );
+      "unknown";
+    const country = (request as Request & { cf?: { country?: string } }).cf?.country || null;
+    return { ip, country };
   }
 }
