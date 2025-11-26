@@ -4,8 +4,7 @@
  */
 
 import type { AuthContext, RateLimitResult } from "../types/index.js";
-
-const SUBSCRIPTION_URL = "https://apple-rag.com";
+import { APP_CONSTANTS } from "../mcp/protocol-handler.js";
 
 export interface ClientInfo {
   ip: string;
@@ -39,11 +38,11 @@ export function buildRateLimitMessage(
 
     return authContext.isAuthenticated
       ? `Rate limit reached for ${rateLimitResult.planType} plan (${rateLimitResult.minuteLimit} queries per minute). Please wait ${waitSeconds} seconds before trying again.`
-      : `Rate limit reached for anonymous access (${rateLimitResult.minuteLimit} query per minute). Please wait ${waitSeconds} seconds before trying again. Subscribe at ${SUBSCRIPTION_URL} for higher limits.`;
+      : `Rate limit reached for anonymous access (${rateLimitResult.minuteLimit} query per minute). Please wait ${waitSeconds} seconds before trying again. Subscribe at ${APP_CONSTANTS.SUBSCRIPTION_URL} for higher limits.`;
   }
 
   return authContext.isAuthenticated
-    ? `Weekly limit reached for ${rateLimitResult.planType} plan (${rateLimitResult.limit} queries per week). Upgrade to Pro at ${SUBSCRIPTION_URL} for higher limits.`
-    : `Weekly limit reached for anonymous access (${rateLimitResult.limit} queries per week). Subscribe at ${SUBSCRIPTION_URL} for higher limits.`;
+    ? `Weekly limit reached for ${rateLimitResult.planType} plan (${rateLimitResult.limit} queries per week). Upgrade to Pro at ${APP_CONSTANTS.SUBSCRIPTION_URL} for higher limits.`
+    : `Weekly limit reached for anonymous access (${rateLimitResult.limit} queries per week). Subscribe at ${APP_CONSTANTS.SUBSCRIPTION_URL} for higher limits.`;
 }
 
