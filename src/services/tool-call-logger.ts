@@ -21,7 +21,7 @@ export interface FetchLogEntry {
   userId: string;
   mcpToken?: string | null;
   requestedUrl: string;
-  actualUrl?: string | null;
+  actualUrl: string;
   pageId?: string | null;
   responseTimeMs: number;
   statusCode?: number;
@@ -118,7 +118,7 @@ export class ToolCallLogger {
           entry.userId,
           entry.mcpToken,
           entry.requestedUrl,
-          entry.actualUrl || null,
+          entry.actualUrl,
           entry.pageId || null,
           entry.responseTimeMs,
           entry.statusCode,
