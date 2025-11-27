@@ -19,12 +19,13 @@ export default {
   async fetch(
     request: Request,
     env: WorkerEnv,
-    _ctx: ExecutionContext
+    ctx: ExecutionContext
   ): Promise<Response> {
     const startTime = performance.now();
 
-    // Configure Telegram notification
+    // Configure Telegram notification and set execution context for waitUntil
     configureTelegram(env.TELEGRAM_BOT_URL);
+    logger.setContext(ctx);
 
     try {
       const url = new URL(request.url);
