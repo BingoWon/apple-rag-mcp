@@ -2,27 +2,31 @@
 
 <img src="https://apple-rag.com/logo-with-text.svg" alt="Apple RAG MCP" width="400">
 
-*Transform your AI agents into Apple development experts with instant access to official Swift docs, design guidelines, and platform knowledge.*
+### The Apple docs MCP your AI actually deserves.
+
+*370,000+ docs. 1,300+ WWDC transcripts. Semantic + keyword + hybrid search. One clean tool.*
 
 [![Install MCP Server](https://cursor.com/deeplink/mcp-install-light.svg)](https://cursor.com/en/install-mcp?name=apple-rag-mcp&config=eyJ1cmwiOiJodHRwczovL21jcC5hcHBsZS1yYWcuY29tIn0%3D)
 
 [![Install in VS Code](https://img.shields.io/badge/VS_Code-Apple_RAG_MCP-0098FF?style=flat&logo=visualstudiocode&logoColor=ffffff)](vscode:mcp/install?%7B%22name%22%3A%22apple-rag-mcp%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fmcp.apple-rag.com%22%7D) [![Install in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-Apple_RAG_MCP-24bfa5?style=flat&logo=visualstudiocode&logoColor=ffffff)](vscode-insiders:mcp/install?%7B%22name%22%3A%22apple-rag-mcp%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fmcp.apple-rag.com%22%7D)
 
-[🌐 Learn More](https://apple-rag.com) • [🚀 Get Started](https://apple-rag.com/register) • [📊 Dashboard](https://apple-rag.com/overview)
+[🌐 Website](https://apple-rag.com) • [📊 Dashboard](https://apple-rag.com/overview)
 
 </div>
 
-## ✨ What is Apple RAG MCP?
+---
 
-Apple RAG MCP delivers exactly what your AI agents need: **official Swift development docs, design guidelines, comprehensive Apple platform knowledge, and WWDC session transcripts** - current and complete.
+## Not Just Another Docs Tool
 
-A cutting-edge **Retrieval-Augmented Generation (RAG) system** combining Apple's official documentation with WWDC video transcripts. Features **professional AI reranking** with Qwen3-Reranker-8B for superior search accuracy across multiple content types.
+Others give you keyword search. We give you that, plus semantic understanding, plus AI-powered hybrid search that combines both intelligently. Every search mode you need, working together.
 
-**🤖 AI-Powered Embedding & Reranking** • **⚡ Semantic Search for RAG** • **🔍 Keyword Search** • **🎯 Hybrid Search**
+**Minimal footprint. Maximum signal.** Our MCP tools are designed to be lean—no bloated responses, no wasted tokens, no noise cluttering your agent's context. Just the information that matters.
 
-## 🚀 Quick Start
+---
 
-### Option 1: One-Click Setup (Recommended)
+## Start in Seconds
+
+**One click:**
 
 [![Install MCP Server](https://cursor.com/deeplink/mcp-install-light.svg)](https://cursor.com/en/install-mcp?name=apple-rag-mcp&config=eyJ1cmwiOiJodHRwczovL21jcC5hcHBsZS1yYWcuY29tIn0%3D)
 
@@ -99,10 +103,8 @@ Start immediately with no MCP Token required. Get an MCP Token for higher usage 
 
 <div align="center">
 
-**Ready to supercharge your AI agents with Apple expertise?**
+**Better docs. Better context. Better code.**
 
-[🚀 Get Started Now](https://apple-rag.com)
-
-*Made with ❤️ for the Apple developer community*
+[Get Started →](https://apple-rag.com)
 
 </div>
