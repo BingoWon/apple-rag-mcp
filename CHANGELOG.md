@@ -1,3 +1,10 @@
+## [4.3.3](https://github.com/BingoWon/apple-rag-mcp/compare/v4.3.2...v4.3.3) (2025-11-27)
+
+
+### Bug Fixes
+
+* use ctx.waitUntil() for Telegram notifications ([c53bc8f](https://github.com/BingoWon/apple-rag-mcp/commit/c53bc8f06177c3d76be7e43b6d18fac5bdfe0ba3))
+
 ## [4.3.2](https://github.com/BingoWon/apple-rag-mcp/compare/v4.3.1...v4.3.2) (2025-11-27)
 
 ## [4.3.1](https://github.com/BingoWon/apple-rag-mcp/compare/v4.3.0...v4.3.1) (2025-11-26)
