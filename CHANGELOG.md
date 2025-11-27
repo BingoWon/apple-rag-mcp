@@ -1,3 +1,10 @@
+# [4.4.0](https://github.com/BingoWon/apple-rag-mcp/compare/v4.3.3...v4.4.0) (2025-11-27)
+
+
+### Features
+
+* **reranker:** implement dual-model fallback with 8B→4B degradation ([3daf9cf](https://github.com/BingoWon/apple-rag-mcp/commit/3daf9cfea01656c8034bad7940aeb0ba282b664c))
+
 ## [4.3.3](https://github.com/BingoWon/apple-rag-mcp/compare/v4.3.2...v4.3.3) (2025-11-27)
 
 
