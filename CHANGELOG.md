@@ -1,3 +1,10 @@
+# [4.5.0](https://github.com/BingoWon/apple-rag-mcp/compare/v4.4.2...v4.5.0) (2025-11-27)
+
+
+### Features
+
+* **d1:** add timeout protection and background writes for D1 operations ([3b87b63](https://github.com/BingoWon/apple-rag-mcp/commit/3b87b6355b14ad6a459516bd7ce73b27e7a41ca6))
+
 ## [4.4.2](https://github.com/BingoWon/apple-rag-mcp/compare/v4.4.1...v4.4.2) (2025-11-27)
 
 ## [4.4.1](https://github.com/BingoWon/apple-rag-mcp/compare/v4.4.0...v4.4.1) (2025-11-27)
