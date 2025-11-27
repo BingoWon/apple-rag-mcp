@@ -1,9 +1,9 @@
 /**
- * Modern Rate Limiting Service
- * Implements subscription-based rate limiting for MCP server
+ * Rate Limiting Service with D1 timeout protection
  */
 
 import type { AuthContext } from "../types/index.js";
+import { withD1Timeout } from "../utils/d1-utils.js";
 import { logger } from "../utils/logger.js";
 
 interface RateLimitResult {
@@ -12,282 +12,129 @@ interface RateLimitResult {
   remaining: number;
   resetAt: string;
   planType: string;
-  limitType: "weekly" | "minute"; // Which limit was hit
+  limitType: "weekly" | "minute";
   minuteLimit?: number;
   minuteRemaining?: number;
   minuteResetAt?: string;
 }
 
-interface PlanLimits extends Record<string, unknown> {
+interface PlanLimits {
   weeklyQueries: number;
   requestsPerMinute: number;
 }
 
+const PLAN_LIMITS: Record<string, PlanLimits> = {
+  hobby: { weeklyQueries: 10, requestsPerMinute: 2 },
+  pro: { weeklyQueries: 10000, requestsPerMinute: 20 },
+  enterprise: { weeklyQueries: -1, requestsPerMinute: -1 },
+};
+
 export class RateLimitService {
-  private d1: D1Database;
+  constructor(private d1: D1Database) {}
 
-  constructor(d1: D1Database) {
-    this.d1 = d1;
-  }
-
-  /**
-   * Check rate limits for a user
-   */
   async checkLimits(
     clientIP: string,
     authContext: AuthContext
   ): Promise<RateLimitResult> {
-    try {
-      // Get user identifier and plan type (handles all auth types)
-      const { identifier, planType } = await this.getUserInfo(
-        clientIP,
-        authContext
+    const identifier = authContext.userId || `anon_${clientIP}`;
+    const planType = authContext.isAuthenticated && authContext.userId
+      ? await this.getPlanType(authContext.userId)
+      : "hobby";
+
+    const limits = PLAN_LIMITS[planType] || PLAN_LIMITS.hobby;
+
+    const [weeklyUsage, minuteUsage] = await Promise.all([
+      this.getUsageCount(identifier, "weekly"),
+      this.getUsageCount(identifier, "minute"),
+    ]);
+
+    const weeklyAllowed = limits.weeklyQueries === -1 || weeklyUsage < limits.weeklyQueries;
+    const minuteAllowed = limits.requestsPerMinute === -1 || minuteUsage < limits.requestsPerMinute;
+    const allowed = weeklyAllowed && minuteAllowed;
+
+    if (!allowed) {
+      logger.info(
+        `Rate limit: ${identifier} (${planType}) weekly=${weeklyUsage}/${limits.weeklyQueries} minute=${minuteUsage}/${limits.requestsPerMinute}`
       );
-
-      // Get plan limits
-      const limits = this.getPlanLimits(planType);
-
-      // Check weekly and minute limits in parallel
-      const [weeklyUsage, minuteUsage] = await Promise.all([
-        this.getWeeklyUsage(identifier),
-        this.getMinuteUsage(identifier),
-      ]);
-
-      // Determine if request is allowed
-      const weeklyAllowed =
-        limits.weeklyQueries === -1 || weeklyUsage < limits.weeklyQueries;
-      const minuteAllowed =
-        limits.requestsPerMinute === -1 ||
-        minuteUsage < limits.requestsPerMinute;
-      const allowed = weeklyAllowed && minuteAllowed;
-
-      // Calculate remaining quotas
-      const weeklyRemaining =
-        limits.weeklyQueries === -1
-          ? -1
-          : Math.max(0, limits.weeklyQueries - weeklyUsage);
-      const minuteRemaining =
-        limits.requestsPerMinute === -1
-          ? -1
-          : Math.max(0, limits.requestsPerMinute - minuteUsage);
-
-      // Determine which limit was hit
-      const limitType = !minuteAllowed ? "minute" : "weekly";
-
-      const result: RateLimitResult = {
-        allowed,
-        limit: limits.weeklyQueries,
-        remaining: weeklyRemaining,
-        resetAt: this.getWeeklyResetTime(),
-        planType,
-        limitType,
-        minuteLimit: limits.requestsPerMinute,
-        minuteRemaining,
-        minuteResetAt: this.getMinuteResetTime(),
-      };
-
-      if (!allowed) {
-        logger.info(
-          `Rate limit exceeded for ${identifier} (planType: ${planType}, weeklyUsage: ${weeklyUsage}, minuteUsage: ${minuteUsage}, clientIP: ${clientIP})`
-        );
-      }
-
-      return result;
-    } catch (error) {
-      logger.error(
-        `Rate limit check failed for ${clientIP} (authenticated: ${authContext.isAuthenticated}): ${error instanceof Error ? error.message : String(error)}`
-      );
-
-      // Fail open - allow request if rate limit check fails
-      return {
-        allowed: true,
-        limit: -1,
-        remaining: -1,
-        resetAt: new Date().toISOString(),
-        planType: "unknown",
-        limitType: "weekly",
-        minuteLimit: -1,
-        minuteRemaining: -1,
-        minuteResetAt: new Date().toISOString(),
-      };
-    }
-  }
-
-  /**
-   * Get user identifier and plan type - handles all authentication scenarios
-   */
-  private async getUserInfo(
-    clientIP: string,
-    authContext: AuthContext
-  ): Promise<{ identifier: string; planType: string }> {
-    // Handle authenticated users (token or IP-based)
-    if (authContext.isAuthenticated && authContext.userId) {
-      const planType = await this.getUserPlanType(authContext.userId);
-      return {
-        identifier: authContext.userId,
-        planType,
-      };
     }
 
-    // Fallback: anonymous user
     return {
-      identifier: `anon_${clientIP}`,
-      planType: "hobby",
+      allowed,
+      limit: limits.weeklyQueries,
+      remaining: limits.weeklyQueries === -1 ? -1 : Math.max(0, limits.weeklyQueries - weeklyUsage),
+      resetAt: this.getWeeklyResetTime(),
+      planType,
+      limitType: !minuteAllowed ? "minute" : "weekly",
+      minuteLimit: limits.requestsPerMinute,
+      minuteRemaining: limits.requestsPerMinute === -1 ? -1 : Math.max(0, limits.requestsPerMinute - minuteUsage),
+      minuteResetAt: this.getMinuteResetTime(),
     };
   }
 
-  /**
-   * Get user's subscription plan type
-   */
-  private async getUserPlanType(userId: string): Promise<string> {
-    try {
-      const result = await this.d1
-        .prepare(
-          `SELECT us.plan_type
-         FROM user_subscriptions us
-         WHERE us.user_id = ?
-         AND us.status = 'active'
-         LIMIT 1`
-        )
-        .bind(userId)
-        .all();
-
-      return (result.results?.[0]?.plan_type as string) || "hobby";
-    } catch (error) {
-      logger.error(
-        `Failed to get user plan type for ${userId}: ${error instanceof Error ? error.message : String(error)}`
-      );
-      return "hobby"; // Default to hobby plan on error
-    }
+  private async getPlanType(userId: string): Promise<string> {
+    return withD1Timeout(
+      async () => {
+        const result = await this.d1
+          .prepare(
+            `SELECT plan_type FROM user_subscriptions
+             WHERE user_id = ? AND status = 'active' LIMIT 1`
+          )
+          .bind(userId)
+          .first();
+        return (result?.plan_type as string) || "hobby";
+      },
+      "hobby",
+      "get_plan_type"
+    );
   }
 
-  /**
-   * Get weekly usage count from both search_logs and fetch_logs
-   * Excludes rate-limited requests (status_code = 429) to prevent vicious cycles
-   */
-  private async getWeeklyUsage(identifier: string): Promise<number> {
-    try {
-      const weekStart = this.getWeekStartTime().toISOString();
+  private async getUsageCount(
+    identifier: string,
+    period: "weekly" | "minute"
+  ): Promise<number> {
+    const since = period === "weekly"
+      ? this.getWeekStartTime().toISOString()
+      : new Date(Date.now() - 60_000).toISOString();
 
-      // Single optimized query to get combined count, only counting successful requests
-      const result = await this.d1
-        .prepare(
-          `SELECT 
-            (SELECT COUNT(*) FROM search_logs WHERE user_id = ? AND created_at >= ? AND status_code = 200) +
-            (SELECT COUNT(*) FROM fetch_logs WHERE user_id = ? AND created_at >= ? AND status_code = 200) as total_count`
-        )
-        .bind(identifier, weekStart, identifier, weekStart)
-        .first();
+    const operator = period === "weekly" ? ">=" : ">";
 
-      const count = (result?.total_count as number) || 0;
-
-      // Debug logging to verify the fix is working
-      logger.info(
-        `DEBUG: Weekly usage for ${identifier}: ${count} (only status_code=200, since: ${weekStart})`
-      );
-
-      return count;
-    } catch (error) {
-      logger.error(
-        `Failed to get weekly usage for ${identifier}: ${error instanceof Error ? error.message : String(error)}`
-      );
-      return 0;
-    }
+    return withD1Timeout(
+      async () => {
+        const result = await this.d1
+          .prepare(
+            `SELECT
+              (SELECT COUNT(*) FROM search_logs WHERE user_id = ? AND created_at ${operator} ? AND status_code = 200) +
+              (SELECT COUNT(*) FROM fetch_logs WHERE user_id = ? AND created_at ${operator} ? AND status_code = 200) as total`
+          )
+          .bind(identifier, since, identifier, since)
+          .first();
+        return (result?.total as number) || 0;
+      },
+      0,
+      `get_${period}_usage`
+    );
   }
 
-  /**
-   * Get minute usage count from both search_logs and fetch_logs
-   * Excludes rate-limited requests (status_code = 429) to prevent vicious cycles
-   */
-  private async getMinuteUsage(identifier: string): Promise<number> {
-    try {
-      const oneMinuteAgo = new Date(Date.now() - 60 * 1000).toISOString();
-
-      // Single optimized query to get combined count, only counting successful requests
-      const result = await this.d1
-        .prepare(
-          `SELECT 
-            (SELECT COUNT(*) FROM search_logs WHERE user_id = ? AND created_at > ? AND status_code = 200) +
-            (SELECT COUNT(*) FROM fetch_logs WHERE user_id = ? AND created_at > ? AND status_code = 200) as total_count`
-        )
-        .bind(identifier, oneMinuteAgo, identifier, oneMinuteAgo)
-        .first();
-
-      const count = (result?.total_count as number) || 0;
-
-      // Debug logging to verify the fix is working
-      logger.info(
-        `DEBUG: Minute usage for ${identifier}: ${count} (only status_code=200, window: ${oneMinuteAgo} to now)`
-      );
-
-      return count;
-    } catch (error) {
-      logger.error(
-        `Failed to get minute usage for ${identifier}: ${error instanceof Error ? error.message : String(error)}`
-      );
-      return 0;
-    }
-  }
-
-  /**
-   * Get start of current week (Sunday 00:00:00)
-   */
   private getWeekStartTime(): Date {
     const now = new Date();
-    const startOfWeek = new Date(now);
-    startOfWeek.setDate(now.getDate() - now.getDay());
-    startOfWeek.setHours(0, 0, 0, 0);
-    return startOfWeek;
+    const start = new Date(now);
+    start.setDate(now.getDate() - now.getDay());
+    start.setHours(0, 0, 0, 0);
+    return start;
   }
 
-  /**
-   * Get weekly reset time (next Sunday 00:00:00)
-   */
   private getWeeklyResetTime(): string {
     const now = new Date();
-    const nextWeek = new Date(now);
-    nextWeek.setDate(now.getDate() + (7 - now.getDay()));
-    nextWeek.setHours(0, 0, 0, 0);
-    return nextWeek.toISOString();
+    const next = new Date(now);
+    next.setDate(now.getDate() + (7 - now.getDay()));
+    next.setHours(0, 0, 0, 0);
+    return next.toISOString();
   }
 
-  /**
-   * Get minute reset time (next minute 00 seconds)
-   */
   private getMinuteResetTime(): string {
-    const now = new Date();
-    const nextMinute = new Date(now);
-    nextMinute.setSeconds(0, 0);
-    nextMinute.setMinutes(nextMinute.getMinutes() + 1);
-    return nextMinute.toISOString();
-  }
-
-  /**
-   * Get plan limits based on plan type
-   */
-  private getPlanLimits(planType: string): PlanLimits {
-    switch (planType) {
-      case "hobby":
-        return {
-          weeklyQueries: 10,
-          requestsPerMinute: 2,
-        };
-      case "pro":
-        return {
-          weeklyQueries: 10000,
-          requestsPerMinute: 20,
-        };
-      case "enterprise":
-        return {
-          weeklyQueries: -1, // unlimited
-          requestsPerMinute: -1, // unlimited
-        };
-      default:
-        logger.warn(`Unknown plan type ${planType}, defaulting to hobby`);
-        return {
-          weeklyQueries: 10,
-          requestsPerMinute: 2,
-        };
-    }
+    const next = new Date();
+    next.setSeconds(0, 0);
+    next.setMinutes(next.getMinutes() + 1);
+    return next.toISOString();
   }
 }

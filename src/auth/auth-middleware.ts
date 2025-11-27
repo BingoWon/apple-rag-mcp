@@ -85,11 +85,8 @@ export class AuthMiddleware {
     return { isAuthenticated: false };
   }
 
-  /**
-   * Get user data by user ID
-   */
   async getUserData(userId: string): Promise<UserTokenData> {
-    return await this.tokenValidator.getUserData(userId);
+    return this.tokenValidator.getUserDataById(userId);
   }
 
   /**

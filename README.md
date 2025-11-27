@@ -103,6 +103,8 @@ Start immediately with no MCP Token required. Get an MCP Token for higher usage 
 
 <div align="center">
 
+---
+
 **Better docs. Better context. Better code.**
 
 [Get Started →](https://apple-rag.com)

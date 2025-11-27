@@ -54,17 +54,7 @@ export class FetchTool {
     );
 
     if (!rateLimitResult.allowed) {
-      await this.logFetch(
-        authContext,
-        url,
-        url,
-        "",
-        0,
-        ipAddress,
-        countryCode,
-        429,
-        "RATE_LIMIT_EXCEEDED"
-      );
+      this.logFetch(authContext, url, url, "", 0, ipAddress, countryCode, 429, "RATE_LIMIT_EXCEEDED");
 
       return createErrorResponse(
         id,
@@ -92,17 +82,7 @@ export class FetchTool {
       const responseTime = Date.now() - startTime;
 
       if (!page) {
-        await this.logFetch(
-          authContext,
-          url,
-          processedUrl,
-          "",
-          responseTime,
-          ipAddress,
-          countryCode,
-          404,
-          "NOT_FOUND"
-        );
+        this.logFetch(authContext, url, processedUrl, "", responseTime, ipAddress, countryCode, 404, "NOT_FOUND");
 
         return createErrorResponse(
           id,
@@ -111,15 +91,7 @@ export class FetchTool {
         );
       }
 
-      await this.logFetch(
-        authContext,
-        url,
-        processedUrl,
-        page.id,
-        responseTime,
-        ipAddress,
-        countryCode
-      );
+      this.logFetch(authContext, url, processedUrl, page.id, responseTime, ipAddress, countryCode);
 
       // Format response with professional styling
       const formattedContent = formatFetchResponse(
@@ -133,19 +105,7 @@ export class FetchTool {
 
       return createSuccessResponse(id, formattedContent);
     } catch (error) {
-      const responseTime = Date.now() - startTime;
-
-      await this.logFetch(
-        authContext,
-        url,
-        url,
-        "",
-        responseTime,
-        ipAddress,
-        countryCode,
-        500,
-        "FETCH_FAILED"
-      );
+      this.logFetch(authContext, url, url, "", Date.now() - startTime, ipAddress, countryCode, 500, "FETCH_FAILED");
 
       logger.error(
         `Fetch failed for URL ${url}: ${error instanceof Error ? error.message : String(error)}`
@@ -159,7 +119,7 @@ export class FetchTool {
     }
   }
 
-  private async logFetch(
+  private logFetch(
     authContext: AuthContext,
     requestedUrl: string,
     actualUrl: string,
@@ -167,28 +127,20 @@ export class FetchTool {
     responseTime: number,
     ipAddress: string,
     countryCode: string | null,
-    statusCode: number = 200,
+    statusCode = 200,
     errorCode?: string
-  ): Promise<void> {
-    if (!this.services.logger) return;
-
-    try {
-      await this.services.logger.logFetch({
-        userId: authContext.userId || `anon_${ipAddress}`,
-        requestedUrl,
-        actualUrl,
-        pageId,
-        responseTimeMs: responseTime,
-        ipAddress,
-        countryCode,
-        statusCode,
-        errorCode,
-        mcpToken: authContext.token || null,
-      });
-    } catch (error) {
-      logger.error(
-        `Failed to log fetch: ${error instanceof Error ? error.message : String(error)}`
-      );
-    }
+  ): void {
+    this.services.logger?.logFetch({
+      userId: authContext.userId || `anon_${ipAddress}`,
+      requestedUrl,
+      actualUrl,
+      pageId,
+      responseTimeMs: responseTime,
+      ipAddress,
+      countryCode,
+      statusCode,
+      errorCode,
+      mcpToken: authContext.token || null,
+    });
   }
 }

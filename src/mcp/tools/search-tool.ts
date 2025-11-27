@@ -80,21 +80,7 @@ export class SearchTool {
       );
 
       if (!rateLimitResult.allowed) {
-        logger.info(
-          `Rate limit exceeded for user ${authContext.userId || `anon_${clientIP}`} (plan: ${rateLimitResult.planType}, type: ${rateLimitResult.limitType})`
-        );
-
-        await this.logSearch(
-          authContext,
-          requestedQuery,
-          actualQuery,
-          { count: 0 },
-          0,
-          clientIP,
-          countryCode,
-          429,
-          "RATE_LIMIT_EXCEEDED"
-        );
+        this.logSearch(authContext, requestedQuery, actualQuery, { count: 0 }, 0, clientIP, countryCode, 429, "RATE_LIMIT_EXCEEDED");
 
         return createErrorResponse(
           id,
@@ -147,22 +133,12 @@ export class SearchTool {
       result_count: resultCount,
     });
 
-    const totalResponseTime = Date.now() - startTime;
-
-    await this.logSearch(
-      authContext,
-      requestedQuery,
-      actualQuery,
-      ragResult,
-      totalResponseTime,
-      ipAddress,
-      countryCode
-    );
+    this.logSearch(authContext, requestedQuery, actualQuery, ragResult, Date.now() - startTime, ipAddress, countryCode);
 
     return ragResult;
   }
 
-  private async logSearch(
+  private logSearch(
     authContext: AuthContext,
     requestedQuery: string,
     actualQuery: string,
@@ -170,28 +146,20 @@ export class SearchTool {
     responseTime: number,
     ipAddress: string,
     countryCode: string | null,
-    statusCode: number = 200,
+    statusCode = 200,
     errorCode?: string
-  ): Promise<void> {
-    if (!this.services.logger) return;
-
-    try {
-      await this.services.logger.logSearch({
-        userId: authContext.userId || `anon_${ipAddress}`,
-        requestedQuery,
-        actualQuery,
-        resultCount: ragResult?.count || 0,
-        responseTimeMs: responseTime,
-        ipAddress,
-        countryCode,
-        statusCode,
-        errorCode,
-        mcpToken: authContext.token || null,
-      });
-    } catch (error) {
-      logger.error(
-        `Failed to log search: ${error instanceof Error ? error.message : String(error)}`
-      );
-    }
+  ): void {
+    this.services.logger?.logSearch({
+      userId: authContext.userId || `anon_${ipAddress}`,
+      requestedQuery,
+      actualQuery,
+      resultCount: ragResult?.count || 0,
+      responseTimeMs: responseTime,
+      ipAddress,
+      countryCode,
+      statusCode,
+      errorCode,
+      mcpToken: authContext.token || null,
+    });
   }
 }
