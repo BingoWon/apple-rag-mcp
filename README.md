@@ -14,9 +14,9 @@
 
 ## ✨ What is Apple RAG MCP?
 
-Apple RAG MCP delivers exactly what your AI agents need: **official Swift development docs, design guidelines, comprehensive Apple platform knowledge, and Apple Developer YouTube content** including WWDC sessions, tutorials, and live events - current and complete.
+Apple RAG MCP delivers exactly what your AI agents need: **official Swift development docs, design guidelines, comprehensive Apple platform knowledge, and WWDC session transcripts** - current and complete.
 
-A cutting-edge **Retrieval-Augmented Generation (RAG) system** combining Apple's official documentation with video content from the Apple Developer YouTube channel. Features **professional AI reranking** with Qwen3-Reranker-8B for superior search accuracy across multiple content types.
+A cutting-edge **Retrieval-Augmented Generation (RAG) system** combining Apple's official documentation with WWDC video transcripts. Features **professional AI reranking** with Qwen3-Reranker-8B for superior search accuracy across multiple content types.
 
 **🤖 AI-Powered Embedding & Reranking** • **⚡ Semantic Search for RAG** • **🔍 Keyword Search** • **🎯 Hybrid Search**
 
@@ -90,7 +90,7 @@ Start immediately with no MCP Token required. Get an MCP Token for higher usage 
 - **🔎 Keyword Search** - Precise technical term matching for API names and specific terminology
 - **🎯 Hybrid Search** - Combined semantic and keyword search with AI reranking for optimal results
 - **📚 Complete Coverage** - iOS, macOS, watchOS, tvOS, visionOS documentation
-- **📺 Video Content** - Apple Developer YouTube channel with WWDC sessions and tutorials
+- **🎬 WWDC Videos** - Full transcripts from Apple Developer videos and WWDC sessions
 - **⚡ Fast Response** - Optimized for speed across all content types
 - **🚀 High Performance** - Multi-instance cluster deployment for maximum throughput
 - **🔄 Always Current** - Synced with Apple's latest docs and video content

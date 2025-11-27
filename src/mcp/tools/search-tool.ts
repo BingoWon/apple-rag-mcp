@@ -72,7 +72,8 @@ export class SearchTool {
     result_count = adjustedResultCount;
 
     try {
-      const { ip: clientIP, country: countryCode } = extractClientInfo(httpRequest);
+      const { ip: clientIP, country: countryCode } =
+        extractClientInfo(httpRequest);
       const rateLimitResult = await this.services.rateLimit.checkLimits(
         clientIP,
         authContext
@@ -193,5 +194,4 @@ export class SearchTool {
       );
     }
   }
-
 }

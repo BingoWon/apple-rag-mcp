@@ -3,8 +3,8 @@
  * Extract client information from Cloudflare Worker requests
  */
 
-import type { AuthContext, RateLimitResult } from "../types/index.js";
 import { APP_CONSTANTS } from "../mcp/protocol-handler.js";
+import type { AuthContext, RateLimitResult } from "../types/index.js";
 
 export interface ClientInfo {
   ip: string;
@@ -45,4 +45,3 @@ export function buildRateLimitMessage(
     ? `Weekly limit reached for ${rateLimitResult.planType} plan (${rateLimitResult.limit} queries per week). Upgrade to Pro at ${APP_CONSTANTS.SUBSCRIPTION_URL} for higher limits.`
     : `Weekly limit reached for anonymous access (${rateLimitResult.limit} queries per week). Subscribe at ${APP_CONSTANTS.SUBSCRIPTION_URL} for higher limits.`;
 }
-

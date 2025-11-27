@@ -9,10 +9,7 @@ import {
   buildRateLimitMessage,
   extractClientInfo,
 } from "../../utils/request-info.js";
-import {
-  convertYouTubeShortUrl,
-  validateAndNormalizeUrl,
-} from "../../utils/url-processor.js";
+import { validateAndNormalizeUrl } from "../../utils/url-processor.js";
 import {
   createErrorResponse,
   createSuccessResponse,
@@ -48,7 +45,8 @@ export class FetchTool {
       );
     }
 
-    const { ip: ipAddress, country: countryCode } = extractClientInfo(httpRequest);
+    const { ip: ipAddress, country: countryCode } =
+      extractClientInfo(httpRequest);
 
     const rateLimitResult = await this.services.rateLimit.checkLimits(
       ipAddress,
@@ -76,11 +74,8 @@ export class FetchTool {
     }
 
     try {
-      // Pre-process URL: convert youtu.be to youtube.com format for database compatibility
-      const preprocessedUrl = convertYouTubeShortUrl(url);
-
       // Validate and normalize URL
-      const urlResult = validateAndNormalizeUrl(preprocessedUrl);
+      const urlResult = validateAndNormalizeUrl(url);
       if (!urlResult.isValid) {
         logger.warn(`Invalid URL provided: ${url} - ${urlResult.error}`);
 
@@ -196,5 +191,4 @@ export class FetchTool {
       );
     }
   }
-
 }

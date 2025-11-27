@@ -35,7 +35,8 @@ export class RerankerService extends DeepInfraService<
   RerankerResponse,
   RankedDocument[]
 > {
-  protected readonly endpoint = `/v1/inference/${DEEPINFRA_CONFIG.RERANKER_MODEL_PRIMARY}`;
+  protected readonly endpoint =
+    `/v1/inference/${DEEPINFRA_CONFIG.RERANKER_MODEL_PRIMARY}`;
 
   private static readonly MODELS: readonly ModelConfig[] = [
     {
@@ -88,7 +89,9 @@ export class RerankerService extends DeepInfraService<
         return result.data!;
       }
       errors.push(`${model.name}: ${result.error!}`);
-      logger.warn(`${model.name} model failed, ${model === RerankerService.MODELS[0] ? "switching to 4B" : "no more fallbacks"}`);
+      logger.warn(
+        `${model.name} model failed, ${model === RerankerService.MODELS[0] ? "switching to 4B" : "no more fallbacks"}`
+      );
     }
 
     logger.error(
