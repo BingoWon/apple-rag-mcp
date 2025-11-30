@@ -12,6 +12,8 @@
 
 [🌐 Website](https://apple-rag.com) • [📊 Dashboard](https://apple-rag.com/overview)
 
+**English** | [中文](./README.zh-CN.md)
+
 </div>
 
 ---
