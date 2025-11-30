@@ -24,8 +24,9 @@ interface PlanLimits {
 }
 
 const PLAN_LIMITS: Record<string, PlanLimits> = {
-  hobby: { weeklyQueries: 10, requestsPerMinute: 2 },
-  pro: { weeklyQueries: 10000, requestsPerMinute: 20 },
+  anonymous: { weeklyQueries: 30, requestsPerMinute: 3 },
+  hobby: { weeklyQueries: 50, requestsPerMinute: 5 },
+  pro: { weeklyQueries: 50000, requestsPerMinute: 50 },
   enterprise: { weeklyQueries: -1, requestsPerMinute: -1 },
 };
 
@@ -39,7 +40,7 @@ export class RateLimitService {
     const identifier = authContext.userId || `anon_${clientIP}`;
     const planType = authContext.isAuthenticated && authContext.userId
       ? await this.getPlanType(authContext.userId)
-      : "hobby";
+      : "anonymous";
 
     const limits = PLAN_LIMITS[planType] || PLAN_LIMITS.hobby;
 
