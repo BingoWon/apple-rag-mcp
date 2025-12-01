@@ -1,6 +1,6 @@
 {
   "name": "apple-rag-mcp",
-  "version": "4.5.1",
+  "version": "4.6.0",
   "type": "module",
   "main": "dist/src/worker.js",
   "mcpName": "io.github.BingoWon/apple-rag-mcp",

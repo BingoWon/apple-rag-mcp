@@ -1,3 +1,10 @@
+# [4.6.0](https://github.com/BingoWon/apple-rag-mcp/compare/v4.5.1...v4.6.0) (2025-12-01)
+
+
+### Features
+
+* more generous rate limits and clearer usage guidance ([7daf6bc](https://github.com/BingoWon/apple-rag-mcp/commit/7daf6bc79a564d88d246e0cfbabfe48efd533abe))
+
 ## [4.5.1](https://github.com/BingoWon/apple-rag-mcp/compare/v4.5.0...v4.5.1) (2025-11-30)
 
 # [4.5.0](https://github.com/BingoWon/apple-rag-mcp/compare/v4.4.2...v4.5.0) (2025-11-27)
