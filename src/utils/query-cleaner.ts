@@ -40,12 +40,12 @@ const TEMPORAL_PATTERNS = [
 
 /**
  * Meta-descriptive words that reduce Apple docs search precision
+ * Note: Programming language keywords (enum, struct, class, type, protocol)
+ * are NOT filtered as they represent core concepts users explicitly search for
  */
 const META_DESCRIPTIVE_PATTERNS = [
   /\b(documentation|docs?|reference|manual|guide|tutorial)\b/gi,
-  /\b(implementation|implement|implementing|how[\s-]?to)\b/gi,
   /\b(example|examples|sample)\b(?!\s+(code|project|app))/gi,
-  /\b(method|function|property|parameter|argument|type|class|struct|enum)\b(?!\s+(name|signature|declaration|definition|type|value))/gi,
 ];
 
 /**

@@ -2,7 +2,7 @@
 
 <img src="https://apple-rag.com/logo-with-text.svg" alt="Apple RAG MCP" width="400">
 
-### 你的 AI 真正需要的 Apple 文档 MCP。
+### AI 智能体最需要的 Apple 文档 MCP。
 
 *370,000+ 文档。1,300+ WWDC 视频字幕。语义搜索 + 关键词搜索 + 混合搜索。一个干净的工具。*
 
