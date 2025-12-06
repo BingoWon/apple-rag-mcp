@@ -2,9 +2,9 @@
 
 <img src="https://apple-rag.com/logo-with-text.svg" alt="Apple RAG MCP" width="400">
 
-### AI 智能体最需要的 Apple 文档 MCP。
+### 为 AI 智能体打造的 Apple 文档 MCP
 
-*370,000+ 文档。1,300+ WWDC 视频字幕。语义搜索 + 关键词搜索 + 混合搜索。一个干净的工具。*
+*覆盖 37 万+ 文档、1,300+ 条 WWDC 视频字幕。支持语义 / 关键词 / 混合搜索，一站式把答案递到你的智能体手中。*
 
 [![Install MCP Server](https://cursor.com/deeplink/mcp-install-light.svg)](https://cursor.com/en/install-mcp?name=apple-rag-mcp&config=eyJ1cmwiOiJodHRwczovL21jcC5hcHBsZS1yYWcuY29tIn0%3D)
 
@@ -18,15 +18,19 @@
 
 ---
 
-## 不只是另一个文档工具
+## 不只是查文档
 
-其他工具只提供关键词搜索。我们不仅提供关键词搜索，还有语义理解，以及智能结合两者的 AI 驱动混合搜索。你需要的每种搜索模式，协同工作。
+多数工具只能做关键词匹配。Apple RAG MCP 在关键词搜索之外加入语义理解，并用 AI 混合搜索把两者结合，把真正有用的上下文精准送到你的智能体。
 
-**最小占用。最大信号。** 我们的 MCP 工具设计精简——没有臃肿的响应，没有浪费的 token，没有干扰你 AI agent 上下文的噪音。只有真正重要的信息。
+**精简高效。** 响应克制、不啰嗦，尽量少占用 token，不打乱智能体的上下文，只保留最有价值的信号。
 
 ---
 
-## 秒速开始
+## 方式一：秒速开始
+
+**免费对话体验：**
+- [阿里云百宝箱网页应用 - 苹果应用开发专家](https://tbox.alipay.com/inc/share/202511APsocn07628729?platform=WebService)
+- [阿里云百宝箱 MCP 插件（需先登录） - 苹果开发文档检索 / Apple RAG MCP](https://tbox.alipay.com/inc/plugin-market/plugin-detail/20251130R4pz05084592)
 
 **一键安装：**
 
@@ -34,11 +38,11 @@
 
 [![Install in VS Code](https://img.shields.io/badge/VS_Code-Apple_RAG_MCP-0098FF?style=flat&logo=visualstudiocode&logoColor=ffffff)](vscode:mcp/install?%7B%22name%22%3A%22apple-rag-mcp%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fmcp.apple-rag.com%22%7D) [![Install in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-Apple_RAG_MCP-24bfa5?style=flat&logo=visualstudiocode&logoColor=ffffff)](vscode-insiders:mcp/install?%7B%22name%22%3A%22apple-rag-mcp%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fmcp.apple-rag.com%22%7D)
 
-点击上面的按钮，你的编辑器将在几秒内自动完成所有配置。
+点击上面的按钮，在 IDE 中自动填充 MCP 配置，几秒钟即可使用。
 
-### 方式二：其他 MCP 客户端手动配置
+### 方式二：为其他 MCP 客户端手动配置
 
-**JSON 配置（复制粘贴）：**
+**JSON 配置（直接粘贴）：**
 ```json
 {
   "mcpServers": {
@@ -52,62 +56,62 @@
 **手动配置参数：**
 - **MCP 类型：** `Streamable HTTP`
 - **URL：** `https://mcp.apple-rag.com`
-- **认证：** `可选`（MCP Token 可获得更高限额）
-- **MCP Token：** 在 [apple-rag.com](https://apple-rag.com) 获取以增加配额
+- **认证：** `可选`（添加 MCP Token 可提升配额）
+- **MCP Token：** 在 [apple-rag.com](https://apple-rag.com) 获取
 
-**支持的客户端：** Cursor、Claude Desktop、Cline 以及所有兼容 MCP 的工具。
+**支持的客户端：** 通义灵码、Cursor、Claude Desktop、Cline，以及任何兼容 MCP 的工具。
 
-> **注意：** 无需 MCP Token 即可开始使用！你可以免费查询，无需任何认证。之后可添加 MCP Token 以获得更高的使用限额。
+> **提示：** 开箱即可免费使用，无需 Token。需要更高额度时，再添加 MCP Token。
 
-## 🌟 开发者为何喜爱 Apple RAG MCP
+## 🌟 开发者为什么选 Apple RAG MCP
 
 <table>
 <tr>
 <td width="50%">
 
-### ⚡ **快速可靠**
-通过我们优化的搜索基础设施获得快速响应。不再需要翻遍文档。
+### ⚡ **响应迅捷**
+优化的搜索基础设施，结果反馈更快，省去翻找文档的时间。
 
-### 🎯 **AI 驱动的混合搜索**
-先进的搜索技术，结合用于 RAG 的语义搜索、关键词搜索以及结合向量相似度和技术术语匹配的混合搜索，从 Apple 文档中提供准确、有上下文的答案。
+### 🎯 **AI 混合搜索**
+语义 + 关键词 + 向量重排序，精准锁定 Apple 文档里的上下文答案。
 
-### 🔒 **始终安全**
-MCP 认证确保你的 AI agent 获得可信的访问权限，具备企业级安全性。
+### 🔒 **安全可信**
+MCP 认证链路，确保你的智能体获得安全、可控的访问。
 
 </td>
 <td width="50%">
 
-### 📝 **代码示例**
-获取 Swift、Objective-C 和 SwiftUI 的实用代码示例，以及文档参考。
+### 📝 **示例随取随用**
+提供 Swift、Objective-C、SwiftUI 的实用代码示例和文档。
 
-### 🔄 **实时更新**
-我们的文档索引持续更新，以反映最新的 Apple 开发者资源。
+### 🔄 **持续更新**
+文档索引与 Apple 开发者资源持续同步，保持最新。
 
-### 🆓 **完全免费**
-无需 MCP Token 即可立即开始。获取 MCP Token 可获得更高使用限额——所有管理都在 [apple-rag.com](https://apple-rag.com)。
+### 🆓 **免费上手**
+无需 Token 即可使用；可在 [apple-rag.com](https://apple-rag.com) 获取更多配额。
 
 </td>
 </tr>
 </table>
 
-## 🎯 功能特性
+## 🎯 核心能力
 
-- **🔍 RAG 语义搜索** - 具有语义理解能力的向量相似度检索
-- **🔎 关键词搜索** - 精确的技术术语匹配，适用于 API 名称和特定术语
-- **🎯 混合搜索** - 结合语义和关键词搜索，配合 AI 重排序以获得最佳结果
-- **📚 完整覆盖** - iOS、macOS、watchOS、tvOS、visionOS 文档
-- **🎬 WWDC 视频** - Apple 开发者视频和 WWDC sessions 的完整字幕
-- **⚡ 快速响应** - 针对所有内容类型优化速度
-- **🚀 高性能** - 多实例集群部署以实现最大吞吐量
-- **🔄 始终最新** - 与 Apple 最新文档和视频内容同步
-- **🛡️ 安全私密** - 你的查询保持私密
-- **🌐 通用 MCP** - 适用于任何兼容 MCP 的客户端
+- **🔍 RAG 语义搜索** - 基于语义理解的向量相似度检索
+- **🔎 关键词搜索** - 精准匹配 API 名称和技术术语
+- **🎯 混合搜索** - 语义 + 关键词 + AI 重排序，挑出最佳结果
+- **📚 全面覆盖** - 覆盖 iOS、macOS、watchOS、tvOS、visionOS 文档
+- **🎬 WWDC 视频** - 收录 Apple 开发者视频与 WWDC session 字幕
+- **⚡ 快速响应** - 针对所有内容类型优化查询速度
+- **🚀 高性能** - 多实例集群带来高吞吐
+- **🔄 始终最新** - 持续同步最新文档与视频
+- **🛡️ 安全私密** - 查询保持私密与安全
+- **🌐 通用 MCP** - 兼容所有支持 MCP 的客户端
 
 <div align="center">
 
 ---
 
-**更好的文档。更好的上下文。更好的代码。**
+**更优质的文档，更清晰的上下文，更踏实的代码。**
 
 [立即开始 →](https://apple-rag.com)
 
