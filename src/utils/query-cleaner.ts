@@ -44,8 +44,8 @@ const TEMPORAL_PATTERNS = [
  * are NOT filtered as they represent core concepts users explicitly search for
  */
 const META_DESCRIPTIVE_PATTERNS = [
-  /\b(documentation|docs?|reference|manual|guide|tutorial)\b/gi,
-  /\b(example|examples|sample)\b(?!\s+(code|project|app))/gi,
+  /\b(documentation|docs?|reference|manual|guide|tutorial)\b/g,
+  /\b(example|examples|sample)\b(?!\s+(code|project|app))/g,
 ];
 
 /**
