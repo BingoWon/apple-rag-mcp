@@ -1,3 +1,10 @@
+## [4.6.2](https://github.com/BingoWon/apple-rag-mcp/compare/v4.6.1...v4.6.2) (2025-12-08)
+
+
+### Bug Fixes
+
+* preserve capitalized meta-descriptive words in query cleaner ([e378a89](https://github.com/BingoWon/apple-rag-mcp/commit/e378a89affaa9aab626b7498919ccf19750b2d1c))
+
 ## [4.6.1](https://github.com/BingoWon/apple-rag-mcp/compare/v4.6.0...v4.6.1) (2025-12-03)
 
 # [4.6.0](https://github.com/BingoWon/apple-rag-mcp/compare/v4.5.1...v4.6.0) (2025-12-01)
