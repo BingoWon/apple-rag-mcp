@@ -80,7 +80,17 @@ export class SearchTool {
       );
 
       if (!rateLimitResult.allowed) {
-        this.logSearch(authContext, requestedQuery, actualQuery, { count: 0 }, 0, clientIP, countryCode, 429, "RATE_LIMIT_EXCEEDED");
+        this.logSearch(
+          authContext,
+          requestedQuery,
+          actualQuery,
+          { count: 0 },
+          0,
+          clientIP,
+          countryCode,
+          429,
+          "RATE_LIMIT_EXCEEDED"
+        );
 
         return createErrorResponse(
           id,
@@ -133,7 +143,15 @@ export class SearchTool {
       result_count: resultCount,
     });
 
-    this.logSearch(authContext, requestedQuery, actualQuery, ragResult, Date.now() - startTime, ipAddress, countryCode);
+    this.logSearch(
+      authContext,
+      requestedQuery,
+      actualQuery,
+      ragResult,
+      Date.now() - startTime,
+      ipAddress,
+      countryCode
+    );
 
     return ragResult;
   }
