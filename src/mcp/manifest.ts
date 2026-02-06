@@ -19,6 +19,8 @@ export const SERVER_MANIFEST = {
   serverInfo: {
     name: "Apple RAG MCP Server",
     version: "2.0.0",
+    description:
+      "MCP server for Apple developer documentation search and fetch via RAG.",
   },
   endpoints: {
     mcp: "/",

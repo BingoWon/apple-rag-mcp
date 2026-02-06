@@ -29,6 +29,8 @@ import { SearchTool, type SearchToolArgs } from "./tools/search-tool.js";
 export const APP_CONSTANTS = {
   SERVER_NAME: "apple-rag-mcp",
   SERVER_VERSION: "2.0.0",
+  SERVER_DESCRIPTION:
+    "MCP server for Apple developer documentation search and fetch via RAG.",
   SUBSCRIPTION_URL: "https://apple-rag.com",
 
   // Tool definitions
@@ -289,6 +291,7 @@ export class MCPProtocolHandler {
         serverInfo: {
           name: APP_CONSTANTS.SERVER_NAME,
           version: APP_CONSTANTS.SERVER_VERSION,
+          description: APP_CONSTANTS.SERVER_DESCRIPTION,
         },
       },
     };
@@ -360,10 +363,13 @@ export class MCPProtocolHandler {
         );
 
       default:
-        return createErrorResponse(
+        return createToolErrorResponse(
           id,
-          MCP_ERROR_CODES.METHOD_NOT_FOUND,
-          `${APP_CONSTANTS.UNKNOWN_TOOL_ERROR}: ${toolCall.name}`
+          `${APP_CONSTANTS.UNKNOWN_TOOL_ERROR}: ${toolCall.name}`,
+          {
+            errorCode: "UNKNOWN_TOOL",
+            field: "name",
+          }
         );
     }
   }
