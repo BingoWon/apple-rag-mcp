@@ -12,7 +12,10 @@ import type {
   ToolDefinition,
 } from "../types/index.js";
 import { logger } from "../utils/logger.js";
-import { createErrorResponse } from "./formatters/response-formatter.js";
+import {
+  createErrorResponse,
+  createToolErrorResponse,
+} from "./formatters/response-formatter.js";
 import {
   isValidMCPNotification,
   isValidMCPRequest,
@@ -60,8 +63,12 @@ export const MCP_ERROR_CODES = {
   RATE_LIMIT_EXCEEDED: -32003,
 } as const;
 
-export const MCP_PROTOCOL_VERSION = "2025-03-26";
-export const SUPPORTED_MCP_VERSIONS = ["2025-06-18", "2025-03-26"] as const;
+export const MCP_PROTOCOL_VERSION = "2025-11-25";
+export const SUPPORTED_MCP_VERSIONS = [
+  "2025-11-25",
+  "2025-06-18",
+  "2025-03-26",
+] as const;
 
 // Standard CORS headers for all responses
 const CORS_HEADERS = {
@@ -107,7 +114,7 @@ export class MCPProtocolHandler {
         status: 204,
         headers: {
           ...CORS_HEADERS,
-          "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
+          "Access-Control-Allow-Methods": "POST, DELETE, OPTIONS",
           "Access-Control-Allow-Headers": "Content-Type, Authorization",
           "Access-Control-Max-Age": "86400",
         },
@@ -260,16 +267,6 @@ export class MCPProtocolHandler {
       );
     }
 
-    // Validate protocol version
-    const clientVersion = params?.protocolVersion;
-    if (clientVersion && !this.isProtocolVersionSupported(clientVersion)) {
-      return createErrorResponse(
-        id,
-        MCP_ERROR_CODES.INVALID_PARAMS,
-        `Unsupported protocol version: ${clientVersion}. Supported versions: ${SUPPORTED_MCP_VERSIONS.join(", ")}`
-      );
-    }
-
     return {
       jsonrpc: "2.0",
       id,
@@ -294,42 +291,12 @@ export class MCPProtocolHandler {
       {
         name: APP_CONSTANTS.TOOLS.SEARCH.NAME,
         description: APP_CONSTANTS.TOOLS.SEARCH.DESCRIPTION,
-        inputSchema: {
-          type: "object",
-          properties: {
-            query: {
-              type: "string",
-              description:
-                "Search query for Apple's official developer documentation and video content. Queries must be written in English and focus on technical concepts, APIs, frameworks, features, and version numbers rather than temporal information.",
-              minLength: 1,
-              maxLength: 10000,
-            },
-            result_count: {
-              type: "number",
-              description: "Number of results to return (1-10)",
-              minimum: 1,
-              maximum: 10,
-              default: 4,
-            },
-          },
-          required: ["query"],
-        },
+        inputSchema: MCPProtocolHandler.SEARCH_INPUT_SCHEMA,
       },
       {
         name: APP_CONSTANTS.TOOLS.FETCH.NAME,
         description: APP_CONSTANTS.TOOLS.FETCH.DESCRIPTION,
-        inputSchema: {
-          type: "object",
-          properties: {
-            url: {
-              type: "string",
-              description:
-                "URL of the Apple developer documentation or video to retrieve content for",
-              minLength: 1,
-            },
-          },
-          required: ["url"],
-        },
+        inputSchema: MCPProtocolHandler.FETCH_INPUT_SCHEMA,
       },
     ];
 
@@ -354,11 +321,7 @@ export class MCPProtocolHandler {
     // Validate tool call parameters
     const validation = validateToolCallParams(params);
     if (!validation.isValid) {
-      return createErrorResponse(
-        id,
-        validation.error!.code,
-        validation.error!.message
-      );
+      return createToolErrorResponse(id, validation.error!.message);
     }
 
     const toolCall = validation.toolCall!;
@@ -400,13 +363,39 @@ export class MCPProtocolHandler {
     // Handle notifications as needed
   }
 
-  /**
-   * Check if protocol version is supported
-   */
-  private isProtocolVersionSupported(version?: string): boolean {
-    if (!version) return true; // Default to supported if no version specified
-    return SUPPORTED_MCP_VERSIONS.includes(
-      version as (typeof SUPPORTED_MCP_VERSIONS)[number]
-    );
-  }
+  private static readonly SEARCH_INPUT_SCHEMA = {
+    $schema: "https://json-schema.org/draft/2020-12/schema",
+    type: "object",
+    properties: {
+      query: {
+        type: "string",
+        description:
+          "Search query for Apple's official developer documentation and video content. Queries must be written in English and focus on technical concepts, APIs, frameworks, features, and version numbers rather than temporal information.",
+        minLength: 1,
+        maxLength: 10000,
+      },
+      result_count: {
+        type: "number",
+        description: "Number of results to return (1-10)",
+        minimum: 1,
+        maximum: 10,
+        default: 4,
+      },
+    },
+    required: ["query"],
+  } as const;
+
+  private static readonly FETCH_INPUT_SCHEMA = {
+    $schema: "https://json-schema.org/draft/2020-12/schema",
+    type: "object",
+    properties: {
+      url: {
+        type: "string",
+        description:
+          "URL of the Apple developer documentation or video to retrieve content for",
+        minLength: 1,
+      },
+    },
+    required: ["url"],
+  } as const;
 }

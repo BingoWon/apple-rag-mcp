@@ -13,6 +13,7 @@ import {
 import {
   createErrorResponse,
   createSuccessResponse,
+  createToolErrorResponse,
   formatRAGResponse,
 } from "../formatters/response-formatter.js";
 import { APP_CONSTANTS, MCP_ERROR_CODES } from "../protocol-handler.js";
@@ -39,11 +40,7 @@ export class SearchTool {
 
     // Validate query parameter
     if (!query || typeof query !== "string" || query.trim().length === 0) {
-      return createErrorResponse(
-        id,
-        MCP_ERROR_CODES.INVALID_PARAMS,
-        APP_CONSTANTS.MISSING_SEARCH_ERROR
-      );
+      return createToolErrorResponse(id, APP_CONSTANTS.MISSING_SEARCH_ERROR);
     }
 
     const requestedQuery = query;
