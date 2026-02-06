@@ -20,6 +20,7 @@ import {
   isValidMCPNotification,
   isValidMCPRequest,
   validateInitializeParams,
+  validateProtocolVersion,
   validateToolCallParams,
 } from "./middleware/request-validator.js";
 import { FetchTool, type FetchToolArgs } from "./tools/fetch-tool.js";
@@ -114,7 +115,7 @@ export class MCPProtocolHandler {
         status: 204,
         headers: {
           ...CORS_HEADERS,
-          "Access-Control-Allow-Methods": "POST, DELETE, OPTIONS",
+          "Access-Control-Allow-Methods": "POST, OPTIONS",
           "Access-Control-Allow-Headers": "Content-Type, Authorization",
           "Access-Control-Max-Age": "86400",
         },
@@ -163,7 +164,7 @@ export class MCPProtocolHandler {
         });
       }
 
-      // Handle notifications - MCP Streamable HTTP spec requires 202 Accepted
+      // Handle notifications - no response body is returned for notification messages
       if (isValidMCPNotification(body)) {
         await this.handleNotification(body);
         return new Response(null, {
@@ -267,6 +268,11 @@ export class MCPProtocolHandler {
       );
     }
 
+    const versionValidation = validateProtocolVersion(params?.protocolVersion);
+    if (versionValidation.warning) {
+      logger.warn(versionValidation.warning);
+    }
+
     return {
       jsonrpc: "2.0",
       id,
@@ -345,9 +351,8 @@ export class MCPProtocolHandler {
         );
 
       default:
-        return createErrorResponse(
+        return createToolErrorResponse(
           id,
-          MCP_ERROR_CODES.METHOD_NOT_FOUND,
           `${APP_CONSTANTS.UNKNOWN_TOOL_ERROR}: ${toolCall.name}`
         );
     }
@@ -363,7 +368,9 @@ export class MCPProtocolHandler {
     // Handle notifications as needed
   }
 
-  private static readonly SEARCH_INPUT_SCHEMA = {
+  private static readonly SEARCH_INPUT_SCHEMA: ToolDefinition["inputSchema"] & {
+    $schema: string;
+  } = {
     $schema: "https://json-schema.org/draft/2020-12/schema",
     type: "object",
     properties: {
@@ -383,9 +390,11 @@ export class MCPProtocolHandler {
       },
     },
     required: ["query"],
-  } as const;
+  };
 
-  private static readonly FETCH_INPUT_SCHEMA = {
+  private static readonly FETCH_INPUT_SCHEMA: ToolDefinition["inputSchema"] & {
+    $schema: string;
+  } = {
     $schema: "https://json-schema.org/draft/2020-12/schema",
     type: "object",
     properties: {
@@ -397,5 +406,5 @@ export class MCPProtocolHandler {
       },
     },
     required: ["url"],
-  } as const;
+  };
 }

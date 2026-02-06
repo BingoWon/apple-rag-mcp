@@ -12,7 +12,7 @@
   },
   "keywords": [
     "mcp",
-    "mcp-2025-06-18",
+    "mcp-2025-11-25",
     "streamable-http",
     "oauth-2.1",
     "authorization",
@@ -25,7 +25,7 @@
   ],
   "author": "Apple RAG Team",
   "license": "MIT",
-  "description": "Modern MCP 2025-06-18 compliant server with OAuth 2.1 Authorization for Apple Developer Documentation with Semantic Search for RAG, Keyword Search, and Hybrid Search - Production ready with vector similarity and semantic AI reranking",
+  "description": "Modern MCP 2025-11-25 compliant server with OAuth 2.1 Authorization for Apple Developer Documentation with Semantic Search for RAG, Keyword Search, and Hybrid Search - Production ready with vector similarity and semantic AI reranking",
   "dependencies": {
     "@types/node": "^20.19.11",
     "postgres": "^3.4.7"
