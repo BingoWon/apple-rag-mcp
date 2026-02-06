@@ -9,8 +9,8 @@ export const SERVER_MANIFEST = {
   version: "2.0.0",
   description:
     "Ultra-modern MCP server providing AI agents with comprehensive access to Apple's complete developer documentation using advanced RAG technology.",
-  protocolVersion: "2025-06-18",
-  supportedVersions: ["2025-06-18", "2025-03-26"],
+  protocolVersion: "2025-11-25",
+  supportedVersions: ["2025-11-25", "2025-06-18", "2025-03-26"],
   capabilities: {
     tools: { listChanged: true },
     logging: {},
@@ -43,6 +43,6 @@ export const SERVER_MANIFEST = {
 export const HEALTH_STATUS = {
   status: "healthy",
   version: "2.0.0",
-  protocol: "2025-06-18",
-  supportedVersions: ["2025-06-18", "2025-03-26"],
+  protocol: "2025-11-25",
+  supportedVersions: ["2025-11-25", "2025-06-18", "2025-03-26"],
 } as const;
