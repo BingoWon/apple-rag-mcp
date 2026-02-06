@@ -60,8 +60,12 @@ export const MCP_ERROR_CODES = {
   RATE_LIMIT_EXCEEDED: -32003,
 } as const;
 
-export const MCP_PROTOCOL_VERSION = "2025-03-26";
-export const SUPPORTED_MCP_VERSIONS = ["2025-06-18", "2025-03-26"] as const;
+export const MCP_PROTOCOL_VERSION = "2025-11-25";
+export const SUPPORTED_MCP_VERSIONS = [
+  "2025-11-25",
+  "2025-06-18",
+  "2025-03-26",
+] as const;
 
 // Standard CORS headers for all responses
 const CORS_HEADERS = {
