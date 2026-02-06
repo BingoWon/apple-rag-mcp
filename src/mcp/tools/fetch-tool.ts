@@ -41,7 +41,8 @@ export class FetchTool {
     if (!url || typeof url !== "string" || url.trim().length === 0) {
       return createToolErrorResponse(
         id,
-        "URL parameter is required and must be a valid string"
+        "URL parameter is required and must be a valid string",
+        { errorCode: "INVALID_URL", field: "url" }
       );
     }
 
@@ -69,7 +70,11 @@ export class FetchTool {
       if (!urlResult.isValid) {
         logger.warn(`Invalid URL provided: ${url} - ${urlResult.error}`);
 
-        return createToolErrorResponse(id, `Invalid URL: ${urlResult.error}`);
+        return createToolErrorResponse(id, `Invalid URL: ${urlResult.error}`, {
+          errorCode: "INVALID_URL",
+          field: "url",
+          reason: urlResult.error,
+        });
       }
 
       // Use normalized URL for database lookup
@@ -82,7 +87,8 @@ export class FetchTool {
 
         return createToolErrorResponse(
           id,
-          `No content found for URL: ${url}`
+          `No content found for URL: ${url}`,
+          { errorCode: "CONTENT_NOT_FOUND", field: "url" }
         );
       }
 

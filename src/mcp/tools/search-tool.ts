@@ -40,7 +40,10 @@ export class SearchTool {
 
     // Validate query parameter
     if (!query || typeof query !== "string" || query.trim().length === 0) {
-      return createToolErrorResponse(id, APP_CONSTANTS.MISSING_SEARCH_ERROR);
+      return createToolErrorResponse(id, APP_CONSTANTS.MISSING_SEARCH_ERROR, {
+        errorCode: "INVALID_QUERY",
+        field: "query",
+      });
     }
 
     const requestedQuery = query;

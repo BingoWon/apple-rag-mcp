@@ -266,6 +266,17 @@ export class MCPProtocolHandler {
         validation.error!.message
       );
     }
+    const clientVersion = params?.protocolVersion;
+    if (
+      clientVersion &&
+      !SUPPORTED_MCP_VERSIONS.includes(
+        clientVersion as (typeof SUPPORTED_MCP_VERSIONS)[number]
+      )
+    ) {
+      logger.warn(
+        `Unknown MCP protocol version requested: ${clientVersion}. Proceeding with server version ${MCPProtocolHandler.PROTOCOL_VERSION}.`
+      );
+    }
 
     return {
       jsonrpc: "2.0",
@@ -321,7 +332,11 @@ export class MCPProtocolHandler {
     // Validate tool call parameters
     const validation = validateToolCallParams(params);
     if (!validation.isValid) {
-      return createToolErrorResponse(id, validation.error!.message);
+      return createToolErrorResponse(
+        id,
+        validation.error!.message,
+        validation.error?.data
+      );
     }
 
     const toolCall = validation.toolCall!;

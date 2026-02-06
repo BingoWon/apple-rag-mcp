@@ -91,7 +91,7 @@ export function validateInitializeParams(params: unknown): {
 export function validateToolCallParams(params: unknown): {
   isValid: boolean;
   toolCall?: { name: string; arguments?: Record<string, unknown> };
-  error?: { code: number; message: string };
+  error?: { code: number; message: string; data?: unknown };
 } {
   if (!params || typeof params !== "object") {
     return {
@@ -99,6 +99,7 @@ export function validateToolCallParams(params: unknown): {
       error: {
         code: MCP_ERROR_CODES.INVALID_PARAMS,
         message: "Tool call parameters are required",
+        data: { errorCode: "MISSING_TOOL_PARAMS" },
       },
     };
   }
@@ -111,6 +112,7 @@ export function validateToolCallParams(params: unknown): {
       error: {
         code: MCP_ERROR_CODES.INVALID_PARAMS,
         message: "Tool name is required and must be a string",
+        data: { errorCode: "INVALID_TOOL_NAME", field: "name" },
       },
     };
   }
@@ -121,6 +123,7 @@ export function validateToolCallParams(params: unknown): {
       error: {
         code: MCP_ERROR_CODES.INVALID_PARAMS,
         message: "Tool arguments are required and must be an object",
+        data: { errorCode: "INVALID_TOOL_ARGUMENTS", field: "arguments" },
       },
     };
   }
