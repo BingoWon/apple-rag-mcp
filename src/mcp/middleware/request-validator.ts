@@ -44,7 +44,7 @@ export function isValidMCPNotification(body: unknown): body is MCPNotification {
  */
 export function validateProtocolVersion(version?: string): {
   isValid: boolean;
-  error?: { code: number; message: string };
+  warning?: string;
 } {
   if (
     version &&
@@ -53,11 +53,8 @@ export function validateProtocolVersion(version?: string): {
     )
   ) {
     return {
-      isValid: false,
-      error: {
-        code: MCP_ERROR_CODES.INVALID_PARAMS,
-        message: `Unsupported protocol version: ${version}. Supported versions: ${SUPPORTED_MCP_VERSIONS.join(", ")}`,
-      },
+      isValid: true,
+      warning: `Unsupported protocol version: ${version}. Supported versions: ${SUPPORTED_MCP_VERSIONS.join(", ")}`,
     };
   }
 

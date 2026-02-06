@@ -54,7 +54,17 @@ export class FetchTool {
     );
 
     if (!rateLimitResult.allowed) {
-      this.logFetch(authContext, url, url, "", 0, ipAddress, countryCode, 429, "RATE_LIMIT_EXCEEDED");
+      this.logFetch(
+        authContext,
+        url,
+        url,
+        "",
+        0,
+        ipAddress,
+        countryCode,
+        429,
+        "RATE_LIMIT_EXCEEDED"
+      );
 
       return createErrorResponse(
         id,
@@ -78,15 +88,30 @@ export class FetchTool {
       const responseTime = Date.now() - startTime;
 
       if (!page) {
-        this.logFetch(authContext, url, processedUrl, "", responseTime, ipAddress, countryCode, 404, "NOT_FOUND");
-
-        return createToolErrorResponse(
-          id,
-          `No content found for URL: ${url}`
+        this.logFetch(
+          authContext,
+          url,
+          processedUrl,
+          "",
+          responseTime,
+          ipAddress,
+          countryCode,
+          404,
+          "NOT_FOUND"
         );
+
+        return createToolErrorResponse(id, `No content found for URL: ${url}`);
       }
 
-      this.logFetch(authContext, url, processedUrl, page.id, responseTime, ipAddress, countryCode);
+      this.logFetch(
+        authContext,
+        url,
+        processedUrl,
+        page.id,
+        responseTime,
+        ipAddress,
+        countryCode
+      );
 
       // Format response with professional styling
       const formattedContent = formatFetchResponse(
@@ -100,15 +125,24 @@ export class FetchTool {
 
       return createSuccessResponse(id, formattedContent);
     } catch (error) {
-      this.logFetch(authContext, url, url, "", Date.now() - startTime, ipAddress, countryCode, 500, "FETCH_FAILED");
+      this.logFetch(
+        authContext,
+        url,
+        url,
+        "",
+        Date.now() - startTime,
+        ipAddress,
+        countryCode,
+        500,
+        "FETCH_FAILED"
+      );
 
       logger.error(
         `Fetch failed for URL ${url}: ${error instanceof Error ? error.message : String(error)}`
       );
 
-      return createErrorResponse(
+      return createToolErrorResponse(
         id,
-        MCP_ERROR_CODES.INTERNAL_ERROR,
         "Failed to fetch content from the specified URL"
       );
     }
