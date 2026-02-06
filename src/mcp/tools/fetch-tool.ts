@@ -13,6 +13,7 @@ import { validateAndNormalizeUrl } from "../../utils/url-processor.js";
 import {
   createErrorResponse,
   createSuccessResponse,
+  createToolErrorResponse,
   formatFetchResponse,
 } from "../formatters/response-formatter.js";
 import { MCP_ERROR_CODES } from "../protocol-handler.js";
@@ -38,9 +39,8 @@ export class FetchTool {
 
     // Validate URL parameter
     if (!url || typeof url !== "string" || url.trim().length === 0) {
-      return createErrorResponse(
+      return createToolErrorResponse(
         id,
-        MCP_ERROR_CODES.INVALID_PARAMS,
         "URL parameter is required and must be a valid string"
       );
     }
@@ -69,11 +69,7 @@ export class FetchTool {
       if (!urlResult.isValid) {
         logger.warn(`Invalid URL provided: ${url} - ${urlResult.error}`);
 
-        return createErrorResponse(
-          id,
-          MCP_ERROR_CODES.INVALID_PARAMS,
-          `Invalid URL: ${urlResult.error}`
-        );
+        return createToolErrorResponse(id, `Invalid URL: ${urlResult.error}`);
       }
 
       // Use normalized URL for database lookup
@@ -84,9 +80,8 @@ export class FetchTool {
       if (!page) {
         this.logFetch(authContext, url, processedUrl, "", responseTime, ipAddress, countryCode, 404, "NOT_FOUND");
 
-        return createErrorResponse(
+        return createToolErrorResponse(
           id,
-          MCP_ERROR_CODES.INVALID_PARAMS,
           `No content found for URL: ${url}`
         );
       }

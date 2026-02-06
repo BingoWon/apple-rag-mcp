@@ -155,3 +155,27 @@ export function createErrorResponse(
     },
   };
 }
+
+/**
+ * Create tool execution error response
+ */
+export function createToolErrorResponse(
+  requestId: string | number,
+  message: string,
+  data?: unknown
+): MCPResponse {
+  return {
+    jsonrpc: "2.0",
+    id: requestId,
+    result: {
+      isError: true,
+      content: [
+        {
+          type: "text",
+          text: message,
+        },
+      ],
+      ...(data ? { data } : {}),
+    },
+  };
+}
