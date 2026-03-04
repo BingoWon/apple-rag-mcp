@@ -56,7 +56,7 @@ export class AuthMiddleware {
         };
       }
 
-      logger.error(
+      logger.warn(
         `Token validation failed. Raw header: "${authHeader}", Extracted token: "${token}", IP: ${clientIP}, Error: ${validation.error}`
       );
     }
