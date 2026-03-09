@@ -33,9 +33,6 @@
   "devDependencies": {
     "@biomejs/biome": "^2.2.2",
     "@cloudflare/workers-types": "^4.20250831.0",
-    "@semantic-release/changelog": "^6.0.3",
-    "@semantic-release/git": "^10.0.1",
-    "semantic-release": "^24.2.0",
     "typescript": "^5.9.2",
     "wrangler": "^4.33.1"
   },
