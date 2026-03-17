@@ -10,7 +10,11 @@ interface ThemeToggleProps {
 	placement?: "top" | "bottom";
 }
 
-export function ThemeToggle({ className, variant = "icon", placement = "bottom" }: ThemeToggleProps) {
+export function ThemeToggle({
+	className,
+	variant = "icon",
+	placement = "bottom",
+}: ThemeToggleProps) {
 	const { theme, setTheme, isTransitioning } = useTheme();
 	const [isHovered, setIsHovered] = useState(false);
 	const [isClicking, setIsClicking] = useState(false);
@@ -158,22 +162,22 @@ export function ThemeToggle({ className, variant = "icon", placement = "bottom" 
 					<span className="sr-only">Current theme: {theme}</span>
 				</Button>
 
-			<div
-				className={cn(
-					"absolute left-1/2 transform -translate-x-1/2 p-1 z-50",
-					"bg-background border border-default rounded-lg shadow-lg",
-					"min-w-[120px] py-1",
-					"transition-all duration-200 ease-out",
-					placement === "top"
-						? "bottom-full mb-1 before:content-[''] before:absolute before:top-full before:left-0 before:right-0 before:h-1"
-						: "top-full mt-1 before:content-[''] before:absolute before:bottom-full before:left-0 before:right-0 before:h-1",
-					isHovered
-						? "opacity-100 scale-100 translate-y-0 pointer-events-auto"
-						: cn(
-								"opacity-0 scale-95 pointer-events-none",
-								placement === "top" ? "translate-y-1" : "-translate-y-1",
-							),
-				)}
+				<div
+					className={cn(
+						"absolute left-1/2 transform -translate-x-1/2 p-1 z-50",
+						"bg-background border border-default rounded-lg shadow-lg",
+						"min-w-[120px] py-1",
+						"transition-all duration-200 ease-out",
+						placement === "top"
+							? "bottom-full mb-1 before:content-[''] before:absolute before:top-full before:left-0 before:right-0 before:h-1"
+							: "top-full mt-1 before:content-[''] before:absolute before:bottom-full before:left-0 before:right-0 before:h-1",
+						isHovered
+							? "opacity-100 scale-100 translate-y-0 pointer-events-auto"
+							: cn(
+									"opacity-0 scale-95 pointer-events-none",
+									placement === "top" ? "translate-y-1" : "-translate-y-1",
+								),
+					)}
 					onMouseEnter={handleMouseEnter}
 					onMouseLeave={handleMouseLeave}
 				>

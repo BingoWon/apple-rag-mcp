@@ -64,6 +64,9 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
 
 		try {
 			const response = await api.getMCPTokens();
+			if (!response.success || !response.data) {
+				throw new Error(response.error?.message || "Failed to fetch MCP tokens");
+			}
 			set({
 				mcpTokens: response.data as MCPToken[],
 				isLoadingTokens: false,
@@ -235,17 +238,18 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
 
 		try {
 			const response = await api.getUserSubscription();
-			const subscription = response.success ? (response.data as Subscription) : null;
-
+			if (!response.success || !response.data) {
+				throw new Error(response.error?.message || "Failed to fetch subscription");
+			}
 			set({
-				subscription: subscription ?? get().subscription,
+				subscription: response.data as Subscription,
 				isLoadingSubscription: false,
 				errors: { ...get().errors, subscription: null },
 			});
 			return true;
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : "Failed to fetch subscription";
-			console.error("Error fetching subscription:", error);
+			console.error("Failed to fetch subscription:", error);
 			set({
 				isLoadingSubscription: false,
 				errors: { ...get().errors, subscription: errorMessage },

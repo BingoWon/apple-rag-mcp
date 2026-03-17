@@ -105,12 +105,7 @@ function SidebarFooter({
 				<LanguageSwitcher placement="top" />
 				<ThemeToggle variant="icon" placement="top" />
 				<Link to="/settings" className="shrink-0">
-					<Avatar
-						src={user?.avatar}
-						name={displayName}
-						size="sm"
-						className="h-7 w-7 shrink-0"
-					/>
+					<Avatar src={user?.avatar} name={displayName} size="sm" className="h-7 w-7 shrink-0" />
 				</Link>
 			</div>
 		);
@@ -119,12 +114,7 @@ function SidebarFooter({
 	return (
 		<div className="flex items-center gap-2 px-2 py-2 rounded-lg">
 			<Link to="/settings" className="shrink-0">
-				<Avatar
-					src={user?.avatar}
-					name={displayName}
-					size="sm"
-					className="h-7 w-7 shrink-0"
-				/>
+				<Avatar src={user?.avatar} name={displayName} size="sm" className="h-7 w-7 shrink-0" />
 			</Link>
 			<Link
 				to="/settings"

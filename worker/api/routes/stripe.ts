@@ -3,108 +3,64 @@ import type { Context } from "hono";
 import Stripe from "stripe";
 import { z } from "zod";
 import { authMiddleware } from "../middleware/auth";
+import { UnifiedErrorCode } from "../types/api-response";
 import type { AppEnv } from "../types/hono";
 import { logger } from "../utils/logger.js";
 import { notifyTelegram } from "../utils/telegram-notifier";
 
 const stripe = new OpenAPIHono<AppEnv>();
 
-/**
- * Extract period information from Stripe subscription object
- * Uses the first subscription item's period data
- */
+function formatBillingInterval(interval: string, intervalCount: number): string {
+	if (interval === "month" && intervalCount === 6) return "6 months";
+	if (intervalCount === 1) return interval;
+	return `${intervalCount} ${interval}${intervalCount > 1 ? "s" : ""}`;
+}
+
 function extractSubscriptionPeriod(subscription: Stripe.Subscription) {
 	const firstItem = subscription.items?.data?.[0];
 	if (!firstItem) {
-		console.warn("🔔 [STRIPE] No subscription items found", {
-			subscriptionId: subscription.id,
-		});
+		logger.warn(`[STRIPE] No subscription items found for ${subscription.id}`);
 		return { start: null, end: null };
 	}
 
-	const periodStart = firstItem.current_period_start
+	const start = firstItem.current_period_start
 		? new Date(firstItem.current_period_start * 1000).toISOString()
 		: null;
-
-	const periodEnd = firstItem.current_period_end
+	const end = firstItem.current_period_end
 		? new Date(firstItem.current_period_end * 1000).toISOString()
 		: null;
 
-	console.log("🔔 [STRIPE] Extracted period data", {
-		subscriptionId: subscription.id,
-		periodStart,
-		periodEnd,
-		rawStart: firstItem.current_period_start,
-		rawEnd: firstItem.current_period_end,
-	});
-
-	return { start: periodStart, end: periodEnd };
+	return { start, end };
 }
 
-/**
- * Extract subscription pricing information from Stripe subscription
- */
 async function extractSubscriptionPricing(subscription: Stripe.Subscription, stripeClient: Stripe) {
 	const firstItem = subscription.items?.data?.[0];
 	if (!firstItem) {
-		console.warn("🔔 [STRIPE] No subscription items found", {
-			subscriptionId: subscription.id,
-		});
+		logger.warn(`[STRIPE] No subscription items found for ${subscription.id}`);
 		return { price: 0, billingInterval: "month", priceId: null };
 	}
 
 	try {
-		// Get the price object from Stripe to get accurate pricing info
 		const priceObject = await stripeClient.prices.retrieve(firstItem.price.id);
-
 		const price = priceObject.unit_amount ? priceObject.unit_amount / 100 : 0;
-
-		// Handle billing interval with interval_count for complex periods
-		const interval = priceObject.recurring?.interval || "month";
-		const intervalCount = priceObject.recurring?.interval_count || 1;
-
-		let billingInterval: string;
-		if (interval === "month" && intervalCount === 6) {
-			billingInterval = "6 months";
-		} else if (intervalCount === 1) {
-			billingInterval = interval;
-		} else {
-			billingInterval = `${intervalCount} ${interval}${intervalCount > 1 ? "s" : ""}`;
-		}
-
-		logger.info(
-			`🔔 [STRIPE] Extracted pricing info for subscription ${subscription.id}: ${price} ${billingInterval}`,
+		const billingInterval = formatBillingInterval(
+			priceObject.recurring?.interval || "month",
+			priceObject.recurring?.interval_count || 1,
 		);
 
-		return {
-			price,
-			billingInterval,
-			priceId: priceObject.id,
-		};
+		return { price, billingInterval, priceId: priceObject.id };
 	} catch (error) {
 		await logger.error(
-			`🔔 [STRIPE] Error fetching price details for ${firstItem.price.id}: ${error instanceof Error ? error.message : "Unknown error"}`,
+			`[STRIPE] Error fetching price for ${firstItem.price.id}: ${error instanceof Error ? error.message : "Unknown error"}`,
 		);
 
-		// Fallback to basic price info from subscription item
 		const price = firstItem.price.unit_amount ? firstItem.price.unit_amount / 100 : 0;
-		const interval = firstItem.price.recurring?.interval || "month";
-		const intervalCount = firstItem.price.recurring?.interval_count || 1;
+		const billingInterval = formatBillingInterval(
+			firstItem.price.recurring?.interval || "month",
+			firstItem.price.recurring?.interval_count || 1,
+		);
 
-		let billingInterval: string;
-		if (interval === "month" && intervalCount === 6) {
-			billingInterval = "6 months";
-		} else if (intervalCount === 1) {
-			billingInterval = interval;
-		} else {
-			billingInterval = `${intervalCount} ${interval}${intervalCount > 1 ? "s" : ""}`;
-		}
-
-		return {
-			price,
-			billingInterval,
-			priceId: firstItem.price.id,
-		};
+		return { price, billingInterval, priceId: firstItem.price.id };
 	}
 }
 
@@ -165,7 +121,10 @@ stripe.openapi(
 				description: "Checkout session created successfully",
 				content: {
 					"application/json": {
-						schema: z.object({ url: z.string() }),
+						schema: z.object({
+							success: z.boolean(),
+							data: z.object({ url: z.string() }),
+						}),
 					},
 				},
 			},
@@ -173,7 +132,10 @@ stripe.openapi(
 				description: "Bad request - invalid price ID",
 				content: {
 					"application/json": {
-						schema: z.object({ error: z.string() }),
+						schema: z.object({
+							success: z.literal(false),
+							error: z.object({ code: z.string(), message: z.string() }),
+						}),
 					},
 				},
 			},
@@ -182,8 +144,12 @@ stripe.openapi(
 				content: {
 					"application/json": {
 						schema: z.object({
-							error: z.string(),
-							details: z.string().optional(),
+							success: z.literal(false),
+							error: z.object({
+								code: z.string(),
+								message: z.string(),
+								details: z.string().optional(),
+							}),
 						}),
 					},
 				},
@@ -196,12 +162,27 @@ stripe.openapi(
 			const user = c.get("user");
 
 			if (!c.env.STRIPE_SECRET_KEY) {
-				return c.json({ error: "Stripe configuration error" }, 500);
+				return c.json(
+					{
+						success: false,
+						error: {
+							code: UnifiedErrorCode.SERVICE_UNAVAILABLE,
+							message: "Stripe configuration error",
+						},
+					},
+					500,
+				);
 			}
 
 			const priceIdValue = PRICES[priceId as keyof typeof PRICES](c.env);
 			if (!priceIdValue) {
-				return c.json({ error: "Invalid price ID" }, 400);
+				return c.json(
+					{
+						success: false,
+						error: { code: UnifiedErrorCode.INVALID_REQUEST, message: "Invalid price ID" },
+					},
+					400,
+				);
 			}
 
 			const origin = new URL(c.req.url).origin;
@@ -237,12 +218,16 @@ stripe.openapi(
 
 			const session = await stripeClient.checkout.sessions.create(sessionParams);
 
-			return c.json({ url: session.url! });
+			return c.json({ success: true, data: { url: session.url! } });
 		} catch (error) {
 			return c.json(
 				{
-					error: "Failed to create checkout session",
-					details: error instanceof Error ? error.message : "Unknown error",
+					success: false,
+					error: {
+						code: UnifiedErrorCode.INTERNAL_ERROR,
+						message: "Failed to create checkout session",
+						details: error instanceof Error ? error.message : "Unknown error",
+					},
 				},
 				500,
 			);
@@ -263,7 +248,8 @@ stripe.openapi(
 				content: {
 					"application/json": {
 						schema: z.object({
-							url: z.string(),
+							success: z.boolean(),
+							data: z.object({ url: z.string() }),
 						}),
 					},
 				},
@@ -273,7 +259,8 @@ stripe.openapi(
 				content: {
 					"application/json": {
 						schema: z.object({
-							error: z.string(),
+							success: z.literal(false),
+							error: z.object({ code: z.string(), message: z.string() }),
 						}),
 					},
 				},
@@ -283,7 +270,8 @@ stripe.openapi(
 				content: {
 					"application/json": {
 						schema: z.object({
-							error: z.string(),
+							success: z.literal(false),
+							error: z.object({ code: z.string(), message: z.string() }),
 						}),
 					},
 				},
@@ -293,7 +281,8 @@ stripe.openapi(
 				content: {
 					"application/json": {
 						schema: z.object({
-							error: z.string(),
+							success: z.literal(false),
+							error: z.object({ code: z.string(), message: z.string() }),
 						}),
 					},
 				},
@@ -303,7 +292,10 @@ stripe.openapi(
 	async (c): Promise<any> => {
 		const user = c.get("user");
 		if (!user) {
-			return c.json({ error: "Unauthorized" }, 401);
+			return c.json(
+				{ success: false, error: { code: UnifiedErrorCode.UNAUTHORIZED, message: "Unauthorized" } },
+				401,
+			);
 		}
 
 		try {
@@ -319,7 +311,16 @@ stripe.openapi(
 				.first();
 
 			if (!result?.stripe_customer_id) {
-				return c.json({ error: "No billing information found" }, 404);
+				return c.json(
+					{
+						success: false,
+						error: {
+							code: UnifiedErrorCode.SUBSCRIPTION_NOT_FOUND,
+							message: "No billing information found",
+						},
+					},
+					404,
+				);
 			}
 
 			// Create Stripe client
@@ -333,10 +334,19 @@ stripe.openapi(
 				return_url: `${new URL(c.req.url).origin}/billing?refresh=true`,
 			});
 
-			return c.json({ url: session.url });
+			return c.json({ success: true, data: { url: session.url } });
 		} catch (error) {
 			console.error("Failed to create billing portal session:", error);
-			return c.json({ error: "Failed to create billing portal session" }, 500);
+			return c.json(
+				{
+					success: false,
+					error: {
+						code: UnifiedErrorCode.INTERNAL_ERROR,
+						message: "Failed to create billing portal session",
+					},
+				},
+				500,
+			);
 		}
 	},
 );
@@ -354,26 +364,29 @@ stripe.openapi(
 				content: {
 					"application/json": {
 						schema: z.object({
-							id: z.string(),
-							plan_id: z.enum(["hobby", "pro", "enterprise"]),
-							plan_name: z.string(),
-							status: z.enum([
-								"active",
-								"canceled",
-								"past_due",
-								"trialing",
-								"incomplete",
-								"inactive",
-							]),
-							current_period_start: z.string().optional(),
-							current_period_end: z.string().optional(),
-							cancel_at_period_end: z.boolean(),
-							weekly_quota: z.number(),
-							minute_quota: z.number(),
-							price: z.number(),
-							billing_interval: z.string(),
-							payment_type: z.enum(["subscription", "one_time"]),
-							stripe_customer_id: z.string().optional(),
+							success: z.boolean(),
+							data: z.object({
+								id: z.string(),
+								plan_id: z.enum(["hobby", "pro", "enterprise"]),
+								plan_name: z.string(),
+								status: z.enum([
+									"active",
+									"canceled",
+									"past_due",
+									"trialing",
+									"incomplete",
+									"inactive",
+								]),
+								current_period_start: z.string().optional(),
+								current_period_end: z.string().optional(),
+								cancel_at_period_end: z.boolean(),
+								weekly_quota: z.number(),
+								minute_quota: z.number(),
+								price: z.number(),
+								billing_interval: z.string(),
+								payment_type: z.enum(["subscription", "one_time"]),
+								stripe_customer_id: z.string().optional(),
+							}),
 						}),
 					},
 				},
@@ -430,19 +443,22 @@ stripe.openapi(
 		const billingInterval = result?.billing_interval ?? "month";
 
 		return c.json({
-			id: result?.stripe_subscription_id || `mock_${user.id}`,
-			plan_id: planType,
-			plan_name: planConfig.name,
-			status,
-			current_period_start: result?.current_period_start,
-			current_period_end: result?.current_period_end,
-			cancel_at_period_end: Boolean(result?.cancel_at_period_end),
-			weekly_quota: planConfig.weekly_quota,
-			minute_quota: planConfig.minute_quota,
-			price: price,
-			billing_interval: billingInterval,
-			payment_type: paymentType,
-			stripe_customer_id: result?.stripe_customer_id,
+			success: true,
+			data: {
+				id: result?.stripe_subscription_id || `mock_${user.id}`,
+				plan_id: planType,
+				plan_name: planConfig.name,
+				status,
+				current_period_start: result?.current_period_start,
+				current_period_end: result?.current_period_end,
+				cancel_at_period_end: Boolean(result?.cancel_at_period_end),
+				weekly_quota: planConfig.weekly_quota,
+				minute_quota: planConfig.minute_quota,
+				price: price,
+				billing_interval: billingInterval,
+				payment_type: paymentType,
+				stripe_customer_id: result?.stripe_customer_id,
+			},
 		});
 	},
 );

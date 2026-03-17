@@ -15,11 +15,7 @@ interface PricingModalProps {
 }
 
 const getDiscountBadgeColor = (index: number): string => {
-	const colors = [
-		"bg-warning",
-		"bg-success",
-		"bg-brand",
-	];
+	const colors = ["bg-warning", "bg-success", "bg-brand"];
 	return colors[index] || "bg-success";
 };
 
@@ -136,9 +132,7 @@ export function PricingModal({ planName }: PricingModalProps) {
 				<div className="space-y-3">
 					{options.map((option, index) => {
 						const isSelected = selectedOption === option.id;
-						const discountIndex = options
-							.slice(0, index)
-							.filter((opt) => opt.discount).length;
+						const discountIndex = options.slice(0, index).filter((opt) => opt.discount).length;
 
 						return (
 							<div
@@ -182,18 +176,14 @@ export function PricingModal({ planName }: PricingModalProps) {
 											<h3 className="font-semibold text-foreground text-lg">
 												{getOptionLabel(option)}
 											</h3>
-											<p className="text-sm text-muted-foreground">
-												{getPeriodText(option)}
-											</p>
+											<p className="text-sm text-muted-foreground">{getPeriodText(option)}</p>
 										</div>
 									</div>
 									<div className="text-right">
 										<div className="text-3xl font-bold text-foreground tracking-wider">
 											${option.price}
 										</div>
-										<div className="text-sm text-muted-foreground">
-											{formatTotal(option)}
-										</div>
+										<div className="text-sm text-muted-foreground">{formatTotal(option)}</div>
 									</div>
 								</div>
 							</div>
@@ -203,9 +193,7 @@ export function PricingModal({ planName }: PricingModalProps) {
 
 				{/* One-time note */}
 				{paymentType === "one_time" && (
-					<p className="text-xs text-muted-foreground text-center">
-						{t("pricing.onetime_note")}
-					</p>
+					<p className="text-xs text-muted-foreground text-center">{t("pricing.onetime_note")}</p>
 				)}
 
 				{/* Action Buttons */}

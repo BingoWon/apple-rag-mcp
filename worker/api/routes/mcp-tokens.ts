@@ -547,7 +547,7 @@ app.openapi(deleteMCPTokenRoute, async (c) => {
 		return c.json(
 			{
 				success: true,
-				message: "Token deleted successfully",
+				data: { message: "Token deleted successfully" },
 			},
 			200,
 		);

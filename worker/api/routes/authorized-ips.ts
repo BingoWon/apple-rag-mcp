@@ -257,7 +257,7 @@ app.delete("/:id", async (c) => {
 
 		return c.json({
 			success: true,
-			message: "Authorized IP deleted successfully",
+			data: { message: "Authorized IP deleted successfully" },
 		});
 	} catch (error) {
 		await logger.error(
