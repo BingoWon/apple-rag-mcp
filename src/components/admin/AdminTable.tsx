@@ -41,7 +41,7 @@ export function AdminTable<T = Record<string, unknown>>({
 	total,
 	limit,
 	offset,
-	hasMore,
+	hasMore: _hasMore,
 	currentPage,
 	isLoading = false,
 	error = null,
@@ -153,7 +153,7 @@ export function AdminTable<T = Record<string, unknown>>({
 			<CardContent className="p-0">
 				<DataTable
 					columns={dataTableColumns}
-					data={data as Array<Record<string, any>>}
+					data={data as Array<Record<string, unknown>>}
 					isLoading={isLoading}
 					error={error}
 				/>

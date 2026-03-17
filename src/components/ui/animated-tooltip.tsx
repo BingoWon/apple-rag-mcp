@@ -19,7 +19,7 @@ export const AnimatedTooltip = ({
 	const rotate = useSpring(useTransform(x, [-100, 100], [-45, 45]), springConfig);
 	const translateX = useSpring(useTransform(x, [-100, 100], [-50, 50]), springConfig);
 
-	const handleMouseMove = (event: any) => {
+	const handleMouseMove = (event: React.MouseEvent<HTMLImageElement>) => {
 		if (animationFrameRef.current) {
 			cancelAnimationFrame(animationFrameRef.current);
 		}
@@ -30,14 +30,24 @@ export const AnimatedTooltip = ({
 		});
 	};
 
+	const handleTriggerKeyDown = (e: React.KeyboardEvent, itemId: number) => {
+		if (e.key === "Enter" || e.key === " ") {
+			e.preventDefault();
+			setHoveredIndex((prev) => (prev === itemId ? null : itemId));
+		}
+	};
 	return (
 		<>
 			{items.map((item, _idx) => (
+				// biome-ignore lint/a11y/useSemanticElements: tooltip trigger wraps image with hover effects
 				<div
+					role="button"
+					tabIndex={0}
 					className="group relative -mr-4"
 					key={item.name}
 					onMouseEnter={() => setHoveredIndex(item.id)}
 					onMouseLeave={() => setHoveredIndex(null)}
+					onKeyDown={(e) => handleTriggerKeyDown(e, item.id)}
 				>
 					<AnimatePresence>
 						{hoveredIndex === item.id && (

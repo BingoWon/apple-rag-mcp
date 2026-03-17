@@ -83,6 +83,7 @@ export function MessageReplyDialog({ message, onClose, onSuccess }: MessageReply
 						{isAlreadyReplied ? t("admin.reply_title") : t("admin.reply_to")}
 					</h2>
 					<button
+						type="button"
 						onClick={onClose}
 						className="p-2 hover:bg-tertiary rounded-lg transition-colors text-muted hover:text-light"
 						aria-label="Close"

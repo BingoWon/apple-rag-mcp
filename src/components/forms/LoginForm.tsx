@@ -52,7 +52,7 @@ export function LoginForm() {
 
 		try {
 			// Persistent debugging
-			const debugLog = (message: string, data?: any) => {
+			const debugLog = (message: string, data?: unknown) => {
 				const timestamp = new Date().toISOString();
 				const logEntry = `[${timestamp}] LoginForm: ${message}`;
 				console.log(logEntry, data || "");

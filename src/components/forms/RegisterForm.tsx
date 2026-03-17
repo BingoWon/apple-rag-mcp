@@ -100,13 +100,6 @@ export function RegisterForm() {
 			}
 		} catch (error) {
 			console.error(`${provider} OAuth error:`, error);
-
-			// Use friendly error message
-			const friendlyMessage = getFriendlyErrorMessage(
-				"OAUTH_FAILED",
-				`Failed to initiate ${provider} registration. Please try again.`,
-			);
-
 			toast.error(t("auth.oauth_failed"));
 			setOauthLoading(null);
 		}

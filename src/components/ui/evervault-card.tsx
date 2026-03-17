@@ -1,4 +1,4 @@
-import { motion, useMotionTemplate, useMotionValue } from "motion/react";
+import { type MotionValue, motion, useMotionTemplate, useMotionValue } from "motion/react";
 import type React from "react";
 import { useRef, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -22,7 +22,7 @@ export const EvervaultCard = ({
 
 	// No initial character generation - only on mouse move
 
-	function onMouseMove({ currentTarget, clientX, clientY }: any) {
+	function onMouseMove({ currentTarget, clientX, clientY }: React.MouseEvent<HTMLDivElement>) {
 		const { left, top } = currentTarget.getBoundingClientRect();
 		mouseX.set(clientX - left);
 		mouseY.set(clientY - top);
@@ -33,6 +33,7 @@ export const EvervaultCard = ({
 	}
 
 	return (
+		// biome-ignore lint/a11y/noStaticElementInteractions: decorative card with mouse tracking for visual effect only
 		<div
 			ref={cardRef}
 			onMouseMove={onMouseMove}
@@ -59,7 +60,19 @@ export const EvervaultCard = ({
 	);
 };
 
-export function CardPattern({ mouseX, mouseY, randomString, gradientFrom, gradientTo }: any) {
+export function CardPattern({
+	mouseX,
+	mouseY,
+	randomString,
+	gradientFrom,
+	gradientTo,
+}: {
+	mouseX: MotionValue<number>;
+	mouseY: MotionValue<number>;
+	randomString: string;
+	gradientFrom: string;
+	gradientTo: string;
+}) {
 	const maskImage = useMotionTemplate`radial-gradient(250px at ${mouseX}px ${mouseY}px, white, transparent)`;
 
 	return (
@@ -96,8 +109,9 @@ export const generateRandomString = (length: number) => {
 	return result;
 };
 
-export const Icon = ({ className, ...rest }: any) => {
+export const Icon = ({ className, ...rest }: React.SVGProps<SVGSVGElement>) => {
 	return (
+		// biome-ignore lint/a11y/noSvgWithoutTitle: decorative
 		<svg
 			xmlns="http://www.w3.org/2000/svg"
 			fill="none"

@@ -79,15 +79,19 @@ class ApiClient {
 		try {
 			const response = await this.client.post(url, data, config);
 			return response.data;
-		} catch (error: any) {
+		} catch (error: unknown) {
+			const axiosError = error as AxiosError<ApiResponse>;
 			// For auth endpoints, return the error response data instead of throwing
-			if (error.response?.data && (url.includes("/auth/login") || url.includes("/auth/register"))) {
-				return error.response.data;
+			if (
+				axiosError.response?.data &&
+				(url.includes("/auth/login") || url.includes("/auth/register"))
+			) {
+				return axiosError.response.data;
 			}
 
 			// For other endpoints, if we have a structured error response, return it
-			if (error.response?.data?.success === false) {
-				return error.response.data;
+			if (axiosError.response?.data?.success === false) {
+				return axiosError.response.data;
 			}
 
 			throw error;
@@ -102,10 +106,11 @@ class ApiClient {
 		try {
 			const response = await this.client.put(url, data, config);
 			return response.data;
-		} catch (error: any) {
+		} catch (error: unknown) {
+			const axiosError = error as AxiosError<ApiResponse>;
 			// If we have a structured error response, return it
-			if (error.response?.data?.success === false) {
-				return error.response.data;
+			if (axiosError.response?.data?.success === false) {
+				return axiosError.response.data;
 			}
 			throw error;
 		}
@@ -115,10 +120,11 @@ class ApiClient {
 		try {
 			const response = await this.client.delete(url, config);
 			return response.data;
-		} catch (error: any) {
+		} catch (error: unknown) {
+			const axiosError = error as AxiosError<ApiResponse>;
 			// If we have a structured error response, return it
-			if (error.response?.data?.success === false) {
-				return error.response.data;
+			if (axiosError.response?.data?.success === false) {
+				return axiosError.response.data;
 			}
 			throw error;
 		}

@@ -127,6 +127,7 @@ export const ShootingStars: React.FC<ShootingStarsProps> = ({
 	}, [star]);
 
 	return (
+		// biome-ignore lint/a11y/noSvgWithoutTitle: decorative
 		<svg ref={svgRef} className={cn("w-full h-full absolute inset-0", className)}>
 			{star && (
 				<rect

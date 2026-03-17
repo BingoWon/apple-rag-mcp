@@ -125,7 +125,7 @@ app.openapi(getUsageLogsRoute, async (c) => {
 		// Execute queries based on log_type
 		let countQuery: string;
 		let dataQuery: string;
-		let queryParams: any[];
+		let queryParams: unknown[];
 
 		if (log_type === "search") {
 			const { conditions, params } = buildConditions("s");
@@ -196,12 +196,12 @@ app.openapi(getUsageLogsRoute, async (c) => {
 			.all();
 
 		// Process results with proper typing
-		const items = (dataResult.results || []).map((row: any) => ({
+		const items = (dataResult.results || []).map((row: Record<string, unknown>) => ({
 			id: row.id,
 			query: row.query,
 			result_count: Number(row.result_count) || 0,
 			status: row.status,
-			mcp_token: row.mcp_token ? `${row.mcp_token.substring(0, 12)}...` : null,
+			mcp_token: row.mcp_token ? `${String(row.mcp_token).substring(0, 12)}...` : null,
 			created_at: row.created_at,
 			log_type: row.log_type,
 		}));

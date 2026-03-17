@@ -63,9 +63,10 @@ export function DialogTrigger({ asChild, children }: DialogTriggerProps) {
 	const { onOpenChange } = useDialog();
 
 	if (asChild && React.isValidElement(children)) {
-		return React.cloneElement(children as React.ReactElement<any>, {
+		return React.cloneElement(children as React.ReactElement<Record<string, unknown>>, {
 			onClick: (e: React.MouseEvent) => {
-				const originalOnClick = (children as React.ReactElement<any>).props.onClick;
+				const originalOnClick = (children as React.ReactElement<Record<string, unknown>>).props
+					.onClick;
 				originalOnClick?.(e);
 				onOpenChange(true);
 			},
@@ -105,12 +106,14 @@ export function DialogContent({ className, children }: DialogContentProps) {
 	return createPortal(
 		<div className="fixed inset-0 z-50 flex items-center justify-center">
 			{/* Backdrop */}
+			{/* biome-ignore lint/a11y/noStaticElementInteractions: backdrop overlay to close dialog on click */}
 			<div
 				className="fixed inset-0 bg-background/80 backdrop-blur-sm"
 				onClick={() => onOpenChange(false)}
 			/>
 
 			{/* Content */}
+			{/* biome-ignore lint/a11y/noStaticElementInteractions: dialog content wrapper uses onClick to prevent backdrop close propagation */}
 			<div
 				className={cn(
 					"relative bg-card rounded-lg shadow-lg border border-border p-6 w-full max-w-md mx-4",

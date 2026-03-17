@@ -69,7 +69,7 @@ interface MobileNavHeaderProps {
 }
 
 interface UserMenuProps {
-	user: any;
+	user: { name?: string; email?: string } | null;
 	visible?: boolean;
 	onLogout: () => void;
 }
@@ -262,6 +262,7 @@ export const UserMenu = ({ user, onLogout }: Omit<UserMenuProps, "visible">) => 
 								{t("common.dashboard")}
 							</a>
 							<button
+								type="button"
 								onClick={onLogout}
 								className="block w-full text-left px-3 py-2 text-sm text-muted hover:text-light hover:bg-secondary rounded-md"
 							>

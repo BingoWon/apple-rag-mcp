@@ -76,6 +76,7 @@ export function LanguageSwitcher({
 
 	if (variant === "icon") {
 		return (
+			// biome-ignore lint/a11y/noStaticElementInteractions: hover container for dropdown, child buttons are semantic
 			<div
 				className="relative flex items-center"
 				onMouseEnter={handleMouseEnter}
@@ -93,6 +94,7 @@ export function LanguageSwitcher({
 					<span className="sr-only">Language</span>
 				</Button>
 
+				{/* biome-ignore lint/a11y/noStaticElementInteractions: hover dropdown panel */}
 				<div
 					className={cn(
 						"absolute left-1/2 transform -translate-x-1/2 p-1 z-50",

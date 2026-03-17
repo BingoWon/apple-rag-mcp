@@ -93,13 +93,13 @@ app.openapi(getSearchLogsRoute, async (c) => {
 		const truncate = (s: string, max: number): string =>
 			s.length > max ? `${s.substring(0, max)}...` : s;
 
-		const logs = (logsResult.results || []).map((row: any) => {
+		const logs = (logsResult.results || []).map((row: Record<string, unknown>) => {
 			const requestedQuery = (row.requested_query as string) || "";
 			const actualQuery = (row.actual_query as string) || requestedQuery;
 			return {
 				id: row.id as string,
 				user_id: row.user_id as string,
-				mcp_token: row.mcp_token ? `${row.mcp_token.substring(0, 12)}...` : null,
+				mcp_token: row.mcp_token ? `${String(row.mcp_token).substring(0, 12)}...` : null,
 				requested_query: truncate(requestedQuery, 80),
 				actual_query: truncate(actualQuery, 80),
 				result_count: Number(row.result_count) || 0,

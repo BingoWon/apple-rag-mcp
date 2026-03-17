@@ -18,7 +18,7 @@ interface ProcessBatchResult {
 
 interface ProcessingPlanItem {
 	record: DatabaseRecord;
-	collectResult: BatchResult<any>;
+	collectResult: BatchResult<unknown>;
 	hasChanged: boolean;
 	newRawJson?: string | null;
 	processResult?: BatchResult<DocumentContent> | undefined;
@@ -114,7 +114,7 @@ class AppleDocCollector {
 				: [];
 
 		// Build result maps (preserving original order)
-		const collectResultsMap = new Map<string, BatchResult<any>>();
+		const collectResultsMap = new Map<string, BatchResult<unknown>>();
 		const processResultsMap = new Map<string, BatchResult<DocumentContent>>();
 
 		// Map document results (use filter to align indices)
@@ -157,7 +157,7 @@ class AppleDocCollector {
 
 	private createProcessingPlan(
 		records: DatabaseRecord[],
-		collectResults: BatchResult<any>[],
+		collectResults: BatchResult<unknown>[],
 		processResultsMap: Map<string, BatchResult<DocumentContent>>,
 	): ProcessingPlanItem[] {
 		if (this.config.forceUpdateAll) {
@@ -187,7 +187,7 @@ class AppleDocCollector {
 
 	private createErrorPlanItem(
 		record: DatabaseRecord,
-		collectResult: BatchResult<any>,
+		collectResult: BatchResult<unknown>,
 	): ProcessingPlanItem {
 		const isPermanent = BatchErrorHandler.isPermanentError(collectResult.error || "");
 		return {
@@ -201,7 +201,7 @@ class AppleDocCollector {
 
 	private createSuccessPlanItem(
 		record: DatabaseRecord,
-		collectResult: BatchResult<any>,
+		collectResult: BatchResult<unknown>,
 		processResult?: BatchResult<DocumentContent>,
 	): ProcessingPlanItem {
 		// Videos don't have raw JSON API response, only documents do
@@ -365,7 +365,9 @@ class AppleDocCollector {
 		return this.buildProcessingResult(processingPlan, processResults, allChunks);
 	}
 
-	private async generateChunksAndEmbeddings(processResults: any[]): Promise<{
+	private async generateChunksAndEmbeddings(
+		processResults: (BatchResult<DocumentContent> | undefined)[],
+	): Promise<{
 		allChunks: Array<{
 			url: string;
 			chunk: {
@@ -406,7 +408,7 @@ class AppleDocCollector {
 
 	private buildProcessingResult(
 		processingPlan: ProcessingPlanItem[],
-		processResults: any[],
+		processResults: (BatchResult<DocumentContent> | undefined)[],
 		allChunks: Array<{
 			url: string;
 			chunk: {
@@ -435,7 +437,9 @@ class AppleDocCollector {
 			if (hasChanged && collectResult?.data && processIndex < processResults.length) {
 				const processResult = processResults[processIndex++];
 				if (processResult?.data?.extractedUrls) {
-					processResult.data.extractedUrls.forEach((url: string) => extractedUrls.add(url));
+					for (const url of processResult.data.extractedUrls) {
+						extractedUrls.add(url);
+					}
 				}
 			}
 		}

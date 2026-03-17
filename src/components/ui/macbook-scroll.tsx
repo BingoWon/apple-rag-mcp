@@ -556,6 +556,7 @@ export const SpeakerGrid = () => {
 
 export const OptionKey = ({ className }: { className: string }) => {
 	return (
+		// biome-ignore lint/a11y/noSvgWithoutTitle: decorative
 		<svg
 			fill="none"
 			version="1.1"

@@ -90,13 +90,13 @@ app.openapi(getFetchLogsRoute, async (c) => {
 			.bind(limit, offset)
 			.all();
 
-		const logs = (logsResult.results || []).map((row: any) => {
+		const logs = (logsResult.results || []).map((row: Record<string, unknown>) => {
 			const requestedUrl = row.requested_url as string;
 			const actualUrl = (row.actual_url as string) || requestedUrl;
 			return {
 				id: row.id as string,
 				user_id: row.user_id as string,
-				mcp_token: row.mcp_token ? `${row.mcp_token.substring(0, 12)}...` : null,
+				mcp_token: row.mcp_token ? `${String(row.mcp_token).substring(0, 12)}...` : null,
 				requested_url: requestedUrl,
 				actual_url: actualUrl,
 				page_id: row.page_id as string | null,

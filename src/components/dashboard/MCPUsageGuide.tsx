@@ -270,6 +270,7 @@ export function MCPUsageGuide() {
 							{selectedToken && (
 								<div className="border border-info/30 rounded-lg overflow-hidden">
 									<button
+										type="button"
 										onClick={() => setShowCodexGuide(!showCodexGuide)}
 										className="w-full flex items-center justify-between p-4 bg-info/5 hover:bg-info/10 transition-colors"
 									>
@@ -328,6 +329,7 @@ export function MCPUsageGuide() {
 							{selectedToken && (
 								<div className="border border-info/30 rounded-lg overflow-hidden mt-3">
 									<button
+										type="button"
 										onClick={() => setShowClaudeGuide(!showClaudeGuide)}
 										className="w-full flex items-center justify-between p-4 bg-info/5 hover:bg-info/10 transition-colors"
 									>

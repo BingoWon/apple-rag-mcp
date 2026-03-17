@@ -220,7 +220,7 @@ export function FabButton({ className }: FabButtonProps) {
 		// Command + Enter (Mac) 或 Ctrl + Enter (Windows/Linux) 提交表单
 		if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
 			e.preventDefault();
-			handleSubmit(e as any);
+			handleSubmit(e as unknown as React.FormEvent);
 		}
 	};
 
@@ -332,6 +332,7 @@ export function FabButton({ className }: FabButtonProps) {
 	return (
 		<>
 			<button
+				type="button"
 				ref={buttonRef}
 				aria-label={t("fab.label")}
 				onClick={handleClick}
@@ -413,6 +414,7 @@ export function FabButton({ className }: FabButtonProps) {
 						<div className="flex items-center justify-between h-8 pl-8 w-full">
 							<div className="flex items-center gap-2 ml-auto">
 								<button
+									type="button"
 									aria-label="Close"
 									onClick={() => {
 										animateClose(() => setIsOpen(false));

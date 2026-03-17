@@ -15,7 +15,7 @@ export const BaseErrorResponseSchema = z.object({
 	error: z.object({
 		code: z.string(),
 		message: z.string(),
-		details: z.any().optional(),
+		details: z.unknown().optional(),
 		suggestion: z.string().optional(),
 	}),
 	meta: z
@@ -56,7 +56,7 @@ export type ErrorResponse = {
 	error: {
 		code: string;
 		message: string;
-		details?: any;
+		details?: unknown;
 		suggestion?: string;
 	};
 	meta?: {
@@ -75,7 +75,7 @@ export const createOpenAPIResponses = <T extends z.ZodTypeAny>(
 	const baseErrors: (keyof typeof ErrorResponseSchemas)[] = [401, 500];
 	const allErrors = [...new Set([...baseErrors, ...additionalErrors])];
 
-	const responses: Record<string, any> = {
+	const responses: Record<string, unknown> = {
 		[successStatusCode]: {
 			description: "Success",
 			content: {
@@ -129,49 +129,53 @@ export type PaginatedResponse<T> = {
 };
 
 // Response builder helpers
-export class ResponseBuilder {
-	static success<T>(data: T, _statusCode: 200 | 201 = 200) {
-		return {
-			success: true as const,
-			data,
-		};
-	}
-
-	static error(
-		code: string,
-		message: string,
-		_statusCode: keyof typeof ErrorResponseSchemas = 500,
-		details?: any,
-		suggestion?: string,
-	) {
-		return {
-			success: false as const,
-			error: {
-				code,
-				message,
-				details,
-				suggestion,
-			},
-			meta: {
-				timestamp: new Date().toISOString(),
-			},
-		};
-	}
-
-	static paginated<T>(items: T[], page: number, limit: number, total: number) {
-		return {
-			success: true as const,
-			data: {
-				items,
-				pagination: {
-					page,
-					limit,
-					total,
-					total_pages: Math.ceil(total / limit),
-					has_next: page * limit < total,
-					has_prev: page > 1,
-				},
-			},
-		};
-	}
+export function buildSuccess<T>(data: T, _statusCode: 200 | 201 = 200) {
+	return {
+		success: true as const,
+		data,
+	};
 }
+
+export function buildError(
+	code: string,
+	message: string,
+	_statusCode: keyof typeof ErrorResponseSchemas = 500,
+	details?: unknown,
+	suggestion?: string,
+) {
+	return {
+		success: false as const,
+		error: {
+			code,
+			message,
+			details,
+			suggestion,
+		},
+		meta: {
+			timestamp: new Date().toISOString(),
+		},
+	};
+}
+
+export function buildPaginated<T>(items: T[], page: number, limit: number, total: number) {
+	return {
+		success: true as const,
+		data: {
+			items,
+			pagination: {
+				page,
+				limit,
+				total,
+				total_pages: Math.ceil(total / limit),
+				has_next: page * limit < total,
+				has_prev: page > 1,
+			},
+		},
+	};
+}
+
+export const ResponseBuilder = {
+	success: buildSuccess,
+	error: buildError,
+	paginated: buildPaginated,
+};

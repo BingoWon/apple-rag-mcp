@@ -30,7 +30,7 @@ export function ResetPasswordForm() {
 			toast.error(t("auth.invalid_token"));
 			navigate("/forgot-password");
 		}
-	}, [token, navigate]);
+	}, [token, navigate, t]);
 
 	const validatePassword = (password: string) => {
 		if (password.length < 8) {

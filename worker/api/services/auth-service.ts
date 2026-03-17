@@ -56,7 +56,7 @@ export class AuthService {
 				.first();
 
 			if (existingUser) {
-				const provider = (existingUser as any).provider;
+				const provider = (existingUser as Record<string, unknown>).provider;
 				const providerName = provider === "email" ? "email/password" : provider;
 				return {
 					success: false,

@@ -2,7 +2,7 @@
  * Unified API response format for frontend and MCP
  */
 
-export interface ApiSuccessResponse<T = any> {
+export interface ApiSuccessResponse<T = unknown> {
 	success: true;
 	data: T;
 	meta?: {
@@ -17,7 +17,7 @@ export interface ApiErrorResponse {
 	error: {
 		code: UnifiedErrorCode | string;
 		message: string;
-		details?: any;
+		details?: unknown;
 		suggestion?: string;
 	};
 	meta?: {
@@ -27,7 +27,7 @@ export interface ApiErrorResponse {
 	};
 }
 
-export type ApiResponse<T = any> = ApiSuccessResponse<T> | ApiErrorResponse;
+export type ApiResponse<T = unknown> = ApiSuccessResponse<T> | ApiErrorResponse;
 
 export interface PaginatedResponse<T> {
 	items: T[];
@@ -112,98 +112,110 @@ export const ApiErrorCode = UnifiedErrorCode;
 export const ErrorCode = UnifiedErrorCode;
 export const MCPErrorCode = UnifiedErrorCode;
 
-export class ResponseBuilder {
-	static success<T>(data: T, meta?: any): ApiSuccessResponse<T> {
-		return {
-			success: true,
-			data,
-			meta: {
-				timestamp: new Date().toISOString(),
-				...meta,
-			},
-		};
-	}
-
-	static error(
-		code: UnifiedErrorCode | string,
-		message: string,
-		details?: any,
-		suggestion?: string,
-		meta?: any,
-	): ApiErrorResponse {
-		return {
-			success: false,
-			error: {
-				code,
-				message,
-				details,
-				suggestion,
-			},
-			meta: {
-				timestamp: new Date().toISOString(),
-				...meta,
-			},
-		};
-	}
-
-	static paginated<T>(
-		items: T[],
-		page: number,
-		limit: number,
-		total: number,
-		meta?: any,
-	): ApiSuccessResponse<PaginatedResponse<T>> {
-		const totalPages = Math.ceil(total / limit);
-
-		return ResponseBuilder.success(
-			{
-				items,
-				pagination: {
-					page,
-					limit,
-					total,
-					total_pages: totalPages,
-					has_next: page < totalPages,
-					has_prev: page > 1,
-				},
-			},
-			meta,
-		);
-	}
-}
-
-export class PermissionMapper {
-	private static readonly PERMISSION_MAP: Record<string, string[]> = {
-		read: ["rag:query"],
-		write: ["rag:query"],
-		admin: ["rag:query", "admin:manage"],
-		full: ["rag:query", "admin:manage", "stats:read"],
+export function buildSuccessResponse<T>(
+	data: T,
+	meta?: Record<string, unknown>,
+): ApiSuccessResponse<T> {
+	return {
+		success: true,
+		data,
+		meta: {
+			timestamp: new Date().toISOString(),
+			...meta,
+		},
 	};
-
-	static mapToBackend(frontendPermissions: string[]): string[] {
-		const backendPermissions = new Set<string>();
-
-		for (const permission of frontendPermissions) {
-			const mapped = PermissionMapper.PERMISSION_MAP[permission];
-			if (mapped) {
-				mapped.forEach((p) => backendPermissions.add(p));
-			} else {
-				backendPermissions.add(permission);
-			}
-		}
-
-		return Array.from(backendPermissions);
-	}
-
-	static mapToFrontend(backendPermissions: string[]): string[] {
-		if (backendPermissions.includes("rag:query")) {
-			const permissions = ["read", "write"];
-			if (backendPermissions.includes("admin:manage")) {
-				permissions.push("admin");
-			}
-			return permissions;
-		}
-
-		return backendPermissions;
-	}
 }
+
+export function buildErrorResponse(
+	code: UnifiedErrorCode | string,
+	message: string,
+	details?: unknown,
+	suggestion?: string,
+	meta?: Record<string, unknown>,
+): ApiErrorResponse {
+	return {
+		success: false,
+		error: {
+			code,
+			message,
+			details,
+			suggestion,
+		},
+		meta: {
+			timestamp: new Date().toISOString(),
+			...meta,
+		},
+	};
+}
+
+export function buildPaginatedResponse<T>(
+	items: T[],
+	page: number,
+	limit: number,
+	total: number,
+	meta?: Record<string, unknown>,
+): ApiSuccessResponse<PaginatedResponse<T>> {
+	const totalPages = Math.ceil(total / limit);
+
+	return buildSuccessResponse(
+		{
+			items,
+			pagination: {
+				page,
+				limit,
+				total,
+				total_pages: totalPages,
+				has_next: page < totalPages,
+				has_prev: page > 1,
+			},
+		},
+		meta,
+	);
+}
+
+export const ResponseBuilder = {
+	success: buildSuccessResponse,
+	error: buildErrorResponse,
+	paginated: buildPaginatedResponse,
+};
+
+const PERMISSION_MAP: Record<string, string[]> = {
+	read: ["rag:query"],
+	write: ["rag:query"],
+	admin: ["rag:query", "admin:manage"],
+	full: ["rag:query", "admin:manage", "stats:read"],
+};
+
+export function mapPermissionsToBackend(frontendPermissions: string[]): string[] {
+	const backendPermissions = new Set<string>();
+
+	for (const permission of frontendPermissions) {
+		const mapped = PERMISSION_MAP[permission];
+		if (mapped) {
+			for (const p of mapped) {
+				backendPermissions.add(p);
+			}
+		} else {
+			backendPermissions.add(permission);
+		}
+	}
+
+	return Array.from(backendPermissions);
+}
+
+export function mapPermissionsToFrontend(backendPermissions: string[]): string[] {
+	if (backendPermissions.includes("rag:query")) {
+		const permissions = ["read", "write"];
+		if (backendPermissions.includes("admin:manage")) {
+			permissions.push("admin");
+		}
+		return permissions;
+	}
+
+	return backendPermissions;
+}
+
+export const PermissionMapper = {
+	mapToBackend: mapPermissionsToBackend,
+	mapToFrontend: mapPermissionsToFrontend,
+};

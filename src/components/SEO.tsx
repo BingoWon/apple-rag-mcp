@@ -147,6 +147,7 @@ export function BreadcrumbStructuredData({
 	return (
 		<script
 			type="application/ld+json"
+			// biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data requires innerHTML
 			dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
 		/>
 	);
@@ -170,6 +171,7 @@ export function FAQStructuredData({ faqs }: { faqs: Array<{ question: string; an
 	return (
 		<script
 			type="application/ld+json"
+			// biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data requires innerHTML
 			dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
 		/>
 	);
@@ -205,6 +207,7 @@ export function ProductStructuredData({
 	return (
 		<script
 			type="application/ld+json"
+			// biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data requires innerHTML
 			dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
 		/>
 	);

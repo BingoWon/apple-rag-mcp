@@ -81,14 +81,24 @@ const StatsCards = () => {
 				<div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
 					{stats.map((stat, index) => {
 						const Icon = stat.icon;
+						const handleKeyDown = (e: React.KeyboardEvent) => {
+							if (stat.clickable && (e.key === "Enter" || e.key === " ")) {
+								e.preventDefault();
+								handleCardClick(stat);
+							}
+						};
 						return (
+							// biome-ignore lint/a11y/noStaticElementInteractions: conditionally interactive based on stat.clickable
 							<div
 								key={index}
+								role={stat.clickable ? "button" : undefined}
+								tabIndex={stat.clickable ? 0 : undefined}
 								className={`rounded-[10px] w-full h-24 lg:h-32 flex flex-col items-center justify-center gap-1 lg:gap-2 transition-all duration-[350ms] ease-in-out ${
 									stat.clickable ? "cursor-pointer hover:scale-110" : "cursor-default"
 								}`}
 								style={{ backgroundColor: `${stat.color}20` }}
-								onClick={() => handleCardClick(stat)}
+								onClick={stat.clickable ? () => handleCardClick(stat) : undefined}
+								onKeyDown={stat.clickable ? handleKeyDown : undefined}
 							>
 								<Icon className="w-6 h-6 lg:w-8 lg:h-8" style={{ color: stat.color }} />
 								<span className="text-lg lg:text-xl font-semibold" style={{ color: stat.color }}>

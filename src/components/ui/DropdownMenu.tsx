@@ -82,7 +82,20 @@ export function DropdownMenu({ trigger, items, align = "right", className }: Dro
 	return (
 		<div className={cn("relative", className)} ref={dropdownRef}>
 			{/* Trigger */}
-			<div ref={triggerRef} onClick={handleTriggerClick} className="cursor-pointer">
+			{/* biome-ignore lint/a11y/useSemanticElements: trigger wraps arbitrary children */}
+			<div
+				ref={triggerRef}
+				role="button"
+				tabIndex={0}
+				className="cursor-pointer"
+				onClick={handleTriggerClick}
+				onKeyDown={(e) => {
+					if (e.key === "Enter" || e.key === " ") {
+						e.preventDefault();
+						handleTriggerClick();
+					}
+				}}
+			>
 				{trigger}
 			</div>
 
@@ -105,6 +118,7 @@ export function DropdownMenu({ trigger, items, align = "right", className }: Dro
 					>
 						{items.map((item) => (
 							<button
+								type="button"
 								key={item.key}
 								onClick={() => handleItemClick(item)}
 								disabled={item.disabled}

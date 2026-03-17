@@ -45,6 +45,7 @@ export default function LegalTabs() {
 			<div className="flex flex-row items-center justify-center [perspective:1000px] relative overflow-auto sm:overflow-visible no-visible-scrollbar max-w-full w-full">
 				{tabs.map((tab, idx) => (
 					<button
+						type="button"
 						key={tab.value}
 						onClick={() => handleTabClick(idx)}
 						onMouseEnter={() => setHovering(true)}

@@ -179,12 +179,13 @@ export const MobileSidebar = ({ className, children, ...props }: React.Component
 								className,
 							)}
 						>
-							<div
+							<button
+								type="button"
 								className="absolute right-6 top-6 z-50 text-light cursor-pointer hover:text-muted transition-colors"
 								onClick={() => setOpen(!open)}
 							>
 								<IconX />
-							</div>
+							</button>
 							{children}
 						</motion.div>
 					</>

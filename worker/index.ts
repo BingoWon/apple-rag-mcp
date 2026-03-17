@@ -7,7 +7,7 @@ import { MCPProtocolHandler } from "./mcp/protocol-handler.js";
 import { createServices } from "./mcp-services/index.js";
 import { logger } from "./mcp-utils/logger.js";
 import { configureTelegram } from "./mcp-utils/telegram-notifier.js";
-import type { AppEnv, Env } from "./shared/types.js";
+import type { Env } from "./shared/types.js";
 
 const MCP_HOSTNAME = "mcp.apple-rag.com";
 

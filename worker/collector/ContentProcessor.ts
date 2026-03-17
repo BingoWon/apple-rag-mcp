@@ -2,6 +2,9 @@ import type { AppleAPIResponse, BatchResult, DocumentContent } from "./types/ind
 import { BatchErrorHandler } from "./utils/batch-error-handler.js";
 import { UrlProcessor } from "./utils/url-processor.js";
 
+// biome-ignore lint/suspicious/noExplicitAny: ContentProcessor handles dynamic Apple documentation JSON structures with deeply nested, variable-shape nodes
+type DocJsonNode = any;
+
 class ContentProcessor {
 	private urlProcessor = new UrlProcessor();
 
@@ -72,7 +75,7 @@ class ContentProcessor {
 
 			// Collect unique deprecation messages
 			const deprecationMessages = new Set<string>();
-			docData.metadata.platforms.forEach((platform: any) => {
+			docData.metadata.platforms.forEach((platform: DocJsonNode) => {
 				if ((platform.deprecated || platform.deprecatedAt) && platform.message) {
 					deprecationMessages.add(platform.message);
 				}
@@ -88,7 +91,7 @@ class ContentProcessor {
 		return `${parts.join("")}\n`;
 	}
 
-	private formatPlatformInfo(platform: any): string {
+	private formatPlatformInfo(platform: DocJsonNode): string {
 		// Handle special case: deprecated item without name (global deprecation)
 		if (!platform.name && platform.deprecated) {
 			const message = platform.message ? ` (${platform.message})` : "";
@@ -127,8 +130,8 @@ class ContentProcessor {
 	}
 
 	private convertContentSectionToMarkdown(
-		section: any,
-		references: Record<string, any>,
+		section: DocJsonNode,
+		references: Record<string, DocJsonNode>,
 		indentLevel: number,
 	): { title: string; content: string } {
 		const sectionType = section.type || section.kind;
@@ -160,7 +163,7 @@ class ContentProcessor {
 		return handlers[sectionType]?.() || this.renderGenericContent(section, references, indentLevel);
 	}
 
-	private renderHeading(section: any): { title: string; content: string } {
+	private renderHeading(section: DocJsonNode): { title: string; content: string } {
 		const level = section.level || 2;
 		const headingPrefix = "#".repeat(level);
 		const title = section.text || "";
@@ -169,19 +172,19 @@ class ContentProcessor {
 	}
 
 	private renderParagraph(
-		section: any,
-		references: Record<string, any>,
+		section: DocJsonNode,
+		references: Record<string, DocJsonNode>,
 	): { title: string; content: string } {
 		let content = "";
 		if (section.inlineContent) {
 			content = section.inlineContent
-				.map((inline: any) => this.renderInlineContent(inline, references))
+				.map((inline: DocJsonNode) => this.renderInlineContent(inline, references))
 				.join("");
 		}
 		return { title: "", content };
 	}
 
-	private renderCodeListing(section: any): { title: string; content: string } {
+	private renderCodeListing(section: DocJsonNode): { title: string; content: string } {
 		if (!section.code?.length) {
 			return { title: "", content: "" };
 		}
@@ -192,8 +195,8 @@ class ContentProcessor {
 	}
 
 	private renderList(
-		section: any,
-		references: Record<string, any>,
+		section: DocJsonNode,
+		references: Record<string, DocJsonNode>,
 		indentLevel: number,
 		listType: "ordered" | "unordered",
 	): { title: string; content: string } {
@@ -206,14 +209,14 @@ class ContentProcessor {
 			return { title: "", content };
 		}
 
-		section.items.forEach((item: any, index: number) => {
+		section.items.forEach((item: DocJsonNode, index: number) => {
 			if (item.content) {
 				const indent = "  ".repeat(indentLevel);
 				const marker = listType === "ordered" ? `${index + 1}. ` : "- ";
 				content += `${indent}${marker}`;
 
 				let isFirstContent = true;
-				item.content.forEach((contentItem: any, contentIndex: number) => {
+				item.content.forEach((contentItem: DocJsonNode, contentIndex: number) => {
 					const result = this.convertContentSectionToMarkdown(
 						contentItem,
 						references,
@@ -248,7 +251,7 @@ class ContentProcessor {
 		return { title: "", content };
 	}
 
-	private isNestedList(contentItem: any): boolean {
+	private isNestedList(contentItem: DocJsonNode): boolean {
 		return (
 			contentItem.type === "unorderedList" ||
 			contentItem.kind === "unorderedList" ||
@@ -264,7 +267,10 @@ class ContentProcessor {
 			.replace(/\n+$/, "");
 	}
 
-	private renderInlineContent(inline: any, references: Record<string, any>): string {
+	private renderInlineContent(
+		inline: DocJsonNode,
+		references: Record<string, DocJsonNode>,
+	): string {
 		const handlers: Record<string, () => string> = {
 			text: () => this.normalizeLineTerminators(this.toSafeString(inline.text)),
 			reference: () => this.renderReference(inline, references),
@@ -279,7 +285,7 @@ class ContentProcessor {
 		return handlers[inline.type]?.() || "";
 	}
 
-	private renderReference(inline: any, references: Record<string, any>): string {
+	private renderReference(inline: DocJsonNode, references: Record<string, DocJsonNode>): string {
 		const refText =
 			inline.identifier && references[inline.identifier]
 				? references[inline.identifier].title || inline.text || inline.identifier
@@ -288,23 +294,25 @@ class ContentProcessor {
 		return refText ? `\`${refText}\`` : "";
 	}
 
-	private renderMedia(inline: any, mediaType: string): string {
-		const abstractText = inline.metadata?.abstract?.map((item: any) => item.text || "").join("");
+	private renderMedia(inline: DocJsonNode, mediaType: string): string {
+		const abstractText = inline.metadata?.abstract
+			?.map((item: DocJsonNode) => item.text || "")
+			.join("");
 
 		return abstractText ? `[${mediaType}: ${abstractText}]` : "";
 	}
 
 	private renderTableRow(
-		section: any,
-		references: Record<string, any>,
+		section: DocJsonNode,
+		references: Record<string, DocJsonNode>,
 		indentLevel: number,
 	): { title: string; content: string } {
 		let title = "";
 		let content = "";
 		if (section.columns) {
-			section.columns.forEach((column: any) => {
+			section.columns.forEach((column: DocJsonNode) => {
 				if (column.content) {
-					column.content.forEach((contentItem: any) => {
+					column.content.forEach((contentItem: DocJsonNode) => {
 						const result = this.convertContentSectionToMarkdown(
 							contentItem,
 							references,
@@ -319,7 +327,7 @@ class ContentProcessor {
 		return { title, content };
 	}
 
-	private renderDeclarations(section: any): { title: string; content: string } {
+	private renderDeclarations(section: DocJsonNode): { title: string; content: string } {
 		if (!section.declarations?.length) {
 			return { title: "", content: "" };
 		}
@@ -373,9 +381,8 @@ class ContentProcessor {
 		return { title: "", content };
 	}
 
-	private formatFunctionDeclaration(tokens: any[], languages: string[]): string {
-		// Get the raw declaration text
-		const rawText = tokens.map((token: any) => token.text || "").join("");
+	private formatFunctionDeclaration(tokens: DocJsonNode[], languages: string[]): string {
+		const rawText = tokens.map((token: DocJsonNode) => token.text || "").join("");
 
 		// Check if this is a Swift function based on languages array
 		const isSwiftFunction = languages.includes("swift");
@@ -452,8 +459,8 @@ class ContentProcessor {
 	}
 
 	private renderProperties(
-		section: any,
-		references: Record<string, any>,
+		section: DocJsonNode,
+		references: Record<string, DocJsonNode>,
 	): { title: string; content: string } {
 		let content = "";
 		if (section.title) {
@@ -461,13 +468,13 @@ class ContentProcessor {
 		}
 
 		if (section.items && section.items.length > 0) {
-			section.items.forEach((item: any) => {
+			section.items.forEach((item: DocJsonNode) => {
 				if (item.name) {
 					const propertyHeader = this.buildPropertyHeader(item);
 					content += `${propertyHeader}\n\n`;
 
 					if (item.content && item.content.length > 0) {
-						item.content.forEach((contentItem: any) => {
+						item.content.forEach((contentItem: DocJsonNode) => {
 							const result = this.convertContentSectionToMarkdown(contentItem, references, 0);
 							if (result.content) {
 								content += result.content;
@@ -482,11 +489,11 @@ class ContentProcessor {
 		return { title: "", content };
 	}
 
-	private buildPropertyHeader(item: any): string {
+	private buildPropertyHeader(item: DocJsonNode): string {
 		let propertyHeader = `#### ${item.name}`;
 
 		if (item.type && item.type.length > 0) {
-			const typeText = item.type.map((t: any) => t.text || "").join("");
+			const typeText = item.type.map((t: DocJsonNode) => t.text || "").join("");
 			if (typeText) {
 				propertyHeader += ` (${typeText})`;
 			}
@@ -508,8 +515,8 @@ class ContentProcessor {
 	}
 
 	private renderAside(
-		section: any,
-		references: Record<string, any>,
+		section: DocJsonNode,
+		references: Record<string, DocJsonNode>,
 		indentLevel: number,
 	): { title: string; content: string } {
 		let content = "";
@@ -525,7 +532,7 @@ class ContentProcessor {
 
 		// Process the aside content
 		if (section.content) {
-			section.content.forEach((contentItem: any, index: number) => {
+			section.content.forEach((contentItem: DocJsonNode, index: number) => {
 				const result = this.convertContentSectionToMarkdown(contentItem, references, indentLevel);
 				if (result.content) {
 					// Add the label before the first content item
@@ -542,25 +549,24 @@ class ContentProcessor {
 	}
 
 	private renderTermList(
-		section: any,
-		references: Record<string, any>,
+		section: DocJsonNode,
+		references: Record<string, DocJsonNode>,
 		_indentLevel: number,
 	): { title: string; content: string } {
 		let content = "";
 
 		if (section.items?.length) {
-			section.items.forEach((item: any) => {
-				// Render the term (parameter name) as bold text
+			section.items.forEach((item: DocJsonNode) => {
 				if (item.term?.inlineContent) {
 					const termContent = item.term.inlineContent
-						.map((inline: any) => this.renderInlineContent(inline, references))
+						.map((inline: DocJsonNode) => this.renderInlineContent(inline, references))
 						.join("");
 					content += `**${termContent}**\n`;
 				}
 
 				// Render the definition (parameter description)
 				if (item.definition?.content) {
-					item.definition.content.forEach((defItem: any) => {
+					item.definition.content.forEach((defItem: DocJsonNode) => {
 						const result = this.convertContentSectionToMarkdown(defItem, references, 0);
 						if (result.content) {
 							content += `${result.content}\n`;
@@ -574,15 +580,15 @@ class ContentProcessor {
 	}
 
 	private renderGenericContent(
-		section: any,
-		references: Record<string, any>,
+		section: DocJsonNode,
+		references: Record<string, DocJsonNode>,
 		indentLevel: number,
 	): { title: string; content: string } {
 		let title = "";
 		let content = "";
 
 		if (section.content) {
-			section.content.forEach((contentItem: any) => {
+			section.content.forEach((contentItem: DocJsonNode) => {
 				const result = this.convertContentSectionToMarkdown(contentItem, references, indentLevel);
 				if (result.title) title += `${result.title}\n`;
 				if (result.content) content += `${result.content}\n`;
@@ -593,8 +599,8 @@ class ContentProcessor {
 	}
 
 	private renderParameters(
-		section: any,
-		references: Record<string, any>,
+		section: DocJsonNode,
+		references: Record<string, DocJsonNode>,
 	): { title: string; content: string } {
 		if (!section.parameters?.length) {
 			return { title: "", content: "" };
@@ -602,12 +608,12 @@ class ContentProcessor {
 
 		let content = "## Parameters\n";
 
-		section.parameters.forEach((param: any) => {
+		section.parameters.forEach((param: DocJsonNode) => {
 			if (param.name) {
 				content += `### ${param.name}\n`;
 
 				if (param.content?.length) {
-					param.content.forEach((contentItem: any) => {
+					param.content.forEach((contentItem: DocJsonNode) => {
 						const result = this.convertContentSectionToMarkdown(contentItem, references, 0);
 						if (result.content) {
 							content += `${result.content}\n`;
@@ -620,7 +626,7 @@ class ContentProcessor {
 		return { title: "", content };
 	}
 
-	private renderRestEndpoint(section: any): { title: string; content: string } {
+	private renderRestEndpoint(section: DocJsonNode): { title: string; content: string } {
 		let content = "";
 
 		if (section.title) {
@@ -629,7 +635,7 @@ class ContentProcessor {
 
 		if (section.tokens?.length) {
 			let endpointLine = "";
-			section.tokens.forEach((token: any) => {
+			section.tokens.forEach((token: DocJsonNode) => {
 				if (token.kind === "method") {
 					endpointLine += `**${token.text}**`;
 				} else if (token.kind === "baseURL" || token.kind === "path") {
@@ -647,8 +653,8 @@ class ContentProcessor {
 	}
 
 	private renderRestParameters(
-		section: any,
-		references: Record<string, any>,
+		section: DocJsonNode,
+		references: Record<string, DocJsonNode>,
 	): { title: string; content: string } {
 		let content = "";
 
@@ -657,13 +663,13 @@ class ContentProcessor {
 		}
 
 		if (section.items?.length) {
-			section.items.forEach((item: any, index: number) => {
+			section.items.forEach((item: DocJsonNode, index: number) => {
 				if (item.name) {
 					if (index > 0) content += "\n";
 					content += `### ${item.name}\n`;
 
 					if (item.type?.length) {
-						const typeText = item.type.map((t: any) => t.text).join("");
+						const typeText = item.type.map((t: DocJsonNode) => t.text).join("");
 						content += `**Type:** \`${typeText}\`\n`;
 					}
 
@@ -672,7 +678,7 @@ class ContentProcessor {
 					}
 
 					if (item.content?.length) {
-						item.content.forEach((contentItem: any) => {
+						item.content.forEach((contentItem: DocJsonNode) => {
 							const result = this.convertContentSectionToMarkdown(contentItem, references, 0);
 							if (result.content) {
 								content += `${result.content}\n`;
@@ -687,8 +693,8 @@ class ContentProcessor {
 	}
 
 	private renderRestResponses(
-		section: any,
-		references: Record<string, any>,
+		section: DocJsonNode,
+		references: Record<string, DocJsonNode>,
 	): { title: string; content: string } {
 		let content = "";
 
@@ -697,13 +703,13 @@ class ContentProcessor {
 		}
 
 		if (section.items?.length) {
-			section.items.forEach((item: any, index: number) => {
+			section.items.forEach((item: DocJsonNode, index: number) => {
 				if (item.status) {
 					if (index > 0) content += "\n";
 					content += `### ${item.status} ${item.reason || ""}\n`;
 
 					if (item.type?.length) {
-						const typeText = item.type.map((t: any) => t.text).join("");
+						const typeText = item.type.map((t: DocJsonNode) => t.text).join("");
 						content += `**Response Type:** \`${typeText}\`\n`;
 					}
 
@@ -712,7 +718,7 @@ class ContentProcessor {
 					}
 
 					if (item.content?.length) {
-						item.content.forEach((contentItem: any) => {
+						item.content.forEach((contentItem: DocJsonNode) => {
 							const result = this.convertContentSectionToMarkdown(contentItem, references, 0);
 							if (result.content) {
 								content += `${result.content}\n`;
@@ -726,7 +732,7 @@ class ContentProcessor {
 		return { title: section.title || "", content };
 	}
 
-	private renderDetails(section: any): { title: string; content: string } {
+	private renderDetails(section: DocJsonNode): { title: string; content: string } {
 		let content = "";
 
 		if (section.title) {
@@ -744,7 +750,7 @@ class ContentProcessor {
 
 			// Render value type information
 			if (details.value && Array.isArray(details.value)) {
-				details.value.forEach((valueInfo: any) => {
+				details.value.forEach((valueInfo: DocJsonNode) => {
 					if (valueInfo.baseType) {
 						const arrayMode = valueInfo.arrayMode ? " (array)" : "";
 						items.push(`**Type:** ${valueInfo.baseType}${arrayMode}`);
@@ -755,7 +761,7 @@ class ContentProcessor {
 			// Render platform information if available
 			if (details.platforms && Array.isArray(details.platforms) && details.platforms.length > 0) {
 				const platformInfo = details.platforms
-					.map((platform: any) => this.formatPlatformInfo(platform))
+					.map((platform: DocJsonNode) => this.formatPlatformInfo(platform))
 					.filter((info: string) => info.trim())
 					.join(", ");
 				if (platformInfo) {
@@ -770,7 +776,7 @@ class ContentProcessor {
 		return { title: section.title || "", content };
 	}
 
-	private renderPossibleValues(section: any): {
+	private renderPossibleValues(section: DocJsonNode): {
 		title: string;
 		content: string;
 	} {
@@ -781,7 +787,7 @@ class ContentProcessor {
 		}
 
 		if (section.values && Array.isArray(section.values)) {
-			section.values.forEach((value: any) => {
+			section.values.forEach((value: DocJsonNode) => {
 				if (value.name) {
 					content += `- **${value.name}**`;
 
@@ -789,10 +795,10 @@ class ContentProcessor {
 					if (value.content && Array.isArray(value.content) && value.content.length > 0) {
 						content += ": ";
 						const valueContent = value.content
-							.map((contentItem: any) => {
+							.map((contentItem: DocJsonNode) => {
 								if (contentItem.inlineContent) {
 									return contentItem.inlineContent
-										.map((inline: any) => this.renderInlineContent(inline, {}))
+										.map((inline: DocJsonNode) => this.renderInlineContent(inline, {}))
 										.join("");
 								}
 								return "";
@@ -810,7 +816,7 @@ class ContentProcessor {
 		return { title: section.title || "", content };
 	}
 
-	private renderAttributes(section: any): { title: string; content: string } {
+	private renderAttributes(section: DocJsonNode): { title: string; content: string } {
 		let content = "";
 
 		if (section.title) {
@@ -819,7 +825,7 @@ class ContentProcessor {
 
 		if (section.attributes && Array.isArray(section.attributes)) {
 			const items: string[] = [];
-			section.attributes.forEach((attribute: any) => {
+			section.attributes.forEach((attribute: DocJsonNode) => {
 				if (attribute.kind && attribute.value) {
 					items.push(`**${attribute.kind}:** ${attribute.value}`);
 				}
@@ -836,7 +842,7 @@ class ContentProcessor {
 	 * Lightweight synchronous type conversion for frequently called methods
 	 * Converts any value to string without sending notifications
 	 */
-	private toSafeString(value: any): string {
+	private toSafeString(value: DocJsonNode): string {
 		return typeof value === "string" ? value : String(value || "");
 	}
 

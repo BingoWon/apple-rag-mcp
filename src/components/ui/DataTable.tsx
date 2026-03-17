@@ -8,12 +8,12 @@ import { formatDate } from "@/lib/datetime";
 export interface DataTableColumn {
 	key: string;
 	label: string;
-	render?: (value: any, row: any) => ReactNode;
+	render?: (value: unknown, row: Record<string, unknown>) => ReactNode;
 }
 
 export interface DataTableProps {
 	columns: DataTableColumn[];
-	data: Array<Record<string, any>>;
+	data: Array<Record<string, unknown>>;
 	isLoading?: boolean;
 	error?: string | null;
 	className?: string;
@@ -28,7 +28,11 @@ export function DataTable({
 }: DataTableProps) {
 	const { t } = useTranslation();
 
-	const formatValue = (value: any, column: DataTableColumn, row: any): ReactNode => {
+	const formatValue = (
+		value: unknown,
+		column: DataTableColumn,
+		row: Record<string, unknown>,
+	): ReactNode => {
 		if (column.render) {
 			return column.render(value, row);
 		}

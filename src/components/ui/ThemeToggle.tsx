@@ -121,6 +121,7 @@ export function ThemeToggle({
 		const allThemes = getAllThemes();
 
 		return (
+			// biome-ignore lint/a11y/noStaticElementInteractions: hover container for dropdown, child buttons are semantic
 			<div
 				ref={containerRef}
 				className="relative flex items-center"
@@ -162,6 +163,7 @@ export function ThemeToggle({
 					<span className="sr-only">Current theme: {theme}</span>
 				</Button>
 
+				{/* biome-ignore lint/a11y/noStaticElementInteractions: hover dropdown panel */}
 				<div
 					className={cn(
 						"absolute left-1/2 transform -translate-x-1/2 p-1 z-50",
@@ -185,6 +187,7 @@ export function ThemeToggle({
 						const isSelected = themeOption === theme;
 						return (
 							<button
+								type="button"
 								key={themeOption}
 								onClick={() => handleThemeSelect(themeOption)}
 								disabled={isTransitioning}

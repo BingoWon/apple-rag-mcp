@@ -35,6 +35,7 @@ export const AnimatedTestimonials = ({
 			const interval = setInterval(handleNext, 5000);
 			return () => clearInterval(interval);
 		}
+		// biome-ignore lint/correctness/useExhaustiveDependencies: animation interval - handleNext/testimonials intentionally excluded
 	}, [autoplay, handleNext]);
 
 	const [rotationValues, setRotationValues] = useState<number[]>([]);
@@ -146,12 +147,14 @@ export const AnimatedTestimonials = ({
 					</motion.div>
 					<div className="flex gap-4 pt-12 md:pt-0">
 						<button
+							type="button"
 							onClick={handlePrev}
 							className="group/button flex h-10 w-10 items-center justify-center rounded-xl bg-card border border-default hover:border-brand hover:bg-accent transition-all duration-200 shadow-button"
 						>
 							<IconArrowLeft className="h-5 w-5 text-light transition-all duration-200 group-hover/button:rotate-12 group-hover/button:text-brand" />
 						</button>
 						<button
+							type="button"
 							onClick={handleNext}
 							className="group/button flex h-10 w-10 items-center justify-center rounded-xl bg-card border border-default hover:border-brand hover:bg-accent transition-all duration-200 shadow-button"
 						>

@@ -117,7 +117,7 @@ app.openapi(listMCPTokensRoute, async (c) => {
 
 		// Transform database results to API format
 		// Include token value for user convenience (consider encryption in production)
-		const formattedTokens = (tokens.results || []).map((token: any) => ({
+		const formattedTokens = (tokens.results || []).map((token: Record<string, unknown>) => ({
 			id: token.id,
 			name: token.name,
 			mcp_token: token.mcp_token, // Include token for user access
@@ -230,7 +230,7 @@ app.openapi(createMCPTokenRoute, async (c) => {
 			.bind(user.id)
 			.first();
 
-		if (existingCount && (existingCount as any).count >= 10) {
+		if (existingCount && (existingCount as Record<string, unknown>).count >= 10) {
 			return c.json(
 				{
 					success: false,

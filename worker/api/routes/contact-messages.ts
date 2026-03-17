@@ -558,7 +558,7 @@ app.openapi(getMessageHistoryRoute, async (c) => {
 
 		// Build WHERE clause based on filter
 		let whereClause = "user_id = ? AND admin_reply IS NOT NULL";
-		const bindings: any[] = [userId];
+		const bindings: unknown[] = [userId];
 
 		if (filter === "unread") {
 			whereClause += " AND user_read_at IS NULL";

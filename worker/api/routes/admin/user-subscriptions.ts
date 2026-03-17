@@ -114,23 +114,25 @@ app.openapi(getUserSubscriptionsRoute, async (c) => {
 			.bind(limit, offset)
 			.all();
 
-		const subscriptions = (subscriptionsResult.results || []).map((row: any) => ({
-			user_id: row.user_id,
-			stripe_customer_id: row.stripe_customer_id,
-			stripe_subscription_id: row.stripe_subscription_id,
-			plan_type: row.plan_type || "hobby",
-			status: row.status || "active",
-			current_period_start: row.current_period_start,
-			current_period_end: row.current_period_end,
-			cancel_at_period_end: Boolean(row.cancel_at_period_end),
-			price: Number(row.price) || 0,
-			billing_interval: row.billing_interval || "month",
-			stripe_price_id: row.stripe_price_id,
-			payment_type: row.payment_type || "subscription",
-			updated_at: row.updated_at,
-			user_email: row.user_email || "N/A",
-			user_name: row.user_name || "N/A",
-		}));
+		const subscriptions = (subscriptionsResult.results || []).map(
+			(row: Record<string, unknown>) => ({
+				user_id: row.user_id,
+				stripe_customer_id: row.stripe_customer_id,
+				stripe_subscription_id: row.stripe_subscription_id,
+				plan_type: row.plan_type || "hobby",
+				status: row.status || "active",
+				current_period_start: row.current_period_start,
+				current_period_end: row.current_period_end,
+				cancel_at_period_end: Boolean(row.cancel_at_period_end),
+				price: Number(row.price) || 0,
+				billing_interval: row.billing_interval || "month",
+				stripe_price_id: row.stripe_price_id,
+				payment_type: row.payment_type || "subscription",
+				updated_at: row.updated_at,
+				user_email: row.user_email || "N/A",
+				user_name: row.user_name || "N/A",
+			}),
+		);
 
 		return c.json(
 			{

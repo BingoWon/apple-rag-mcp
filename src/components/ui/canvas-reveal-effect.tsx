@@ -173,16 +173,18 @@ const ShaderMaterial = ({
 		}
 		lastFrameTime = timestamp;
 
+		// biome-ignore lint/suspicious/noExplicitAny: third-party component - THREE.js material uniforms
 		const material: any = ref.current.material;
 		const timeLocation = material.uniforms.u_time;
 		timeLocation.value = timestamp;
 	});
 
 	const getUniforms = () => {
+		// biome-ignore lint/suspicious/noExplicitAny: third-party component - dynamic WebGL uniform types
 		const preparedUniforms: any = {};
 
 		for (const uniformName in uniforms) {
-			const uniform: any = uniforms[uniformName];
+			const uniform = uniforms[uniformName];
 
 			switch (uniform.type) {
 				case "uniform1f":
@@ -247,9 +249,11 @@ const ShaderMaterial = ({
 		});
 
 		return materialObject;
+		// biome-ignore lint/correctness/useExhaustiveDependencies: getUniforms captures size/uniforms; animation effect intentionally stable
 	}, [source, getUniforms]);
 
 	return (
+		// biome-ignore lint/suspicious/noExplicitAny: third-party component - THREE.js ref type mismatch
 		<mesh ref={ref as any}>
 			<planeGeometry args={[2, 2]} />
 			<primitive object={material} attach="material" />

@@ -7,7 +7,7 @@ export const LoaderOne = () => {
 			repeat: Infinity,
 			repeatType: "loop" as const,
 			delay: x * 0.2,
-			ease: "easeInOut" as any,
+			ease: "easeInOut" as unknown as string,
 		};
 	};
 	return (
@@ -53,7 +53,7 @@ export const LoaderTwo = () => {
 			repeat: Infinity,
 			repeatType: "loop" as const,
 			delay: x * 0.2,
-			ease: "easeInOut" as any,
+			ease: "easeInOut" as unknown as string,
 		};
 	};
 	return (
@@ -112,7 +112,7 @@ export const LoaderThree = () => {
 				animate={{ pathLength: 1, fill: "var(--fill-final)" }}
 				transition={{
 					duration: 2,
-					ease: "easeInOut" as any,
+					ease: "easeInOut" as unknown as string,
 					repeat: Infinity,
 					repeatType: "reverse",
 				}}
@@ -202,7 +202,7 @@ export const LoaderFive = ({ text }: { text: string }) => {
 						repeat: Infinity,
 						repeatType: "loop",
 						delay: i * 0.05,
-						ease: "easeInOut" as any,
+						ease: "easeInOut" as unknown as string,
 						repeatDelay: 2,
 					}}
 				>

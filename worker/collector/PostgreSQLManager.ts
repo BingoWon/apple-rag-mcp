@@ -60,7 +60,7 @@ class PostgreSQLManager {
       RETURNING *
     `;
 
-		return result.map((row: any) => ({
+		return result.map((row: Record<string, unknown>) => ({
 			...row,
 			raw_json: row.raw_json === undefined ? null : row.raw_json, // Fix postgres JSONB undefined → null
 			collect_count: Number(row.collect_count),
@@ -117,9 +117,9 @@ class PostgreSQLManager {
 		const pct = (n: number, d: number) => (d > 0 ? `${Math.floor((n / d) * 1000) / 10}%` : "0%");
 
 		const collectCountDistribution: Record<string, { count: number; percentage: string }> = {};
-		distributionResult.forEach((row: any) => {
+		distributionResult.forEach((row: Record<string, unknown>) => {
 			const cc = String(row.collect_count);
-			const count = parseInt(row.count, 10);
+			const count = parseInt(String(row.count), 10);
 			collectCountDistribution[cc] = { count, percentage: pct(count, total) };
 		});
 

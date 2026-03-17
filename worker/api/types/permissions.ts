@@ -17,7 +17,15 @@ export const TIER_PERMISSIONS: Record<string, string[]> = {
 };
 
 // OAuth quota system
-export const OAUTH_SUBSCRIPTION_QUOTAS: Record<string, any> = {
+interface SubscriptionQuota {
+	week: number;
+	minute: number;
+	maxRequestsPerHour: number;
+	maxTokensPerUser: number;
+	canAccessPremiumFeatures: boolean;
+}
+
+export const OAUTH_SUBSCRIPTION_QUOTAS: Record<string, SubscriptionQuota> = {
 	anonymous: {
 		week: 30,
 		minute: 3,

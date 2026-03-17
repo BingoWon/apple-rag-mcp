@@ -58,7 +58,7 @@ export const ModalTrigger = ({
 
 	// Auto-detect: if children is a React element, clone it; otherwise use button
 	if (React.isValidElement(children)) {
-		return React.cloneElement(children as React.ReactElement<any>, {
+		return React.cloneElement(children as React.ReactElement<Record<string, unknown>>, {
 			onClick: handleClick,
 			disabled,
 		});
@@ -221,10 +221,12 @@ const CloseIcon = () => {
 
 	return (
 		<button
+			type="button"
 			onClick={handleClick}
 			className="absolute top-6 right-6 group p-2.5 rounded-full bg-card/90 backdrop-blur-md hover:bg-card transition-all duration-300 shadow-[var(--shadow-button)] hover:shadow-[var(--shadow-complex)] ring-1 ring-border hover:ring-border/60 hover:scale-105"
 			aria-label="Close modal"
 		>
+			{/* biome-ignore lint/a11y/noSvgWithoutTitle: decorative icon, button has aria-label */}
 			<svg
 				xmlns="http://www.w3.org/2000/svg"
 				width="24"

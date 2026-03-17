@@ -102,7 +102,7 @@ app.openapi(getUsersRoute, async (c) => {
 			.bind(limit, offset)
 			.all();
 
-		const users = (usersResult.results || []).map((row: any) => ({
+		const users = (usersResult.results || []).map((row: Record<string, unknown>) => ({
 			id: row.id,
 			email: row.email,
 			name: row.name || "N/A",

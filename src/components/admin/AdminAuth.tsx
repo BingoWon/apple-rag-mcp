@@ -3,7 +3,7 @@
  * Password-protected access to admin dashboard
  */
 import { IconEye, IconEyeOff, IconShieldCheck } from "@tabler/icons-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/Button";
@@ -22,17 +22,20 @@ export function AdminAuth({ onAuthenticated }: AdminAuthProps) {
 	const [error, setError] = useState("");
 	const [isLoading, setIsLoading] = useState(false);
 
-	const verifyStoredPassword = async (_storedPassword: string) => {
-		try {
-			// Test the stored password by making an admin API call
-			// Password is already in localStorage, so API call will include it
-			await api.getAdminUsers();
-			onAuthenticated();
-		} catch (_error) {
-			// Invalid stored password, clear it
-			localStorage.removeItem(ADMIN_SESSION_KEY);
-		}
-	};
+	const verifyStoredPassword = useCallback(
+		async (_storedPassword: string) => {
+			try {
+				// Test the stored password by making an admin API call
+				// Password is already in localStorage, so API call will include it
+				await api.getAdminUsers();
+				onAuthenticated();
+			} catch (_error) {
+				// Invalid stored password, clear it
+				localStorage.removeItem(ADMIN_SESSION_KEY);
+			}
+		},
+		[onAuthenticated],
+	);
 
 	// Check if already authenticated
 	useEffect(() => {

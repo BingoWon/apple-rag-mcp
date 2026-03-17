@@ -1,3 +1,4 @@
+import type { TFunction } from "i18next";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
@@ -8,7 +9,6 @@ import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
 import { api } from "@/lib/api";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import type { TFunction } from "i18next";
 import type { CurrentUsage, Subscription } from "@/types";
 
 interface SubscriptionCardProps {
@@ -113,9 +113,7 @@ export function SubscriptionCard({ subscription, usage }: SubscriptionCardProps)
 							{subscription.price > 0 ? formatCurrency(subscription.price) : t("common.free")}
 						</div>
 						{subscription.price > 0 && !isOneTime && (
-							<div className="text-sm text-faint">
-								{t(`pricing.${interval.perKey}`)}
-							</div>
+							<div className="text-sm text-faint">{t(`pricing.${interval.perKey}`)}</div>
 						)}
 					</div>
 				</div>
@@ -190,9 +188,7 @@ export function SubscriptionCard({ subscription, usage }: SubscriptionCardProps)
 								<PricingModal planName="Pro" />
 							</Modal>
 						) : (
-							<p className="text-xs text-faint text-center">
-								{t("billing.upgrade_after_expiry")}
-							</p>
+							<p className="text-xs text-faint text-center">{t("billing.upgrade_after_expiry")}</p>
 						)}
 					</div>
 				) : (
@@ -206,9 +202,7 @@ export function SubscriptionCard({ subscription, usage }: SubscriptionCardProps)
 							>
 								{isManagingSubscription ? t("billing.manage_opening") : t("billing.manage")}
 							</Button>
-							<p className="text-xs text-faint mt-2 text-center">
-								{t("billing.manage_desc")}
-							</p>
+							<p className="text-xs text-faint mt-2 text-center">{t("billing.manage_desc")}</p>
 						</div>
 					)
 				)}
@@ -218,8 +212,7 @@ export function SubscriptionCard({ subscription, usage }: SubscriptionCardProps)
 }
 
 function UsageProgress({ usage, t }: { usage: CurrentUsage; t: TFunction }) {
-	const percent =
-		usage.limit === -1 ? 0 : Math.min((usage.current_usage / usage.limit) * 100, 100);
+	const percent = usage.limit === -1 ? 0 : Math.min((usage.current_usage / usage.limit) * 100, 100);
 	const color = percent >= 80 ? "bg-error" : percent >= 50 ? "bg-warning" : "bg-brand";
 
 	return (

@@ -71,7 +71,7 @@ export const AnalyticsEvents = {
 // Type-safe event tracking function
 export const trackEvent = (
 	eventName: keyof typeof AnalyticsEvents,
-	additionalParams?: Record<string, any>,
+	additionalParams?: Record<string, unknown>,
 ) => {
 	if (typeof window === "undefined" || !window.gtag) return;
 
@@ -84,14 +84,14 @@ export const trackEvent = (
 };
 
 // Enhanced event tracking with custom parameters
-export const trackCustomEvent = (action: string, parameters: Record<string, any> = {}) => {
+export const trackCustomEvent = (action: string, parameters: Record<string, unknown> = {}) => {
 	if (typeof window === "undefined" || !window.gtag) return;
 
 	window.gtag("event", action, parameters);
 };
 
 // User identification for authenticated users
-export const identifyUser = (userId: string, properties?: Record<string, any>) => {
+export const identifyUser = (userId: string, properties?: Record<string, unknown>) => {
 	if (typeof window === "undefined" || !window.gtag) return;
 
 	window.gtag("config", import.meta.env.VITE_GA_MEASUREMENT_ID!, {
@@ -127,7 +127,7 @@ declare global {
 		gtag: (
 			command: "config" | "event" | "js" | "consent",
 			targetId: string | Date | "default" | "update",
-			config?: Record<string, any>,
+			config?: Record<string, unknown>,
 		) => void;
 	}
 }

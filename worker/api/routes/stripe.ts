@@ -163,7 +163,7 @@ stripe.openapi(
 			},
 		},
 	},
-	async (c): Promise<any> => {
+	async (c): Promise<Response> => {
 		try {
 			const { priceId, cancelUrl } = await c.req.json();
 			const user = c.get("user");
@@ -340,7 +340,7 @@ stripe.openapi(
 			},
 		},
 	},
-	async (c): Promise<any> => {
+	async (c): Promise<Response> => {
 		const user = c.get("user");
 		if (!user) {
 			return c.json(

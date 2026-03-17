@@ -222,10 +222,12 @@ export class OAuthService {
 					throw new Error(`GitHub email info failed: ${emailResponse.status} ${errorText}`);
 				}
 
-				const userData = (await userResponse.json()) as any;
-				const emailData = (await emailResponse.json()) as any[];
+				const userData = (await userResponse.json()) as Record<string, unknown>;
+				const emailData = (await emailResponse.json()) as Record<string, unknown>[];
 
-				const primaryEmail = emailData.find((email: any) => email.primary)?.email || userData.email;
+				const primaryEmail =
+					emailData.find((email: Record<string, unknown>) => email.primary)?.email ||
+					userData.email;
 
 				if (!primaryEmail) {
 					throw new Error("No email found in GitHub user data");
@@ -297,7 +299,7 @@ export class OAuthService {
 				.first();
 
 			if (emailConflict) {
-				const conflictProvider = (emailConflict as any).provider;
+				const conflictProvider = (emailConflict as Record<string, unknown>).provider;
 				throw new Error(
 					`Email ${normalizedEmail} is already registered with ${conflictProvider} authentication. Please use ${conflictProvider} to sign in.`,
 				);

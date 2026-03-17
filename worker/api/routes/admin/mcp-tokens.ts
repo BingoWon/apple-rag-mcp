@@ -94,11 +94,11 @@ app.openapi(getMCPTokensRoute, async (c) => {
 			.bind(limit, offset)
 			.all();
 
-		const tokens = (tokensResult.results || []).map((row: any) => ({
+		const tokens = (tokensResult.results || []).map((row: Record<string, unknown>) => ({
 			id: row.id,
 			user_id: row.user_id,
 			name: row.name,
-			mcp_token: row.mcp_token ? `${row.mcp_token.substring(0, 12)}...` : "N/A", // Mask sensitive token
+			mcp_token: row.mcp_token ? `${String(row.mcp_token).substring(0, 12)}...` : "N/A",
 			last_used_at: row.last_used_at,
 			created_at: row.created_at,
 			updated_at: row.updated_at,

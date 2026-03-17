@@ -1,4 +1,5 @@
 import { IconBrandGithub } from "@tabler/icons-react";
+import type React from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { activateFabContact } from "@/components/ui/FabButton";
@@ -24,17 +25,16 @@ export function Footer() {
 			{
 				name: "GitHub",
 				href: "https://github.com/BingoWon/apple-rag-mcp",
-				icon: (props: any) => <IconBrandGithub {...props} />,
+				icon: (props: React.SVGProps<SVGSVGElement>) => <IconBrandGithub {...props} />,
 			},
 			{
 				name: "Aceternity UI",
 				href: "https://ui.aceternity.com/",
-				icon: (props: any) => (
+				icon: (_props: Record<string, unknown>) => (
 					<img
 						src="https://ui.aceternity.com/logo-dark.png"
 						alt="Aceternity UI"
 						className="h-6 w-6"
-						{...props}
 					/>
 				),
 			},
@@ -81,6 +81,7 @@ export function Footer() {
 									<li key={item.name}>
 										{item.action === "contact" ? (
 											<button
+												type="button"
 												onClick={(e) => {
 													e.preventDefault();
 													activateFabContact();

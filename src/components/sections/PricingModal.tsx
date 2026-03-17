@@ -60,8 +60,7 @@ export function PricingModal({ planName, defaultTab = "subscription" }: PricingM
 		setSelectedOption(type === "one_time" ? "onetime_monthly" : "weekly");
 	};
 
-	const getSubtitle = (option: PricingOption) =>
-		t(`pricing.${option.subtitleKey}`);
+	const getSubtitle = (option: PricingOption) => t(`pricing.${option.subtitleKey}`);
 
 	const getOptionLabel = (option: PricingOption): string => {
 		const baseId = option.id.replace("onetime_", "");
@@ -89,7 +88,7 @@ export function PricingModal({ planName, defaultTab = "subscription" }: PricingM
 				window.location.href = response.data.url;
 			} else {
 				const conflictKey = CONFLICT_MESSAGES[response.error?.message || ""];
-				toast.error(conflictKey ? t(conflictKey) : (response.error?.message || "Unknown error"));
+				toast.error(conflictKey ? t(conflictKey) : response.error?.message || "Unknown error");
 			}
 		} catch (error) {
 			console.error("Error creating checkout session:", error);
@@ -119,9 +118,7 @@ export function PricingModal({ planName, defaultTab = "subscription" }: PricingM
 						className={cn(
 							"flex-1 py-2.5 px-4 text-sm font-medium transition-colors duration-200 flex items-center justify-center gap-1.5",
 							subscriptionTabDisabled && "opacity-40 cursor-not-allowed",
-							!subscriptionTabDisabled &&
-								!isOneTime &&
-								"bg-brand text-white",
+							!subscriptionTabDisabled && !isOneTime && "bg-brand text-white",
 							!subscriptionTabDisabled &&
 								isOneTime &&
 								"bg-secondary text-muted-foreground hover:text-foreground hover:bg-accent",
@@ -138,9 +135,7 @@ export function PricingModal({ planName, defaultTab = "subscription" }: PricingM
 						className={cn(
 							"flex-1 py-2.5 px-4 text-sm font-medium transition-colors duration-200 flex items-center justify-center gap-1.5",
 							onetimeTabDisabled && "opacity-40 cursor-not-allowed",
-							!onetimeTabDisabled &&
-								isOneTime &&
-								"bg-brand text-white",
+							!onetimeTabDisabled && isOneTime && "bg-brand text-white",
 							!onetimeTabDisabled &&
 								!isOneTime &&
 								"bg-secondary text-muted-foreground hover:text-foreground hover:bg-accent",
@@ -156,30 +151,30 @@ export function PricingModal({ planName, defaultTab = "subscription" }: PricingM
 				<div className="space-y-3">
 					{options.map((option, index) => {
 						const isSelected = selectedOption === option.id;
-						const discountIndex = options
-							.slice(0, index)
-							.filter((opt) => opt.discount).length;
+						const discountIndex = options.slice(0, index).filter((opt) => opt.discount).length;
 
+						const handleOptionKeyDown = (e: React.KeyboardEvent) => {
+							if (e.key === "Enter" || e.key === " ") {
+								e.preventDefault();
+								setSelectedOption(option.id);
+							}
+						};
 						return (
+							// biome-ignore lint/a11y/useSemanticElements: complex card layout with nested badges and price display
 							<div
 								key={option.id}
+								role="button"
+								tabIndex={0}
 								className={cn(
 									"relative rounded-xl border-2 p-5 cursor-pointer transition-all",
-									!isSelected &&
-										!option.popular &&
-										"border-border hover:border-border-light",
-									isSelected &&
-										!option.popular &&
-										"border-brand bg-brand/10 shadow-lg",
-									!isSelected &&
-										option.popular &&
-										"border-dashed border-yellow-400",
-									isSelected &&
-										option.popular &&
-										"border-brand bg-brand/10 shadow-lg",
+									!isSelected && !option.popular && "border-border hover:border-border-light",
+									isSelected && !option.popular && "border-brand bg-brand/10 shadow-lg",
+									!isSelected && option.popular && "border-dashed border-yellow-400",
+									isSelected && option.popular && "border-brand bg-brand/10 shadow-lg",
 									!isSelected && "hover:bg-accent",
 								)}
 								onClick={() => setSelectedOption(option.id)}
+								onKeyDown={handleOptionKeyDown}
 							>
 								{option.popular && (
 									<span className="absolute top-0 left-4 -translate-y-1/2 z-10 bg-yellow-500 text-white px-3 py-1 text-xs font-semibold rounded-full whitespace-nowrap shadow-lg">
@@ -202,22 +197,16 @@ export function PricingModal({ planName, defaultTab = "subscription" }: PricingM
 										<div
 											className={cn(
 												"w-5 h-5 rounded-full border-2 mr-4 flex items-center justify-center transition-colors",
-												isSelected
-													? "border-brand bg-brand"
-													: "border-border",
+												isSelected ? "border-brand bg-brand" : "border-border",
 											)}
 										>
-											{isSelected && (
-												<IconCheck className="w-3 h-3 text-white" />
-											)}
+											{isSelected && <IconCheck className="w-3 h-3 text-white" />}
 										</div>
 										<div>
 											<h3 className="font-semibold text-foreground text-lg">
 												{getOptionLabel(option)}
 											</h3>
-											<p className="text-sm text-muted-foreground">
-												{getSubtitle(option)}
-											</p>
+											<p className="text-sm text-muted-foreground">{getSubtitle(option)}</p>
 										</div>
 									</div>
 									<div className="text-right">

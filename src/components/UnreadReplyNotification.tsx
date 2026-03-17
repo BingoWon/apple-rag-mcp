@@ -113,6 +113,7 @@ export function UnreadReplyNotification() {
 							)}
 						</div>
 						<button
+							type="button"
 							onClick={handleClose}
 							className="text-muted hover:text-light transition-all p-1 rounded-lg hover:bg-secondary/80 backdrop-blur-sm"
 							aria-label={t("notification.close_for_now")}

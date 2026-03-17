@@ -28,6 +28,7 @@ export const CardSpotlight = ({
 	const handleMouseEnter = () => setIsHovering(true);
 	const handleMouseLeave = () => setIsHovering(false);
 	return (
+		// biome-ignore lint/a11y/noStaticElementInteractions: decorative card with mouse tracking for spotlight effect
 		<div
 			className={cn("group/spotlight rounded-lg relative overflow-hidden", className)}
 			onMouseMove={handleMouseMove}

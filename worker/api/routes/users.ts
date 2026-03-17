@@ -290,7 +290,7 @@ app.openapi(getUserToolCallsStatsRoute, async (c) => {
 			.all();
 
 		// Return raw data without time formatting - let frontend handle it
-		const usageByDay = (toolCallsStatsResult.results || []).map((row: any) => ({
+		const usageByDay = (toolCallsStatsResult.results || []).map((row: Record<string, unknown>) => ({
 			date: row.date, // Raw timestamp from database
 			tool_calls: Number(row.tool_calls) || 0,
 			results: Number(row.results) || 0,

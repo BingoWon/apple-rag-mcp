@@ -49,7 +49,7 @@ async function verifySignature(data: string, signature: string, secret: string):
 /**
  * Generate JWT token
  */
-async function signJWT(payload: any, secret: string): Promise<string> {
+async function signJWT(payload: Record<string, unknown>, secret: string): Promise<string> {
 	const header = {
 		alg: "HS256",
 		typ: "JWT",
@@ -66,7 +66,7 @@ async function signJWT(payload: any, secret: string): Promise<string> {
 /**
  * Verify JWT token
  */
-async function verifyJWT(token: string, secret: string): Promise<any> {
+async function verifyJWT(token: string, secret: string): Promise<Record<string, unknown>> {
 	const parts = token.split(".");
 	if (parts.length !== 3) {
 		throw new Error("Invalid token format");
