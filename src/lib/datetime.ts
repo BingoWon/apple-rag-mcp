@@ -1,3 +1,4 @@
+import i18n from "@/i18n";
 import {
 	DateTimeError,
 	type ParsedDateTime,
@@ -100,6 +101,21 @@ function toDate(input: string | Date | number): Date | null {
 export function formatDate(input: string | Date | number): string {
 	const date = toDate(input);
 	if (!date) return "—";
+
+	const lang = i18n.language || "en";
+
+	if (lang.startsWith("zh")) {
+		const y = date.getFullYear();
+		const m = date.getMonth() + 1;
+		const d = date.getDate();
+		const timePart = date.toLocaleTimeString("zh-CN", {
+			hour: "2-digit",
+			minute: "2-digit",
+			second: "2-digit",
+			hour12: false,
+		});
+		return `${y}年${m}月${d}日 ${timePart}`;
+	}
 
 	const datePart = date.toLocaleDateString("en-US", {
 		year: "numeric",

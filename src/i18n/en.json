@@ -140,12 +140,21 @@
 		"tab_subscription": "Subscription",
 		"tab_onetime": "One-time Pass",
 		"buy_now": "Buy Now",
-		"onetime_note": "Access expires after the selected period. No auto-renewal.",
+		"onetime_note": "No auto-renewal",
 		"onetime_weekly": "Weekly Pass",
 		"onetime_monthly": "Monthly Pass",
 		"onetime_semiannual": "Semi-annual Pass",
 		"onetime_annual": "Annual Pass",
-		"upgrade": "Upgrade Plan"
+		"onetime_duration_week": "1 week",
+		"onetime_duration_month": "1 month",
+		"onetime_duration_6months": "6 months",
+		"onetime_duration_year": "1 year",
+		"conflict_subscription_active": "You have an active subscription. Please cancel it first before purchasing a one-time pass.",
+		"conflict_onetime_active": "You have an active one-time pass. You can subscribe after it expires.",
+		"tab_disabled_has_subscription": "Cancel your subscription first",
+		"tab_disabled_has_onetime": "Available after your pass expires",
+		"manage_subscription": "Manage Subscription",
+		"view_plan": "View My Plan"
 	},
 
 	"plans": {
@@ -403,7 +412,6 @@
 		"manage": "Manage Subscription & Billing",
 		"manage_opening": "Opening...",
 		"manage_desc": "Manage your subscription, update payment methods, view invoice history, download invoices, and more",
-		"per_interval": "per {{interval}}",
 		"active": "Active",
 		"trial": "Trial",
 		"cancelled": "Cancelled",
@@ -413,14 +421,11 @@
 		"subscription_updated": "Subscription updated!\nYour changes have been saved successfully.",
 		"manage_error": "Unable to open billing management. Please contact support if this persists.",
 		"plan_suffix": "Plan",
-		"onetime_pass": "One-time Pass",
 		"expires_on": "Expires on {{date}}",
 		"expired": "Expired",
-		"buy_again": "Buy Again",
+		"buy_again": "Extend Pass",
 		"upgrade_to_subscription": "Upgrade to Subscription",
-		"usage_percent": "{{percent}}% used",
-		"no_usage_data": "Usage data will appear once you start using the API",
-		"no_subscription": "You're on the free plan. Upgrade to unlock more features and higher quotas.",
+		"upgrade_after_expiry": "You can switch to a subscription after your pass expires",
 		"loading": "Loading billing information..."
 	},
 
@@ -655,18 +660,6 @@
 		"privacy": "Privacy Policy",
 		"terms": "Terms of Service",
 		"crafted": "Crafted with Vibe Coding ✨"
-	},
-
-	"success": {
-		"title": "Payment Successful!",
-		"subtitle": "Welcome to Apple RAG MCP Pro! Your subscription is now active.",
-		"whats_next": "What's Next?",
-		"feature_queries": "Access to 50,000 queries per week",
-		"feature_rpm": "50 requests per minute",
-		"feature_rag": "Advanced RAG search features",
-		"feature_analytics": "Usage analytics dashboard",
-		"go_dashboard": "Go to Dashboard",
-		"back_home": "Back to Home"
 	},
 
 	"errors": {

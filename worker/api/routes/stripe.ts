@@ -88,6 +88,13 @@ const ONETIME_DURATIONS: Record<string, number> = {
 	onetime_annual: 365,
 };
 
+const ONETIME_INTERVALS: Record<string, string> = {
+	onetime_weekly: "week",
+	onetime_monthly: "month",
+	onetime_semiannual: "6 months",
+	onetime_annual: "year",
+};
+
 // Create checkout session
 stripe.openapi(
 	{
@@ -185,9 +192,53 @@ stripe.openapi(
 				);
 			}
 
+			const isOneTime = priceId.startsWith("onetime_");
+
+			const existing = await c.env.DB.prepare(
+				"SELECT payment_type, status, current_period_end, plan_type FROM user_subscriptions WHERE user_id = ?",
+			)
+				.bind(user.id)
+				.first();
+
+			if (existing) {
+				const hasActiveSubscription =
+					existing.payment_type === "subscription" &&
+					existing.status === "active" &&
+					existing.plan_type !== "hobby";
+				const hasActiveOneTime =
+					existing.payment_type === "one_time" &&
+					existing.current_period_end &&
+					new Date(existing.current_period_end as string) > new Date();
+
+				if (hasActiveSubscription && isOneTime) {
+					return c.json(
+						{
+							success: false,
+							error: {
+								code: UnifiedErrorCode.INVALID_REQUEST,
+								message: "CONFLICT_SUBSCRIPTION_ACTIVE",
+							},
+						},
+						400,
+					);
+				}
+
+				if (hasActiveOneTime && !isOneTime) {
+					return c.json(
+						{
+							success: false,
+							error: {
+								code: UnifiedErrorCode.INVALID_REQUEST,
+								message: "CONFLICT_ONETIME_ACTIVE",
+							},
+						},
+						400,
+					);
+				}
+			}
+
 			const origin = new URL(c.req.url).origin;
 			const finalCancelUrl = cancelUrl || `${origin}/#pricing`;
-			const isOneTime = priceId.startsWith("onetime_");
 
 			const stripeClient = new Stripe(c.env.STRIPE_SECRET_KEY, {
 				apiVersion: "2025-07-30.basil",
@@ -831,7 +882,7 @@ async function handleOneTimePayment(
 		const periodEnd = new Date(periodStart.getTime() + durationDays * 24 * 60 * 60 * 1000);
 
 		const price = session.amount_total ? session.amount_total / 100 : 0;
-		const billingInterval = priceId?.replace("onetime_", "") || "unknown";
+		const billingInterval = (priceId && ONETIME_INTERVALS[priceId]) || "month";
 
 		await db
 			.prepare(`

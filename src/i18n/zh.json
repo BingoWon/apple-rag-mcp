@@ -140,12 +140,21 @@
 		"tab_subscription": "订阅",
 		"tab_onetime": "单次购买",
 		"buy_now": "立即购买",
-		"onetime_note": "所选周期结束后自动失效，不会自动续费。",
+		"onetime_note": "不自动续费",
 		"onetime_weekly": "周卡",
 		"onetime_monthly": "月卡",
 		"onetime_semiannual": "半年卡",
 		"onetime_annual": "年卡",
-		"upgrade": "升级方案"
+		"onetime_duration_week": "一周",
+		"onetime_duration_month": "一个月",
+		"onetime_duration_6months": "半年",
+		"onetime_duration_year": "一年",
+		"conflict_subscription_active": "你当前有生效中的订阅，请先取消订阅后再购买单次通行证。",
+		"conflict_onetime_active": "你当前有生效中的单次通行证，到期后即可订阅。",
+		"tab_disabled_has_subscription": "请先取消订阅",
+		"tab_disabled_has_onetime": "到期后可用",
+		"manage_subscription": "管理订阅",
+		"view_plan": "查看我的方案"
 	},
 
 	"plans": {
@@ -172,18 +181,6 @@
 		"price_free": "免费",
 		"price_pro": "$1 / 周",
 		"price_custom": "定制"
-	},
-
-	"success": {
-		"title": "支付成功！",
-		"subtitle": "欢迎使用 Apple RAG MCP Pro！您的订阅已生效。",
-		"whats_next": "接下来做什么？",
-		"feature_queries": "每周 50,000 次查询",
-		"feature_rpm": "每分钟 50 次请求",
-		"feature_rag": "高级 RAG 搜索功能",
-		"feature_analytics": "使用数据分析面板",
-		"go_dashboard": "进入控制台",
-		"back_home": "返回首页"
 	},
 
 	"cta": {
@@ -403,7 +400,6 @@
 		"manage": "管理订阅与账单",
 		"manage_opening": "正在打开...",
 		"manage_desc": "管理订阅、更新支付方式、查看发票记录、下载发票等",
-		"per_interval": "每{{interval}}",
 		"active": "生效中",
 		"trial": "试用中",
 		"cancelled": "已取消",
@@ -413,14 +409,11 @@
 		"subscription_updated": "订阅已更新！\n你的更改已保存。",
 		"manage_error": "无法打开账单管理页面，如问题持续请联系客服。",
 		"plan_suffix": "方案",
-		"onetime_pass": "单次通行证",
 		"expires_on": "到期时间：{{date}}",
 		"expired": "已过期",
-		"buy_again": "再次购买",
+		"buy_again": "延长有效期",
 		"upgrade_to_subscription": "升级为订阅",
-		"usage_percent": "已使用 {{percent}}%",
-		"no_usage_data": "开始使用 API 后，用量数据将在此处显示",
-		"no_subscription": "你当前使用的是免费方案，升级后可获得更多功能和更高配额。",
+		"upgrade_after_expiry": "到期后才可以切换为订阅方案",
 		"loading": "正在加载账单信息..."
 	},
 

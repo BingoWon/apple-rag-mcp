@@ -14,10 +14,10 @@ export type PricingOptionId =
 
 export interface PricingOption {
 	id: PricingOptionId;
-	name: string;
 	price: number;
 	interval: BillingInterval;
 	months: number;
+	subtitleKey: string;
 	popular?: boolean;
 	discount?: string;
 }

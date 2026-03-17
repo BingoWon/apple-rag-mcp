@@ -1,20 +1,38 @@
 import { IconCheck } from "@tabler/icons-react";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Modal, ModalTrigger } from "@/components/ui/animated-modal";
 import { Button } from "@/components/ui/Button";
 import { EvervaultCard, Icon } from "@/components/ui/evervault-card";
 import { activateFabContact } from "@/components/ui/FabButton";
 import { SUPPORTED_CLIENTS } from "@/constants/pricing";
+import { useAuth } from "@/hooks/useAuth";
 import { trackEvent } from "@/lib/analytics";
 import { getPricingTiers } from "@/lib/plans";
 import { cn } from "@/lib/utils";
+import { useDashboardStore } from "@/stores/dashboard";
 import { PricingModal } from "./PricingModal";
 
 export function PricingSection() {
 	const { t } = useTranslation();
+	const navigate = useNavigate();
+	const { isAuthenticated } = useAuth();
+	const subscription = useDashboardStore((s) => s.subscription);
+	const fetchSubscription = useDashboardStore((s) => s.fetchSubscription);
 	const tiers = getPricingTiers();
+
+	const hasActivePaidPlan =
+		isAuthenticated &&
+		subscription &&
+		subscription.plan_id !== "hobby" &&
+		subscription.status === "active";
+
+	useEffect(() => {
+		if (isAuthenticated && !subscription) {
+			fetchSubscription();
+		}
+	}, [isAuthenticated, subscription, fetchSubscription]);
 
 	// Track pricing section view
 	useEffect(() => {
@@ -116,6 +134,16 @@ export function PricingSection() {
 											{t("common.get_started")}
 										</Button>
 									</Link>
+								) : hasActivePaidPlan ? (
+									<Button
+										variant={tier.popular ? "primary" : "outline"}
+										className="mt-6 sm:mt-8 w-full"
+										onClick={() => navigate("/dashboard/billing")}
+									>
+										{subscription?.payment_type === "one_time"
+											? t("pricing.view_plan")
+											: t("pricing.manage_subscription")}
+									</Button>
 								) : (
 									<Modal>
 										<ModalTrigger

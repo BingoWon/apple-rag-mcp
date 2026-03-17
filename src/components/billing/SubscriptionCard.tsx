@@ -1,7 +1,8 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
+import { PricingModal } from "@/components/sections/PricingModal";
+import { Modal, ModalTrigger } from "@/components/ui/animated-modal";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
@@ -14,6 +15,17 @@ interface SubscriptionCardProps {
 	subscription: Subscription;
 	usage?: CurrentUsage | null;
 }
+
+const INTERVAL_MAP: Record<string, { perKey: string; passKey: string }> = {
+	week: { perKey: "per_week", passKey: "onetime_weekly" },
+	weekly: { perKey: "per_week", passKey: "onetime_weekly" },
+	month: { perKey: "per_month", passKey: "onetime_monthly" },
+	monthly: { perKey: "per_month", passKey: "onetime_monthly" },
+	"6 months": { perKey: "per_6months", passKey: "onetime_semiannual" },
+	semiannual: { perKey: "per_6months", passKey: "onetime_semiannual" },
+	year: { perKey: "per_year", passKey: "onetime_annual" },
+	annual: { perKey: "per_year", passKey: "onetime_annual" },
+};
 
 export function SubscriptionCard({ subscription, usage }: SubscriptionCardProps) {
 	const { t } = useTranslation();
@@ -41,9 +53,6 @@ export function SubscriptionCard({ subscription, usage }: SubscriptionCardProps)
 	const getStatusBadge = () => {
 		if (isExpired) {
 			return <Badge variant="secondary">{t("billing.expired")}</Badge>;
-		}
-		if (isOneTime && subscription.status === "active") {
-			return <Badge variant="outline">{t("billing.onetime_pass")}</Badge>;
 		}
 		switch (subscription.status) {
 			case "active":
@@ -76,9 +85,11 @@ export function SubscriptionCard({ subscription, usage }: SubscriptionCardProps)
 		}
 	};
 
+	const interval = INTERVAL_MAP[subscription.billing_interval] || INTERVAL_MAP.month;
+
 	const getPlanTitle = () => {
 		if (isOneTime) {
-			return `${subscription.plan_name} ${t("billing.onetime_pass")}`;
+			return `${subscription.plan_name} ${t(`pricing.${interval.passKey}`)}`;
 		}
 		if (subscription.plan_id === "hobby") {
 			return subscription.plan_name;
@@ -103,7 +114,7 @@ export function SubscriptionCard({ subscription, usage }: SubscriptionCardProps)
 						</div>
 						{subscription.price > 0 && !isOneTime && (
 							<div className="text-sm text-faint">
-								{t("billing.per_interval", { interval: subscription.billing_interval })}
+								{t(`pricing.${interval.perKey}`)}
 							</div>
 						)}
 					</div>
@@ -117,7 +128,11 @@ export function SubscriptionCard({ subscription, usage }: SubscriptionCardProps)
 					<div>
 						<span className="text-faint">{t("billing.status")}</span>
 						<div className="mt-1 font-medium">
-							{isExpired ? t("billing.expired") : subscription.status}
+							{isExpired
+								? t("billing.expired")
+								: t(`billing.${subscription.status}`, {
+										defaultValue: subscription.status,
+									})}
 						</div>
 					</div>
 					<div>
@@ -160,17 +175,25 @@ export function SubscriptionCard({ subscription, usage }: SubscriptionCardProps)
 
 				{/* Actions */}
 				{isOneTime ? (
-					<div className="flex gap-3 pt-1">
-						<Link to="/#pricing" className="flex-1">
-							<Button variant="outline" className="w-full">
+					<div className="space-y-3 pt-1">
+						<Modal>
+							<ModalTrigger className="w-full px-4 py-2 rounded-lg text-center border border-default bg-transparent text-light hover:bg-secondary hover:border-border-light transition-all duration-200">
 								{t("billing.buy_again")}
-							</Button>
-						</Link>
-						<Link to="/#pricing" className="flex-1">
-							<Button variant="primary" className="w-full">
-								{t("billing.upgrade_to_subscription")}
-							</Button>
-						</Link>
+							</ModalTrigger>
+							<PricingModal planName="Pro" defaultTab="one_time" />
+						</Modal>
+						{isExpired ? (
+							<Modal>
+								<ModalTrigger className="w-full px-4 py-2 rounded-lg text-center bg-brand text-white hover:bg-brand/90 shadow-lg hover:shadow-xl transition-all duration-200">
+									{t("billing.upgrade_to_subscription")}
+								</ModalTrigger>
+								<PricingModal planName="Pro" />
+							</Modal>
+						) : (
+							<p className="text-xs text-faint text-center">
+								{t("billing.upgrade_after_expiry")}
+							</p>
+						)}
 					</div>
 				) : (
 					subscription.stripe_customer_id && (
