@@ -144,7 +144,8 @@
 		"onetime_weekly": "Weekly Pass",
 		"onetime_monthly": "Monthly Pass",
 		"onetime_semiannual": "Semi-annual Pass",
-		"onetime_annual": "Annual Pass"
+		"onetime_annual": "Annual Pass",
+		"upgrade": "Upgrade Plan"
 	},
 
 	"plans": {
@@ -416,7 +417,11 @@
 		"expires_on": "Expires on {{date}}",
 		"expired": "Expired",
 		"buy_again": "Buy Again",
-		"upgrade_to_subscription": "Upgrade to Subscription"
+		"upgrade_to_subscription": "Upgrade to Subscription",
+		"usage_percent": "{{percent}}% used",
+		"no_usage_data": "Usage data will appear once you start using the API",
+		"no_subscription": "You're on the free plan. Upgrade to unlock more features and higher quotas.",
+		"loading": "Loading billing information..."
 	},
 
 	"messages": {

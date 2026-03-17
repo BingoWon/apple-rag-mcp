@@ -144,7 +144,8 @@
 		"onetime_weekly": "周卡",
 		"onetime_monthly": "月卡",
 		"onetime_semiannual": "半年卡",
-		"onetime_annual": "年卡"
+		"onetime_annual": "年卡",
+		"upgrade": "升级方案"
 	},
 
 	"plans": {
@@ -416,7 +417,11 @@
 		"expires_on": "到期时间：{{date}}",
 		"expired": "已过期",
 		"buy_again": "再次购买",
-		"upgrade_to_subscription": "升级为订阅"
+		"upgrade_to_subscription": "升级为订阅",
+		"usage_percent": "已使用 {{percent}}%",
+		"no_usage_data": "开始使用 API 后，用量数据将在此处显示",
+		"no_subscription": "你当前使用的是免费方案，升级后可获得更多功能和更高配额。",
+		"loading": "正在加载账单信息..."
 	},
 
 	"messages": {
