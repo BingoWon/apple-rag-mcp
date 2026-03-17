@@ -218,7 +218,9 @@ export const SidebarLink = ({
 			href={link.href}
 			className={cn(
 				"flex items-center group/sidebar py-2 rounded-lg transition-all duration-200 relative",
-				isActive ? "bg-brand text-white" : "hover:bg-secondary text-muted hover:text-light",
+				isActive
+					? "bg-brand text-white"
+					: "text-muted hover:text-light hover:bg-background/60",
 				className,
 			)}
 			style={{
@@ -233,7 +235,7 @@ export const SidebarLink = ({
 			<div
 				className={cn(
 					"transition-colors duration-200 flex-shrink-0 relative",
-					isActive ? "text-white" : "text-muted",
+					isActive ? "text-white" : "text-muted group-hover/sidebar:text-light",
 				)}
 			>
 				{link.icon}

@@ -102,8 +102,8 @@ function SidebarFooter({
 	if (!open) {
 		return (
 			<div className="flex flex-col items-center gap-3">
-				<LanguageSwitcher />
-				<ThemeToggle variant="icon" />
+				<LanguageSwitcher placement="top" />
+				<ThemeToggle variant="icon" placement="top" />
 				<Link to="/settings" className="shrink-0">
 					<Avatar
 						src={user?.avatar}
@@ -133,8 +133,8 @@ function SidebarFooter({
 				{displayName}
 			</Link>
 			<div className="flex items-center shrink-0 ml-auto">
-				<LanguageSwitcher />
-				<ThemeToggle variant="icon" />
+				<LanguageSwitcher placement="top" />
+				<ThemeToggle variant="icon" placement="top" />
 			</div>
 		</div>
 	);
