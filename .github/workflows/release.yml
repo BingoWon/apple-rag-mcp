@@ -1,0 +1,79 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Bump version and release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          LATEST=$(git tag -l 'v*' --sort=-v:refname | head -1)
+
+          if [ -z "$LATEST" ]; then
+            VERSION=$(node -p "require('./package.json').version")
+            echo "Initial release v${VERSION}"
+            NOTES="Initial release — consolidated from apple-rag-api, apple-rag-collector, apple-rag-mcp, and apple-rag-website."
+          else
+            COMMITS=$(git log "${LATEST}..HEAD" --pretty=format:'%s')
+
+            FEAT=0; FIX=0
+            while IFS= read -r msg; do
+              [[ -z "$msg" ]] && continue
+              if [[ "$msg" =~ ^feat ]]; then FEAT=1
+              elif [[ "$msg" =~ ^(fix|perf|refactor) ]]; then FIX=1
+              fi
+            done <<< "$COMMITS"
+
+            if (( !FEAT && !FIX )); then
+              echo "No releasable commits since ${LATEST} — skipping."
+              exit 0
+            fi
+
+            IFS='.' read -r MAJOR MINOR PATCH <<< "${LATEST#v}"
+
+            if (( FEAT )); then
+              MINOR=$((MINOR + 1)); PATCH=0
+            else
+              PATCH=$((PATCH + 1))
+            fi
+
+            # Never auto-bump to 5.0.0 — cap at 4.x.x
+            if (( MAJOR >= 5 )); then
+              echo "Major version ${MAJOR} already >= 5 — skipping auto-release."
+              exit 0
+            fi
+
+            VERSION="${MAJOR}.${MINOR}.${PATCH}"
+            NOTES=$(git log "${LATEST}..HEAD" --pretty=format:'- %s (%h)')
+          fi
+
+          CURRENT=$(node -p "require('./package.json').version")
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if [ "$CURRENT" != "$VERSION" ]; then
+            npm version "${VERSION}" --no-git-tag-version
+            git add package.json
+            git commit -m "chore(release): v${VERSION}"
+          fi
+
+          git tag "v${VERSION}"
+          git push origin main --tags
+
+          echo "${NOTES}" > /tmp/notes.md
+          gh release create "v${VERSION}" --title "v${VERSION}" --notes-file /tmp/notes.md
