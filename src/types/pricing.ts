@@ -1,7 +1,16 @@
 export type PlanId = "hobby" | "pro" | "enterprise";
 export type BillingInterval = "week" | "month" | "year";
 export type PlanAction = "register" | "modal" | "contact";
-export type PricingOptionId = "weekly" | "monthly" | "semiannual" | "annual";
+export type PaymentType = "subscription" | "one_time";
+export type PricingOptionId =
+	| "weekly"
+	| "monthly"
+	| "semiannual"
+	| "annual"
+	| "onetime_weekly"
+	| "onetime_monthly"
+	| "onetime_semiannual"
+	| "onetime_annual";
 
 export interface PricingOption {
 	id: PricingOptionId;

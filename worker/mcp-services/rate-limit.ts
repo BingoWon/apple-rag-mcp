@@ -76,12 +76,23 @@ export class RateLimitService {
 			async () => {
 				const result = await this.d1
 					.prepare(
-						`SELECT plan_type FROM user_subscriptions
+						`SELECT plan_type, payment_type, current_period_end FROM user_subscriptions
              WHERE user_id = ? AND status = 'active' LIMIT 1`,
 					)
 					.bind(userId)
 					.first();
-				return (result?.plan_type as string) || "hobby";
+
+				if (!result) return "hobby";
+
+				if (
+					result.payment_type === "one_time" &&
+					result.current_period_end &&
+					new Date(result.current_period_end as string) < new Date()
+				) {
+					return "hobby";
+				}
+
+				return (result.plan_type as string) || "hobby";
 			},
 			"hobby",
 			"get_plan_type",

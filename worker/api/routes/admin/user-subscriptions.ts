@@ -21,6 +21,7 @@ const AdminUserSubscriptionSchema = z.object({
 	price: z.number(),
 	billing_interval: z.string(),
 	stripe_price_id: z.string().nullable(),
+	payment_type: z.string(),
 	updated_at: z.string(),
 	// Joined user data for display
 	user_email: z.string().optional(),
@@ -101,6 +102,7 @@ app.openapi(getUserSubscriptionsRoute, async (c) => {
         us.price,
         us.billing_interval,
         us.stripe_price_id,
+        us.payment_type,
         us.updated_at,
         u.email as user_email,
         u.name as user_name
@@ -124,6 +126,7 @@ app.openapi(getUserSubscriptionsRoute, async (c) => {
 			price: Number(row.price) || 0,
 			billing_interval: row.billing_interval || "month",
 			stripe_price_id: row.stripe_price_id,
+			payment_type: row.payment_type || "subscription",
 			updated_at: row.updated_at,
 			user_email: row.user_email || "N/A",
 			user_name: row.user_name || "N/A",

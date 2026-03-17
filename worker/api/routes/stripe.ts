@@ -119,7 +119,18 @@ const PRICES = {
 	monthly: (env: AppEnv["Bindings"]) => env.STRIPE_PRICE_ID_PRO_MONTHLY,
 	semiannual: (env: AppEnv["Bindings"]) => env.STRIPE_PRICE_ID_PRO_SEMIANNUAL,
 	annual: (env: AppEnv["Bindings"]) => env.STRIPE_PRICE_ID_PRO_ANNUAL,
+	onetime_weekly: (env: AppEnv["Bindings"]) => env.STRIPE_PRICE_ID_PRO_ONETIME_WEEKLY,
+	onetime_monthly: (env: AppEnv["Bindings"]) => env.STRIPE_PRICE_ID_PRO_ONETIME_MONTHLY,
+	onetime_semiannual: (env: AppEnv["Bindings"]) => env.STRIPE_PRICE_ID_PRO_ONETIME_SEMIANNUAL,
+	onetime_annual: (env: AppEnv["Bindings"]) => env.STRIPE_PRICE_ID_PRO_ONETIME_ANNUAL,
 } as const;
+
+const ONETIME_DURATIONS: Record<string, number> = {
+	onetime_weekly: 7,
+	onetime_monthly: 30,
+	onetime_semiannual: 180,
+	onetime_annual: 365,
+};
 
 // Create checkout session
 stripe.openapi(
@@ -133,7 +144,16 @@ stripe.openapi(
 				content: {
 					"application/json": {
 						schema: z.object({
-							priceId: z.enum(["weekly", "monthly", "semiannual", "annual"]),
+							priceId: z.enum([
+								"weekly",
+								"monthly",
+								"semiannual",
+								"annual",
+								"onetime_weekly",
+								"onetime_monthly",
+								"onetime_semiannual",
+								"onetime_annual",
+							]),
 							cancelUrl: z.string().optional(),
 						}),
 					},
@@ -175,38 +195,46 @@ stripe.openapi(
 			const { priceId, cancelUrl } = await c.req.json();
 			const user = c.get("user");
 
-			// Validate environment variables
 			if (!c.env.STRIPE_SECRET_KEY) {
 				return c.json({ error: "Stripe configuration error" }, 500);
 			}
 
-			// Get the price ID from environment
 			const priceIdValue = PRICES[priceId as keyof typeof PRICES](c.env);
 			if (!priceIdValue) {
 				return c.json({ error: "Invalid price ID" }, 400);
 			}
 
-			// Use frontend provided cancelUrl, fallback to pricing
 			const finalCancelUrl = cancelUrl || `${c.env.FRONTEND_URL}/#pricing`;
+			const isOneTime = priceId.startsWith("onetime_");
 
 			const stripeClient = new Stripe(c.env.STRIPE_SECRET_KEY, {
 				apiVersion: "2025-07-30.basil",
 			});
 
-			const session = await stripeClient.checkout.sessions.create({
+			const sessionParams: Stripe.Checkout.SessionCreateParams = {
 				line_items: [{ price: priceIdValue, quantity: 1 }],
-				mode: "subscription",
+				mode: isOneTime ? "payment" : "subscription",
 				success_url: `${c.env.FRONTEND_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
 				cancel_url: finalCancelUrl,
 				client_reference_id: user.id,
 				customer_email: user.email,
-				metadata: { userId: user.id, planType: "pro" },
-				subscription_data: {
-					metadata: { userId: user.id, planType: "pro" },
+				metadata: {
+					userId: user.id,
+					planType: "pro",
+					paymentType: isOneTime ? "one_time" : "subscription",
+					priceId,
 				},
 				allow_promotion_codes: true,
 				billing_address_collection: "auto",
-			});
+			};
+
+			if (!isOneTime) {
+				sessionParams.subscription_data = {
+					metadata: { userId: user.id, planType: "pro" },
+				};
+			}
+
+			const session = await stripeClient.checkout.sessions.create(sessionParams);
 
 			return c.json({ url: session.url! });
 		} catch (error) {
@@ -343,6 +371,7 @@ stripe.openapi(
 							minute_quota: z.number(),
 							price: z.number(),
 							billing_interval: z.string(),
+							payment_type: z.enum(["subscription", "one_time"]),
 							stripe_customer_id: z.string().optional(),
 						}),
 					},
@@ -382,10 +411,20 @@ stripe.openapi(
 			},
 		};
 
-		const planType = (result?.plan_type as keyof typeof PLAN_CONFIG) || "hobby";
-		const planConfig = PLAN_CONFIG[planType];
+		let planType = (result?.plan_type as keyof typeof PLAN_CONFIG) || "hobby";
+		const paymentType = (result?.payment_type as string) || "subscription";
+		let status = (result?.status as string) || "active";
 
-		// Use actual subscription data from database
+		if (
+			paymentType === "one_time" &&
+			result?.current_period_end &&
+			new Date(result.current_period_end as string) < new Date()
+		) {
+			planType = "hobby";
+			status = "inactive";
+		}
+
+		const planConfig = PLAN_CONFIG[planType];
 		const price = result?.price ?? 0;
 		const billingInterval = result?.billing_interval ?? "month";
 
@@ -393,7 +432,7 @@ stripe.openapi(
 			id: result?.stripe_subscription_id || `mock_${user.id}`,
 			plan_id: planType,
 			plan_name: planConfig.name,
-			status: result?.status || "active",
+			status,
 			current_period_start: result?.current_period_start,
 			current_period_end: result?.current_period_end,
 			cancel_at_period_end: Boolean(result?.cancel_at_period_end),
@@ -401,6 +440,7 @@ stripe.openapi(
 			minute_quota: planConfig.minute_quota,
 			price: price,
 			billing_interval: billingInterval,
+			payment_type: paymentType,
 			stripe_customer_id: result?.stripe_customer_id,
 		});
 	},
@@ -492,6 +532,9 @@ async function processWebhookEvent(
 
 		case "customer.subscription.deleted":
 			return await handleSubscriptionDeletion(event, db);
+
+		case "checkout.session.completed":
+			return await handleCheckoutCompleted(event, db);
 
 		default:
 			return {
@@ -646,8 +689,8 @@ async function saveSubscriptionSafely(
       INSERT OR REPLACE INTO user_subscriptions
       (user_id, stripe_customer_id, stripe_subscription_id, plan_type, status,
        current_period_start, current_period_end, cancel_at_period_end,
-       price, billing_interval, stripe_price_id, updated_at)
-      VALUES (?, ?, ?, 'pro', ?, ?, ?, ?, ?, ?, ?, ?)
+       price, billing_interval, stripe_price_id, payment_type, updated_at)
+      VALUES (?, ?, ?, 'pro', ?, ?, ?, ?, ?, ?, ?, 'subscription', ?)
     `)
 			.bind(
 				userId,
@@ -692,8 +735,8 @@ Billing: ${billingInterval}`;
 		await db
 			.prepare(`
       INSERT OR REPLACE INTO user_subscriptions
-      (user_id, stripe_customer_id, stripe_subscription_id, plan_type, status, updated_at)
-      VALUES (?, ?, ?, 'pro', 'active', ?)
+      (user_id, stripe_customer_id, stripe_subscription_id, plan_type, status, payment_type, updated_at)
+      VALUES (?, ?, ?, 'pro', 'active', 'subscription', ?)
     `)
 			.bind(userId, subscription.customer, subscription.id, new Date().toISOString())
 			.run();
@@ -701,6 +744,121 @@ Billing: ${billingInterval}`;
 		throw new Error(
 			`Partial save completed due to: ${error instanceof Error ? error.message : "Unknown error"}`,
 		);
+	}
+}
+
+/**
+ * Handle checkout.session.completed — route to one-time handler if applicable
+ */
+async function handleCheckoutCompleted(
+	event: Stripe.Event,
+	db: D1Database,
+): Promise<{ success: boolean; message: string }> {
+	const session = event.data.object as Stripe.Checkout.Session;
+
+	if (session.mode !== "payment") {
+		return {
+			success: true,
+			message: `Checkout session ${session.id} is mode=${session.mode}, skipping (handled by subscription events)`,
+		};
+	}
+
+	return await handleOneTimePayment(session, db);
+}
+
+/**
+ * Handle one-time payment: compute expiration and write to user_subscriptions
+ * Extends the existing period if the user already has active time remaining
+ */
+async function handleOneTimePayment(
+	session: Stripe.Checkout.Session,
+	db: D1Database,
+): Promise<{ success: boolean; message: string }> {
+	try {
+		const userId = session.metadata?.userId || session.client_reference_id;
+		if (!userId) {
+			return {
+				success: false,
+				message: `No user found for checkout session ${session.id}`,
+			};
+		}
+
+		const priceId = session.metadata?.priceId;
+		const durationDays = priceId ? ONETIME_DURATIONS[priceId] : null;
+
+		if (!durationDays) {
+			return {
+				success: false,
+				message: `Unknown one-time priceId "${priceId}" for session ${session.id}`,
+			};
+		}
+
+		const existing = await db
+			.prepare("SELECT current_period_end, payment_type FROM user_subscriptions WHERE user_id = ?")
+			.bind(userId)
+			.first();
+
+		const now = new Date();
+		let periodStart: Date;
+
+		if (
+			existing?.payment_type === "one_time" &&
+			existing?.current_period_end &&
+			new Date(existing.current_period_end as string) > now
+		) {
+			periodStart = new Date(existing.current_period_end as string);
+		} else {
+			periodStart = now;
+		}
+
+		const periodEnd = new Date(periodStart.getTime() + durationDays * 24 * 60 * 60 * 1000);
+
+		const price = session.amount_total ? session.amount_total / 100 : 0;
+		const billingInterval = priceId?.replace("onetime_", "") || "unknown";
+
+		await db
+			.prepare(`
+				INSERT OR REPLACE INTO user_subscriptions
+				(user_id, stripe_customer_id, stripe_subscription_id, plan_type, status,
+				 current_period_start, current_period_end, cancel_at_period_end,
+				 price, billing_interval, stripe_price_id, payment_type, updated_at)
+				VALUES (?, ?, NULL, 'pro', 'active', ?, ?, FALSE, ?, ?, ?, 'one_time', ?)
+			`)
+			.bind(
+				userId,
+				session.customer || null,
+				now.toISOString(),
+				periodEnd.toISOString(),
+				price,
+				billingInterval,
+				null,
+				new Date().toISOString(),
+			)
+			.run();
+
+		try {
+			const userResult = await db
+				.prepare("SELECT email FROM users WHERE id = ?")
+				.bind(userId)
+				.first();
+
+			if (userResult?.email) {
+				const telegramMessage = `💳 New One-time Payment\nEmail: ${userResult.email}\nPlan: Pro Pass\nAmount: $${price}\nDuration: ${durationDays} days\nExpires: ${periodEnd.toISOString().split("T")[0]}`;
+				await notifyTelegram(telegramMessage, "alerts");
+			}
+		} catch (_notificationError) {
+			console.warn("Failed to send one-time payment Telegram notification");
+		}
+
+		return {
+			success: true,
+			message: `One-time payment processed: user ${userId} has Pro access until ${periodEnd.toISOString()}`,
+		};
+	} catch (error) {
+		return {
+			success: false,
+			message: `Failed to process one-time payment for session ${session.id}: ${error instanceof Error ? error.message : "Unknown error"}`,
+		};
 	}
 }
 

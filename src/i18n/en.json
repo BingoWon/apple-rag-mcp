@@ -136,7 +136,15 @@
 		"semiannual": "Semi-annual",
 		"annual": "Annual",
 		"discount": "{{percent}}% OFF",
-		"and_more": "and more..."
+		"and_more": "and more...",
+		"tab_subscription": "Subscription",
+		"tab_onetime": "One-time Pass",
+		"buy_now": "Buy Now",
+		"onetime_note": "Access expires after the selected period. No auto-renewal.",
+		"onetime_weekly": "Weekly Pass",
+		"onetime_monthly": "Monthly Pass",
+		"onetime_semiannual": "Semi-annual Pass",
+		"onetime_annual": "Annual Pass"
 	},
 
 	"plans": {
@@ -403,7 +411,12 @@
 		"payment_success": "Payment successful!\nYour subscription has been updated successfully.",
 		"subscription_updated": "Subscription updated!\nYour changes have been saved successfully.",
 		"manage_error": "Unable to open billing management. Please contact support if this persists.",
-		"plan_suffix": "Plan"
+		"plan_suffix": "Plan",
+		"onetime_pass": "One-time Pass",
+		"expires_on": "Expires on {{date}}",
+		"expired": "Expired",
+		"buy_again": "Buy Again",
+		"upgrade_to_subscription": "Upgrade to Subscription"
 	},
 
 	"messages": {

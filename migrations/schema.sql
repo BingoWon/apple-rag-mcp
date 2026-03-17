@@ -1,6 +1,6 @@
 -- Apple RAG Database Schema
 -- Cloudflare D1 (SQLite)
--- Last updated: 2025-11-26
+-- Last updated: 2026-03-17
 
 -- ============================================================
 -- USERS TABLE
@@ -108,6 +108,7 @@ CREATE TABLE IF NOT EXISTS user_subscriptions (
     price REAL DEFAULT 0,
     billing_interval TEXT DEFAULT 'month',
     stripe_price_id TEXT,
+    payment_type TEXT DEFAULT 'subscription',
     updated_at TEXT DEFAULT (datetime('now')),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );

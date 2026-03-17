@@ -136,7 +136,15 @@
 		"semiannual": "半年付费",
 		"annual": "按年付费",
 		"discount": "省 {{percent}}%",
-		"and_more": "等更多..."
+		"and_more": "等更多...",
+		"tab_subscription": "订阅",
+		"tab_onetime": "单次购买",
+		"buy_now": "立即购买",
+		"onetime_note": "所选周期结束后自动失效，不会自动续费。",
+		"onetime_weekly": "周卡",
+		"onetime_monthly": "月卡",
+		"onetime_semiannual": "半年卡",
+		"onetime_annual": "年卡"
 	},
 
 	"plans": {
@@ -403,7 +411,12 @@
 		"payment_success": "支付成功！\n订阅已更新。",
 		"subscription_updated": "订阅已更新！\n你的更改已保存。",
 		"manage_error": "无法打开账单管理页面，如问题持续请联系客服。",
-		"plan_suffix": "方案"
+		"plan_suffix": "方案",
+		"onetime_pass": "单次通行证",
+		"expires_on": "到期时间：{{date}}",
+		"expired": "已过期",
+		"buy_again": "再次购买",
+		"upgrade_to_subscription": "升级为订阅"
 	},
 
 	"messages": {

@@ -49,6 +49,41 @@ export const PRO_PRICING_OPTIONS: PricingOption[] = [
 	},
 ];
 
+export const PRO_ONETIME_OPTIONS: PricingOption[] = [
+	{
+		id: "onetime_weekly",
+		name: "Weekly",
+		price: 2,
+		interval: "week",
+		months: 0.25,
+		popular: false,
+	},
+	{
+		id: "onetime_monthly",
+		name: "Monthly",
+		price: 5,
+		interval: "month",
+		months: 1,
+		popular: true,
+	},
+	{
+		id: "onetime_semiannual",
+		name: "Semi-annual",
+		price: 20,
+		interval: "month",
+		months: 6,
+		popular: false,
+	},
+	{
+		id: "onetime_annual",
+		name: "Annual",
+		price: 30,
+		interval: "year",
+		months: 12,
+		popular: false,
+	},
+];
+
 export const SUPPORTED_CLIENTS = [
 	"Cursor",
 	"Windsurf",

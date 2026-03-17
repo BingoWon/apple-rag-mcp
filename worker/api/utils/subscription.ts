@@ -25,19 +25,28 @@ export interface UserSubscription {
 export async function getUserPlanType(userId: string, db: D1Database): Promise<PlanType> {
 	try {
 		const result = await db
-			.prepare("SELECT plan_type, status FROM user_subscriptions WHERE user_id = ?")
+			.prepare(
+				"SELECT plan_type, status, payment_type, current_period_end FROM user_subscriptions WHERE user_id = ?",
+			)
 			.bind(userId)
 			.first();
 
-		// If no subscription record or inactive, default to hobby
 		if (!result || result.status !== "active") {
+			return "hobby";
+		}
+
+		if (
+			result.payment_type === "one_time" &&
+			result.current_period_end &&
+			new Date(result.current_period_end as string) < new Date()
+		) {
 			return "hobby";
 		}
 
 		return (result.plan_type as PlanType) || "hobby";
 	} catch (error) {
 		console.error("Error fetching user plan type:", error);
-		return "hobby"; // Safe default
+		return "hobby";
 	}
 }
 

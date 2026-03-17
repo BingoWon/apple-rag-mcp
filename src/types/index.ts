@@ -165,6 +165,7 @@ export interface Subscription {
 	weekly_quota: number;
 	price: number;
 	billing_interval: string;
+	payment_type?: "subscription" | "one_time";
 	stripe_customer_id?: string;
 }
 
