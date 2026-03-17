@@ -9,10 +9,23 @@ import { logger } from "./mcp-utils/logger.js";
 import { configureTelegram } from "./mcp-utils/telegram-notifier.js";
 import type { Env } from "./shared/types.js";
 
+const MCP_HOSTNAME = "mcp.apple-rag.com";
+
 interface AppEnv {
 	Bindings: Env;
 }
 
+// ─── MCP Handler (shared by both hostname and path routing) ──
+async function handleMCPRequest(c: { env: Env; executionCtx: ExecutionContext; req: { raw: Request } }) {
+	configureTelegram(c.env.TELEGRAM_DEFAULT_BOT_URL);
+	logger.setContext(c.executionCtx);
+	const services = await createServices(c.env);
+	const authContext = await services.auth.optionalAuth(c.req.raw);
+	const handler = new MCPProtocolHandler(services);
+	return handler.handleRequest(c.req.raw, authContext);
+}
+
+// ─── Main App (apple-rag.com) ────────────────────────────────
 const app = new Hono<AppEnv>();
 
 app.onError((err, c) => {
@@ -31,10 +44,8 @@ app.use(
 
 app.get("/health", (c) => c.json({ status: "ok" }));
 
-// ─── API Routes (/api/*) ───────────────────────────────
 app.route("/api", apiApp);
 
-// ─── MCP Protocol (/mcp) ──────────────────────────────
 app.get("/mcp/health", (c) => {
 	return c.json({ ...HEALTH_STATUS, timestamp: new Date().toISOString() });
 });
@@ -43,18 +54,8 @@ app.get("/mcp/manifest", (c) => {
 	return c.json(SERVER_MANIFEST, 200, { "Cache-Control": "public, max-age=3600" });
 });
 
-app.post("/mcp", async (c) => {
-	const env = c.env;
-	configureTelegram(env.TELEGRAM_DEFAULT_BOT_URL);
-	logger.setContext(c.executionCtx);
+app.post("/mcp", (c) => handleMCPRequest(c));
 
-	const services = await createServices(env);
-	const authContext = await services.auth.optionalAuth(c.req.raw);
-	const handler = new MCPProtocolHandler(services);
-	return handler.handleRequest(c.req.raw, authContext);
-});
-
-// ─── Collector Trigger ─────────────────────────────────
 app.post("/api/collector/trigger", async (c) => {
 	try {
 		await handleScheduled(c.env);
@@ -64,7 +65,6 @@ app.post("/api/collector/trigger", async (c) => {
 	}
 });
 
-// ─── SPA Fallback ──────────────────────────────────────
 app.notFound(async (c) => {
 	if (c.req.path.startsWith("/api/") || c.req.path.startsWith("/mcp")) {
 		return c.json({ error: { message: "Not Found" } }, 404);
@@ -78,15 +78,52 @@ app.notFound(async (c) => {
 				return c.env.ASSETS.fetch(new Request(url.toString(), c.req.raw));
 			}
 			return res;
-		} catch {
-			// Ignore ASSETS errors
-		}
+		} catch {}
 	}
 	return c.text("Not Found", 404);
 });
 
+// ─── MCP-only App (mcp.apple-rag.com) ───────────────────────
+const mcpApp = new Hono<AppEnv>();
+
+mcpApp.use(
+	"*",
+	cors({
+		origin: "*",
+		allowMethods: ["GET", "POST", "OPTIONS"],
+		allowHeaders: ["Content-Type", "Authorization", "MCP-Protocol-Version"],
+	}),
+);
+
+mcpApp.get("/health", (c) => {
+	return c.json({ ...HEALTH_STATUS, timestamp: new Date().toISOString() });
+});
+
+mcpApp.get("/manifest", (c) => {
+	return c.json(SERVER_MANIFEST, 200, { "Cache-Control": "public, max-age=3600" });
+});
+
+mcpApp.post("/", (c) => handleMCPRequest(c));
+
+mcpApp.all("*", (c) => {
+	return c.json(
+		{
+			error: "MCP endpoint",
+			message: "Send POST / for MCP protocol, GET /health for status, GET /manifest for discovery",
+		},
+		404,
+	);
+});
+
+// ─── Router: dispatch by hostname ────────────────────────────
 export default {
-	fetch: app.fetch,
+	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+		const host = new URL(request.url).hostname;
+		if (host === MCP_HOSTNAME) {
+			return mcpApp.fetch(request, env, ctx);
+		}
+		return app.fetch(request, env, ctx);
+	},
 
 	async scheduled(_event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
 		ctx.waitUntil(handleScheduled(env));

@@ -243,7 +243,7 @@ export class AuthService {
 			// Send reset email
 			if (this.env.RESEND_API_KEY) {
 				const emailService = new EmailService(this.env);
-				const frontendUrl = this.env.FRONTEND_URL || "http://localhost:3000";
+				const frontendUrl = this.env.FRONTEND_URL || "https://apple-rag.com";
 
 				const emailSent = await emailService.sendPasswordResetEmail(email, resetToken, frontendUrl);
 

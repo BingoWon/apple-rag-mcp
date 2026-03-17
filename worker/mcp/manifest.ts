@@ -21,9 +21,9 @@ export const SERVER_MANIFEST = {
 		version: "2.0.0",
 	},
 	endpoints: {
-		mcp: "/",
-		manifest: "/manifest",
-		health: "/health",
+		mcp: "https://mcp.apple-rag.com",
+		manifest: "https://mcp.apple-rag.com/manifest",
+		health: "https://mcp.apple-rag.com/health",
 	},
 	transport: {
 		type: "http",

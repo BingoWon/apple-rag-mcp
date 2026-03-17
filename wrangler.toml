@@ -9,6 +9,7 @@ keep_vars = true
 
 [vars]
 ENVIRONMENT = "production"
+FRONTEND_URL = "https://apple-rag.com"
 BATCH_SIZE = "40"
 BATCH_COUNT = "20"
 FORCE_UPDATE_ALL = "false"
@@ -40,6 +41,7 @@ workers_dev = true
 
 [env.development.vars]
 ENVIRONMENT = "development"
+FRONTEND_URL = "http://localhost:4200"
 
 [[env.development.d1_databases]]
 binding = "DB"

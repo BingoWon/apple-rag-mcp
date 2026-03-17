@@ -5,6 +5,7 @@ export interface Env {
 
 	// Environment
 	ENVIRONMENT: "development" | "production";
+	FRONTEND_URL: string;
 
 	// API: Authentication secrets
 	JWT_SECRET: string;

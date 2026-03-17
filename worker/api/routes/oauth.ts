@@ -103,7 +103,7 @@ app.openapi(oauthCallbackRoute, async (c) => {
 
 	if (result.success && result.data) {
 		// Redirect to frontend with authentication data
-		const frontendUrl = c.env.FRONTEND_URL || "http://localhost:3000";
+		const frontendUrl = c.env.FRONTEND_URL || "https://apple-rag.com";
 
 		const authData = {
 			userId: result.data.user.id,
@@ -117,8 +117,7 @@ app.openapi(oauthCallbackRoute, async (c) => {
 		const redirectUrl = `${frontendUrl}/overview?auth=${encodeURIComponent(btoa(JSON.stringify(authData)))}`;
 		return c.redirect(redirectUrl);
 	} else {
-		// Redirect to login page with error
-		const frontendUrl = c.env.FRONTEND_URL || "http://localhost:3000";
+		const frontendUrl = c.env.FRONTEND_URL || "https://apple-rag.com";
 		const errorMessage = encodeURIComponent(result.error || "OAuth authentication failed");
 		return c.redirect(`${frontendUrl}/login?error=${errorMessage}`);
 	}

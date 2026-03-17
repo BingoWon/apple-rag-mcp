@@ -43,9 +43,7 @@ export class OAuthService {
 	 */
 	getAuthUrl(provider: "google" | "github", state?: string): string {
 		// 使用 OAUTH_REDIRECT_BASE 环境变量，支持开发和生产环境
-		const baseUrl =
-			this.env.OAUTH_REDIRECT_BASE || this.env.API_BASE_URL || "https://api.apple-rag.com";
-		// 使用简化的路径结构
+		const baseUrl = this.env.OAUTH_REDIRECT_BASE || "https://apple-rag.com/api";
 		const redirectUri = `${baseUrl}/oauth/${provider}/callback`;
 
 		// 调试日志：记录实际使用的重定向URI
@@ -129,10 +127,7 @@ export class OAuthService {
 		provider: "google" | "github",
 		code: string,
 	): Promise<OAuthTokens> {
-		// 使用 OAUTH_REDIRECT_BASE 环境变量，与 getAuthUrl 保持一致
-		const baseUrl =
-			this.env.OAUTH_REDIRECT_BASE || this.env.API_BASE_URL || "https://api.apple-rag.com";
-		// 使用简化的路径结构，与getAuthUrl保持一致
+		const baseUrl = this.env.OAUTH_REDIRECT_BASE || "https://apple-rag.com/api";
 		const redirectUri = `${baseUrl}/oauth/${provider}/callback`;
 
 		if (provider === "google") {
