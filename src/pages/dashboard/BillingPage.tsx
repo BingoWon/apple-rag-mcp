@@ -1,16 +1,10 @@
-import {
-	IconChartBar,
-	IconCreditCard,
-	IconInfoCircle,
-	IconRocket,
-} from "@tabler/icons-react";
-import { Suspense, useEffect, useMemo, useRef } from "react";
+import { IconChartBar, IconInfoCircle } from "@tabler/icons-react";
+import { Suspense, useEffect, useRef } from "react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
-import { Link, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { SubscriptionCard } from "@/components/billing/SubscriptionCard";
 import { PricingSection } from "@/components/sections/PricingSection";
-import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
 import { cn, formatDate } from "@/lib/utils";
 import { useDashboardStore } from "@/stores/dashboard";
@@ -125,65 +119,6 @@ function UsageCard() {
 	);
 }
 
-function SubscriptionSection() {
-	const { t } = useTranslation();
-	const { subscription, isLoadingSubscription } = useDashboardStore();
-
-	if (isLoadingSubscription) {
-		return (
-			<Card>
-				<CardHeader>
-					<div className="flex items-center justify-between">
-						<div className="space-y-2 animate-pulse">
-							<div className="h-5 bg-tertiary rounded w-40" />
-							<div className="h-4 bg-tertiary rounded w-64" />
-						</div>
-						<div className="animate-pulse">
-							<div className="h-8 bg-tertiary rounded w-16" />
-						</div>
-					</div>
-				</CardHeader>
-				<CardContent>
-					<div className="grid grid-cols-2 gap-4 animate-pulse">
-						<div className="space-y-2">
-							<div className="h-3 bg-tertiary rounded w-16" />
-							<div className="h-4 bg-tertiary rounded w-20" />
-						</div>
-						<div className="space-y-2">
-							<div className="h-3 bg-tertiary rounded w-24" />
-							<div className="h-4 bg-tertiary rounded w-20" />
-						</div>
-					</div>
-				</CardContent>
-			</Card>
-		);
-	}
-
-	if (!subscription) {
-		return (
-			<Card>
-				<CardHeader>
-					<div className="flex items-center gap-2">
-						<IconCreditCard className="h-5 w-5 text-brand" />
-						<CardTitle>{t("billing.your_plan")}</CardTitle>
-					</div>
-				</CardHeader>
-				<CardContent>
-					<div className="flex flex-col items-center gap-4 py-4 text-center">
-						<IconRocket className="h-10 w-10 text-faint" />
-						<p className="text-sm text-faint max-w-sm">{t("billing.no_subscription")}</p>
-						<Link to="/#pricing">
-							<Button variant="primary">{t("pricing.upgrade")}</Button>
-						</Link>
-					</div>
-				</CardContent>
-			</Card>
-		);
-	}
-
-	return <SubscriptionCard subscription={subscription} />;
-}
-
 function BillingPageContent() {
 	const { t } = useTranslation();
 	const [searchParams] = useSearchParams();
@@ -213,10 +148,7 @@ function BillingPageContent() {
 		}
 	}, [fetchSubscription, fetchCurrentUsage, searchParams, t]);
 
-	const showUpgrade = useMemo(
-		() => subscription?.plan_id === "hobby",
-		[subscription?.plan_id],
-	);
+	const isHobbyOrFree = !subscription || subscription.plan_id === "hobby";
 
 	return (
 		<div className="space-y-6">
@@ -226,8 +158,8 @@ function BillingPageContent() {
 			</div>
 
 			<UsageCard />
-			<SubscriptionSection />
-			{showUpgrade && <PricingSection />}
+			{subscription && <SubscriptionCard subscription={subscription} />}
+			{isHobbyOrFree && <PricingSection />}
 		</div>
 	);
 }
