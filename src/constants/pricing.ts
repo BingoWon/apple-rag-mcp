@@ -77,7 +77,7 @@ export const PRO_ONETIME_OPTIONS: PricingOption[] = [
 	{
 		id: "onetime_annual",
 		name: "Annual",
-		price: 30,
+		price: 25,
 		interval: "year",
 		months: 12,
 		popular: false,
