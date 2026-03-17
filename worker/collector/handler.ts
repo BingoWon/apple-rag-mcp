@@ -8,6 +8,7 @@ import { configureTelegram, notifyStats } from "./utils/telegram-notifier.js";
 
 export async function handleScheduled(env: Env): Promise<void> {
 	configureTelegram(env.TELEGRAM_STATS_BOT_URL, env.TELEGRAM_ALERT_BOT_URL);
+	logger.setAlertUrl(env.TELEGRAM_ALERT_BOT_URL);
 
 	try {
 		await processAppleContent(env);

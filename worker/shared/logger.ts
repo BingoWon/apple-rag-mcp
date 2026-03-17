@@ -29,11 +29,10 @@ export class Logger {
 		console.warn(msg);
 	}
 
-	error(msg: string): void {
+	async error(msg: string): Promise<void> {
 		console.error(msg);
 		if (this.alertUrl) {
-			const p = sendTelegram(this.alertUrl, `${this.prefix} ${msg}`);
-			if (this.ctx) this.ctx.waitUntil(p);
+			await sendTelegram(this.alertUrl, `${this.prefix} ${msg}`);
 		}
 	}
 }

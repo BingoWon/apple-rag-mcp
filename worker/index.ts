@@ -106,7 +106,7 @@ export default {
 		return app.fetch(request, env, ctx);
 	},
 
-	async scheduled(_event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
-		ctx.waitUntil(handleScheduled(env));
+	async scheduled(_event: ScheduledEvent, env: Env, _ctx: ExecutionContext): Promise<void> {
+		await handleScheduled(env);
 	},
 };
