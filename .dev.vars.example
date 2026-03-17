@@ -1,0 +1,41 @@
+# Apple RAG MCP — Local Development Secrets
+# Copy to .dev.vars and fill in your values.
+# Production secrets: set via `wrangler versions secret put <NAME>`
+
+# ─── Core Auth (required for login to work) ──────────────
+JWT_SECRET=local-dev-jwt-secret-change-me-in-production
+ADMIN_PASSWORD=local-admin-password
+
+# ─── Stripe (optional — leave empty to skip billing features) ──
+STRIPE_SECRET_KEY=
+STRIPE_WEBHOOK_SECRET=
+STRIPE_PRICE_ID_PRO_WEEKLY=
+STRIPE_PRICE_ID_PRO_MONTHLY=
+STRIPE_PRICE_ID_PRO_SEMIANNUAL=
+STRIPE_PRICE_ID_PRO_ANNUAL=
+
+# ─── OAuth (optional — leave empty to skip social login) ──
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GITHUB_CLIENT_ID=
+GITHUB_CLIENT_SECRET=
+OAUTH_REDIRECT_BASE=http://localhost:4200
+
+# ─── Email / Resend (optional) ───────────────────────────
+RESEND_API_KEY=
+RESEND_FROM_EMAIL=
+
+# ─── RAG PostgreSQL (required for MCP / Collector) ───────
+RAG_DB_HOST=
+RAG_DB_PORT=5432
+RAG_DB_DATABASE=
+RAG_DB_USER=
+RAG_DB_PASSWORD=
+RAG_DB_SSLMODE=disable
+
+# ─── DeepInfra (required for MCP search) ─────────────────
+DEEPINFRA_API_KEY=
+
+# ─── Telegram (optional) ─────────────────────────────────
+TELEGRAM_ALERT_BOT_URL=
+TELEGRAM_STATS_BOT_URL=
