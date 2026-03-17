@@ -33,7 +33,8 @@ apiApp.onError(async (err, c) => {
 });
 
 apiApp.use(async (c, next) => {
-	const corsMiddleware = createCorsMiddleware(c.env);
+	const origin = new URL(c.req.url).origin;
+	const corsMiddleware = createCorsMiddleware(origin, c.env);
 	return corsMiddleware(c, next);
 });
 apiApp.use(securityHeaders);

@@ -35,14 +35,16 @@ interface OAuthTokens {
 }
 
 export class OAuthService {
-	constructor(private env: Env) {}
+	constructor(
+		private env: Env,
+		private origin: string,
+	) {}
 
 	/**
 	 * Returns OAuth authorization URL.
 	 */
 	getAuthUrl(provider: "google" | "github", state?: string): string {
-		const baseUrl = this.env.OAUTH_REDIRECT_BASE || "https://apple-rag.com/api";
-		const redirectUri = `${baseUrl}/oauth/${provider}/callback`;
+		const redirectUri = `${this.origin}/api/oauth/${provider}/callback`;
 
 		console.log(`Website OAuth ${provider} redirect URI:`, redirectUri);
 
@@ -117,8 +119,7 @@ export class OAuthService {
 		provider: "google" | "github",
 		code: string,
 	): Promise<OAuthTokens> {
-		const baseUrl = this.env.OAUTH_REDIRECT_BASE || "https://apple-rag.com/api";
-		const redirectUri = `${baseUrl}/oauth/${provider}/callback`;
+		const redirectUri = `${this.origin}/api/oauth/${provider}/callback`;
 
 		if (provider === "google") {
 			const response = await fetch("https://oauth2.googleapis.com/token", {

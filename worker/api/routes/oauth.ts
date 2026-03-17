@@ -62,7 +62,8 @@ const oauthInitRoute = createRoute({
 app.openapi(oauthInitRoute, async (c) => {
 	const provider = c.req.param("provider") as "google" | "github";
 	const { state } = c.req.valid("json");
-	const oauthService = new OAuthService(c.env);
+	const origin = new URL(c.req.url).origin;
+	const oauthService = new OAuthService(c.env, origin);
 
 	const authUrl = oauthService.getAuthUrl(provider, state);
 
@@ -93,18 +94,15 @@ const oauthCallbackRoute = createRoute({
 app.openapi(oauthCallbackRoute, async (c) => {
 	const provider = c.req.param("provider") as "google" | "github";
 	const { code } = c.req.valid("query");
-	const oauthService = new OAuthService(c.env);
+	const origin = new URL(c.req.url).origin;
+	const oauthService = new OAuthService(c.env, origin);
 
-	// Get request info for session management
 	const userAgent = c.req.header("User-Agent");
 	const ipAddress = c.req.header("CF-Connecting-IP") || c.req.header("X-Forwarded-For");
 
 	const result = await oauthService.handleCallback(provider, code, userAgent, ipAddress);
 
 	if (result.success && result.data) {
-		// Redirect to frontend with authentication data
-		const frontendUrl = c.env.FRONTEND_URL || "https://apple-rag.com";
-
 		const authData = {
 			userId: result.data.user.id,
 			email: result.data.user.email,
@@ -114,12 +112,11 @@ app.openapi(oauthCallbackRoute, async (c) => {
 			jwtToken: result.data.jwtToken,
 		};
 
-		const redirectUrl = `${frontendUrl}/overview?auth=${encodeURIComponent(btoa(JSON.stringify(authData)))}`;
+		const redirectUrl = `${origin}/overview?auth=${encodeURIComponent(btoa(JSON.stringify(authData)))}`;
 		return c.redirect(redirectUrl);
 	} else {
-		const frontendUrl = c.env.FRONTEND_URL || "https://apple-rag.com";
 		const errorMessage = encodeURIComponent(result.error || "OAuth authentication failed");
-		return c.redirect(`${frontendUrl}/login?error=${errorMessage}`);
+		return c.redirect(`${origin}/login?error=${errorMessage}`);
 	}
 });
 

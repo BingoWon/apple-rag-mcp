@@ -5,7 +5,6 @@ export interface Env {
 
 	// Environment
 	ENVIRONMENT: "development" | "production";
-	FRONTEND_URL: string;
 
 	// API: Authentication secrets
 	JWT_SECRET: string;
@@ -28,7 +27,6 @@ export interface Env {
 	GOOGLE_CLIENT_SECRET?: string;
 	GITHUB_CLIENT_ID?: string;
 	GITHUB_CLIENT_SECRET?: string;
-	OAUTH_REDIRECT_BASE?: string;
 
 	// API: Email (Resend)
 	RESEND_API_KEY?: string;

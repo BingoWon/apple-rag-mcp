@@ -220,7 +220,7 @@ export class AuthService {
 	/**
 	 * Forgot password - send reset email with modern email normalization
 	 */
-	async forgotPassword(email: string): Promise<ApiResponse<{ message: string }>> {
+	async forgotPassword(email: string, origin: string): Promise<ApiResponse<{ message: string }>> {
 		try {
 			// Normalize email and check if user exists with email provider
 			const normalizedEmail = email.toLowerCase().trim();
@@ -256,9 +256,8 @@ export class AuthService {
 			// Send reset email
 			if (this.env.RESEND_API_KEY) {
 				const emailService = new EmailService(this.env);
-				const frontendUrl = this.env.FRONTEND_URL || "https://apple-rag.com";
 
-				const emailSent = await emailService.sendPasswordResetEmail(email, resetToken, frontendUrl);
+				const emailSent = await emailService.sendPasswordResetEmail(email, resetToken, origin);
 
 				if (!emailSent) {
 					console.error("Failed to send password reset email");

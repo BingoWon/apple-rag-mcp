@@ -2,17 +2,14 @@ import type { Context, Next } from "hono";
 import { cors } from "hono/cors";
 import type { Env } from "../../shared/types.js";
 
-function getAllowedOrigins(env: Env): string[] {
-	return [env.FRONTEND_URL || "https://apple-rag.com", "http://localhost:4200"];
-}
-
-export function createCorsMiddleware(env: Env) {
-	const allowedOrigins = getAllowedOrigins(env);
-
+export function createCorsMiddleware(requestOrigin: string, env: Env) {
 	return cors({
 		origin: (origin) => {
 			if (!origin) return origin;
-			return allowedOrigins.includes(origin) ? origin : null;
+			if (origin === requestOrigin) return origin;
+			if (env.ENVIRONMENT === "development" && origin.startsWith("http://localhost:"))
+				return origin;
+			return null;
 		},
 		allowHeaders: ["Content-Type", "Authorization", "X-Admin-Password"],
 		allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],

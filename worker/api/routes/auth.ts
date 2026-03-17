@@ -229,8 +229,9 @@ const forgotPasswordRoute = createRoute({
 app.openapi(forgotPasswordRoute, async (c) => {
 	const { email } = c.req.valid("json");
 	const authService = new AuthService(c.env.DB, c.env);
+	const origin = new URL(c.req.url).origin;
 
-	const result = await authService.forgotPassword(email);
+	const result = await authService.forgotPassword(email, origin);
 
 	if (result.success) {
 		return c.json(result, 200);

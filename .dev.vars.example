@@ -23,7 +23,6 @@ GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
 GITHUB_CLIENT_ID=
 GITHUB_CLIENT_SECRET=
-OAUTH_REDIRECT_BASE=http://localhost:4200
 
 # ─── Email / Resend (optional) ───────────────────────────
 RESEND_API_KEY=

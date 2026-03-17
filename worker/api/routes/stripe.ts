@@ -204,7 +204,8 @@ stripe.openapi(
 				return c.json({ error: "Invalid price ID" }, 400);
 			}
 
-			const finalCancelUrl = cancelUrl || `${c.env.FRONTEND_URL}/#pricing`;
+			const origin = new URL(c.req.url).origin;
+			const finalCancelUrl = cancelUrl || `${origin}/#pricing`;
 			const isOneTime = priceId.startsWith("onetime_");
 
 			const stripeClient = new Stripe(c.env.STRIPE_SECRET_KEY, {
@@ -214,7 +215,7 @@ stripe.openapi(
 			const sessionParams: Stripe.Checkout.SessionCreateParams = {
 				line_items: [{ price: priceIdValue, quantity: 1 }],
 				mode: isOneTime ? "payment" : "subscription",
-				success_url: `${c.env.FRONTEND_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
+				success_url: `${origin}/success?session_id={CHECKOUT_SESSION_ID}`,
 				cancel_url: finalCancelUrl,
 				client_reference_id: user.id,
 				customer_email: user.email,
@@ -329,7 +330,7 @@ stripe.openapi(
 			// Create billing portal session with return URL that triggers refresh
 			const session = await stripeClient.billingPortal.sessions.create({
 				customer: result.stripe_customer_id as string,
-				return_url: `${c.env.FRONTEND_URL}/billing?refresh=true`,
+				return_url: `${new URL(c.req.url).origin}/billing?refresh=true`,
 			});
 
 			return c.json({ url: session.url });
