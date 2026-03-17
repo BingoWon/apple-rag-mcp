@@ -14,10 +14,13 @@ BATCH_SIZE = "40"
 BATCH_COUNT = "20"
 FORCE_UPDATE_ALL = "false"
 
+[placement]
+mode = "smart"
+
 [assets]
 directory = "./dist"
 binding = "ASSETS"
-run_worker_first = true
+run_worker_first = ["/", "/api/*", "/mcp*"]
 
 [[d1_databases]]
 binding = "DB"
