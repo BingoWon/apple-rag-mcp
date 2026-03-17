@@ -1,6 +1,7 @@
 import { IconMenu2, IconX } from "@tabler/icons-react";
 import { AnimatePresence, motion } from "motion/react";
 import React, { createContext, useContext, useState } from "react";
+import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { cn } from "@/lib/utils";
 
@@ -123,8 +124,9 @@ export const MobileSidebar = ({ className, children, ...props }: React.Component
 			)}
 			{...props}
 		>
-			{/* Right side - Both buttons */}
-			<div className="flex items-center gap-3 z-20">
+			{/* Right side controls */}
+			<div className="flex items-center gap-2 z-20">
+				<LanguageSwitcher />
 				<ThemeToggle variant="icon" />
 				<IconMenu2
 					className="text-light cursor-pointer hover:text-muted transition-colors p-1"

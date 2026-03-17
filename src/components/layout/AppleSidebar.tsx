@@ -160,28 +160,35 @@ const AppleSidebarComponent = ({ children }: { children: React.ReactNode }) => {
 							})}
 						</div>
 					</div>
-					<div className="space-y-2">
-						{/* Theme Toggle & Language Switcher */}
-						<div className="flex items-center justify-start px-2">
-							<ThemeToggle variant={open ? "dropdown" : "icon"} className={open ? "w-auto" : ""} />
-							<LanguageSwitcher />
-						</div>
+					<div
+						className={cn(
+							"flex items-center rounded-lg py-2 transition-all duration-200",
+							open ? "px-2 gap-2" : "flex-col items-center gap-2 px-1",
+						)}
+					>
+						<Link to="/settings" className="shrink-0">
+							<Avatar
+								src={user?.avatar}
+								name={user?.name || t("common.user")}
+								size="sm"
+								className="h-7 w-7 shrink-0"
+							/>
+						</Link>
 
-						{/* User Profile */}
-						<SidebarLink
-							link={{
-								label: user?.name || t("common.user"),
-								href: "/settings",
-								icon: (
-									<Avatar
-										src={user?.avatar}
-										name={user?.name || t("common.user")}
-										size="sm"
-										className="h-7 w-7 shrink-0"
-									/>
-								),
-							}}
-						/>
+						{open && (
+							<>
+								<Link
+									to="/settings"
+									className="text-sm text-muted hover:text-light truncate flex-1 min-w-0 transition-colors duration-200"
+								>
+									{user?.name || t("common.user")}
+								</Link>
+								<div className="flex items-center shrink-0 ml-auto">
+									<LanguageSwitcher />
+									<ThemeToggle variant="icon" />
+								</div>
+							</>
+						)}
 					</div>
 				</SidebarBody>
 			</Sidebar>
