@@ -3,7 +3,13 @@
  * Optimized for edge computing with zero-dependency architecture
  */
 
-import type { AppConfig, RAGQuery, RAGResult, SearchResult, WorkerEnv } from "../mcp-types/index.js";
+import type {
+	AppConfig,
+	RAGQuery,
+	RAGResult,
+	SearchResult,
+	WorkerEnv,
+} from "../mcp-types/index.js";
 import { logger } from "../mcp-utils/logger.js";
 import { DatabaseService } from "./database.js";
 import { EmbeddingService } from "./embedding.js";
