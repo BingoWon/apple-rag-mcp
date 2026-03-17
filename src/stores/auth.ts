@@ -11,6 +11,15 @@ import type {
 } from "@/types";
 import { getFriendlyErrorMessage } from "@/utils/errorMessages";
 
+function isTokenExpired(token: string): boolean {
+	try {
+		const payload = JSON.parse(atob(token.split(".")[1]));
+		return payload.exp ? payload.exp * 1000 < Date.now() : false;
+	} catch {
+		return true;
+	}
+}
+
 interface AuthState {
 	user: User | null;
 	token: string | null;
@@ -208,7 +217,13 @@ export const useAuthStore = create<AuthState>()(
 				token: state.token,
 				isAuthenticated: state.isAuthenticated,
 			}),
-			onRehydrateStorage: () => (state) => state?.setHydrated(true),
+			onRehydrateStorage: () => (state) => {
+				if (!state) return;
+				if (state.token && isTokenExpired(state.token)) {
+					state.logout();
+				}
+				state.setHydrated(true);
+			},
 		},
 	),
 );

@@ -3,128 +3,53 @@ import type { ApiResponse } from "@/types";
 import { normalizeEmail } from "@/utils/email";
 import { ADMIN_PASSWORD_HEADER, ADMIN_SESSION_KEY } from "./constants";
 
-interface ApiClientConfig {
-	baseURL?: string;
-	timeout?: number;
-}
+let isLoggingOut = false;
 
 class ApiClient {
 	private client: AxiosInstance;
-	private baseURL: string;
 
-	constructor(config: ApiClientConfig = {}) {
-		this.baseURL = config.baseURL || "/api";
-
+	constructor(baseURL = "/api") {
 		this.client = axios.create({
-			baseURL: this.baseURL,
-			timeout: config.timeout || 30000,
-			headers: {
-				"Content-Type": "application/json",
-			},
+			baseURL,
+			timeout: 30000,
+			headers: { "Content-Type": "application/json" },
 		});
 
-		this.setupInterceptors();
-	}
+		this.client.interceptors.request.use((config) => {
+			try {
+				const raw = localStorage.getItem("auth-storage");
+				if (raw) {
+					const token = JSON.parse(raw).state?.token;
+					if (token) config.headers.Authorization = `Bearer ${token}`;
+				}
+			} catch {}
 
-	private getTokenFromStorage(): string | null {
-		if (typeof window === "undefined") return null;
-
-		try {
-			const authStorage = localStorage.getItem("auth-storage");
-			if (authStorage) {
-				const parsed = JSON.parse(authStorage);
-				return parsed.state?.token || null;
+			if (config.url?.includes("/admin/")) {
+				const pw = localStorage.getItem(ADMIN_SESSION_KEY);
+				if (pw) config.headers[ADMIN_PASSWORD_HEADER] = pw;
 			}
-		} catch (error) {
-			console.error("❌ [API CLIENT] Failed to get stored token:", error);
-		}
-		return null;
-	}
 
-	private clearAuthFromStorage(): void {
-		if (typeof window === "undefined") return;
-
-		console.log(
-			"🚨 [API CLIENT] clearAuthFromStorage called - this should not happen during login!",
-		);
-
-		try {
-			const authStorage = localStorage.getItem("auth-storage");
-			if (authStorage) {
-				const parsed = JSON.parse(authStorage);
-
-				// Add safety check - don't clear if we just logged in recently or if user is authenticated
-				const now = Date.now();
-				const lastLogin = localStorage.getItem("last-login-time");
-
-				// Check if we have a valid auth state
-				const hasValidAuth = parsed.state?.isAuthenticated && parsed.state?.token;
-
-				// Protect for 30 seconds after login, or if we have valid auth state
-				if ((lastLogin && now - parseInt(lastLogin, 10) < 30000) || hasValidAuth) {
-					console.log("🛡️ [API CLIENT] Preventing auth clear", {
-						recentLogin: lastLogin && now - parseInt(lastLogin, 10) < 30000,
-						hasValidAuth,
-						timeSinceLogin: lastLogin ? now - parseInt(lastLogin, 10) : "N/A",
-					});
-					return;
-				}
-
-				parsed.state.token = null;
-				parsed.state.isAuthenticated = false;
-				parsed.state.user = null;
-				localStorage.setItem("auth-storage", JSON.stringify(parsed));
-			}
-		} catch (error) {
-			console.error("Failed to clear auth storage:", error);
-		}
-	}
-
-	private setupInterceptors() {
-		this.client.interceptors.request.use(
-			(config) => {
-				const token = this.getTokenFromStorage();
-				if (token) {
-					config.headers.Authorization = `Bearer ${token}`;
-				}
-
-				// Add admin password for admin endpoints
-				if (config.url?.includes("/admin/")) {
-					const adminPassword =
-						typeof window !== "undefined" ? localStorage.getItem(ADMIN_SESSION_KEY) : null;
-					if (adminPassword) {
-						config.headers[ADMIN_PASSWORD_HEADER] = adminPassword;
-					}
-				}
-
-				return config;
-			},
-			(error) => Promise.reject(error),
-		);
+			return config;
+		});
 
 		this.client.interceptors.response.use(
-			(response: AxiosResponse<ApiResponse>) => {
-				return response;
-			},
+			(r: AxiosResponse<ApiResponse>) => r,
 			(error: AxiosError) => {
-				const isAuthEndpoint =
-					error.config?.url?.includes("/auth/login") ||
-					error.config?.url?.includes("/auth/register");
-				const isAdminEndpoint = error.config?.url?.includes("/admin/");
+				const url = error.config?.url ?? "";
+				const status = error.response?.status;
+				const isAuthEndpoint = url.includes("/auth/login") || url.includes("/auth/register");
 
-				if ((error.response?.status === 401 || error.response?.status === 403) && !isAuthEndpoint) {
-					if (isAdminEndpoint) {
-						// Admin authentication failed: clear admin session only
-						if (typeof window !== "undefined") {
-							localStorage.removeItem(ADMIN_SESSION_KEY);
-						}
-						// Don't redirect for admin errors, let the admin component handle it
-					} else {
-						// Main app authentication failed: clear auth and redirect
-						this.clearAuthFromStorage();
-						if (typeof window !== "undefined") {
-							window.location.href = "/login";
-						}
+				if ((status === 401 || status === 403) && !isAuthEndpoint) {
+					if (url.includes("/admin/")) {
+						localStorage.removeItem(ADMIN_SESSION_KEY);
+					} else if (!isLoggingOut) {
+						isLoggingOut = true;
+						import("@/stores/auth").then(({ useAuthStore }) => {
+							useAuthStore.getState().logout();
+							setTimeout(() => {
+								isLoggingOut = false;
+							}, 2000);
+						});
 					}
 				}
 				return Promise.reject(error);
