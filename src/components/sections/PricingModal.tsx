@@ -11,21 +11,6 @@ interface PricingModalProps {
 	planName: string;
 }
 
-const getPeriodText = (option: PricingOption): string => {
-	if (option.interval === "week") return "week";
-	if (option.interval === "year") return "year";
-	if (option.months === 6) return "6 months";
-	return "month";
-};
-
-const formatPeriod = (option: PricingOption): string => {
-	return `per ${getPeriodText(option)}`;
-};
-
-const formatTotal = (option: PricingOption): string => {
-	return `$${option.price} / ${getPeriodText(option)}`;
-};
-
 const getDiscountBadgeColor = (index: number): string => {
 	const colors = [
 		"bg-warning", // 第一个：黄色
@@ -40,6 +25,17 @@ export function PricingModal({ planName }: PricingModalProps) {
 	const { setOpen } = useModal();
 	const [selectedOption, setSelectedOption] = useState<PricingOption["id"]>("weekly");
 	const [isLoading, setIsLoading] = useState(false);
+
+	const getPeriodText = (option: PricingOption): string => {
+		if (option.interval === "week") return t("pricing.per_week");
+		if (option.interval === "year") return t("pricing.per_year");
+		if (option.months === 6) return t("pricing.per_6months");
+		return t("pricing.per_month");
+	};
+
+	const formatTotal = (option: PricingOption): string => {
+		return `$${option.price} / ${getPeriodText(option)}`;
+	};
 
 	const selectedPricingOption = PRO_PRICING_OPTIONS.find((opt) => opt.id === selectedOption);
 
@@ -113,7 +109,7 @@ export function PricingModal({ planName }: PricingModalProps) {
 									<span
 										className={`absolute top-0 right-4 -translate-y-1/2 z-10 ${getDiscountBadgeColor(discountIndex)} text-white px-3 py-1 text-xs font-semibold rounded-full whitespace-nowrap shadow-lg`}
 									>
-										{option.discount}
+										{t("pricing.discount", { percent: option.discount?.replace(/[^0-9]/g, "") })}
 									</span>
 								)}
 
@@ -127,8 +123,10 @@ export function PricingModal({ planName }: PricingModalProps) {
 											{isSelected && <IconCheck className="w-3 h-3 text-white" />}
 										</div>
 										<div>
-											<h3 className="font-semibold text-foreground text-lg">{option.name}</h3>
-											<p className="text-sm text-muted-foreground">{formatPeriod(option)}</p>
+											<h3 className="font-semibold text-foreground text-lg">
+												{t(`pricing.${option.id}`)}
+											</h3>
+											<p className="text-sm text-muted-foreground">{getPeriodText(option)}</p>
 										</div>
 									</div>
 									<div className="text-right">

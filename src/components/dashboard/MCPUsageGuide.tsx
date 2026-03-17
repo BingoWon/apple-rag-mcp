@@ -93,7 +93,7 @@ export function MCPUsageGuide() {
 			await navigator.clipboard.writeText(text);
 			toast.success(successMessage);
 		} catch (_error) {
-			toast.error("Failed to copy to clipboard");
+			toast.error(t("guide.copy_clipboard_failed"));
 		}
 	};
 
@@ -145,7 +145,7 @@ export function MCPUsageGuide() {
 						onClick={() =>
 							copyToClipboard(param.value || "", param.copyMessage || "Copied to clipboard!")
 						}
-						title={`Copy ${param.label.replace(":", "")}`}
+						title={t("guide.copy_param", { param: param.label.replace(":", "") })}
 						className={copyButtonClass}
 					>
 						<IconClipboard className="h-3 w-3" />
@@ -287,7 +287,7 @@ export function MCPUsageGuide() {
 												<IconTerminal className="h-5 w-5 text-light" />
 												<span className="text-sm font-semibold text-light">Codex CLI</span>
 											</div>
-											<span className="text-sm text-muted">Configuration</span>
+											<span className="text-sm text-muted">{t("guide.codex_config")}</span>
 										</div>
 										<IconChevronDown
 											className={`h-4 w-4 text-muted transition-transform ${showCodexGuide ? "rotate-180" : ""}`}
@@ -298,18 +298,18 @@ export function MCPUsageGuide() {
 										<div className="p-4 space-y-4">
 											<div>
 												<p className="text-sm text-muted mb-3">
-													Add the snippet below to{" "}
+													{t("guide.codex_desc")}{" "}
 													<code className="text-xs font-mono bg-secondary px-1 py-0.5 rounded">
 														~/.codex/config.toml
 													</code>{" "}
-													to configure Codex. For more detail, refer to the{" "}
+													{t("guide.codex_desc_suffix")}{" "}
 													<a
 														href="https://github.com/openai/codex/blob/main/docs/config.md#mcp_servers"
 														target="_blank"
 														rel="noopener noreferrer"
 														className="text-brand hover:text-brand-secondary underline"
 													>
-														official docs
+														{t("guide.official_docs")}
 													</a>
 													.
 												</p>
@@ -341,7 +341,7 @@ export function MCPUsageGuide() {
 												/>
 												<span className="text-sm font-semibold text-light">Claude Code</span>
 											</div>
-											<span className="text-sm text-muted">CLI Command</span>
+											<span className="text-sm text-muted">{t("guide.claude_command")}</span>
 										</div>
 										<IconChevronDown
 											className={`h-4 w-4 text-muted transition-transform ${showClaudeGuide ? "rotate-180" : ""}`}
@@ -351,10 +351,7 @@ export function MCPUsageGuide() {
 									{showClaudeGuide && (
 										<div className="p-4 space-y-4">
 											<div>
-												<p className="text-sm text-muted mb-3">
-													Run the following command in your terminal to add the MCP server to Claude
-													Code:
-												</p>
+												<p className="text-sm text-muted mb-3">{t("guide.claude_desc")}</p>
 												<CodeBlock
 													language="bash"
 													filename="terminal"
@@ -402,10 +399,10 @@ export function MCPUsageGuide() {
 								<div className="bg-tertiary rounded-lg p-4 border border-default">
 									<h4 className="font-medium text-light mb-2">{t("guide.about_features")}</h4>
 									<ul className="space-y-1 text-xs">
-										<li>• Intelligent search across Apple's developer documentation</li>
-										<li>• Context-aware responses for all Apple platforms</li>
-										<li>• Higher query limits with authentication tokens</li>
-										<li>• Automatic authentication for trusted IP addresses</li>
+										<li>• {t("guide.about_feature_1")}</li>
+										<li>• {t("guide.about_feature_2")}</li>
+										<li>• {t("guide.about_feature_3")}</li>
+										<li>• {t("guide.about_feature_4")}</li>
 									</ul>
 								</div>
 							</div>
@@ -419,7 +416,7 @@ export function MCPUsageGuide() {
 							</h3>
 							<div className="space-y-2 text-sm text-muted">
 								<p>
-									• Authenticated tokens provide higher query limits in{" "}
+									• {t("guide.token_higher_limits")}{" "}
 									<Link
 										to="/mcp-tokens"
 										className="text-brand hover:text-brand-secondary underline"
@@ -428,7 +425,7 @@ export function MCPUsageGuide() {
 									</Link>
 								</p>
 								<p>
-									• Monitor your usage in{" "}
+									• {t("guide.usage_monitor")}{" "}
 									<Link to="/usage" className="text-brand hover:text-brand-secondary underline">
 										{t("guide.usage_dashboard")}
 									</Link>
@@ -453,7 +450,7 @@ export function MCPUsageGuide() {
 								>
 									{t("guide.ip_auth_link")}
 								</Link>{" "}
-								for automatic authentication
+								{t("guide.ip_auto_auth")}
 							</p>
 							<p>• {t("guide.ip_auth_desc")}</p>
 						</div>

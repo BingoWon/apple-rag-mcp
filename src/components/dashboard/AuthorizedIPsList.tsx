@@ -36,10 +36,10 @@ export function AuthorizedIPsList({
 	const { handleDeleteClick, isDeleting, DeleteModal } = useDeleteConfirm({
 		onDelete: useCallback(onDelete, [onDelete]),
 		onRefresh: useCallback(onRefresh, [onRefresh]),
-		itemType: "Authorized IP",
-		title: "Delete Authorized IP",
+		itemType: t("ips.ip_label"),
+		title: t("ips.delete_title"),
 		successMessage: useCallback((name: string) => t("ips.deleted_success", { name }), [t]),
-		errorMessage: "Error\nFailed to delete authorized IP",
+		errorMessage: t("ips.delete_error_full"),
 	});
 
 	// Define columns for the DataTable

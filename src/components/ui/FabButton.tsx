@@ -284,9 +284,7 @@ export function FabButton({ className }: FabButtonProps) {
 			const target = event.target as Element;
 
 			// 现代化的 FAB 触发元素识别（使用 data 属性）
-			const isFabTriggerElement =
-				target.closest("[data-nav-action='fab-contact']") ||
-				target.closest("button")?.textContent?.includes("Contact us");
+			const isFabTriggerElement = target.closest("[data-nav-action='fab-contact']");
 
 			if (
 				isOpen &&

@@ -118,7 +118,7 @@ export default function UsagePage() {
 										toast.error(t("common.copy_failed"));
 									}
 								}}
-								title="Copy URL"
+								title={t("common.copy_url")}
 								className="text-muted hover:text-light h-8 w-8"
 							>
 								<IconClipboard className="h-4 w-4" />

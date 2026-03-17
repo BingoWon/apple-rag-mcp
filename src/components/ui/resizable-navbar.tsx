@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/Button";
 import { activateFabContact } from "@/components/ui/FabButton";
+import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth";
@@ -323,6 +324,7 @@ export function AppNavbar() {
 				</a>
 				<NavItems items={navItems} onItemClick={handleMenuClose} />
 				<div className="flex items-center gap-3">
+					<LanguageSwitcher />
 					<ThemeToggle variant="icon" />
 					{isAuthenticated ? (
 						<UserMenu user={user} onLogout={handleLogout} />
@@ -349,6 +351,7 @@ export function AppNavbar() {
 						<img src="/logo-with-text.svg" alt="Apple RAG MCP" className="h-8 w-auto" />
 					</a>
 					<div className="flex items-center gap-3">
+						<LanguageSwitcher />
 						<ThemeToggle variant="icon" />
 						<MobileNavToggle
 							isOpen={isMobileMenuOpen}

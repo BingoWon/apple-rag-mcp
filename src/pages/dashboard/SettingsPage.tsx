@@ -12,14 +12,13 @@ import { Input } from "@/components/ui/Input";
 import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/lib/api";
 
-const profileSchema = z.object({
-	name: z.string().min(2, "Name must be at least 2 characters"),
-});
-
-type ProfileFormData = z.infer<typeof profileSchema>;
-
 export default function SettingsPage() {
 	const { t } = useTranslation();
+	const profileSchema = z.object({
+		name: z.string().min(2, t("settings.name_min")),
+	});
+	type ProfileFormData = z.infer<typeof profileSchema>;
+
 	const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
 	const { user, updateUser } = useAuth();
 
@@ -43,7 +42,7 @@ export default function SettingsPage() {
 			}
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : t("settings.profile_error");
-			toast.error(`Error\n${errorMessage}`);
+			toast.error(`${t("common.error")}\n${errorMessage}`);
 		} finally {
 			setIsUpdatingProfile(false);
 		}

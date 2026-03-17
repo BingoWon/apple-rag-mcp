@@ -43,7 +43,8 @@
 		"loading_data": "正在加载...",
 		"error_loading": "加载失败",
 		"url_copied": "URL 已复制",
-		"copy_failed": "复制失败"
+		"copy_failed": "复制失败",
+		"copy_url": "复制 URL"
 	},
 
 	"nav": {
@@ -108,7 +109,12 @@
 		"quote2": "以前的 LLM 勉强够用，但在正经 Apple 开发中总差那么点意思。这个 MCP 彻底改变了局面——终于有 AI 能真正理解 Apple 生态了。",
 		"quote3": "我找这类方案找了很久，甚至评估过自己做一个。这个产品的架构设计和实现质量都相当过硬。",
 		"quote4": "不得不说，定价策略设计得很巧妙。实惠与价值的平衡恰到好处，完全契合我的工作流。",
-		"quote5": "很高兴看到这样优质的商业 MCP 产品出现。这对整个生态是好事，也说明认真做 MCP 确实能创造价值。"
+		"quote5": "很高兴看到这样优质的商业 MCP 产品出现。这对整个生态是好事，也说明认真做 MCP 确实能创造价值。",
+		"designation_1": "独立开发者",
+		"designation_2": "macOS 开发工程师",
+		"designation_3": "高级 iOS 架构师",
+		"designation_4": "自由应用开发者",
+		"designation_5": "MCP 平台专家"
 	},
 
 	"pricing": {
@@ -127,7 +133,9 @@
 		"weekly": "按周付费",
 		"monthly": "按月付费",
 		"semiannual": "半年付费",
-		"annual": "按年付费"
+		"annual": "按年付费",
+		"discount": "省 {{percent}}%",
+		"and_more": "等更多..."
 	},
 
 	"plans": {
@@ -150,7 +158,22 @@
 		"faster_response": "更快的响应速度",
 		"usage_analytics": "使用量统计",
 		"dedicated_infra": "专属基础设施",
-		"premium_support": "全天候高级支持"
+		"premium_support": "全天候高级支持",
+		"price_free": "免费",
+		"price_pro": "$1 / 周",
+		"price_custom": "定制"
+	},
+
+	"success": {
+		"title": "支付成功！",
+		"subtitle": "欢迎使用 Apple RAG MCP Pro！您的订阅已生效。",
+		"whats_next": "接下来做什么？",
+		"feature_queries": "每周 50,000 次查询",
+		"feature_rpm": "每分钟 50 次请求",
+		"feature_rag": "高级 RAG 搜索功能",
+		"feature_analytics": "使用数据分析面板",
+		"go_dashboard": "进入控制台",
+		"back_home": "返回首页"
 	},
 
 	"cta": {
@@ -238,7 +261,9 @@
 		"config_copied": "{{client}} 配置已复制到剪贴板！",
 		"cursor_hint": "请在弹出的 Cursor 窗口中点击 'Install' 添加 MCP。",
 		"vscode_hint": "请在弹出的 VS Code 窗口中点击 'Install' 添加 MCP。",
-		"vscode_insiders_hint": "请在弹出的 VS Code Insiders 窗口中点击 'Install' 添加 MCP。"
+		"vscode_insiders_hint": "请在弹出的 VS Code Insiders 窗口中点击 'Install' 添加 MCP。",
+		"delete_title": "删除令牌",
+		"delete_error_full": "删除令牌失败"
 	},
 
 	"guide": {
@@ -273,7 +298,22 @@
 		"usage_dashboard": "使用量面板",
 		"ip_auth_title": "IP 认证（可选）",
 		"ip_auth_link": "授权你的 IP 地址",
-		"ip_auth_desc": "信任 IP 免令牌认证，享受更高查询配额"
+		"ip_auth_desc": "信任 IP 免令牌认证，享受更高查询配额",
+		"codex_config": "配置方式",
+		"codex_desc": "将以下代码添加到",
+		"codex_desc_suffix": "即可完成 Codex 配置。详情请参阅",
+		"official_docs": "官方文档",
+		"claude_command": "CLI 命令",
+		"claude_desc": "在终端执行以下命令，将 MCP 服务器添加到 Claude Code：",
+		"copy_param": "复制{{param}}",
+		"copy_clipboard_failed": "复制失败",
+		"about_feature_1": "智能搜索 Apple 全部开发者文档",
+		"about_feature_2": "上下文感知，覆盖所有 Apple 平台",
+		"about_feature_3": "认证令牌享有更高查询配额",
+		"about_feature_4": "信任 IP 自动完成身份验证",
+		"token_higher_limits": "认证令牌享有更高查询配额，前往",
+		"usage_monitor": "前往",
+		"ip_auto_auth": "自动完成身份验证"
 	},
 
 	"ips": {
@@ -310,7 +350,11 @@
 		"how_2": "从这些 IP 使用 MCP 时自动完成认证",
 		"how_3": "无需配置或记忆 MCP 令牌",
 		"how_4": "仍然享有订阅方案的全部功能和速率限制",
-		"how_5": "IP 认证和令牌认证互不影响，两种方式均可使用"
+		"how_5": "IP 认证和令牌认证互不影响，两种方式均可使用",
+		"delete_title": "删除授权 IP",
+		"delete_error_full": "删除授权 IP 失败",
+		"detect_failed": "无法检测",
+		"update_error": "更新授权 IP 失败"
 	},
 
 	"usage": {
@@ -356,7 +400,9 @@
 		"past_due": "逾期",
 		"incomplete": "未完成",
 		"payment_success": "支付成功！\n订阅已更新。",
-		"subscription_updated": "订阅已更新！\n你的更改已保存。"
+		"subscription_updated": "订阅已更新！\n你的更改已保存。",
+		"manage_error": "无法打开账单管理页面，如问题持续请联系客服。",
+		"plan_suffix": "方案"
 	},
 
 	"messages": {
@@ -422,7 +468,11 @@
 		"delete_confirm_placeholder": "输入 DELETE 以确认",
 		"deleting": "正在删除...",
 		"delete_success": "账号已删除。\n即将跳转到首页。",
-		"delete_error": "删除账号失败"
+		"delete_error": "删除账号失败",
+		"name_min": "名称至少 2 个字符",
+		"delete_type_confirm": "请输入 DELETE 以确认",
+		"password_changed": "密码修改成功！\n你的密码已更新。",
+		"password_change_error": "修改密码失败，请重试。"
 	},
 
 	"admin": {
@@ -586,6 +636,18 @@
 		"privacy": "隐私政策",
 		"terms": "服务条款",
 		"crafted": "以 Vibe Coding 打造 ✨"
+	},
+
+	"success": {
+		"title": "支付成功！",
+		"subtitle": "欢迎加入 Apple RAG MCP Pro！你的订阅已生效。",
+		"whats_next": "接下来",
+		"feature_queries": "每周 50,000 次查询",
+		"feature_rpm": "每分钟 50 次请求",
+		"feature_rag": "高级 RAG 搜索功能",
+		"feature_analytics": "使用量统计面板",
+		"go_dashboard": "前往控制台",
+		"back_home": "回到首页"
 	},
 
 	"errors": {

@@ -140,7 +140,9 @@ export function PricingSection() {
 			{/* Supported Clients - Global Section */}
 			<div className="mt-4 md:mt-0">
 				<h3 className="text-lg font-semibold text-light mb-4">{t("pricing.supported_clients")}</h3>
-				<p className="text-sm text-muted leading-relaxed">{SUPPORTED_CLIENTS.join(", ")}</p>
+				<p className="text-sm text-muted leading-relaxed">
+					{SUPPORTED_CLIENTS.filter((c) => c !== "and more...").join(", ")}, {t("pricing.and_more")}
+				</p>
 			</div>
 		</div>
 	);

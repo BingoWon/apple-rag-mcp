@@ -43,7 +43,8 @@
 		"loading_data": "Loading data...",
 		"error_loading": "Error Loading Data",
 		"url_copied": "URL copied to clipboard",
-		"copy_failed": "Failed to copy"
+		"copy_failed": "Failed to copy",
+		"copy_url": "Copy URL"
 	},
 
 	"nav": {
@@ -108,7 +109,12 @@
 		"quote2": "LLMs were decent, but never quite hit the mark for serious Apple development. This MCP changes everything - finally, AI that truly gets Apple's ecosystem.",
 		"quote3": "I've been looking for this kind of solution for a while and even evaluated building something similar internally. The execution here is solid and well-architected.",
 		"quote4": "Whoever designed these pricing tiers is brilliant. Perfect balance of accessibility and value - fits my workflow like a glove.",
-		"quote5": "Great to see quality commercial MCP products like this. It's good for the ecosystem and shows developers can actually make money doing this right."
+		"quote5": "Great to see quality commercial MCP products like this. It's good for the ecosystem and shows developers can actually make money doing this right.",
+		"designation_1": "Indie Developer",
+		"designation_2": "macOS Development Engineer",
+		"designation_3": "Senior iOS Architect",
+		"designation_4": "Freelance App Developer",
+		"designation_5": "MCP Platform Expert"
 	},
 
 	"pricing": {
@@ -127,7 +133,9 @@
 		"weekly": "Weekly",
 		"monthly": "Monthly",
 		"semiannual": "Semi-annual",
-		"annual": "Annual"
+		"annual": "Annual",
+		"discount": "{{percent}}% OFF",
+		"and_more": "and more..."
 	},
 
 	"plans": {
@@ -150,7 +158,22 @@
 		"faster_response": "Faster response time",
 		"usage_analytics": "Usage analytics",
 		"dedicated_infra": "Dedicated infrastructure",
-		"premium_support": "24/7 premium support"
+		"premium_support": "24/7 premium support",
+		"price_free": "Free",
+		"price_pro": "$1 / week",
+		"price_custom": "Custom"
+	},
+
+	"success": {
+		"title": "Payment Successful!",
+		"subtitle": "Welcome to Apple RAG MCP Pro! Your subscription is now active.",
+		"whats_next": "What's Next?",
+		"feature_queries": "Access to 50,000 queries per week",
+		"feature_rpm": "50 requests per minute",
+		"feature_rag": "Advanced RAG search features",
+		"feature_analytics": "Usage analytics dashboard",
+		"go_dashboard": "Go to Dashboard",
+		"back_home": "Back to Home"
 	},
 
 	"cta": {
@@ -238,7 +261,9 @@
 		"config_copied": "{{client}} configuration copied to clipboard!",
 		"cursor_hint": "Look for the Cursor window and click 'Install' to add MCP.",
 		"vscode_hint": "Look for the VS Code window and click 'Install' to add MCP.",
-		"vscode_insiders_hint": "Look for the VS Code Insiders window and click 'Install' to add MCP."
+		"vscode_insiders_hint": "Look for the VS Code Insiders window and click 'Install' to add MCP.",
+		"delete_title": "Delete MCP Token",
+		"delete_error_full": "Failed to delete MCP token"
 	},
 
 	"guide": {
@@ -273,7 +298,22 @@
 		"usage_dashboard": "Usage Dashboard",
 		"ip_auth_title": "IP Authentication (Optional)",
 		"ip_auth_link": "Authorize your IP addresses",
-		"ip_auth_desc": "Higher query limits without requiring tokens for trusted IP addresses"
+		"ip_auth_desc": "Higher query limits without requiring tokens for trusted IP addresses",
+		"codex_config": "Configuration",
+		"codex_desc": "Add the snippet below to",
+		"codex_desc_suffix": "to configure Codex. For more detail, refer to the",
+		"official_docs": "official docs",
+		"claude_command": "CLI Command",
+		"claude_desc": "Run the following command in your terminal to add the MCP server to Claude Code:",
+		"copy_param": "Copy {{param}}",
+		"copy_clipboard_failed": "Failed to copy to clipboard",
+		"about_feature_1": "Intelligent search across Apple's developer documentation",
+		"about_feature_2": "Context-aware responses for all Apple platforms",
+		"about_feature_3": "Higher query limits with authentication tokens",
+		"about_feature_4": "Automatic authentication for trusted IP addresses",
+		"token_higher_limits": "Authenticated tokens provide higher query limits in",
+		"usage_monitor": "Monitor your usage in",
+		"ip_auto_auth": "for automatic authentication"
 	},
 
 	"ips": {
@@ -310,7 +350,11 @@
 		"how_2": "When using MCP from these IPs, authentication is automatic",
 		"how_3": "No need to configure or remember MCP tokens",
 		"how_4": "You still get the same features and rate limits as your subscription plan",
-		"how_5": "IP and token authentication work independently - you can use either method"
+		"how_5": "IP and token authentication work independently - you can use either method",
+		"delete_title": "Delete Authorized IP",
+		"delete_error_full": "Failed to delete authorized IP",
+		"detect_failed": "Unable to detect",
+		"update_error": "Failed to update authorized IP"
 	},
 
 	"usage": {
@@ -356,7 +400,9 @@
 		"past_due": "Past Due",
 		"incomplete": "Incomplete",
 		"payment_success": "Payment successful!\nYour subscription has been updated successfully.",
-		"subscription_updated": "Subscription updated!\nYour changes have been saved successfully."
+		"subscription_updated": "Subscription updated!\nYour changes have been saved successfully.",
+		"manage_error": "Unable to open billing management. Please contact support if this persists.",
+		"plan_suffix": "Plan"
 	},
 
 	"messages": {
@@ -422,7 +468,11 @@
 		"delete_confirm_placeholder": "Type DELETE to confirm",
 		"deleting": "Deleting...",
 		"delete_success": "Account deleted successfully.\nYou will be redirected to the homepage.",
-		"delete_error": "Failed to delete account"
+		"delete_error": "Failed to delete account",
+		"name_min": "Name must be at least 2 characters",
+		"delete_type_confirm": "Please type DELETE to confirm",
+		"password_changed": "Password changed successfully!\nYour password has been updated.",
+		"password_change_error": "Failed to update password. Please try again."
 	},
 
 	"admin": {
@@ -586,6 +636,18 @@
 		"privacy": "Privacy Policy",
 		"terms": "Terms of Service",
 		"crafted": "Crafted with Vibe Coding ✨"
+	},
+
+	"success": {
+		"title": "Payment Successful!",
+		"subtitle": "Welcome to Apple RAG MCP Pro! Your subscription is now active.",
+		"whats_next": "What's Next?",
+		"feature_queries": "Access to 50,000 queries per week",
+		"feature_rpm": "50 requests per minute",
+		"feature_rag": "Advanced RAG search features",
+		"feature_analytics": "Usage analytics dashboard",
+		"go_dashboard": "Go to Dashboard",
+		"back_home": "Back to Home"
 	},
 
 	"errors": {

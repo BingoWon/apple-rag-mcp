@@ -56,7 +56,7 @@ export function SubscriptionCard({ subscription }: SubscriptionCardProps) {
 			}
 		} catch (error) {
 			console.error("Failed to create billing portal session:", error);
-			toast.error("Unable to open billing management. Please contact support if this persists.");
+			toast.error(t("billing.manage_error"));
 		} finally {
 			setIsManagingSubscription(false);
 		}
@@ -70,7 +70,7 @@ export function SubscriptionCard({ subscription }: SubscriptionCardProps) {
 						<CardTitle className="flex items-center gap-2">
 							{subscription.plan_id === "hobby"
 								? subscription.plan_name
-								: `${subscription.plan_name} Plan`}
+								: `${subscription.plan_name} ${t("billing.plan_suffix")}`}
 							{getStatusBadge()}
 						</CardTitle>
 						<CardDescription>{getPlanDescription(subscription.plan_id)}</CardDescription>

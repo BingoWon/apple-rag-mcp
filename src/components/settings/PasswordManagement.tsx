@@ -10,20 +10,6 @@ import { Input } from "@/components/ui/Input";
 import { LoaderFive } from "@/components/ui/loader";
 import { api } from "@/lib/api";
 
-// Password change schema for email users only
-const passwordChangeSchema = z
-	.object({
-		currentPassword: z.string().min(1, "Current password is required"),
-		newPassword: z.string().min(8, "Password must be at least 8 characters"),
-		confirmPassword: z.string(),
-	})
-	.refine((data) => data.newPassword === data.confirmPassword, {
-		message: "Passwords don't match",
-		path: ["confirmPassword"],
-	});
-
-type PasswordChangeData = z.infer<typeof passwordChangeSchema>;
-
 interface AuthStatus {
 	provider: string;
 	canChangePassword: boolean;
@@ -32,6 +18,18 @@ interface AuthStatus {
 
 export function PasswordManagement() {
 	const { t } = useTranslation();
+	const passwordChangeSchema = z
+		.object({
+			currentPassword: z.string().min(1, t("settings.current_required")),
+			newPassword: z.string().min(8, t("settings.password_min")),
+			confirmPassword: z.string(),
+		})
+		.refine((data) => data.newPassword === data.confirmPassword, {
+			message: t("settings.passwords_mismatch"),
+			path: ["confirmPassword"],
+		});
+	type PasswordChangeData = z.infer<typeof passwordChangeSchema>;
+
 	const [isLoading, setIsLoading] = useState(false);
 	const [isLoadingStatus, setIsLoadingStatus] = useState(true);
 	const [authStatus, setAuthStatus] = useState<AuthStatus | null>(null);
@@ -64,7 +62,7 @@ export function PasswordManagement() {
 			const response = await api.changePassword(data.currentPassword, data.newPassword);
 
 			if (response.success) {
-				toast.success("Password changed successfully!\nYour password has been updated.");
+				toast.success(t("settings.password_changed"));
 				changeForm.reset();
 
 				// Refresh auth status
@@ -73,12 +71,12 @@ export function PasswordManagement() {
 					setAuthStatus(statusResponse.data as AuthStatus);
 				}
 			} else {
-				throw new Error(response.error?.message || "Failed to change password");
+				throw new Error(response.error?.message || t("settings.password_change_error"));
 			}
 		} catch (error) {
 			const errorMessage =
-				error instanceof Error ? error.message : "Failed to update password. Please try again.";
-			toast.error(`Error\n${errorMessage}`);
+				error instanceof Error ? error.message : t("settings.password_change_error");
+			toast.error(`${t("common.error")}\n${errorMessage}`);
 		} finally {
 			setIsLoading(false);
 		}

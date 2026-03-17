@@ -35,10 +35,10 @@ export function MCPTokensList({ tokens, onRefresh, isLoading = false }: MCPToken
 	const { handleDeleteClick, isDeleting, DeleteModal } = useDeleteConfirm({
 		onDelete: deleteMCPToken,
 		onRefresh,
-		itemType: "MCP Token",
-		title: "Delete MCP Token",
+		itemType: t("tokens.token"),
+		title: t("tokens.delete_title"),
 		successMessage: (name) => t("tokens.deleted_success", { name }),
-		errorMessage: "Error\nFailed to delete MCP token",
+		errorMessage: t("tokens.delete_error_full"),
 	});
 
 	const toggleTokenVisibility = (tokenId: string) => {

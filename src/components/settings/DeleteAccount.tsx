@@ -20,20 +20,18 @@ import { Input } from "@/components/ui/Input";
 import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/lib/api";
 
-// Confirmation schema
-const deleteConfirmationSchema = z.object({
-	confirmation: z.string().refine((val) => val === "DELETE", {
-		message: "Please type DELETE to confirm",
-	}),
-});
-
-type DeleteConfirmationData = z.infer<typeof deleteConfirmationSchema>;
-
 export function DeleteAccount() {
 	const { t } = useTranslation();
+	const deleteConfirmationSchema = z.object({
+		confirmation: z.string().refine((val) => val === "DELETE", {
+			message: t("settings.delete_type_confirm"),
+		}),
+	});
+	type DeleteConfirmationData = z.infer<typeof deleteConfirmationSchema>;
+
 	const [isLoading, setIsLoading] = useState(false);
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
-	const { user, logout } = useAuth();
+	const { logout } = useAuth();
 	const navigate = useNavigate();
 
 	const confirmForm = useForm<DeleteConfirmationData>({
@@ -61,7 +59,7 @@ export function DeleteAccount() {
 			}
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : t("settings.delete_error");
-			toast.error(`Error\n${errorMessage}`);
+			toast.error(`${t("common.error")}\n${errorMessage}`);
 		} finally {
 			setIsLoading(false);
 		}

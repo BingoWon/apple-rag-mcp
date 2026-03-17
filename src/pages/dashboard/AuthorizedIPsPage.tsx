@@ -24,13 +24,6 @@ import { api } from "@/lib/api";
 const IP_REGEX =
 	/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$|^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$|^::1$|^::$/;
 
-const authorizedIPSchema = z.object({
-	ip_address: z.string().regex(IP_REGEX, "Invalid IP address format"),
-	name: z.string().min(1, "Name is required").max(50, "Name too long"),
-});
-
-type AuthorizedIPFormData = z.infer<typeof authorizedIPSchema>;
-
 interface AuthorizedIP {
 	id: string;
 	ip_address: string;
@@ -42,6 +35,12 @@ interface AuthorizedIP {
 
 export default function AuthorizedIPsPage() {
 	const { t } = useTranslation();
+	const authorizedIPSchema = z.object({
+		ip_address: z.string().regex(IP_REGEX, t("ips.invalid_ip")),
+		name: z.string().min(1, t("ips.name_required")).max(50, t("ips.name_too_long")),
+	});
+	type AuthorizedIPFormData = z.infer<typeof authorizedIPSchema>;
+
 	const [ips, setIPs] = useState<AuthorizedIP[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
 	const [isCreating, setIsCreating] = useState(false);
@@ -60,7 +59,7 @@ export default function AuthorizedIPsPage() {
 		fetch("https://api.ipify.org?format=json")
 			.then((res) => res.json())
 			.then((data) => setCurrentIP(data.ip))
-			.catch(() => setCurrentIP("Unable to detect"));
+			.catch(() => setCurrentIP(""));
 	}, []);
 
 	// Load authorized IPs
@@ -114,7 +113,7 @@ export default function AuthorizedIPsPage() {
 	const handleUpdate = async (id: string, name: string) => {
 		const response = await api.updateAuthorizedIP(id, { name });
 		if (!response.success) {
-			throw new Error(response.error?.message || "Failed to update authorized IP");
+			throw new Error(response.error?.message || t("ips.update_error"));
 		}
 	};
 
@@ -133,7 +132,7 @@ export default function AuthorizedIPsPage() {
 
 	// Auto-fill current IP
 	const fillCurrentIP = () => {
-		if (currentIP && currentIP !== "Unable to detect") {
+		if (currentIP) {
 			form.setValue("ip_address", currentIP);
 		}
 	};
@@ -155,7 +154,8 @@ export default function AuthorizedIPsPage() {
 						</div>
 						<div className="ml-3">
 							<h3 className="text-sm font-medium text-light">
-								{t("ips.current_ip")} <span className="font-mono text-brand">{currentIP}</span>
+								{t("ips.current_ip")}{" "}
+								<span className="font-mono text-brand">{currentIP || t("ips.detect_failed")}</span>
 							</h3>
 							<div className="mt-2 text-sm text-muted">
 								<p>{t("ips.current_ip_desc")}</p>
@@ -226,15 +226,21 @@ export default function AuthorizedIPsPage() {
 	);
 }
 
-interface AddIPModalProps {
+interface AddIPModalProps<T> {
 	currentIP: string;
-	form: UseFormReturn<AuthorizedIPFormData>;
+	form: UseFormReturn<T>;
 	isCreating: boolean;
-	onSubmit: (data: AuthorizedIPFormData, closeModal?: () => void) => void;
+	onSubmit: (data: T, closeModal?: () => void) => void;
 	fillCurrentIP: () => void;
 }
 
-function AddIPModal({ currentIP, form, isCreating, onSubmit, fillCurrentIP }: AddIPModalProps) {
+function AddIPModal<T>({
+	currentIP,
+	form,
+	isCreating,
+	onSubmit,
+	fillCurrentIP,
+}: AddIPModalProps<T>) {
 	const { t } = useTranslation();
 	const { setOpen } = useModal();
 
@@ -253,9 +259,7 @@ function AddIPModal({ currentIP, form, isCreating, onSubmit, fillCurrentIP }: Ad
 				</div>
 
 				<form
-					onSubmit={form.handleSubmit((data: AuthorizedIPFormData) =>
-						onSubmit(data, () => setOpen(false)),
-					)}
+					onSubmit={form.handleSubmit((data) => onSubmit(data, () => setOpen(false)))}
 					className="space-y-6"
 				>
 					<div className="space-y-4">
@@ -278,10 +282,10 @@ function AddIPModal({ currentIP, form, isCreating, onSubmit, fillCurrentIP }: Ad
 									type="button"
 									variant="link"
 									onClick={fillCurrentIP}
-									disabled={!currentIP || currentIP === "Unable to detect"}
+									disabled={!currentIP}
 									className="text-sm p-0 h-auto"
 								>
-									{currentIP && currentIP !== "Unable to detect"
+									{currentIP
 										? t("ips.use_current", { ip: currentIP })
 										: t("ips.use_current_fallback")}
 								</Button>
