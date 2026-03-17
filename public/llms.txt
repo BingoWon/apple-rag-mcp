@@ -1,0 +1,92 @@
+# Apple RAG MCP
+
+> Transform your AI agents into Apple development experts with instant access to official Swift docs, design guidelines, and comprehensive Apple platform knowledge. Here's to the Vibe Coders - born with Apple DNA. RAG infuses your agents with official documentation and WWDC video transcripts.
+
+## Why Developers Love Apple RAG MCP
+
+**Lightning Fast**: Get instant responses with our optimized search infrastructure. No more hunting through docs.
+
+**AI-Powered Search**: Advanced RAG hybrid technology understands context and provides accurate, relevant answers from Apple's documentation.
+
+**Always Secure**: MCP authentication ensures trusted access for your AI agents with enterprise-grade security.
+
+**Code Examples**: Get practical code examples in Swift, Objective-C, and SwiftUI alongside documentation references.
+
+**Real-time Updates**: Our documentation index is continuously updated to reflect the latest Apple developer resources.
+
+**Comprehensive Knowledge Base**: Multiple data sources, one search - from official documentation to WWDC video transcripts, all accessible through our unified MCP interface.
+
+## Quick Setup for AI Agents
+
+**Basic Configuration (Try Without Registration)**:
+```json
+{
+  "mcpServers": {
+    "apple-rag-mcp": {
+      "url": "https://mcp.apple-rag.com"
+    }
+  }
+}
+```
+
+**Enhanced Configuration (With Authentication)**:
+```json
+{
+  "mcpServers": {
+    "apple-rag-mcp": {
+      "url": "https://mcp.apple-rag.com",
+      "headers": {
+        "Authorization": "Bearer your-mcp-token-here"
+      }
+    }
+  }
+}
+```
+
+**Unlock Full Access**: Register and subscribe at https://apple-rag.com to get MCP tokens for seamless, unlimited access to our services.
+
+## Manual Configuration Parameters
+
+For MCP clients that don't support JSON import:
+
+**Required Settings**:
+- **Name**: `apple-rag-mcp`
+- **MCP Type**: `Streamable HTTP`
+- **URL (Endpoint)**: `https://mcp.apple-rag.com`
+
+**Optional Authentication** (for subscribers):
+- **Authentication Type**: `API key / Token`
+- **API key / Token**: `your-mcp-token-here`
+- **Authorization Header**: `Bearer your-mcp-token-here`
+
+## Authentication Options
+
+**No Registration Required**: Start using immediately with basic configuration and limited queries
+**MCP Tokens**: Subscribe to get tokens for higher limits, usage tracking, and multiple project support
+**IP Authentication**: Authorize your IP addresses for automatic authentication without needing tokens
+
+## Available MCP Tools
+
+- **search**: Query Apple's official developer documentation and WWDC video transcripts using advanced RAG technology. Returns relevant content from frameworks, APIs, design guidelines, and WWDC sessions.
+- **fetch**: Retrieve complete cleaned content for specific Apple developer documentation or video by URL.
+
+## Pricing & Benefits
+
+**Free Tier**: 50 queries per week, 5 requests per minute - perfect for getting started
+**Pro Plan**: $1/week - 50,000 queries per week, 50 requests per minute, multiple MCP tokens, faster response time, usage analytics
+**Enterprise**: Unlimited queries, dedicated infrastructure, 24/7 premium support
+
+**Supported Clients**: Cursor, Windsurf, VS Code, Claude Code, Codex CLI, Gemini CLI, Claude Desktop, Augment Code, Zed, Cline, Kiro, BoltAI, JetBrains AI, and 50+ more MCP-compatible tools.
+
+## Get Started Now
+
+- [Apple RAG Website](https://apple-rag.com): Register for free and upgrade for premium features
+- [User Dashboard](https://apple-rag.com/overview): Manage tokens, view usage analytics, and account settings
+- [MCP Token Management](https://apple-rag.com/mcp-tokens): Create and manage authentication tokens for your AI agents
+- [Authorized IPs](https://apple-rag.com/authorized-ips): Configure IP addresses for automatic authentication without tokens
+- [Usage Analytics](https://apple-rag.com/usage): Monitor your API usage and performance metrics
+- [GitHub Repository](https://github.com/BingoWon/apple-rag-mcp): Star us and see why developers are making this a core part of their stack
+
+## Optional
+
+- [Main README](https://github.com/BingoWon/apple-rag-mcp/blob/main/README.md): Complete technical documentation and setup instructions

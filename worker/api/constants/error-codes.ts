@@ -1,0 +1,36 @@
+/**
+ * Unified Error Codes for API Responses
+ * Modern, type-safe error code constants
+ */
+
+export const ApiErrorCode = {
+	// Authentication & Authorization
+	UNAUTHORIZED: "UNAUTHORIZED",
+	FORBIDDEN: "FORBIDDEN",
+	TOKEN_INVALID: "TOKEN_INVALID",
+	TOKEN_EXPIRED: "TOKEN_EXPIRED",
+
+	// User Management
+	USER_NOT_FOUND: "USER_NOT_FOUND",
+	USER_ALREADY_EXISTS: "USER_ALREADY_EXISTS",
+	INVALID_CREDENTIALS: "INVALID_CREDENTIALS",
+
+	// Resource Management
+	RESOURCE_NOT_FOUND: "RESOURCE_NOT_FOUND",
+	RESOURCE_CONFLICT: "RESOURCE_CONFLICT",
+
+	// Validation
+	VALIDATION_ERROR: "VALIDATION_ERROR",
+	INVALID_INPUT: "INVALID_INPUT",
+
+	// System
+	INTERNAL_ERROR: "INTERNAL_ERROR",
+	SERVICE_UNAVAILABLE: "SERVICE_UNAVAILABLE",
+	RATE_LIMIT_EXCEEDED: "RATE_LIMIT_EXCEEDED",
+
+	// MCP Specific
+	TOKEN_NOT_FOUND: "TOKEN_NOT_FOUND",
+	TOKEN_CREATION_FAILED: "TOKEN_CREATION_FAILED",
+} as const;
+
+export type ApiErrorCodeType = (typeof ApiErrorCode)[keyof typeof ApiErrorCode];

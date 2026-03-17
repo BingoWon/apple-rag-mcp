@@ -1,0 +1,25 @@
+{
+	"$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
+	"name": "com.apple-rag/mcp-server",
+	"description": "Apple Developer Documentation with Semantic Search, RAG, and AI reranking for MCP clients",
+	"status": "active",
+	"repository": {
+		"url": "https://github.com/BingoWon/apple-rag-mcp",
+		"source": "github"
+	},
+	"version": "4.6.6",
+	"remotes": [
+		{
+			"type": "streamable-http",
+			"url": "https://mcp.apple-rag.com",
+			"headers": [
+				{
+					"name": "Authorization",
+					"description": "MCP Token for authentication (optional - free tier available without token)",
+					"is_required": false,
+					"is_secret": true
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,132 @@
+/**
+ * Admin Search Logs Page
+ * Display and manage search_logs table
+ */
+import { useCallback, useEffect, useState } from "react";
+import { AdminTable } from "@/components/admin/AdminTable";
+import { api } from "@/lib/api";
+
+interface AdminSearchLog {
+	user_id: string;
+	mcp_token: string | null;
+	requested_query: string;
+	actual_query: string;
+	result_count: number;
+	response_time_ms: number | null;
+	status_code: number | null;
+	error_code: string | null;
+	country_code: string | null;
+	created_at: string;
+}
+
+const columns = [
+	{ key: "user_id", label: "User ID", width: "w-16" },
+	{ key: "mcp_token", label: "Token", width: "w-16" },
+	{
+		key: "requested_query",
+		label: "Query",
+		width: "w-[400px]",
+		render: (_: unknown, row: Record<string, unknown>) => {
+			const requested = row.requested_query as string;
+			const actual = row.actual_query as string;
+			const isSame = requested === actual;
+
+			return isSame ? (
+				<div className="text-xs truncate" title={requested}>
+					{requested}
+				</div>
+			) : (
+				<div className="text-xs space-y-0.5">
+					<div className="truncate" title={requested}>
+						<span className="text-muted-foreground">→</span> {requested}
+					</div>
+					<div className="truncate text-muted-foreground" title={actual}>
+						<span>⇢</span> {actual}
+					</div>
+				</div>
+			);
+		},
+	},
+	{ key: "result_count", label: "Results", width: "w-20" },
+	{ key: "response_time_ms", label: "Time (s)", width: "w-24" },
+	{ key: "status_code", label: "Status", width: "w-20" },
+	{ key: "error_code", label: "Error", width: "w-32" },
+	{ key: "country_code", label: "🌍", width: "w-12" },
+	{ key: "created_at", label: "Created", width: "w-40" },
+];
+
+export default function AdminSearchLogsPage() {
+	const [logs, setLogs] = useState<AdminSearchLog[]>([]);
+	const [total, setTotal] = useState(0);
+	const [limit, setLimit] = useState(50);
+	const [offset, setOffset] = useState(0);
+	const [hasMore, setHasMore] = useState(false);
+	const [currentPage, setCurrentPage] = useState(1);
+	const [isLoading, setIsLoading] = useState(true);
+	const [error, setError] = useState<string | null>(null);
+
+	const fetchLogs = useCallback(
+		async (page: number = 1) => {
+			try {
+				setIsLoading(true);
+				setError(null);
+
+				const response = await api.getAdminSearchLogs(page, limit);
+
+				if (response.success && response.data) {
+					const data = response.data as {
+						logs: AdminSearchLog[];
+						total: number;
+						limit: number;
+						offset: number;
+						hasMore: boolean;
+					};
+					setLogs(data.logs || []);
+					setTotal(data.total || 0);
+					setLimit(data.limit || 50);
+					setOffset(data.offset || 0);
+					setHasMore(data.hasMore || false);
+					setCurrentPage(page);
+				} else {
+					throw new Error("Failed to fetch search logs data");
+				}
+			} catch (err) {
+				console.error("Error fetching admin search logs:", err);
+				setError(err instanceof Error ? err.message : "Failed to load search logs");
+				setLogs([]);
+				setTotal(0);
+			} finally {
+				setIsLoading(false);
+			}
+		},
+		[limit],
+	);
+
+	const handlePageChange = (page: number) => {
+		fetchLogs(page);
+	};
+
+	useEffect(() => {
+		fetchLogs(1);
+	}, [fetchLogs]);
+
+	return (
+		<div className="space-y-6">
+			<AdminTable
+				title="Search Logs Table"
+				description="Comprehensive logging of all search operations and query activities"
+				columns={columns}
+				data={logs}
+				total={total}
+				limit={limit}
+				offset={offset}
+				hasMore={hasMore}
+				currentPage={currentPage}
+				isLoading={isLoading}
+				error={error}
+				onRefresh={() => fetchLogs(currentPage)}
+				onPageChange={handlePageChange}
+			/>
+		</div>
+	);
+}

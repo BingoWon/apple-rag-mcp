@@ -1,0 +1,189 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/*
+ * ========================================
+ * APPLE RAG DESIGN SYSTEM - TAILWIND V4 DUAL MODE
+ * ========================================
+ *
+ * ✨ Enhanced dual-mode design system
+ * ✨ Based on original working @theme architecture
+ * ✨ Seamless light/dark mode switching
+ * ✨ Brand color integration: #60a5fa
+ *
+ * ========================================
+ */
+
+@theme {
+  /* Background Colors - generates bg-primary, bg-secondary, etc. */
+  --color-primary: #0a0a0a;
+  --color-secondary: #0f0f0f;
+  --color-tertiary: #1a1a1a;
+  --color-elevated: #111111;
+  --color-overlay: rgba(10, 10, 10, 0.9);
+  --color-glass: rgba(10, 10, 10, 0.8);
+
+  /* Text Colors - generates text-light, text-muted, etc. */
+  --color-light: #ffffff;
+  --color-muted: #e5e5e5;
+  --color-subtle: #cccccc;
+  --color-faint: #999999;
+  --color-inverse: #0a0a0a;
+
+  /* Border Colors - generates border-default, border-light, etc. */
+  --color-default: #333333;
+  --color-border-light: #444444;
+  --color-border-dark: #222222;
+  --color-focus: #60a5fa;
+
+  /* Brand Colors - generates bg-brand, text-brand, from-brand, etc. */
+  --color-brand: #60a5fa;
+  --color-brand-secondary: #3b82f6;
+  --color-brand-tertiary: #2563eb;
+
+  /* Status Colors - generates bg-success, text-success, etc. */
+  --color-success: #22c55e;
+  --color-warning: #fbbf24;
+  --color-error: #ef4444;
+  --color-info: #60a5fa;
+
+  /* Semantic Colors for shadcn/ui compatibility */
+  --color-background: #0a0a0a;
+  --color-foreground: #ffffff;
+  --color-card: #111111;
+  --color-card-foreground: #ffffff;
+  --color-popover: #111111;
+  --color-popover-foreground: #ffffff;
+  --color-accent: #1a1a1a;
+  --color-accent-foreground: #ffffff;
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #ffffff;
+  --color-border: #333333;
+  --color-input: #333333;
+  --color-ring: #60a5fa;
+
+  /* Chart specific colors */
+  --color-chart-queries: #2afadf; /* 青绿色 - 查询图表主色 */
+  --color-chart-results: #ee9ae5; /* 粉紫色 - 结果图表主色 */
+  --color-chart-gradient-1: #4c83ff; /* 蓝色渐变1 */
+  --color-chart-gradient-2: #5961f9; /* 蓝色渐变2 */
+
+  /* Chart variables for ApexCharts */
+  --chart-1: 174 100% 59%; /* #2AFADF - 查询图表 */
+  --chart-2: 225 100% 65%; /* #4C83FF - 查询图表渐变 */
+  --chart-3: 309 77% 74%; /* #EE9AE5 - 结果图表 */
+  --chart-4: 243 93% 67%; /* #5961F9 - 结果图表渐变 */
+
+  /* Dark Mode Shadows - single layer only */
+  --shadow-input: 0px 1px 3px rgba(0, 0, 0, 0.2);
+  --shadow-button: 0px 2px 4px rgba(0, 0, 0, 0.25);
+  --shadow-complex: 0px 3px 6px rgba(0, 0, 0, 0.3);
+
+  /* Global Transition System - generates smooth, smooth-colors, etc. */
+  --transition-duration: 200ms;
+  --transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Light Mode Override */
+:root:not(.dark) {
+	/* Light Mode Background Colors */
+	--color-primary: #ffffff;
+	--color-secondary: #f8fafc;
+	--color-tertiary: #f1f5f9;
+	--color-elevated: #ffffff;
+	--color-overlay: rgba(255, 255, 255, 0.9);
+	--color-glass: rgba(255, 255, 255, 0.8);
+
+	/* Light Mode Text Colors */
+	--color-light: #0f172a;
+	--color-muted: #64748b;
+	--color-subtle: #475569;
+	--color-faint: #94a3b8;
+	--color-inverse: #ffffff;
+
+	/* Light Mode Border Colors */
+	--color-default: #e2e8f0;
+	--color-border-light: #cbd5e1;
+	--color-border-dark: #94a3b8;
+	--color-focus: #60a5fa;
+
+	/* Chart specific colors (same as dark mode) */
+	--color-chart-queries: #2afadf; /* 青绿色 - 查询图表主色 */
+	--color-chart-results: #ee9ae5; /* 粉紫色 - 结果图表主色 */
+	--color-chart-gradient-1: #4c83ff; /* 蓝色渐变1 */
+	--color-chart-gradient-2: #5961f9; /* 蓝色渐变2 */
+
+	/* Chart variables for ApexCharts (same as dark mode) */
+	--chart-1: 174 100% 59%; /* #2AFADF - 查询图表 */
+	--chart-2: 225 100% 65%; /* #4C83FF - 查询图表渐变 */
+	--chart-3: 309 77% 74%; /* #EE9AE5 - 结果图表 */
+	--chart-4: 243 93% 67%; /* #5961F9 - 结果图表渐变 */
+
+	/* Light Mode Semantic Colors */
+	--color-background: #ffffff;
+	--color-foreground: #0f172a;
+	--color-card: #ffffff;
+	--color-card-foreground: #0f172a;
+	--color-popover: #ffffff;
+	--color-popover-foreground: #0f172a;
+	--color-accent: #f1f5f9;
+	--color-accent-foreground: #0f172a;
+	--color-border: #e2e8f0;
+	--color-input: #e2e8f0;
+
+	/* Light Mode Shadows - single layer only */
+	--shadow-input: 0px 1px 3px rgba(0, 0, 0, 0.08);
+	--shadow-button: 0px 2px 4px rgba(0, 0, 0, 0.12);
+	--shadow-complex: 0px 3px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* Global Smooth Scrolling */
+html {
+	scroll-behavior: smooth;
+}
+
+/* Smooth Scroll Offset for Fixed Navbar */
+#features,
+#pricing,
+#contact {
+	scroll-margin-top: 50px; /* 导航栏高度 + 额外间距 */
+}
+
+/* Global Transition for All Interactive Elements */
+button,
+a {
+	transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Global Cursor for All Interactive Elements (Desktop Only) */
+@media (hover: hover) and (pointer: fine) {
+	button,
+	a,
+	[role="button"],
+	[onclick],
+	.cursor-pointer {
+		cursor: pointer;
+	}
+}
+
+/* Optional: Utility classes for specific needs (if needed) */
+.smooth {
+	transition: all var(--transition-duration) var(--transition-timing);
+}
+
+/* Essential layout styles only */
+main,
+#root {
+	background-color: transparent;
+	min-height: 100vh;
+}
+/* Hide scrollbar for Aceternity UI Animated Tabs */
+.no-visible-scrollbar {
+	scrollbar-width: none;
+	-ms-overflow-style: none;
+	-webkit-overflow-scrolling: touch;
+}
+
+.no-visible-scrollbar::-webkit-scrollbar {
+	display: none;
+}

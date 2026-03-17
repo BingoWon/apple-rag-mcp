@@ -1,0 +1,90 @@
+{
+	"$schema": "https://biomejs.dev/schemas/2.4.7/schema.json",
+	"vcs": {
+		"enabled": true,
+		"clientKind": "git",
+		"useIgnoreFile": true
+	},
+	"files": {
+		"ignoreUnknown": true,
+		"includes": ["**", "!**/dist", "!**/node_modules", "!**/.wrangler"]
+	},
+	"css": {
+		"parser": {
+			"cssModules": true,
+			"tailwindDirectives": true
+		},
+		"linter": {
+			"enabled": false
+		},
+		"formatter": {
+			"enabled": false
+		}
+	},
+	"formatter": {
+		"enabled": true,
+		"indentStyle": "tab",
+		"lineWidth": 100
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": true,
+			"suspicious": {
+				"noExplicitAny": "warn",
+				"noArrayIndexKey": "off",
+				"useIterableCallbackReturn": "warn"
+			},
+			"style": {
+				"noNonNullAssertion": "off"
+			},
+			"complexity": {
+				"noForEach": "off",
+				"noStaticOnlyClass": "warn"
+			},
+			"a11y": {
+				"useKeyWithClickEvents": "off",
+				"useKeyWithMouseEvents": "off",
+				"useButtonType": "warn",
+				"noStaticElementInteractions": "warn",
+				"useSemanticElements": "warn",
+				"noSvgWithoutTitle": "warn"
+			},
+			"correctness": {
+				"noUnusedFunctionParameters": "warn",
+				"useExhaustiveDependencies": "warn",
+				"useHookAtTopLevel": "warn",
+				"noInvalidUseBeforeDeclaration": "warn"
+			},
+			"security": {
+				"noDangerouslySetInnerHtml": "warn"
+			}
+		}
+	},
+	"javascript": {
+		"formatter": {
+			"quoteStyle": "double",
+			"jsxQuoteStyle": "double",
+			"trailingCommas": "all",
+			"semicolons": "always",
+			"arrowParentheses": "always",
+			"bracketSpacing": true,
+			"bracketSameLine": false
+		}
+	},
+	"assist": {
+		"enabled": true,
+		"actions": {
+			"source": {
+				"organizeImports": "on"
+			}
+		}
+	},
+	"json": {
+		"formatter": {
+			"enabled": true,
+			"indentStyle": "tab",
+			"indentWidth": 2
+		}
+	}
+}
