@@ -126,6 +126,7 @@
 		"choose_plan": "选择 {{plan}} 方案",
 		"choose_cycle": "请选择最适合你的计费周期",
 		"subscribe_now": "立即订阅",
+		"login_required": "请先登录后再订阅",
 		"per_week": "每周",
 		"per_month": "每月",
 		"per_6months": "每 6 个月",

@@ -126,6 +126,7 @@
 		"choose_plan": "Choose Your {{plan}} Plan",
 		"choose_cycle": "Select the billing cycle that works best for you",
 		"subscribe_now": "Subscribe Now",
+		"login_required": "Please sign in first to subscribe",
 		"per_week": "per week",
 		"per_month": "per month",
 		"per_6months": "per 6 months",

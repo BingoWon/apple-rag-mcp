@@ -1,9 +1,12 @@
 import { IconCheck } from "@tabler/icons-react";
 import { useState } from "react";
+import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { ModalBody, ModalContent, useModal } from "@/components/ui/animated-modal";
 import { Button } from "@/components/ui/Button";
 import { PRO_PRICING_OPTIONS } from "@/constants/pricing";
+import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import type { PricingOption } from "@/types/pricing";
 
@@ -23,6 +26,8 @@ const getDiscountBadgeColor = (index: number): string => {
 export function PricingModal({ planName }: PricingModalProps) {
 	const { t } = useTranslation();
 	const { setOpen } = useModal();
+	const { isAuthenticated } = useAuth();
+	const navigate = useNavigate();
 	const [selectedOption, setSelectedOption] = useState<PricingOption["id"]>("weekly");
 	const [isLoading, setIsLoading] = useState(false);
 
@@ -41,6 +46,13 @@ export function PricingModal({ planName }: PricingModalProps) {
 
 	const handleSubscribe = async () => {
 		if (!selectedPricingOption) return;
+
+		if (!isAuthenticated) {
+			toast.error(t("pricing.login_required"));
+			setOpen(false);
+			navigate("/login/");
+			return;
+		}
 
 		setIsLoading(true);
 
