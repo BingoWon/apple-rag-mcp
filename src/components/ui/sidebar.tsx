@@ -1,6 +1,6 @@
 import { IconMenu2, IconX } from "@tabler/icons-react";
 import { AnimatePresence, motion } from "motion/react";
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useCallback, useContext, useState } from "react";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { cn } from "@/lib/utils";
@@ -17,7 +17,11 @@ interface SidebarContextProps {
 	open: boolean;
 	setOpen: React.Dispatch<React.SetStateAction<boolean>>;
 	animate: boolean;
+	pinned: boolean;
+	togglePin: () => void;
 }
+
+const STORAGE_KEY = "sidebar-pinned";
 
 const SidebarContext = createContext<SidebarContextProps | undefined>(undefined);
 
@@ -42,18 +46,31 @@ export const SidebarProvider = React.memo(
 		animate?: boolean;
 	}) => {
 		const [openState, setOpenState] = useState(false);
+		const [pinned, setPinned] = useState(() => {
+			try {
+				return localStorage.getItem(STORAGE_KEY) === "true";
+			} catch {
+				return false;
+			}
+		});
 
 		const open = openProp !== undefined ? openProp : openState;
 		const setOpen = setOpenProp !== undefined ? setOpenProp : setOpenState;
 
-		// Memoize context value to prevent unnecessary re-renders
+		const togglePin = useCallback(() => {
+			setPinned((prev) => {
+				const next = !prev;
+				try {
+					localStorage.setItem(STORAGE_KEY, String(next));
+				} catch {}
+				if (next) setOpen(true);
+				return next;
+			});
+		}, [setOpen]);
+
 		const contextValue = React.useMemo(
-			() => ({
-				open,
-				setOpen,
-				animate,
-			}),
-			[open, setOpen, animate],
+			() => ({ open: pinned || open, setOpen, animate, pinned, togglePin }),
+			[open, setOpen, animate, pinned, togglePin],
 		);
 
 		return <SidebarContext.Provider value={contextValue}>{children}</SidebarContext.Provider>;
@@ -94,7 +111,7 @@ export const DesktopSidebar = ({
 	children,
 	...props
 }: React.ComponentProps<typeof motion.div>) => {
-	const { open, setOpen, animate } = useSidebar();
+	const { open, setOpen, animate, pinned } = useSidebar();
 	return (
 		<motion.div
 			className={cn(
@@ -106,8 +123,12 @@ export const DesktopSidebar = ({
 				paddingLeft: animate ? (open ? "16px" : "8px") : "16px",
 				paddingRight: animate ? (open ? "16px" : "8px") : "16px",
 			}}
-			onMouseEnter={() => setOpen(true)}
-			onMouseLeave={() => setOpen(false)}
+			onMouseEnter={() => {
+				if (!pinned) setOpen(true);
+			}}
+			onMouseLeave={() => {
+				if (!pinned) setOpen(false);
+			}}
 			{...props}
 		>
 			{children}
@@ -136,7 +157,6 @@ export const MobileSidebar = ({ className, children, ...props }: React.Component
 			<AnimatePresence>
 				{open && (
 					<>
-						{/* Backdrop with blur effect */}
 						<motion.div
 							initial={{ opacity: 0 }}
 							animate={{ opacity: 1 }}
@@ -146,7 +166,6 @@ export const MobileSidebar = ({ className, children, ...props }: React.Component
 							onClick={() => setOpen(false)}
 						/>
 
-						{/* Sheet content */}
 						<motion.div
 							initial={{ x: "-100%", opacity: 0 }}
 							animate={{ x: 0, opacity: 1 }}
@@ -219,7 +238,6 @@ export const SidebarLink = ({
 			>
 				{link.icon}
 
-				{/* Red dot badge when sidebar is closed */}
 				{link.badge && !open && (
 					<span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />
 				)}
@@ -245,7 +263,6 @@ export const SidebarLink = ({
 				{link.label}
 			</motion.span>
 
-			{/* Badge when sidebar is open */}
 			{link.badge && open && (
 				<motion.span
 					animate={{

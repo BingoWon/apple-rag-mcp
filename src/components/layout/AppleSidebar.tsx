@@ -4,6 +4,8 @@ import {
 	IconCreditCard,
 	IconDashboard,
 	IconKey,
+	IconLayoutSidebarLeftCollapse,
+	IconLayoutSidebarLeftExpand,
 	IconMessageCircle,
 	IconSettings,
 	IconWorld,
@@ -18,7 +20,7 @@ import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
-import { Sidebar, SidebarBody, SidebarLink } from "../ui/sidebar";
+import { Sidebar, SidebarBody, SidebarLink, useSidebar } from "../ui/sidebar";
 
 const SIDEBAR_LINK_KEYS = [
 	{
@@ -58,7 +60,86 @@ const SIDEBAR_LINK_KEYS = [
 	},
 ] as const;
 
-// Memoized sidebar component to prevent unnecessary re-renders
+function SidebarHeader() {
+	const { open, pinned, togglePin } = useSidebar();
+
+	return (
+		<div className={cn("flex items-center", open ? "justify-between" : "justify-center")}>
+			{open ? <Logo /> : <LogoIcon />}
+			{open && (
+				<button
+					type="button"
+					onClick={togglePin}
+					className={cn(
+						"p-1.5 rounded-md transition-all duration-200",
+						pinned
+							? "text-brand hover:text-brand/80 bg-brand/10"
+							: "text-muted hover:text-light hover:bg-secondary",
+					)}
+					title={pinned ? "Auto-collapse sidebar" : "Pin sidebar open"}
+				>
+					{pinned ? (
+						<IconLayoutSidebarLeftCollapse className="h-4 w-4" />
+					) : (
+						<IconLayoutSidebarLeftExpand className="h-4 w-4" />
+					)}
+				</button>
+			)}
+		</div>
+	);
+}
+
+function SidebarFooter({
+	user,
+}: {
+	user: { name?: string; avatar?: string; email?: string } | null;
+}) {
+	const { t } = useTranslation();
+	const { open } = useSidebar();
+
+	const displayName = user?.name || t("common.user");
+
+	if (!open) {
+		return (
+			<div className="flex flex-col items-center gap-3">
+				<LanguageSwitcher />
+				<ThemeToggle variant="icon" />
+				<Link to="/settings" className="shrink-0">
+					<Avatar
+						src={user?.avatar}
+						name={displayName}
+						size="sm"
+						className="h-7 w-7 shrink-0"
+					/>
+				</Link>
+			</div>
+		);
+	}
+
+	return (
+		<div className="flex items-center gap-2 px-2 py-2 rounded-lg">
+			<Link to="/settings" className="shrink-0">
+				<Avatar
+					src={user?.avatar}
+					name={displayName}
+					size="sm"
+					className="h-7 w-7 shrink-0"
+				/>
+			</Link>
+			<Link
+				to="/settings"
+				className="text-sm text-muted hover:text-light truncate flex-1 min-w-0 transition-colors duration-200"
+			>
+				{displayName}
+			</Link>
+			<div className="flex items-center shrink-0 ml-auto">
+				<LanguageSwitcher />
+				<ThemeToggle variant="icon" />
+			</div>
+		</div>
+	);
+}
+
 const AppleSidebarComponent = ({ children }: { children: React.ReactNode }) => {
 	const { t } = useTranslation();
 	const { user, logout, isAuthenticated } = useAuth();
@@ -66,7 +147,6 @@ const AppleSidebarComponent = ({ children }: { children: React.ReactNode }) => {
 	const navigate = useNavigate();
 	const [unreadCount, setUnreadCount] = useState(0);
 
-	// Fetch unread count
 	useEffect(() => {
 		if (!isAuthenticated) {
 			setUnreadCount(0);
@@ -86,18 +166,14 @@ const AppleSidebarComponent = ({ children }: { children: React.ReactNode }) => {
 		};
 
 		fetchUnreadCount();
-
-		// Poll every 30 seconds
 		const interval = setInterval(fetchUnreadCount, 30000);
 		return () => clearInterval(interval);
 	}, [isAuthenticated]);
 
-	// Stable logout handler - logout function is stable in Zustand
 	const handleLogout = useCallback(async () => {
 		try {
 			logout();
 			toast.success(t("nav.logout_success"));
-			// Small delay to ensure state is updated before navigation
 			setTimeout(() => {
 				navigate("/login");
 			}, 100);
@@ -107,7 +183,6 @@ const AppleSidebarComponent = ({ children }: { children: React.ReactNode }) => {
 		}
 	}, [logout, navigate, t]);
 
-	// Memoized links with logout action and unread badge
 	const links = useMemo(
 		() => [
 			...SIDEBAR_LINK_KEYS.map((link) => {
@@ -140,56 +215,23 @@ const AppleSidebarComponent = ({ children }: { children: React.ReactNode }) => {
 		<div
 			className={cn(
 				"mx-auto flex w-full max-w-full flex-1 flex-col overflow-hidden rounded-md border border-default bg-secondary md:flex-row",
-				"h-screen", // Full screen height for dashboard
+				"h-screen",
 			)}
 		>
 			<Sidebar open={open} setOpen={setOpen}>
 				<SidebarBody className="justify-between gap-10">
 					<div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto">
-						<div className={cn("flex", open ? "justify-start" : "justify-center")}>
-							{open ? <Logo /> : <LogoIcon />}
-						</div>
+						<SidebarHeader />
 						<div className="mt-8 flex flex-col gap-2">
 							{links.map((link, idx) => {
-								// 修复路径匹配：处理末尾斜杠问题
 								const normalizedPathname = pathname?.replace(/\/$/, "") || "";
 								const normalizedHref = link.href.replace(/\/$/, "");
 								const isActive = normalizedPathname === normalizedHref;
-
 								return <SidebarLink key={idx} link={link} isActive={isActive} />;
 							})}
 						</div>
 					</div>
-					<div
-						className={cn(
-							"flex items-center rounded-lg py-2 transition-all duration-200",
-							open ? "px-2 gap-2" : "flex-col items-center gap-2 px-1",
-						)}
-					>
-						<Link to="/settings" className="shrink-0">
-							<Avatar
-								src={user?.avatar}
-								name={user?.name || t("common.user")}
-								size="sm"
-								className="h-7 w-7 shrink-0"
-							/>
-						</Link>
-
-						{open && (
-							<>
-								<Link
-									to="/settings"
-									className="text-sm text-muted hover:text-light truncate flex-1 min-w-0 transition-colors duration-200"
-								>
-									{user?.name || t("common.user")}
-								</Link>
-								<div className="flex items-center shrink-0 ml-auto">
-									<LanguageSwitcher />
-									<ThemeToggle variant="icon" />
-								</div>
-							</>
-						)}
-					</div>
+					<SidebarFooter user={user} />
 				</SidebarBody>
 			</Sidebar>
 			<Dashboard>{children}</Dashboard>
@@ -225,7 +267,6 @@ export const LogoIcon = () => {
 	);
 };
 
-// Memoized dashboard content wrapper - prevents re-render when sidebar state changes
 const Dashboard = React.memo(({ children }: { children: React.ReactNode }) => {
 	return (
 		<div className="flex flex-1 overflow-hidden">
@@ -238,6 +279,5 @@ const Dashboard = React.memo(({ children }: { children: React.ReactNode }) => {
 
 Dashboard.displayName = "Dashboard";
 
-// Export memoized sidebar component to prevent unnecessary re-renders
 export const AppleSidebar = React.memo(AppleSidebarComponent);
 AppleSidebar.displayName = "AppleSidebar";
