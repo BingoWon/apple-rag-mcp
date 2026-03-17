@@ -1,6 +1,6 @@
 #:schema node_modules/wrangler/config-schema.json
 
-name = "apple-rag-mcp"
+name = "apple-rag-mcp-legacy"
 main = "worker/index.ts"
 compatibility_date = "2025-12-01"
 compatibility_flags = ["nodejs_compat"]
