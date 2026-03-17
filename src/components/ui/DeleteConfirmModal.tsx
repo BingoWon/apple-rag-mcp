@@ -1,5 +1,6 @@
 import { IconAlertTriangle } from "@tabler/icons-react";
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { ModalBody, ModalContent, useModal } from "./animated-modal";
 import { Button } from "./Button";
 
@@ -16,6 +17,7 @@ export function DeleteConfirmModal({
 	isDeleting = false,
 	onConfirm,
 }: DeleteConfirmModalProps) {
+	const { t } = useTranslation();
 	const { setOpen } = useModal();
 
 	// Auto-open the modal when component mounts
@@ -51,16 +53,15 @@ export function DeleteConfirmModal({
 				{/* Content */}
 				<div className="text-center space-y-2">
 					<p className="text-sm text-muted-foreground">
-						Are you sure you want to delete{" "}
-						<span className="font-semibold text-foreground">"{itemName}"</span>?
+						{t("delete_modal.confirm_text", { name: itemName })}
 					</p>
-					<p className="text-xs text-muted-foreground/80">This action cannot be undone.</p>
+					<p className="text-xs text-muted-foreground/80">{t("delete_modal.warning")}</p>
 				</div>
 
 				{/* Actions */}
 				<div className="flex gap-3">
 					<Button variant="outline" onClick={handleCancel} disabled={isDeleting} className="flex-1">
-						Cancel
+						{t("common.cancel")}
 					</Button>
 					<Button
 						variant="destructive"
@@ -69,7 +70,7 @@ export function DeleteConfirmModal({
 						disabled={isDeleting}
 						className="flex-1"
 					>
-						Delete
+						{t("common.delete")}
 					</Button>
 				</div>
 			</ModalContent>

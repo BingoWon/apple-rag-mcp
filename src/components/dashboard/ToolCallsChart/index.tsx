@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { useTheme } from "@/hooks/useTheme";
 import { useDashboardStore } from "@/stores/dashboard";
@@ -18,6 +19,8 @@ export function ToolCallsChart({
 	totalToolCalls = 0,
 	totalResults = 0,
 }: ToolCallsChartProps) {
+	const { t } = useTranslation();
+
 	// 状态管理
 	const [selectedCharts, setSelectedCharts] = useState<ChartType[]>(["tool_calls"]);
 	const [timeRange, setTimeRange] = useState<TimeRange>("7d");
@@ -94,7 +97,7 @@ export function ToolCallsChart({
 		<Card>
 			<CardHeader>
 				<div className="flex items-center justify-between">
-					<CardTitle>Usage Trends</CardTitle>
+					<CardTitle>{t("chart.usage_trends")}</CardTitle>
 					<TimeRangeSelector timeRange={timeRange} onTimeRangeChange={handleTimeRangeChange} />
 				</div>
 			</CardHeader>

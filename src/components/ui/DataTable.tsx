@@ -1,5 +1,6 @@
 import { IconXboxX } from "@tabler/icons-react";
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/Badge";
 import { LoaderFive } from "@/components/ui/loader";
 import { formatDate } from "@/lib/datetime";
@@ -25,6 +26,8 @@ export function DataTable({
 	error = null,
 	className = "",
 }: DataTableProps) {
+	const { t } = useTranslation();
+
 	const formatValue = (value: any, column: DataTableColumn, row: any): ReactNode => {
 		if (column.render) {
 			return column.render(value, row);
@@ -44,7 +47,7 @@ export function DataTable({
 				<div className="mx-auto h-12 w-12 text-red-500 mb-4">
 					<IconXboxX className="h-12 w-12" />
 				</div>
-				<h3 className="text-lg font-medium text-foreground mb-2">Error Loading Data</h3>
+				<h3 className="text-lg font-medium text-foreground mb-2">{t("table.error")}</h3>
 				<p className="text-muted-foreground">{error}</p>
 			</div>
 		);
@@ -54,11 +57,11 @@ export function DataTable({
 		<div className={className}>
 			{isLoading ? (
 				<div className="flex items-center justify-center py-12">
-					<LoaderFive text="Loading data..." />
+					<LoaderFive text={t("table.loading")} />
 				</div>
 			) : data.length === 0 ? (
 				<div className="text-center py-12">
-					<p className="text-muted-foreground">No data available</p>
+					<p className="text-muted-foreground">{t("table.no_data")}</p>
 				</div>
 			) : (
 				<div className="overflow-x-auto overflow-y-visible">
@@ -102,17 +105,17 @@ export function DataTable({
 
 // Utility functions for common column renderers
 export const DataTableRenderers = {
-	statusBadge: (statusCode: number) => {
+	statusBadge: (statusCode: number, successLabel?: string, errorLabel?: string) => {
 		if (statusCode === 200) {
 			return (
 				<Badge variant="success" className="flex items-center gap-1 w-fit">
-					Success
+					{successLabel || "Success"}
 				</Badge>
 			);
 		} else {
 			return (
 				<Badge variant="destructive" className="flex items-center gap-1 w-fit">
-					Error
+					{errorLabel || "Error"}
 				</Badge>
 			);
 		}

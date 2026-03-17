@@ -10,6 +10,7 @@ import {
 } from "@tabler/icons-react";
 import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
@@ -20,6 +21,7 @@ import { useDashboardStore } from "@/stores/dashboard";
 import { MCPConfigService } from "@/utils/mcpConfigService";
 
 export function MCPUsageGuide() {
+	const { t } = useTranslation();
 	const { mcpTokens, fetchMCPTokens, createMCPToken, isLoadingTokens } = useDashboardStore();
 	const [selectedTokenId, setSelectedTokenId] = useState<string>("");
 	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -75,10 +77,10 @@ export function MCPUsageGuide() {
 
 			if (newToken) {
 				setSelectedTokenId(newToken.id);
-				toast.success(`MCP Token Created\n"${tokenName}" has been created successfully.`);
+				toast.success(t("tokens.created_success", { name: tokenName }));
 			}
 		} catch (error) {
-			toast.error(error instanceof Error ? error.message : "Error\nFailed to create MCP token");
+			toast.error(error instanceof Error ? error.message : t("tokens.create_error"));
 		}
 	};
 
@@ -98,30 +100,30 @@ export function MCPUsageGuide() {
 	// 配置参数数据
 	const configParams = [
 		{
-			label: "Name:",
+			label: t("guide.field_name"),
 			value: "apple-rag-mcp",
-			copyMessage: "Name copied to clipboard!",
+			copyMessage: t("guide.name_copied"),
 		},
-		{ label: "MCP Type:", value: "SSE / Streamable HTTP", copyable: false },
+		{ label: t("guide.field_type"), value: "SSE / Streamable HTTP", copyable: false },
 		{
-			label: "URL (Endpoint):",
+			label: t("guide.field_url"),
 			value: mcpServerUrl,
-			copyMessage: "URL copied to clipboard!",
+			copyMessage: t("guide.url_copied"),
 		},
 		{
-			label: "Authentication Type:",
+			label: t("guide.field_auth_type"),
 			value: "API key / Token",
 			copyable: false,
 		},
 		{
-			label: "API key / Token:",
+			label: t("guide.field_api_key"),
 			value: selectedToken?.mcp_token || "",
-			copyMessage: "API key copied to clipboard!",
+			copyMessage: t("guide.key_copied"),
 		},
 		{
-			label: "Authorization:",
+			label: t("guide.field_authorization"),
 			value: selectedToken ? `Bearer ${selectedToken.mcp_token}` : "",
-			copyMessage: "Authorization value copied to clipboard!",
+			copyMessage: t("guide.auth_copied"),
 		},
 	];
 
@@ -156,7 +158,7 @@ export function MCPUsageGuide() {
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle>MCP Usage Guide</CardTitle>
+				<CardTitle>{t("guide.title")}</CardTitle>
 			</CardHeader>
 			<CardContent className="space-y-6">
 				{/* MCP Configuration - 放在最前面 */}
@@ -164,27 +166,29 @@ export function MCPUsageGuide() {
 					<h3 className={sectionTitleClass}>
 						<IconSettings className="h-4 w-4 text-info" />
 						{isLoadingTokens
-							? "Loading Configuration"
+							? t("guide.loading_config")
 							: mcpTokens.length === 0
-								? "Create Your First Token"
-								: "MCP Client Configuration"}
+								? t("guide.create_first_title")
+								: t("guide.client_config")}
 					</h3>
 
 					{isLoadingTokens ? (
 						// 加载状态显示 LoaderFive
 						<div className="text-center py-8 bg-tertiary rounded-lg border border-default">
 							<div className="flex justify-center mb-4">
-								<LoaderFive text="Loading MCP tokens..." />
+								<LoaderFive text={t("guide.loading_tokens")} />
 							</div>
-							<p className="text-sm text-muted">Please wait while we fetch your MCP tokens</p>
+							<p className="text-sm text-muted">{t("guide.loading_tokens_desc")}</p>
 						</div>
 					) : mcpTokens.length === 0 ? (
 						// 没有 token 时显示创建按钮
 						<div className="text-center py-8 bg-tertiary rounded-lg border border-default">
 							<IconKey className="h-12 w-12 text-muted mx-auto mb-4" />
-							<h4 className="text-sm font-medium text-light mb-2">Ready to get started?</h4>
+							<h4 className="text-sm font-medium text-light mb-2">
+								{t("guide.create_first_subtitle")}
+							</h4>
 							<p className="text-sm text-muted mb-6 max-w-sm mx-auto">
-								Create your first MCP token to unlock intelligent Apple documentation search.
+								{t("guide.create_first_desc")}
 							</p>
 							<Button
 								onClick={handleCreateToken}
@@ -193,7 +197,7 @@ export function MCPUsageGuide() {
 								className="px-6"
 							>
 								<IconSquareRoundedPlus className="h-4 w-4 mr-2" />
-								Create MCP Token
+								{t("tokens.create")}
 							</Button>
 						</div>
 					) : (
@@ -205,7 +209,7 @@ export function MCPUsageGuide() {
 									htmlFor="token-selector"
 									className="block text-xs font-medium text-muted mb-2"
 								>
-									Select MCP Token:
+									{t("guide.select_token")}
 								</label>
 								<button
 									id="token-selector"
@@ -214,7 +218,7 @@ export function MCPUsageGuide() {
 									className="w-full flex items-center justify-between px-3 py-2 text-sm bg-tertiary border border-default rounded-md hover:bg-secondary hover:border-light transition-colors"
 								>
 									<span className="text-light">
-										{selectedToken ? selectedToken.name : "Select a token..."}
+										{selectedToken ? selectedToken.name : t("guide.select_placeholder")}
 									</span>
 									<IconChevronDown
 										className={`h-4 w-4 text-muted transition-transform ${isDropdownOpen ? "rotate-180" : ""}`}
@@ -230,9 +234,7 @@ export function MCPUsageGuide() {
 												onClick={() => {
 													setSelectedTokenId(token.id);
 													setIsDropdownOpen(false);
-													toast.success(
-														"Configuration Updated\nJSON config and API key (token) have been refreshed with the selected token.",
-													);
+													toast.success(t("guide.config_updated"));
 												}}
 												className={`w-full text-left px-3 py-2 text-sm hover:bg-secondary transition-colors ${
 													selectedTokenId === token.id ? "bg-secondary text-light" : "text-muted"
@@ -372,12 +374,10 @@ export function MCPUsageGuide() {
 								<div className="mt-6">
 									<h4 className="text-sm font-medium text-light mb-4 flex items-center gap-2">
 										<IconSettings className="h-4 w-4 text-warning" />
-										Manual Configuration Parameters
+										{t("guide.manual_title")}
 									</h4>
 									<div className="space-y-3 text-sm">
-										<p className="text-muted mb-3">
-											For MCP clients that don't support JSON import, use these parameters:
-										</p>
+										<p className="text-muted mb-3">{t("guide.manual_desc")}</p>
 										{configParams.map((param, index) =>
 											renderConfigRow(param, index === configParams.length - 1),
 										)}
@@ -395,15 +395,12 @@ export function MCPUsageGuide() {
 						<>
 							<h3 className={sectionTitleClass}>
 								<IconShieldCheck className="h-4 w-4 text-success" />
-								Apple RAG MCP Server
+								{t("guide.about_title")}
 							</h3>
 							<div className="space-y-3 text-sm text-muted">
-								<p>
-									Connect your AI assistant to Apple's developer documentation through the Model
-									Context Protocol (MCP).
-								</p>
+								<p>{t("guide.about_desc")}</p>
 								<div className="bg-tertiary rounded-lg p-4 border border-default">
-									<h4 className="font-medium text-light mb-2">Features:</h4>
+									<h4 className="font-medium text-light mb-2">{t("guide.about_features")}</h4>
 									<ul className="space-y-1 text-xs">
 										<li>• Intelligent search across Apple's developer documentation</li>
 										<li>• Context-aware responses for all Apple platforms</li>
@@ -418,7 +415,7 @@ export function MCPUsageGuide() {
 						<>
 							<h3 className={sectionTitleClass}>
 								<IconKey className="h-4 w-4 text-pink-600" />
-								Token Management
+								{t("guide.token_management")}
 							</h3>
 							<div className="space-y-2 text-sm text-muted">
 								<p>
@@ -427,13 +424,13 @@ export function MCPUsageGuide() {
 										to="/mcp-tokens"
 										className="text-brand hover:text-brand-secondary underline"
 									>
-										MCP Tokens
+										{t("guide.token_link")}
 									</Link>
 								</p>
 								<p>
 									• Monitor your usage in{" "}
 									<Link to="/usage" className="text-brand hover:text-brand-secondary underline">
-										Usage Dashboard
+										{t("guide.usage_dashboard")}
 									</Link>
 								</p>
 							</div>
@@ -445,7 +442,7 @@ export function MCPUsageGuide() {
 					<>
 						<h3 className={sectionTitleClass}>
 							<IconWorld className="h-4 w-4 text-success" />
-							IP Authentication (Optional)
+							{t("guide.ip_auth_title")}
 						</h3>
 						<div className="space-y-2 text-sm text-muted">
 							<p>
@@ -454,11 +451,11 @@ export function MCPUsageGuide() {
 									to="/authorized-ips"
 									className="text-brand hover:text-brand-secondary underline"
 								>
-									Authorize your IP addresses
+									{t("guide.ip_auth_link")}
 								</Link>{" "}
 								for automatic authentication
 							</p>
-							<p>• Higher query limits without requiring tokens for trusted IP addresses</p>
+							<p>• {t("guide.ip_auth_desc")}</p>
 						</div>
 					</>
 				)}

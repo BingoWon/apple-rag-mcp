@@ -1,6 +1,7 @@
 import { IconCopy, IconMail, IconMailOff, IconSend, IconX } from "@tabler/icons-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/Button";
 import { api } from "@/lib/api";
 import { formatDateCompact } from "@/lib/datetime";
@@ -24,6 +25,7 @@ interface MessageReplyDialogProps {
 }
 
 export function MessageReplyDialog({ message, onClose, onSuccess }: MessageReplyDialogProps) {
+	const { t } = useTranslation();
 	const [reply, setReply] = useState(message.admin_reply || "");
 	const [sendEmail, setSendEmail] = useState(!!message.email); // Default to true if email available
 	const [isSubmitting, setIsSubmitting] = useState(false);
@@ -33,19 +35,19 @@ export function MessageReplyDialog({ message, onClose, onSuccess }: MessageReply
 
 	const handleCopyMessage = () => {
 		navigator.clipboard.writeText(message.message);
-		toast.success("Message copied to clipboard");
+		toast.success(t("admin.message_copied"));
 	};
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 
 		if (!reply.trim()) {
-			toast.error("Reply message cannot be empty");
+			toast.error(t("admin.reply_empty"));
 			return;
 		}
 
 		if (sendEmail && !message.email) {
-			toast.error("Cannot send email: user did not provide email address");
+			toast.error(t("admin.reply_no_email"));
 			return;
 		}
 
@@ -58,19 +60,15 @@ export function MessageReplyDialog({ message, onClose, onSuccess }: MessageReply
 			});
 
 			if (response.success) {
-				toast.success(
-					sendEmail
-						? "Reply sent successfully! Email notification sent."
-						: "Reply saved successfully!",
-				);
+				toast.success(sendEmail ? t("admin.reply_sent_email") : t("admin.reply_saved"));
 				onSuccess();
 				onClose();
 			} else {
-				toast.error(response.error?.message || "Failed to send reply");
+				toast.error(response.error?.message || t("admin.reply_error"));
 			}
 		} catch (error) {
 			console.error("Error sending reply:", error);
-			toast.error("Failed to send reply. Please try again.");
+			toast.error(t("admin.reply_error_retry"));
 		} finally {
 			setIsSubmitting(false);
 		}
@@ -82,7 +80,7 @@ export function MessageReplyDialog({ message, onClose, onSuccess }: MessageReply
 				{/* Header */}
 				<div className="flex items-center justify-between p-6 border-b border-default">
 					<h2 className="text-xl font-bold text-light">
-						{isAlreadyReplied ? "View Message & Reply" : "Reply to Message"}
+						{isAlreadyReplied ? t("admin.reply_title") : t("admin.reply_to")}
 					</h2>
 					<button
 						onClick={onClose}
@@ -99,23 +97,23 @@ export function MessageReplyDialog({ message, onClose, onSuccess }: MessageReply
 					<div className="bg-secondary rounded-lg p-4 space-y-2 border border-default">
 						<div className="flex items-center justify-between">
 							<div>
-								<p className="text-sm text-muted">From</p>
-								<p className="font-medium text-light">{message.email || "Anonymous"}</p>
+								<p className="text-sm text-muted">{t("admin.from")}</p>
+								<p className="font-medium text-light">{message.email || t("admin.anonymous")}</p>
 							</div>
 							<div className="text-right">
-								<p className="text-sm text-muted">Date</p>
+								<p className="text-sm text-muted">{t("admin.date")}</p>
 								<p className="font-medium text-light">{formatDateCompact(message.created_at)}</p>
 							</div>
 						</div>
 						{message.ip_address && (
 							<div>
-								<p className="text-sm text-muted">IP Address</p>
+								<p className="text-sm text-muted">{t("admin.ip_address")}</p>
 								<p className="font-mono text-sm text-light">{message.ip_address}</p>
 							</div>
 						)}
 						{message.user_id && (
 							<div>
-								<p className="text-sm text-muted">User ID</p>
+								<p className="text-sm text-muted">{t("admin.user_id")}</p>
 								<p className="font-mono text-sm text-light">{message.user_id}</p>
 							</div>
 						)}
@@ -124,10 +122,10 @@ export function MessageReplyDialog({ message, onClose, onSuccess }: MessageReply
 					{/* Original Message */}
 					<div>
 						<div className="flex items-center justify-between mb-2">
-							<p className="text-sm font-semibold text-subtle">Original Message:</p>
+							<p className="text-sm font-semibold text-subtle">{t("admin.original_message")}</p>
 							<Button variant="ghost" size="sm" onClick={handleCopyMessage}>
 								<IconCopy className="w-3.5 h-3.5 mr-1.5" />
-								Copy
+								{t("common.copy")}
 							</Button>
 						</div>
 						<div className="bg-secondary rounded-lg p-4 border-l-4 border-default">
@@ -141,11 +139,11 @@ export function MessageReplyDialog({ message, onClose, onSuccess }: MessageReply
 						<div>
 							<div className="flex items-center justify-between mb-2">
 								<p className="text-sm font-semibold text-subtle">
-									Admin Reply ({formatDateCompact(message.replied_at!)}):
+									{t("admin.admin_reply_label", { date: formatDateCompact(message.replied_at!) })}
 								</p>
 								{message.user_read_at && (
 									<span className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
-										✓ Read by user on {formatDateCompact(message.user_read_at)}
+										✓ {t("admin.read_by_user", { date: formatDateCompact(message.user_read_at) })}
 									</span>
 								)}
 							</div>
@@ -158,14 +156,14 @@ export function MessageReplyDialog({ message, onClose, onSuccess }: MessageReply
 						<form onSubmit={handleSubmit} className="space-y-4">
 							<div>
 								<label htmlFor="reply" className="block text-sm font-semibold text-subtle mb-2">
-									Your Reply:
+									{t("admin.your_reply")}
 								</label>
 								<textarea
 									id="reply"
 									value={reply}
 									onChange={(e) => setReply(e.target.value)}
 									className="w-full h-40 px-4 py-3 border border-input rounded-lg focus:ring-2 focus:ring-focus focus:border-transparent bg-secondary text-light resize-none shadow-input transition-colors"
-									placeholder="Type your reply here..."
+									placeholder={t("admin.reply_placeholder")}
 									disabled={isSubmitting}
 								/>
 							</div>
@@ -181,14 +179,10 @@ export function MessageReplyDialog({ message, onClose, onSuccess }: MessageReply
 										)}
 										<div>
 											<p className="text-sm font-semibold text-subtle">
-												{sendEmail ? "Email will be sent" : "In-app only"}
+												{sendEmail ? t("admin.email_sent") : t("admin.in_app_only")}
 											</p>
 											<p className="text-xs text-muted">
-												{sendEmail ? (
-													<>To: {message.email}</>
-												) : (
-													"User will see reply when they login"
-												)}
+												{sendEmail ? <>To: {message.email}</> : t("admin.in_app_desc")}
 											</p>
 										</div>
 									</div>
@@ -213,8 +207,10 @@ export function MessageReplyDialog({ message, onClose, onSuccess }: MessageReply
 								<div className="flex items-center gap-3 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg border border-default">
 									<IconMailOff className="w-5 h-5 text-muted" />
 									<div>
-										<p className="text-sm font-semibold text-muted">Email Unavailable</p>
-										<p className="text-xs text-faint">User did not provide email</p>
+										<p className="text-sm font-semibold text-muted">
+											{t("admin.email_unavailable")}
+										</p>
+										<p className="text-xs text-faint">{t("admin.email_unavailable_desc")}</p>
 									</div>
 								</div>
 							)}
@@ -227,13 +223,13 @@ export function MessageReplyDialog({ message, onClose, onSuccess }: MessageReply
 					{isAlreadyReplied ? (
 						/* View Mode - Only Close Button */
 						<Button variant="primary" onClick={onClose}>
-							Close
+							{t("common.close")}
 						</Button>
 					) : (
 						/* Edit Mode - Cancel and Send Buttons */
 						<>
 							<Button variant="secondary" onClick={onClose} disabled={isSubmitting}>
-								Cancel
+								{t("common.cancel")}
 							</Button>
 							<Button
 								variant="primary"
@@ -242,7 +238,7 @@ export function MessageReplyDialog({ message, onClose, onSuccess }: MessageReply
 								loading={isSubmitting}
 							>
 								<IconSend className="w-4 h-4 mr-2" />
-								Send Reply
+								{t("admin.send_reply")}
 							</Button>
 						</>
 					)}

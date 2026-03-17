@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { AdminAuth } from "@/components/admin/AdminAuth";
 import { Button } from "@/components/ui/Button";
@@ -7,17 +8,18 @@ import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { ADMIN_SESSION_KEY } from "@/lib/constants";
 
 const adminNavItems = [
-	{ href: "/admin", label: "Dashboard", exact: true },
-	{ href: "/admin/users", label: "Users", exact: false },
-	{ href: "/admin/mcp-tokens", label: "MCP Tokens", exact: false },
-	{ href: "/admin/authorized-ips", label: "Authorized IPs", exact: false },
-	{ href: "/admin/search-logs", label: "Search Logs", exact: false },
-	{ href: "/admin/fetch-logs", label: "Fetch Logs", exact: false },
-	{ href: "/admin/user-subscriptions", label: "User Subscriptions", exact: false },
-	{ href: "/admin/contact-messages", label: "Contact Messages", exact: false },
+	{ href: "/admin", labelKey: "admin.dashboard", exact: true },
+	{ href: "/admin/users", labelKey: "admin.users", exact: false },
+	{ href: "/admin/mcp-tokens", labelKey: "nav.mcp_tokens", exact: false },
+	{ href: "/admin/authorized-ips", labelKey: "nav.authorized_ips", exact: false },
+	{ href: "/admin/search-logs", labelKey: "admin.search_logs", exact: false },
+	{ href: "/admin/fetch-logs", labelKey: "admin.fetch_logs", exact: false },
+	{ href: "/admin/user-subscriptions", labelKey: "admin.subscriptions", exact: false },
+	{ href: "/admin/contact-messages", labelKey: "admin.contact_messages", exact: false },
 ];
 
 export function AdminLayout() {
+	const { t } = useTranslation();
 	const { pathname } = useLocation();
 	const [isAuthenticated, setIsAuthenticated] = useState(false);
 	const [isLoading, setIsLoading] = useState(true);
@@ -36,7 +38,7 @@ export function AdminLayout() {
 	if (isLoading) {
 		return (
 			<div className="min-h-screen bg-gray-900 flex items-center justify-center">
-				<LoaderFive text="Loading admin panel..." />
+				<LoaderFive text={t("admin.loading")} />
 			</div>
 		);
 	}
@@ -51,7 +53,7 @@ export function AdminLayout() {
 				<div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
 					<div className="flex justify-between items-center h-16">
 						<div className="flex items-center">
-							<h1 className="text-xl font-semibold text-foreground">Admin Console</h1>
+							<h1 className="text-xl font-semibold text-foreground">{t("admin.title")}</h1>
 						</div>
 						<div className="flex items-center space-x-4">
 							<ThemeToggle />
@@ -61,7 +63,7 @@ export function AdminLayout() {
 								size="sm"
 								className="text-sm text-muted-foreground hover:text-foreground p-0 h-auto"
 							>
-								Logout
+								{t("common.logout")}
 							</Button>
 						</div>
 					</div>
@@ -89,7 +91,7 @@ export function AdminLayout() {
 											: "border-transparent text-muted-foreground hover:text-foreground hover:border-primary"
 									}`}
 								>
-									{item.label}
+									{t(item.labelKey)}
 								</Link>
 							);
 						})}

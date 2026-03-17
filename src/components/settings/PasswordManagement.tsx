@@ -2,6 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
@@ -30,6 +31,7 @@ interface AuthStatus {
 }
 
 export function PasswordManagement() {
+	const { t } = useTranslation();
 	const [isLoading, setIsLoading] = useState(false);
 	const [isLoadingStatus, setIsLoadingStatus] = useState(true);
 	const [authStatus, setAuthStatus] = useState<AuthStatus | null>(null);
@@ -86,12 +88,12 @@ export function PasswordManagement() {
 		return (
 			<Card>
 				<CardHeader>
-					<CardTitle>Password Management</CardTitle>
-					<CardDescription>Loading authentication settings...</CardDescription>
+					<CardTitle>{t("settings.password_title")}</CardTitle>
+					<CardDescription>{t("settings.loading_auth")}</CardDescription>
 				</CardHeader>
 				<CardContent>
 					<div className="flex items-center justify-center py-8">
-						<LoaderFive text="Loading settings..." />
+						<LoaderFive text={t("common.loading")} />
 					</div>
 				</CardContent>
 			</Card>
@@ -102,11 +104,11 @@ export function PasswordManagement() {
 		return (
 			<Card>
 				<CardHeader>
-					<CardTitle>Password Management</CardTitle>
-					<CardDescription>Unable to load authentication settings</CardDescription>
+					<CardTitle>{t("settings.password_title")}</CardTitle>
+					<CardDescription>{t("settings.auth_load_error")}</CardDescription>
 				</CardHeader>
 				<CardContent>
-					<p className="text-sm text-gray-500">Please refresh the page to try again.</p>
+					<p className="text-sm text-gray-500">{t("settings.auth_load_retry")}</p>
 				</CardContent>
 			</Card>
 		);
@@ -117,9 +119,9 @@ export function PasswordManagement() {
 		return (
 			<Card>
 				<CardHeader>
-					<CardTitle>Change Password</CardTitle>
+					<CardTitle>{t("settings.change_password")}</CardTitle>
 					<CardDescription>
-						Update your account password for {authStatus.authenticationMethod} authentication.
+						{t("settings.change_password_desc", { method: authStatus.authenticationMethod })}
 					</CardDescription>
 				</CardHeader>
 				<CardContent>
@@ -133,12 +135,12 @@ export function PasswordManagement() {
 								htmlFor="currentPassword"
 								className="block text-sm font-medium text-text-primary mb-1"
 							>
-								Current Password
+								{t("settings.current_password")}
 							</label>
 							<Input
 								id="currentPassword"
 								type="password"
-								placeholder="Enter your current password"
+								placeholder={t("settings.current_password_placeholder")}
 								autoComplete="current-password"
 								{...changeForm.register("currentPassword")}
 								error={changeForm.formState.errors.currentPassword?.message}
@@ -150,12 +152,12 @@ export function PasswordManagement() {
 								htmlFor="newPassword"
 								className="block text-sm font-medium text-text-primary mb-1"
 							>
-								New Password
+								{t("settings.new_password")}
 							</label>
 							<Input
 								id="newPassword"
 								type="password"
-								placeholder="Enter your new password"
+								placeholder={t("settings.new_password_placeholder")}
 								autoComplete="new-password"
 								{...changeForm.register("newPassword")}
 								error={changeForm.formState.errors.newPassword?.message}
@@ -167,12 +169,12 @@ export function PasswordManagement() {
 								htmlFor="confirmPassword"
 								className="block text-sm font-medium text-text-primary mb-1"
 							>
-								Confirm New Password
+								{t("settings.confirm_password")}
 							</label>
 							<Input
 								id="confirmPassword"
 								type="password"
-								placeholder="Confirm your new password"
+								placeholder={t("settings.confirm_password_placeholder")}
 								autoComplete="new-password"
 								{...changeForm.register("confirmPassword")}
 								error={changeForm.formState.errors.confirmPassword?.message}
@@ -180,7 +182,7 @@ export function PasswordManagement() {
 						</div>
 
 						<Button type="submit" disabled={isLoading} className="w-auto">
-							{isLoading ? "Changing Password..." : "Change Password"}
+							{isLoading ? t("settings.changing_password") : t("settings.change_password")}
 						</Button>
 					</form>
 				</CardContent>
@@ -192,26 +194,21 @@ export function PasswordManagement() {
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle>Authentication Method</CardTitle>
+				<CardTitle>{t("settings.auth_method_title")}</CardTitle>
 				<CardDescription>
-					Your account uses {authStatus.authenticationMethod} for secure sign-in.
+					{t("settings.auth_method_desc", { method: authStatus.authenticationMethod })}
 				</CardDescription>
 			</CardHeader>
 			<CardContent>
 				<div className="p-4 bg-brand/10 rounded-lg">
 					<p className="text-sm text-brand">
-						🔐 Your account is secured with {authStatus.authenticationMethod}. Password management
-						is handled by your authentication provider.
+						🔐 {t("settings.auth_managed", { method: authStatus.authenticationMethod })}
 					</p>
 					{authStatus.provider === "google" && (
-						<p className="text-sm text-brand/80 mt-2">
-							To manage your password, visit your Google Account settings.
-						</p>
+						<p className="text-sm text-brand/80 mt-2">{t("settings.google_manage")}</p>
 					)}
 					{authStatus.provider === "github" && (
-						<p className="text-sm text-brand/80 mt-2">
-							To manage your password, visit your GitHub Account settings.
-						</p>
+						<p className="text-sm text-brand/80 mt-2">{t("settings.github_manage")}</p>
 					)}
 				</div>
 			</CardContent>

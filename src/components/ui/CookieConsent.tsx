@@ -1,6 +1,7 @@
 import { IconCookie } from "@tabler/icons-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/Button";
 
 /**
@@ -10,6 +11,7 @@ import { Button } from "@/components/ui/Button";
 export function CookieConsent() {
 	const [isVisible, setIsVisible] = useState(false);
 	const [isLoaded, setIsLoaded] = useState(false);
+	const { t } = useTranslation();
 
 	useEffect(() => {
 		// Check if user has already made a choice
@@ -68,9 +70,7 @@ export function CookieConsent() {
 									<div className="w-8 h-8 rounded-lg bg-brand/10 flex items-center justify-center flex-shrink-0">
 										<IconCookie className="w-5 h-5 text-brand" />
 									</div>
-									<p className="text-sm text-foreground leading-relaxed">
-										We use cookies to personalize your site experience and analyze the site traffic.
-									</p>
+									<p className="text-sm text-foreground leading-relaxed">{t("cookie.message")}</p>
 								</div>
 
 								{/* Buttons */}
@@ -81,7 +81,7 @@ export function CookieConsent() {
 										size="sm"
 										className="flex-1 sm:flex-none whitespace-nowrap h-8"
 									>
-										Decline
+										{t("cookie.decline")}
 									</Button>
 									<Button
 										onClick={handleAccept}
@@ -89,7 +89,7 @@ export function CookieConsent() {
 										size="sm"
 										className="flex-1 px-4 font-bold sm:flex-none whitespace-nowrap h-8"
 									>
-										Accept
+										{t("cookie.accept")}
 									</Button>
 								</div>
 							</div>

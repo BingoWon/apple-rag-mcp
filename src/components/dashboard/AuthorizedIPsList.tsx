@@ -1,5 +1,6 @@
 import { IconTrash, IconWorld } from "@tabler/icons-react";
 import { useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/Button";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import { LoaderFive } from "@/components/ui/loader";
@@ -31,15 +32,13 @@ export function AuthorizedIPsList({
 	onDelete,
 	isLoading = false,
 }: AuthorizedIPsListProps) {
+	const { t } = useTranslation();
 	const { handleDeleteClick, isDeleting, DeleteModal } = useDeleteConfirm({
 		onDelete: useCallback(onDelete, [onDelete]),
 		onRefresh: useCallback(onRefresh, [onRefresh]),
 		itemType: "Authorized IP",
 		title: "Delete Authorized IP",
-		successMessage: useCallback(
-			(name: string) => `Authorized IP Deleted\n"${name}" has been deleted successfully.`,
-			[],
-		),
+		successMessage: useCallback((name: string) => t("ips.deleted_success", { name }), [t]),
 		errorMessage: "Error\nFailed to delete authorized IP",
 	});
 
@@ -48,7 +47,7 @@ export function AuthorizedIPsList({
 		() => [
 			{
 				key: "name",
-				label: "Name",
+				label: t("common.name"),
 				render: (_, row: AuthorizedIP) => (
 					<div className="max-w-xs">
 						<EditableName
@@ -63,7 +62,7 @@ export function AuthorizedIPsList({
 			},
 			{
 				key: "ip_address",
-				label: "IP Address",
+				label: t("ips.ip_label"),
 				render: (value) => (
 					<code className="text-sm font-mono text-subtle bg-tertiary px-2 py-1 rounded border border-default font-mono tracking-wider">
 						{value}
@@ -72,17 +71,17 @@ export function AuthorizedIPsList({
 			},
 			{
 				key: "created_at",
-				label: "Created",
+				label: t("common.created"),
 				render: (value) => (
 					<div className="text-sm text-muted-foreground select-none">{formatDate(value)}</div>
 				),
 			},
 			{
 				key: "last_used_at",
-				label: "Last Used",
+				label: t("tokens.last_used"),
 				render: (value) => (
 					<div className="text-sm text-muted-foreground select-none">
-						{value ? formatDate(value) : "Never"}
+						{value ? formatDate(value) : t("common.never")}
 					</div>
 				),
 			},
@@ -97,7 +96,7 @@ export function AuthorizedIPsList({
 							onClick={() => handleDeleteClick(row.id, row.name)}
 							disabled={isDeleting === row.id}
 							className="text-error hover:text-error/80"
-							title="Delete authorized IP"
+							title={t("ips.delete_label")}
 						>
 							{isDeleting === row.id ? (
 								<LoaderFive text="..." />
@@ -109,14 +108,14 @@ export function AuthorizedIPsList({
 				),
 			},
 		],
-		[handleDeleteClick, isDeleting, onUpdate, onRefresh],
+		[handleDeleteClick, isDeleting, onUpdate, onRefresh, t],
 	);
 
 	// Loading state
 	if (isLoading) {
 		return (
 			<div className="flex items-center justify-center py-12">
-				<LoaderFive text="Loading authorized IPs..." />
+				<LoaderFive text={t("ips.loading")} />
 			</div>
 		);
 	}
@@ -129,11 +128,9 @@ export function AuthorizedIPsList({
 					<IconWorld className="h-12 w-12" />
 				</div>
 				<h3 className="mt-2 text-sm font-medium text-gray-100 dark:text-gray-100">
-					No authorized IPs
+					{t("ips.empty")}
 				</h3>
-				<p className="mt-1 text-sm text-gray-400 dark:text-gray-400">
-					Get started by adding your first authorized IP address.
-				</p>
+				<p className="mt-1 text-sm text-gray-400 dark:text-gray-400">{t("ips.empty_desc")}</p>
 			</div>
 		);
 	}

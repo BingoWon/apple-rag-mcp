@@ -2,6 +2,7 @@ import { IconBrandGithub, IconBrandGoogle, IconXboxX } from "@tabler/icons-react
 import type React from "react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
 import { FormContainer } from "@/components/ui/FormContainer";
@@ -23,6 +24,7 @@ export function LoginForm() {
 	const [searchParams] = useSearchParams();
 	const { login } = useAuth();
 	const { handleError } = useErrorHandler();
+	const { t } = useTranslation();
 
 	// Check for error parameter in URL and show toast
 	useEffect(() => {
@@ -94,7 +96,7 @@ export function LoginForm() {
 			// Use unified error handling
 			const friendlyError = handleError(error, {
 				showToast: false, // Don't show toast, display in form instead
-				title: "Login Failed",
+				title: t("auth.login_failed"),
 			});
 
 			setError(friendlyError.message);
@@ -127,13 +129,13 @@ export function LoginForm() {
 			}
 		} catch (error) {
 			console.error(`${provider} OAuth error:`, error);
-			toast.error(`Authentication failed\nFailed to initiate ${provider} login. Please try again.`);
+			toast.error(t("auth.oauth_failed"));
 			setOauthLoading(null);
 		}
 	};
 
 	return (
-		<FormContainer title="Welcome back" subtitle="Choose your preferred way to sign in">
+		<FormContainer title={t("auth.welcome_back")} subtitle={t("auth.sign_in_subtitle")}>
 			<div className="space-y-6">
 				{/* OAuth Login Buttons - Top Priority */}
 				<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -144,7 +146,7 @@ export function LoginForm() {
 						className="w-full h-11"
 					>
 						<IconBrandGoogle className="h-5 w-5 mr-3" />
-						{oauthLoading === "google" ? "Connecting..." : "Google"}
+						{oauthLoading === "google" ? t("common.connecting") : "Google"}
 					</Button>
 					<Button
 						variant="ghost"
@@ -153,7 +155,7 @@ export function LoginForm() {
 						className="w-full h-11"
 					>
 						<IconBrandGithub className="h-5 w-5 mr-3" />
-						{oauthLoading === "github" ? "Connecting..." : "GitHub"}
+						{oauthLoading === "github" ? t("common.connecting") : "GitHub"}
 					</Button>
 				</div>
 
@@ -164,7 +166,7 @@ export function LoginForm() {
 					</div>
 					<div className="relative flex justify-center text-xs uppercase">
 						<span className="bg-card px-3 text-muted-foreground font-medium">
-							Or continue with email
+							{t("auth.or_email")}
 						</span>
 					</div>
 				</div>
@@ -186,7 +188,7 @@ export function LoginForm() {
 					)}
 
 					<LabelInputContainer className="mb-4">
-						<Label htmlFor="email">Email Address</Label>
+						<Label htmlFor="email">{t("auth.email")}</Label>
 						<Input
 							id="email"
 							name="email"
@@ -199,7 +201,7 @@ export function LoginForm() {
 					</LabelInputContainer>
 
 					<LabelInputContainer className="mb-4">
-						<Label htmlFor="password">Password</Label>
+						<Label htmlFor="password">{t("auth.password")}</Label>
 						<Input
 							id="password"
 							name="password"
@@ -217,24 +219,24 @@ export function LoginForm() {
 							to="/forgot-password"
 							className="text-sm text-brand hover:text-brand/80 transition-colors"
 						>
-							Forgot your password?
+							{t("auth.forgot_password")}
 						</Link>
 					</div>
 
 					<Button variant="primary" type="submit" disabled={isLoading} className="w-full">
-						{isLoading ? "Signing in..." : "Sign in →"}
+						{isLoading ? t("auth.signing_in") : t("auth.sign_in")}
 					</Button>
 				</form>
 
 				{/* Sign up link */}
 				<div className="text-center pt-4 border-t border-border">
 					<span className="text-sm text-muted-foreground">
-						Don&apos;t have an account?{" "}
+						{t("auth.no_account")}{" "}
 						<Link
 							to="/register"
 							className="font-medium text-brand hover:text-brand/80 transition-colors"
 						>
-							Sign up
+							{t("common.sign_up")}
 						</Link>
 					</span>
 				</div>

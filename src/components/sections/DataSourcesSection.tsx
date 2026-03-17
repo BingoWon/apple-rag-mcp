@@ -1,21 +1,19 @@
+import { useTranslation } from "react-i18next";
 import { WobbleCard } from "../ui/wobble-card";
 
 export function DataSourcesShowcase() {
+	const { t } = useTranslation();
 	return (
 		<div className="relative pb-24">
 			<div className="mx-auto max-w-7xl px-6 lg:px-8">
 				<div className="mx-auto max-w-4xl lg:text-center mb-16">
 					<h2 className="text-base font-semibold leading-7 text-brand">
-						Comprehensive Knowledge Base
+						{t("datasources.eyebrow")}
 					</h2>
 					<p className="mt-2 text-3xl font-bold tracking-tight text-light sm:text-4xl">
-						Multiple data sources, one search
+						{t("datasources.title")}
 					</p>
-					<p className="mt-6 text-lg leading-8 text-muted">
-						Empower your AI agents with comprehensive Apple developer knowledge - from official
-						documentation to WWDC video transcripts - all accessible through our unified MCP
-						interface.
-					</p>
+					<p className="mt-6 text-lg leading-8 text-muted">{t("datasources.subtitle")}</p>
 				</div>
 				<div className="grid grid-cols-1 lg:grid-cols-3 gap-4 w-full">
 					<WobbleCard
@@ -25,11 +23,10 @@ export function DataSourcesShowcase() {
 					>
 						<div className="max-w-xs relative z-10">
 							<h2 className="text-left text-balance text-xl lg:text-3xl font-semibold tracking-[-0.015em] text-white">
-								Apple Developer Documentation
+								{t("datasources.docs_title")}
 							</h2>
 							<p className="mt-4 text-left  text-base/6 text-neutral-200">
-								All of Apple's official developer docs in one place, with smart AI search to help
-								your AI agents find exactly what they need, fast.
+								{t("datasources.docs_desc")}
 							</p>
 						</div>
 						<img
@@ -42,10 +39,10 @@ export function DataSourcesShowcase() {
 					</WobbleCard>
 					<WobbleCard containerClassName="col-span-1 min-h-[150px] md:min-h-[250px]">
 						<h2 className="max-w-80 text-left text-balance text-xl lg:text-3xl font-semibold tracking-[-0.015em] text-white">
-							No shirt, no shoes, no weapons.
+							{t("datasources.fight_title")}
 						</h2>
 						<p className="mt-4 max-w-[26rem] text-left  text-base/6 text-neutral-200">
-							If someone yells "stop!", goes limp, or taps out, the fight is over.
+							{t("datasources.fight_desc")}
 						</p>
 						<img
 							src="/muscle-sticker.png"
@@ -61,11 +58,10 @@ export function DataSourcesShowcase() {
 					>
 						<div className="max-w-sm relative z-10">
 							<h2 className="max-w-sm md:max-w-lg  text-left text-balance text-xl lg:text-3xl font-semibold tracking-[-0.015em] text-white">
-								WWDC Videos & Sessions
+								{t("datasources.videos_title")}
 							</h2>
 							<p className="mt-4 max-w-[26rem] text-left  text-base/6 text-neutral-200">
-								Full transcripts from Apple Developer videos - WWDC talks, coding tutorials, and
-								tech sessions, all easily searchable through our RAG system.
+								{t("datasources.videos_desc")}
 							</p>
 						</div>
 						<img

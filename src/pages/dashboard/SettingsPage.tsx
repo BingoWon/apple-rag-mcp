@@ -2,6 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { DeleteAccount } from "@/components/settings/DeleteAccount";
 import { PasswordManagement } from "@/components/settings/PasswordManagement";
@@ -18,6 +19,7 @@ const profileSchema = z.object({
 type ProfileFormData = z.infer<typeof profileSchema>;
 
 export default function SettingsPage() {
+	const { t } = useTranslation();
 	const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
 	const { user, updateUser } = useAuth();
 
@@ -35,13 +37,12 @@ export default function SettingsPage() {
 
 			if (response.success && response.data) {
 				updateUser(response.data);
-				toast.success("Profile updated\nYour profile has been updated successfully.");
+				toast.success(t("settings.profile_updated"));
 			} else {
 				throw new Error(response.error?.message || "Failed to update profile");
 			}
 		} catch (error) {
-			const errorMessage =
-				error instanceof Error ? error.message : "Failed to update profile. Please try again.";
+			const errorMessage = error instanceof Error ? error.message : t("settings.profile_error");
 			toast.error(`Error\n${errorMessage}`);
 		} finally {
 			setIsUpdatingProfile(false);
@@ -52,20 +53,20 @@ export default function SettingsPage() {
 		<div className="space-y-6">
 			{/* Header */}
 			<div>
-				<h1 className="text-2xl font-bold text-light">Account Settings</h1>
-				<p className="mt-1 text-sm text-muted">Manage your account information and preferences</p>
+				<h1 className="text-2xl font-bold text-light">{t("settings.title")}</h1>
+				<p className="mt-1 text-sm text-muted">{t("settings.subtitle")}</p>
 			</div>
 
 			{/* Profile Settings */}
 			<Card>
 				<CardHeader>
-					<CardTitle>Profile Information</CardTitle>
-					<CardDescription>Update your personal information and email address</CardDescription>
+					<CardTitle>{t("settings.profile_title")}</CardTitle>
+					<CardDescription>{t("settings.profile_desc")}</CardDescription>
 				</CardHeader>
 				<CardContent>
 					<form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-4">
 						<Input
-							label="Full Name"
+							label={t("settings.full_name")}
 							{...profileForm.register("name")}
 							error={profileForm.formState.errors.name?.message}
 						/>
@@ -73,7 +74,7 @@ export default function SettingsPage() {
 						{/* Email display (disabled input style) */}
 						<div>
 							<label htmlFor="email" className="block text-sm font-medium text-light mb-1">
-								Email Address
+								{t("settings.email_label")}
 							</label>
 							<input
 								id="email"
@@ -83,9 +84,7 @@ export default function SettingsPage() {
 								className="w-full px-3 py-2 bg-secondary border border-default rounded-md text-sm text-faint cursor-not-allowed"
 								readOnly
 							/>
-							<p className="text-xs text-faint mt-1">
-								Email cannot be changed for security reasons
-							</p>
+							<p className="text-xs text-faint mt-1">{t("settings.email_locked")}</p>
 						</div>
 						<Button
 							type="submit"
@@ -93,7 +92,7 @@ export default function SettingsPage() {
 							disabled={!profileForm.formState.isDirty}
 							className="w-auto"
 						>
-							Update Profile
+							{t("settings.update_profile")}
 						</Button>
 					</form>
 				</CardContent>

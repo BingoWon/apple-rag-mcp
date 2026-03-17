@@ -1,6 +1,7 @@
 import { IconAlertTriangle } from "@tabler/icons-react";
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import { Button } from "@/components/ui/Button";
+import i18n from "@/i18n";
 
 interface Props {
 	children: ReactNode;
@@ -51,14 +52,14 @@ export class ErrorBoundary extends Component<Props, State> {
 							<div className="mx-auto h-12 w-12 text-red-500">
 								<IconAlertTriangle className="h-12 w-12" />
 							</div>
-							<h2 className="mt-6 text-3xl font-extrabold text-gray-900">Something went wrong</h2>
-							<p className="mt-2 text-sm text-gray-600">
-								We&apos;re sorry, but something unexpected happened. Please try again.
-							</p>
+							<h2 className="mt-6 text-3xl font-extrabold text-gray-900">
+								{i18n.t("errorboundary.title")}
+							</h2>
+							<p className="mt-2 text-sm text-gray-600">{i18n.t("errorboundary.subtitle")}</p>
 							{process.env.NODE_ENV === "development" && this.state.error && (
 								<details className="mt-4 text-left">
 									<summary className="cursor-pointer text-sm font-medium text-gray-700">
-										Error details (development only)
+										{i18n.t("errorboundary.details")}
 									</summary>
 									<pre className="mt-2 text-xs text-red-600 bg-red-50 p-4 rounded overflow-auto">
 										{this.state.error.stack}
@@ -68,10 +69,10 @@ export class ErrorBoundary extends Component<Props, State> {
 						</div>
 						<div className="space-y-4">
 							<Button onClick={this.handleReset} className="w-full">
-								Try Again
+								{i18n.t("errorboundary.try_again")}
 							</Button>
 							<Button onClick={this.handleReload} variant="secondary" className="w-full">
-								Reload Page
+								{i18n.t("errorboundary.reload")}
 							</Button>
 						</div>
 					</div>

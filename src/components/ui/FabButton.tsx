@@ -2,6 +2,7 @@ import { IconArrowsMinimize, IconMessageCircle, IconSend } from "@tabler/icons-r
 import { gsap } from "gsap";
 import React from "react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -153,6 +154,7 @@ export function FabButton({ className }: FabButtonProps) {
 	const [email, setEmail] = React.useState("");
 	const [message, setMessage] = React.useState("");
 	const [isSubmitting, setIsSubmitting] = React.useState(false);
+	const { t } = useTranslation();
 
 	const buttonRef = React.useRef<HTMLButtonElement>(null);
 	const popoverRef = React.useRef<HTMLDivElement>(null);
@@ -238,12 +240,10 @@ export function FabButton({ className }: FabButtonProps) {
 			});
 
 			if (response.success) {
-				// 提交成功，显示成功提示
-				// 根据是否提供邮箱显示不同的提示信息
 				const hasEmail = email?.trim();
 				const successMessage = hasEmail
-					? `Message received! 📧\nWe'll reply to ${email.trim()} within 24-48 hours.\nPlease check your inbox (and spam folder).`
-					: "Message received! 📧\nWe've got your message and will review it soon.\nConsider adding your email next time for a direct reply.";
+					? t("fab.success_with_email", { email: email.trim() })
+					: t("fab.success_no_email");
 
 				toast.success(successMessage, {
 					duration: 10000, // 显示10秒，给用户足够时间阅读
@@ -256,14 +256,12 @@ export function FabButton({ className }: FabButtonProps) {
 				}
 				await animateClose(() => setIsOpen(false));
 			} else {
-				// 提交失败，显示错误提示
-				const errorMessage = response.error?.message || "Failed to send message";
-				toast.error(`Failed to send message\n${errorMessage}`);
+				const errorMessage = response.error?.message || t("fab.send_error");
+				toast.error(`${t("fab.send_error")}\n${errorMessage}`);
 			}
 		} catch (error) {
 			console.error("Error submitting contact message:", error);
-			// 显示网络错误提示
-			toast.error("Network error\nPlease check your connection and try again.");
+			toast.error(t("fab.network_error"));
 		} finally {
 			setIsSubmitting(false);
 		}
@@ -337,7 +335,7 @@ export function FabButton({ className }: FabButtonProps) {
 		<>
 			<button
 				ref={buttonRef}
-				aria-label="Contact us"
+				aria-label={t("fab.label")}
 				onClick={handleClick}
 				className={cn(
 					"w-[42px] h-[42px] rounded-full fixed bottom-6 right-6 md:bottom-16 md:right-16",
@@ -387,7 +385,7 @@ export function FabButton({ className }: FabButtonProps) {
 					>
 						<input
 							type="email"
-							placeholder="Your email (optional)"
+							placeholder={t("fab.email_placeholder")}
 							name="email"
 							value={email}
 							onChange={(e) => setEmail(e.target.value)}
@@ -399,7 +397,7 @@ export function FabButton({ className }: FabButtonProps) {
 						<Divider />
 
 						<textarea
-							placeholder="How can we help you?"
+							placeholder={t("fab.message_placeholder")}
 							name="message"
 							value={message}
 							onChange={(e) => setMessage(e.target.value)}
@@ -427,7 +425,7 @@ export function FabButton({ className }: FabButtonProps) {
 								</button>
 								<button
 									type="submit"
-									aria-label="Submit"
+									aria-label={t("fab.submit")}
 									disabled={isSubmitting || !message.trim()}
 									className={cn(
 										"w-7 h-7 rounded-md grid place-items-center p-0 border-0 cursor-pointer relative pointer-events-auto",

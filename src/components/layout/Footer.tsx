@@ -1,43 +1,46 @@
 import { IconBrandGithub } from "@tabler/icons-react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { activateFabContact } from "@/components/ui/FabButton";
 import { trackEvent } from "@/lib/analytics";
 
-const navigation = {
-	product: [
-		{ name: "Features", href: "/#features" },
-		{ name: "Pricing", href: "/#pricing" },
-		{ name: "Contact", href: "#", action: "contact" },
-	],
-	dashboard: [
-		{ name: "Overview", href: "/overview/" },
-		{ name: "MCP Tokens", href: "/mcp-tokens/" },
-		{ name: "Authorized IPs", href: "/authorized-ips/" },
-		{ name: "Billing", href: "/billing/" },
-		{ name: "Usage", href: "/usage/" },
-	],
-	social: [
-		{
-			name: "GitHub",
-			href: "https://github.com/BingoWon/apple-rag-mcp",
-			icon: (props: any) => <IconBrandGithub {...props} />,
-		},
-		{
-			name: "Aceternity UI",
-			href: "https://ui.aceternity.com/",
-			icon: (props: any) => (
-				<img
-					src="https://ui.aceternity.com/logo-dark.png"
-					alt="Aceternity UI"
-					className="h-6 w-6"
-					{...props}
-				/>
-			),
-		},
-	],
-};
-
 export function Footer() {
+	const { t } = useTranslation();
+
+	const navigation = {
+		product: [
+			{ name: t("nav.features"), href: "/#features" },
+			{ name: t("nav.pricing"), href: "/#pricing" },
+			{ name: t("nav.contact"), href: "#", action: "contact" },
+		],
+		dashboard: [
+			{ name: t("nav.overview"), href: "/overview/" },
+			{ name: t("nav.mcp_tokens"), href: "/mcp-tokens/" },
+			{ name: t("nav.authorized_ips"), href: "/authorized-ips/" },
+			{ name: t("nav.billing"), href: "/billing/" },
+			{ name: t("nav.usage"), href: "/usage/" },
+		],
+		social: [
+			{
+				name: "GitHub",
+				href: "https://github.com/BingoWon/apple-rag-mcp",
+				icon: (props: any) => <IconBrandGithub {...props} />,
+			},
+			{
+				name: "Aceternity UI",
+				href: "https://ui.aceternity.com/",
+				icon: (props: any) => (
+					<img
+						src="https://ui.aceternity.com/logo-dark.png"
+						alt="Aceternity UI"
+						className="h-6 w-6"
+						{...props}
+					/>
+				),
+			},
+		],
+	};
+
 	return (
 		<footer className="bg-background border-t border-border">
 			<div className="mx-auto max-w-7xl px-6 py-10 lg:px-8">
@@ -46,10 +49,7 @@ export function Footer() {
 						<div className="flex items-center">
 							<img src="/logo-with-text.svg" alt="Apple RAG MCP" className="h-8 w-auto" />
 						</div>
-						<p className="text-sm leading-6 text-muted">
-							Think Vibe Coding. Where RAG technology meets Model Context Protocol, your AI agents
-							don't just code Apple - they master it.
-						</p>
+						<p className="text-sm leading-6 text-muted">{t("footer.tagline")}</p>
 						<div className="flex space-x-6">
 							{navigation.social.map((item) => (
 								<a
@@ -75,7 +75,7 @@ export function Footer() {
 					</div>
 					<div className="mt-16 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">
 						<div>
-							<h3 className="text-sm font-semibold leading-6 text-light">Product</h3>
+							<h3 className="text-sm font-semibold leading-6 text-light">{t("nav.product")}</h3>
 							<ul className="mt-6 space-y-4">
 								{navigation.product.map((item) => (
 									<li key={item.name}>
@@ -102,7 +102,9 @@ export function Footer() {
 							</ul>
 						</div>
 						<div>
-							<h3 className="text-sm font-semibold leading-6 text-light">Dashboard</h3>
+							<h3 className="text-sm font-semibold leading-6 text-light">
+								{t("common.dashboard")}
+							</h3>
 							<ul className="mt-6 space-y-4">
 								{navigation.dashboard.map((item) => (
 									<li key={item.name}>
@@ -117,18 +119,18 @@ export function Footer() {
 				</div>
 				<div className="mt-16 border-t border-default pt-4 space-y-4">
 					<p className="text-xs leading-5 text-muted text-center md:text-left">
-						&copy; 2025 Apple RAG MCP • All rights reserved
+						{t("footer.copyright")}
 					</p>
 					<div className="flex flex-col items-center space-y-4 md:flex-row md:justify-between md:space-y-0">
 						<div className="flex space-x-4 text-xs">
 							<Link to="/privacy-policy" className="text-muted hover:text-light">
-								Privacy Policy
+								{t("footer.privacy")}
 							</Link>
 							<Link to="/terms-of-service" className="text-muted hover:text-light">
-								Terms of Service
+								{t("footer.terms")}
 							</Link>
 						</div>
-						<p className="text-xs text-muted">Crafted with Vibe Coding ✨</p>
+						<p className="text-xs text-muted">{t("footer.crafted")}</p>
 					</div>
 				</div>
 			</div>

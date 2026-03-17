@@ -1,6 +1,7 @@
 import { IconCheck, IconClock, IconMessageCircle, IconSearch } from "@tabler/icons-react";
 import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
 import { activateFabContact } from "@/components/ui/FabButton";
@@ -21,6 +22,7 @@ interface Message {
 type FilterType = "all" | "unread" | "read";
 
 export default function MessagesPage() {
+	const { t } = useTranslation();
 	const [messages, setMessages] = useState<Message[]>([]);
 	const [total, setTotal] = useState(0);
 	const [unreadCount, setUnreadCount] = useState(0);
@@ -54,11 +56,11 @@ export default function MessagesPage() {
 			}
 		} catch (error) {
 			console.error("Failed to fetch messages:", error);
-			toast.error("Failed to load messages");
+			toast.error(t("messages.load_error"));
 		} finally {
 			setIsLoading(false);
 		}
-	}, [filter, search, page]);
+	}, [filter, search, page, t]);
 
 	useEffect(() => {
 		fetchMessages();
@@ -73,12 +75,12 @@ export default function MessagesPage() {
 		try {
 			const response = await api.markMessageAsRead(messageId);
 			if (response.success) {
-				toast.success("Message marked as read");
+				toast.success(t("messages.marked_success"));
 				fetchMessages();
 			}
 		} catch (error) {
 			console.error("Failed to mark message as read:", error);
-			toast.error("Failed to mark message as read");
+			toast.error(t("messages.mark_error"));
 		}
 	};
 
@@ -89,10 +91,8 @@ export default function MessagesPage() {
 			{/* Header */}
 			<div className="flex items-start justify-between gap-4">
 				<div>
-					<h1 className="text-2xl font-bold text-light">Messages</h1>
-					<p className="mt-1 text-sm text-muted">
-						View and manage your conversation history with our support team
-					</p>
+					<h1 className="text-2xl font-bold text-light">{t("messages.title")}</h1>
+					<p className="mt-1 text-sm text-muted">{t("messages.subtitle")}</p>
 				</div>
 				<Button
 					variant="primary"
@@ -101,7 +101,7 @@ export default function MessagesPage() {
 					className="whitespace-nowrap"
 				>
 					<IconMessageCircle className="w-4 h-4 mr-1.5" />
-					Contact Us
+					{t("common.contact_us")}
 				</Button>
 			</div>
 
@@ -112,7 +112,9 @@ export default function MessagesPage() {
 						<div className="flex items-center gap-2">
 							<IconMessageCircle className="w-5 h-5 text-blue-400" />
 							<p className="text-blue-400 font-medium">
-								You have {unreadCount} unread {unreadCount === 1 ? "message" : "messages"}
+								{unreadCount === 1
+									? t("messages.unread_banner", { count: unreadCount })
+									: t("messages.unread_banner_plural", { count: unreadCount })}
 							</p>
 						</div>
 					</CardContent>
@@ -126,9 +128,11 @@ export default function MessagesPage() {
 						{/* Title and Filter Buttons */}
 						<div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
 							<div>
-								<CardTitle>Your Messages</CardTitle>
+								<CardTitle>{t("messages.your_messages")}</CardTitle>
 								<CardDescription>
-									{isLoading ? "Loading..." : `Showing ${messages.length} of ${total} messages`}
+									{isLoading
+										? t("messages.loading")
+										: t("common.showing_of", { count: messages.length, total })}
 								</CardDescription>
 							</div>
 							<div className="flex gap-2">
@@ -140,7 +144,7 @@ export default function MessagesPage() {
 									}}
 									size="sm"
 								>
-									All
+									{t("messages.filter_all")}
 								</Button>
 								<Button
 									variant={filter === "unread" ? "primary" : "secondary"}
@@ -150,7 +154,7 @@ export default function MessagesPage() {
 									}}
 									size="sm"
 								>
-									Unread
+									{t("messages.filter_unread")}
 								</Button>
 								<Button
 									variant={filter === "read" ? "primary" : "secondary"}
@@ -160,7 +164,7 @@ export default function MessagesPage() {
 									}}
 									size="sm"
 								>
-									Read
+									{t("messages.filter_read")}
 								</Button>
 							</div>
 						</div>
@@ -168,7 +172,7 @@ export default function MessagesPage() {
 						{/* Search Bar */}
 						<div className="flex gap-2">
 							<Input
-								placeholder="Search messages..."
+								placeholder={t("messages.search_placeholder")}
 								value={searchInput}
 								onChange={(e) => setSearchInput(e.target.value)}
 								onKeyDown={(e) => {
@@ -180,18 +184,18 @@ export default function MessagesPage() {
 							/>
 							<Button onClick={handleSearch} variant="primary">
 								<IconSearch className="w-4 h-4 mr-2" />
-								Search
+								{t("common.search")}
 							</Button>
 						</div>
 					</div>
 				</CardHeader>
 				<CardContent className="p-0">
 					{isLoading ? (
-						<div className="p-8 text-center text-muted">Loading messages...</div>
+						<div className="p-8 text-center text-muted">{t("messages.loading")}</div>
 					) : messages.length === 0 ? (
 						<div className="p-8 text-center text-muted">
 							<IconMessageCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
-							<p>No messages found</p>
+							<p>{t("messages.empty")}</p>
 						</div>
 					) : (
 						<div className="divide-y divide-default">
@@ -214,7 +218,7 @@ export default function MessagesPage() {
 													message.user_read_at ? "text-neutral-500" : "text-blue-400",
 												)}
 											>
-												{message.user_read_at ? "Read" : "Unread"}
+												{message.user_read_at ? t("messages.read") : t("messages.unread")}
 											</span>
 										</div>
 										<span className="text-xs text-muted">
@@ -224,7 +228,9 @@ export default function MessagesPage() {
 
 									{/* Your Message */}
 									<div className="mb-4">
-										<h4 className="text-sm font-medium text-muted mb-2">Your Message</h4>
+										<h4 className="text-sm font-medium text-muted mb-2">
+											{t("messages.your_message")}
+										</h4>
 										<div className="bg-secondary rounded-lg p-4 border border-default">
 											<p className="text-light text-sm whitespace-pre-wrap">{message.message}</p>
 										</div>
@@ -233,14 +239,18 @@ export default function MessagesPage() {
 									{/* Admin Reply */}
 									{message.admin_reply && (
 										<div className="mb-4">
-											<h4 className="text-sm font-medium text-muted mb-2">Our Response</h4>
+											<h4 className="text-sm font-medium text-muted mb-2">
+												{t("messages.our_response")}
+											</h4>
 											<div className="bg-blue-500/10 rounded-lg p-4 border border-blue-500/30">
 												<p className="text-light text-sm whitespace-pre-wrap">
 													{message.admin_reply}
 												</p>
 												{message.replied_at && (
 													<p className="text-xs text-blue-400 mt-2">
-														Replied on {formatDateCompact(message.replied_at)}
+														{t("messages.replied_on", {
+															date: formatDateCompact(message.replied_at),
+														})}
 													</p>
 												)}
 											</div>
@@ -256,7 +266,7 @@ export default function MessagesPage() {
 												onClick={() => handleMarkAsRead(message.id)}
 											>
 												<IconCheck className="w-4 h-4 mr-2" />
-												Mark as Read
+												{t("messages.mark_read")}
 											</Button>
 										</div>
 									)}
@@ -277,17 +287,17 @@ export default function MessagesPage() {
 								onClick={() => setPage((p) => Math.max(1, p - 1))}
 								disabled={page === 1}
 							>
-								Previous
+								{t("common.previous")}
 							</Button>
 							<span className="text-sm text-muted">
-								Page {page} of {totalPages}
+								{t("common.page_of", { page, total: totalPages })}
 							</span>
 							<Button
 								variant="secondary"
 								onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
 								disabled={page === totalPages}
 							>
-								Next
+								{t("common.next")}
 							</Button>
 						</div>
 					</CardContent>

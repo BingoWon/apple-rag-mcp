@@ -2,7 +2,8 @@
  * Admin User Subscriptions Page
  * Display and manage user_subscriptions table
  */
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { api } from "@/lib/api";
 
@@ -24,28 +25,32 @@ interface AdminUserSubscription {
 	user_name?: string;
 }
 
-const columns = [
-	{ key: "user_id", label: "User ID", width: "w-16" },
-	{ key: "user_email", label: "Email", width: "w-48" },
-	{ key: "user_name", label: "Name", width: "w-40" },
-	{ key: "plan_type", label: "Plan", width: "w-24" },
-	{ key: "status", label: "Status", width: "w-28" },
-	{ key: "price", label: "Price", width: "w-24" },
-	{ key: "billing_interval", label: "Billing", width: "w-24" },
-	{ key: "stripe_customer_id", label: "Stripe Customer", width: "w-28" },
-	{
-		key: "stripe_subscription_id",
-		label: "Stripe Subscription",
-		width: "w-28",
-	},
-	{ key: "stripe_price_id", label: "Stripe Price ID", width: "w-28" },
-	{ key: "current_period_start", label: "Period Start", width: "w-36" },
-	{ key: "current_period_end", label: "Period End", width: "w-36" },
-	{ key: "cancel_at_period_end", label: "Cancel at End", width: "w-32" },
-	{ key: "updated_at", label: "Updated", width: "w-40" },
-];
-
 export default function AdminUserSubscriptionsPage() {
+	const { t } = useTranslation();
+
+	const columns = useMemo(
+		() => [
+			{ key: "user_id", label: t("admin.col_user_id"), width: "w-16" },
+			{ key: "user_email", label: t("admin.col_email"), width: "w-48" },
+			{ key: "user_name", label: t("admin.col_name"), width: "w-40" },
+			{ key: "plan_type", label: t("admin.col_plan"), width: "w-24" },
+			{ key: "status", label: t("admin.col_status"), width: "w-28" },
+			{ key: "price", label: t("admin.col_price"), width: "w-24" },
+			{ key: "billing_interval", label: t("admin.col_billing"), width: "w-24" },
+			{ key: "stripe_customer_id", label: t("admin.col_stripe_customer"), width: "w-28" },
+			{
+				key: "stripe_subscription_id",
+				label: t("admin.col_stripe_subscription"),
+				width: "w-28",
+			},
+			{ key: "stripe_price_id", label: t("admin.col_stripe_price_id"), width: "w-28" },
+			{ key: "current_period_start", label: t("admin.col_period_start"), width: "w-36" },
+			{ key: "current_period_end", label: t("admin.col_period_end"), width: "w-36" },
+			{ key: "cancel_at_period_end", label: t("admin.col_cancel_at_end"), width: "w-32" },
+			{ key: "updated_at", label: t("admin.col_updated"), width: "w-40" },
+		],
+		[t],
+	);
 	const [subscriptions, setSubscriptions] = useState<AdminUserSubscription[]>([]);
 	const [total, setTotal] = useState(0);
 	const [limit, setLimit] = useState(50);
@@ -103,8 +108,8 @@ export default function AdminUserSubscriptionsPage() {
 	return (
 		<div className="space-y-6">
 			<AdminTable
-				title="User Subscriptions Table"
-				description="User subscription plans, billing periods, and Stripe integration data"
+				title={t("admin.subscriptions_table")}
+				description={t("admin.subscriptions_table_desc")}
 				columns={columns}
 				data={subscriptions}
 				total={total}

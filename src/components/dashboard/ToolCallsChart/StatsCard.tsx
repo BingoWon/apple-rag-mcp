@@ -1,5 +1,6 @@
 import { IconCircleCheck, IconSearch } from "@tabler/icons-react";
 import { memo } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/Card";
 import MiniChart from "./MiniChart";
 import type { ChartColors, ChartDataPoint, ChartType } from "./types";
@@ -20,8 +21,9 @@ interface StatsCardProps {
  */
 const StatsCard = memo<StatsCardProps>(
 	({ type, data, totalValue, isSelected, isDark, colors, onToggle }) => {
+		const { t } = useTranslation();
 		const isToolCalls = type === "tool_calls";
-		const title = isToolCalls ? "Tool Calls" : "Results";
+		const title = isToolCalls ? t("chart.tool_calls") : t("chart.results");
 		const Icon = isToolCalls ? IconSearch : IconCircleCheck;
 		const colorVar = isToolCalls
 			? "var(--color-chart-queries, #2AFADF)"

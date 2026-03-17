@@ -7,6 +7,7 @@ import { UnreadReplyNotification } from "@/components/UnreadReplyNotification";
 import { CookieConsent } from "@/components/ui/CookieConsent";
 import { FabButton } from "@/components/ui/FabButton";
 import { AppRouter } from "./router";
+import "./i18n";
 import "./styles/globals.css";
 
 const root = document.getElementById("root");

@@ -2,6 +2,7 @@ import { IconBrandGithub, IconBrandGoogle, IconXboxX } from "@tabler/icons-react
 import type React from "react";
 import { useState } from "react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
 import { FormContainer } from "@/components/ui/FormContainer";
@@ -22,6 +23,7 @@ export function RegisterForm() {
 	const [error, setError] = useState<string | null>(null);
 	const navigate = useNavigate();
 	const { register: registerUser } = useAuth();
+	const { t } = useTranslation();
 
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
@@ -36,7 +38,7 @@ export function RegisterForm() {
 
 		// Password matching validation
 		if (password !== confirmPassword) {
-			setPasswordError("Passwords don't match. Please try again.");
+			setPasswordError(t("auth.passwords_mismatch"));
 			setIsLoading(false);
 			return;
 		}
@@ -105,13 +107,13 @@ export function RegisterForm() {
 				`Failed to initiate ${provider} registration. Please try again.`,
 			);
 
-			toast.error(`OAuth Failed\n${friendlyMessage}`);
+			toast.error(t("auth.oauth_failed"));
 			setOauthLoading(null);
 		}
 	};
 
 	return (
-		<FormContainer title="Welcome to Apple RAG MCP" subtitle="Choose your preferred way to sign up">
+		<FormContainer title={t("auth.welcome_register")} subtitle={t("auth.sign_up_subtitle")}>
 			<div className="space-y-6">
 				{/* OAuth Registration Buttons - Top Priority */}
 				<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -122,7 +124,7 @@ export function RegisterForm() {
 						className="w-full h-11"
 					>
 						<IconBrandGoogle className="h-5 w-5 mr-3" />
-						{oauthLoading === "google" ? "Connecting..." : "Google"}
+						{oauthLoading === "google" ? t("common.connecting") : "Google"}
 					</Button>
 					<Button
 						variant="ghost"
@@ -131,7 +133,7 @@ export function RegisterForm() {
 						className="w-full h-11"
 					>
 						<IconBrandGithub className="h-5 w-5 mr-3" />
-						{oauthLoading === "github" ? "Connecting..." : "GitHub"}
+						{oauthLoading === "github" ? t("common.connecting") : "GitHub"}
 					</Button>
 				</div>
 
@@ -142,7 +144,7 @@ export function RegisterForm() {
 					</div>
 					<div className="relative flex justify-center text-xs uppercase">
 						<span className="bg-card px-3 text-muted-foreground font-medium">
-							Or continue with email
+							{t("auth.or_email")}
 						</span>
 					</div>
 				</div>
@@ -164,7 +166,7 @@ export function RegisterForm() {
 					)}
 
 					<LabelInputContainer className="mb-4">
-						<Label htmlFor="email">Email Address</Label>
+						<Label htmlFor="email">{t("auth.email")}</Label>
 						<Input
 							id="email"
 							name="email"
@@ -177,7 +179,7 @@ export function RegisterForm() {
 					</LabelInputContainer>
 
 					<LabelInputContainer className="mb-4">
-						<Label htmlFor="password">Password</Label>
+						<Label htmlFor="password">{t("auth.password")}</Label>
 						<Input
 							id="password"
 							name="password"
@@ -190,7 +192,7 @@ export function RegisterForm() {
 					</LabelInputContainer>
 
 					<LabelInputContainer className="mb-4">
-						<Label htmlFor="confirmPassword">Confirm Password</Label>
+						<Label htmlFor="confirmPassword">{t("auth.confirm_password")}</Label>
 						<Input
 							id="confirmPassword"
 							name="confirmPassword"
@@ -205,19 +207,19 @@ export function RegisterForm() {
 					{passwordError && <div className="mb-4 text-sm text-status-error">{passwordError}</div>}
 
 					<Button variant="primary" type="submit" disabled={isLoading} className="w-full">
-						{isLoading ? "Creating account..." : "Sign up →"}
+						{isLoading ? t("auth.creating_account") : t("auth.sign_up_btn")}
 					</Button>
 				</form>
 
 				{/* Sign in link */}
 				<div className="text-center pt-4 border-t border-border">
 					<span className="text-sm text-muted-foreground">
-						Already have an account?{" "}
+						{t("auth.has_account")}{" "}
 						<Link
 							to="/login"
 							className="font-medium text-brand hover:text-brand/80 transition-colors"
 						>
-							Sign in
+							{t("common.login")}
 						</Link>
 					</span>
 				</div>

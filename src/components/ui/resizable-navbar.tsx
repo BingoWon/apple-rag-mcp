@@ -2,6 +2,7 @@ import { IconMenu2, IconX } from "@tabler/icons-react";
 import { AnimatePresence, motion, useMotionValueEvent, useScroll } from "motion/react";
 import React, { createContext, useCallback, useContext, useRef, useState } from "react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/Button";
 import { activateFabContact } from "@/components/ui/FabButton";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
@@ -147,7 +148,7 @@ export const NavItems = ({ items, className, onItemClick }: NavItemsProps) => {
 				<a
 					onMouseEnter={() => setHovered(idx)}
 					onClick={(e) => {
-						if (item.name === "Contact") {
+						if (item.link === "#contact") {
 							e.preventDefault();
 							activateFabContact();
 						} else {
@@ -156,8 +157,8 @@ export const NavItems = ({ items, className, onItemClick }: NavItemsProps) => {
 					}}
 					className="relative px-4 py-2 text-muted"
 					key={`link-${idx}`}
-					href={item.name === "Contact" ? "#" : item.link}
-					data-nav-action={item.name === "Contact" ? "fab-contact" : undefined}
+					href={item.link === "#contact" ? "#" : item.link}
+					data-nav-action={item.link === "#contact" ? "fab-contact" : undefined}
 				>
 					{hovered === idx && (
 						<motion.div
@@ -240,6 +241,7 @@ export const MobileNavToggle = ({ isOpen, onClick }: { isOpen: boolean; onClick:
 
 export const UserMenu = ({ user, onLogout }: Omit<UserMenuProps, "visible">) => {
 	const { visible } = useContext(NavbarContext);
+	const { t } = useTranslation();
 	return (
 		<>
 			{/* 用户名 - 始终显示 */}
@@ -256,13 +258,13 @@ export const UserMenu = ({ user, onLogout }: Omit<UserMenuProps, "visible">) => 
 								href="/overview/"
 								className="block px-3 py-2 text-sm text-muted hover:text-light hover:bg-secondary rounded-md"
 							>
-								Dashboard
+								{t("common.dashboard")}
 							</a>
 							<button
 								onClick={onLogout}
 								className="block w-full text-left px-3 py-2 text-sm text-muted hover:text-light hover:bg-secondary rounded-md"
 							>
-								Logout
+								{t("common.logout")}
 							</button>
 						</div>
 					</div>
@@ -273,10 +275,10 @@ export const UserMenu = ({ user, onLogout }: Omit<UserMenuProps, "visible">) => 
 			{!visible && (
 				<>
 					<Button variant="gradient" asChild>
-						<a href="/overview/">Dashboard</a>
+						<a href="/overview/">{t("common.dashboard")}</a>
 					</Button>
 					<Button variant="ghost" onClick={onLogout}>
-						Logout
+						{t("common.logout")}
 					</Button>
 				</>
 			)}
@@ -285,6 +287,7 @@ export const UserMenu = ({ user, onLogout }: Omit<UserMenuProps, "visible">) => 
 };
 
 export function AppNavbar() {
+	const { t } = useTranslation();
 	const { user, isAuthenticated, logout } = useAuthStore();
 	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -292,21 +295,20 @@ export function AppNavbar() {
 	const handleLogout = useCallback(async () => {
 		try {
 			logout();
-			toast.success("Successfully logged out");
+			toast.success(t("nav.logout_success"));
 			setIsMobileMenuOpen(false);
-			// No navigation - user stays on homepage with updated navbar state
 		} catch (error) {
 			console.error("Logout error:", error);
-			toast.error("Failed to logout. Please try again.");
+			toast.error(t("nav.logout_error"));
 		}
-	}, [logout]);
+	}, [logout, t]);
 
 	const handleMenuClose = () => setIsMobileMenuOpen(false);
 
 	const navItems = [
-		{ name: "Features", link: "#features" },
-		{ name: "Pricing", link: "#pricing" },
-		{ name: "Contact", link: "#contact" },
+		{ name: t("nav.features"), link: "#features" },
+		{ name: t("nav.pricing"), link: "#pricing" },
+		{ name: t("nav.contact"), link: "#contact" },
 	];
 
 	return (
@@ -327,10 +329,10 @@ export function AppNavbar() {
 					) : (
 						<>
 							<Button variant="secondary" asChild>
-								<a href="/login">Login</a>
+								<a href="/login">{t("common.login")}</a>
 							</Button>
 							<Button variant="primary" asChild>
-								<a href="/register">Sign Up</a>
+								<a href="/register">{t("common.sign_up")}</a>
 							</Button>
 						</>
 					)}
@@ -359,16 +361,16 @@ export function AppNavbar() {
 					{navItems.map((item, idx) => (
 						<a
 							key={`mobile-nav-${idx}`}
-							href={item.name === "Contact" ? "#" : item.link}
+							href={item.link === "#contact" ? "#" : item.link}
 							onClick={(e) => {
-								if (item.name === "Contact") {
+								if (item.link === "#contact") {
 									e.preventDefault();
 									activateFabContact();
 								}
 								handleMenuClose();
 							}}
 							className="text-muted hover:text-light transition-fast"
-							data-nav-action={item.name === "Contact" ? "fab-contact" : undefined}
+							data-nav-action={item.link === "#contact" ? "fab-contact" : undefined}
 						>
 							{item.name}
 						</a>
@@ -385,23 +387,23 @@ export function AppNavbar() {
 								</div>
 								<Button variant="gradient" className="w-full" asChild>
 									<a href="/overview/" onClick={handleMenuClose}>
-										Dashboard
+										{t("common.dashboard")}
 									</a>
 								</Button>
 								<Button variant="secondary" className="w-full" onClick={handleLogout}>
-									Logout
+									{t("common.logout")}
 								</Button>
 							</>
 						) : (
 							<>
 								<Button variant="secondary" className="w-full" asChild>
 									<a href="/login" onClick={handleMenuClose}>
-										Login
+										{t("common.login")}
 									</a>
 								</Button>
 								<Button variant="gradient" className="w-full" asChild>
 									<a href="/register" onClick={handleMenuClose}>
-										Sign Up
+										{t("common.sign_up")}
 									</a>
 								</Button>
 							</>

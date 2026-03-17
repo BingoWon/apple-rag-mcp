@@ -1,28 +1,31 @@
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { ArrowButton } from "@/components/ui/arrow-button";
 import { Button } from "@/components/ui/Button";
 import { TypewriterEffectSmooth } from "@/components/ui/typewriter-effect";
 
 export function CTASection() {
+	const { t } = useTranslation();
+
 	const words = [
 		{
-			text: "Ready",
+			text: t("cta.ready"),
 			className: "text-light",
 		},
 		{
-			text: "to",
+			text: t("cta.to"),
 			className: "text-light",
 		},
 		{
-			text: "empower",
+			text: t("cta.empower"),
 			className: "text-light",
 		},
 		{
-			text: "your",
+			text: t("cta.your"),
 			className: "text-light",
 		},
 		{
-			text: "AI agents?",
+			text: t("cta.ai_agents"),
 			className: "text-brand-secondary",
 		},
 	];
@@ -52,8 +55,7 @@ export function CTASection() {
 						<span className="font-extrabold text-white bg-gradient-to-r from-brand to-brand-secondary px-2 py-1 rounded-lg text-xl tracking-wide transform -rotate-5 inline-block hover:rotate-0 transition-transform duration-300">
 							Vibe Coding
 						</span>{" "}
-						hits walls sometimes. We keep your AI agents flowing through Apple's complex ecosystem
-						with instant, precise knowledge.
+						{t("cta.subtitle")}
 					</p>
 					<div className="mt-10 flex items-center justify-center gap-x-6">
 						<ArrowButton />

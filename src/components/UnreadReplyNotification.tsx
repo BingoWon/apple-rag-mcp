@@ -1,5 +1,6 @@
 import { IconCheck, IconMessageCircle, IconX } from "@tabler/icons-react";
 import { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { CardSpotlight } from "@/components/ui/card-spotlight";
 import { api } from "@/lib/api";
@@ -20,6 +21,7 @@ export function UnreadReplyNotification() {
 	const [currentIndex, setCurrentIndex] = useState(0);
 	const [isVisible, setIsVisible] = useState(false);
 	const [isMarking, setIsMarking] = useState(false);
+	const { t } = useTranslation();
 
 	const checkUnreadMessages = useCallback(async () => {
 		try {
@@ -97,18 +99,23 @@ export function UnreadReplyNotification() {
 					<div className="flex items-start justify-between mb-6">
 						<div>
 							<p className="text-2xl font-bold text-light flex items-center gap-2">
-								You've got a reply! 💙
+								{t("notification.got_reply")}
 							</p>
 							{remainingCount > 1 && (
 								<p className="text-muted text-sm mt-1">
-									{remainingCount} unread {remainingCount === 1 ? "reply" : "replies"}
+									{t(
+										remainingCount === 1
+											? "notification.unread_count"
+											: "notification.unread_count_plural",
+										{ count: remainingCount },
+									)}
 								</p>
 							)}
 						</div>
 						<button
 							onClick={handleClose}
 							className="text-muted hover:text-light transition-all p-1 rounded-lg hover:bg-secondary/80 backdrop-blur-sm"
-							aria-label="Close for now"
+							aria-label={t("notification.close_for_now")}
 						>
 							<IconX className="w-6 h-6" />
 						</button>
@@ -119,7 +126,7 @@ export function UnreadReplyNotification() {
 						{/* Your Message */}
 						<div>
 							<div className="flex items-center justify-between mb-2">
-								<p className="text-sm font-semibold text-muted">Your Message</p>
+								<p className="text-sm font-semibold text-muted">{t("notification.your_message")}</p>
 								<p className="text-xs text-faint">{formatDateCompact(currentMessage.created_at)}</p>
 							</div>
 							<div className="p-4 rounded-lg bg-secondary backdrop-blur-sm border border-default">
@@ -132,7 +139,7 @@ export function UnreadReplyNotification() {
 						{/* Our Response */}
 						<div>
 							<div className="flex items-center justify-between mb-2">
-								<p className="text-sm font-semibold text-brand">Our Response</p>
+								<p className="text-sm font-semibold text-brand">{t("notification.our_response")}</p>
 								<p className="text-xs text-faint">{formatDateCompact(currentMessage.replied_at)}</p>
 							</div>
 							<div className="p-4 rounded-lg bg-blue-500/10 backdrop-blur-sm border border-blue-500/30">
@@ -152,7 +159,7 @@ export function UnreadReplyNotification() {
 						className="px-4 py-2 text-sm text-muted hover:text-light transition-all flex items-center gap-2 rounded-lg hover:bg-secondary/80 backdrop-blur-sm"
 					>
 						<IconX className="w-4 h-4" />
-						<span>Close for now</span>
+						<span>{t("notification.close_for_now")}</span>
 					</button>
 					<button
 						type="button"
@@ -163,12 +170,12 @@ export function UnreadReplyNotification() {
 						{isMarking ? (
 							<>
 								<div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-								<span>Marking...</span>
+								<span>{t("notification.marking")}</span>
 							</>
 						) : (
 							<>
 								<IconCheck className="w-4 h-4" />
-								<span>Mark as Read</span>
+								<span>{t("notification.mark_read")}</span>
 							</>
 						)}
 					</button>
@@ -181,9 +188,9 @@ export function UnreadReplyNotification() {
 					className="relative z-20 px-8 py-4 border-t border-default flex items-center justify-center gap-2 text-brand hover:text-brand-secondary transition-all group rounded-b-lg hover:bg-secondary/80 backdrop-blur-sm"
 				>
 					<IconMessageCircle className="w-5 h-5" />
-					<span className="font-medium">View All Messages</span>
+					<span className="font-medium">{t("notification.view_all")}</span>
 					<span className="text-xs text-muted group-hover:text-faint">
-						({remainingCount} unread)
+						{t("notification.unread_suffix", { count: remainingCount })}
 					</span>
 				</Link>
 			</CardSpotlight>

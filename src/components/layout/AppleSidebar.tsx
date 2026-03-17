@@ -10,7 +10,9 @@ import {
 } from "@tabler/icons-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { Avatar } from "@/components/ui/OptimizedImage";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
@@ -18,40 +20,39 @@ import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { Sidebar, SidebarBody, SidebarLink } from "../ui/sidebar";
 
-// Static sidebar links configuration - prevents recreation on every render
-const SIDEBAR_LINKS = [
+const SIDEBAR_LINK_KEYS = [
 	{
-		label: "Overview",
+		labelKey: "nav.overview",
 		href: "/overview/",
 		icon: <IconDashboard className="h-5 w-5 shrink-0" />,
 	},
 	{
-		label: "MCP Tokens",
+		labelKey: "nav.mcp_tokens",
 		href: "/mcp-tokens/",
 		icon: <IconKey className="h-5 w-5 shrink-0" />,
 	},
 	{
-		label: "Authorized IPs",
+		labelKey: "nav.authorized_ips",
 		href: "/authorized-ips/",
 		icon: <IconWorld className="h-5 w-5 shrink-0" />,
 	},
 	{
-		label: "Usage",
+		labelKey: "nav.usage",
 		href: "/usage/",
 		icon: <IconChartBar className="h-5 w-5 shrink-0" />,
 	},
 	{
-		label: "Billing",
+		labelKey: "nav.billing",
 		href: "/billing/",
 		icon: <IconCreditCard className="h-5 w-5 shrink-0" />,
 	},
 	{
-		label: "Messages",
+		labelKey: "nav.messages",
 		href: "/messages/",
 		icon: <IconMessageCircle className="h-5 w-5 shrink-0" />,
 	},
 	{
-		label: "Settings",
+		labelKey: "nav.settings",
 		href: "/settings/",
 		icon: <IconSettings className="h-5 w-5 shrink-0" />,
 	},
@@ -59,6 +60,7 @@ const SIDEBAR_LINKS = [
 
 // Memoized sidebar component to prevent unnecessary re-renders
 const AppleSidebarComponent = ({ children }: { children: React.ReactNode }) => {
+	const { t } = useTranslation();
 	const { user, logout, isAuthenticated } = useAuth();
 	const { pathname } = useLocation();
 	const navigate = useNavigate();
@@ -94,37 +96,42 @@ const AppleSidebarComponent = ({ children }: { children: React.ReactNode }) => {
 	const handleLogout = useCallback(async () => {
 		try {
 			logout();
-			toast.success("Successfully logged out");
+			toast.success(t("nav.logout_success"));
 			// Small delay to ensure state is updated before navigation
 			setTimeout(() => {
 				navigate("/login");
 			}, 100);
 		} catch (error) {
 			console.error("Logout error:", error);
-			toast.error("Failed to logout. Please try again.");
+			toast.error(t("nav.logout_error"));
 		}
-	}, [logout, navigate]);
+	}, [logout, navigate, t]);
 
 	// Memoized links with logout action and unread badge
 	const links = useMemo(
 		() => [
-			...SIDEBAR_LINKS.map((link) => {
+			...SIDEBAR_LINK_KEYS.map((link) => {
+				const resolved = {
+					label: t(link.labelKey),
+					href: link.href,
+					icon: link.icon,
+				};
 				if (link.href === "/messages/" && unreadCount > 0) {
 					return {
-						...link,
+						...resolved,
 						badge: unreadCount > 9 ? "9+" : unreadCount.toString(),
 					};
 				}
-				return link;
+				return resolved;
 			}),
 			{
-				label: "Logout",
+				label: t("common.logout"),
 				href: "#",
 				icon: <IconArrowLeft className="h-5 w-5 shrink-0" />,
 				onClick: handleLogout,
 			},
 		],
-		[handleLogout, unreadCount],
+		[handleLogout, unreadCount, t],
 	);
 
 	const [open, setOpen] = useState(false);
@@ -154,20 +161,21 @@ const AppleSidebarComponent = ({ children }: { children: React.ReactNode }) => {
 						</div>
 					</div>
 					<div className="space-y-2">
-						{/* Theme Toggle */}
+						{/* Theme Toggle & Language Switcher */}
 						<div className="flex items-center justify-start px-2">
 							<ThemeToggle variant={open ? "dropdown" : "icon"} className={open ? "w-auto" : ""} />
+							<LanguageSwitcher />
 						</div>
 
 						{/* User Profile */}
 						<SidebarLink
 							link={{
-								label: user?.name || "User",
+								label: user?.name || t("common.user"),
 								href: "/settings",
 								icon: (
 									<Avatar
 										src={user?.avatar}
-										name={user?.name || "User"}
+										name={user?.name || t("common.user")}
 										size="sm"
 										className="h-7 w-7 shrink-0"
 									/>

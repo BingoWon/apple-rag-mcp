@@ -1,5 +1,6 @@
 import { Suspense, useEffect, useRef } from "react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 import { SubscriptionCard } from "@/components/billing/SubscriptionCard";
 import { PricingSection } from "@/components/sections/PricingSection";
@@ -8,6 +9,7 @@ import { formatDate } from "@/lib/utils";
 import { useDashboardStore } from "@/stores/dashboard";
 
 function BillingPageContent() {
+	const { t } = useTranslation();
 	const [searchParams] = useSearchParams();
 	const { subscription, currentUsage, fetchSubscription } = useDashboardStore();
 
@@ -20,7 +22,7 @@ function BillingPageContent() {
 		const successParam = searchParams.get("success");
 		if (successParam === "true" && !processedParams.current.has("success")) {
 			processedParams.current.add("success");
-			toast.success("Payment successful!\nYour subscription has been updated successfully.");
+			toast.success(t("billing.payment_success"));
 		}
 
 		// Check for refresh parameter from Stripe Customer Portal return
@@ -34,34 +36,34 @@ function BillingPageContent() {
 			window.history.replaceState({}, "", url.toString());
 
 			// Show success message
-			toast.success("Subscription updated!\nYour changes have been saved successfully.");
+			toast.success(t("billing.subscription_updated"));
 		}
-	}, [fetchSubscription, searchParams]);
+	}, [fetchSubscription, searchParams, t]);
 
 	return (
 		<div className="space-y-6">
 			{/* Header */}
 			<div>
-				<h1 className="text-2xl font-bold text-light">Billing & Subscription</h1>
-				<p className="mt-1 text-sm text-muted">
-					Manage your subscription, view usage, and billing history
-				</p>
+				<h1 className="text-2xl font-bold text-light">{t("billing.title")}</h1>
+				<p className="mt-1 text-sm text-muted">{t("billing.subtitle")}</p>
 			</div>
 
 			{/* Current Usage */}
 			{currentUsage && (
 				<Card>
 					<CardHeader>
-						<CardTitle>Current Usage</CardTitle>
-						<CardDescription>Your MCP usage for the current billing period</CardDescription>
+						<CardTitle>{t("billing.current_usage")}</CardTitle>
+						<CardDescription>{t("billing.usage_desc")}</CardDescription>
 					</CardHeader>
 					<CardContent>
 						<div className="space-y-4">
 							<div className="flex items-center justify-between">
-								<span className="text-sm font-medium text-muted">Queries Used</span>
+								<span className="text-sm font-medium text-muted">{t("billing.queries_used")}</span>
 								<span className="text-sm text-light">
 									{currentUsage.current_usage.toLocaleString()} /{" "}
-									{currentUsage.limit === -1 ? "Unlimited" : currentUsage.limit.toLocaleString()}
+									{currentUsage.limit === -1
+										? t("common.unlimited")
+										: currentUsage.limit.toLocaleString()}
 								</span>
 							</div>
 							<div className="w-full bg-secondary rounded-full h-2">
@@ -79,8 +81,10 @@ function BillingPageContent() {
 								></div>
 							</div>
 							<div className="flex items-center justify-between text-sm text-faint">
-								<span>{currentUsage.remaining.toLocaleString()} remaining</span>
-								<span>Resets on {formatDate(currentUsage.reset_at)}</span>
+								<span>
+									{t("billing.remaining", { count: currentUsage.remaining.toLocaleString() })}
+								</span>
+								<span>{t("billing.resets_on", { date: formatDate(currentUsage.reset_at) })}</span>
 							</div>
 						</div>
 					</CardContent>

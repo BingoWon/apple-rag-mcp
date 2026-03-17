@@ -1,5 +1,6 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
@@ -12,34 +13,35 @@ interface SubscriptionCardProps {
 }
 
 export function SubscriptionCard({ subscription }: SubscriptionCardProps) {
+	const { t } = useTranslation();
 	const [isManagingSubscription, setIsManagingSubscription] = useState(false);
 
 	// Get plan description based on plan_id
 	const getPlanDescription = (planId: string) => {
 		switch (planId) {
 			case "hobby":
-				return "Perfect for getting started and small projects.";
+				return t("plans.hobby_desc");
 			case "pro":
-				return "Best for professional developers and growing teams.";
+				return t("plans.pro_desc");
 			case "enterprise":
-				return "Advanced features for large teams and organizations.";
+				return t("plans.enterprise_desc");
 			default:
-				return "Your current subscription plan";
+				return t("billing.your_plan");
 		}
 	};
 
 	const getStatusBadge = () => {
 		switch (subscription.status) {
 			case "active":
-				return <Badge variant="success">Active</Badge>;
+				return <Badge variant="success">{t("billing.active")}</Badge>;
 			case "trialing":
-				return <Badge variant="outline">Trial</Badge>;
+				return <Badge variant="outline">{t("billing.trial")}</Badge>;
 			case "canceled":
-				return <Badge variant="secondary">Cancelled</Badge>;
+				return <Badge variant="secondary">{t("billing.cancelled")}</Badge>;
 			case "past_due":
-				return <Badge variant="warning">Past Due</Badge>;
+				return <Badge variant="warning">{t("billing.past_due")}</Badge>;
 			case "incomplete":
-				return <Badge variant="warning">Incomplete</Badge>;
+				return <Badge variant="warning">{t("billing.incomplete")}</Badge>;
 			default:
 				return <Badge variant="secondary">{subscription.status}</Badge>;
 		}
@@ -75,10 +77,12 @@ export function SubscriptionCard({ subscription }: SubscriptionCardProps) {
 					</div>
 					<div className="text-right">
 						<div className="text-2xl font-bold">
-							{subscription.price > 0 ? formatCurrency(subscription.price) : "Free"}
+							{subscription.price > 0 ? formatCurrency(subscription.price) : t("common.free")}
 						</div>
 						{subscription.price > 0 && (
-							<div className="text-sm text-gray-500">per {subscription.billing_interval}</div>
+							<div className="text-sm text-gray-500">
+								{t("billing.per_interval", { interval: subscription.billing_interval })}
+							</div>
 						)}
 					</div>
 				</div>
@@ -86,32 +90,32 @@ export function SubscriptionCard({ subscription }: SubscriptionCardProps) {
 			<CardContent className="space-y-4">
 				<div className="grid grid-cols-2 gap-4 text-sm">
 					<div>
-						<span className="font-medium text-gray-500">Status:</span>
+						<span className="font-medium text-gray-500">{t("billing.status")}</span>
 						<div className="mt-1">{subscription.status}</div>
 					</div>
 					<div>
-						<span className="font-medium text-gray-500">Weekly Quota:</span>
+						<span className="font-medium text-gray-500">{t("billing.weekly_quota")}</span>
 						<div className="mt-1">
 							{subscription.weekly_quota === -1
-								? "Unlimited"
+								? t("common.unlimited")
 								: subscription.weekly_quota.toLocaleString()}{" "}
-							queries
+							{t("billing.queries")}
 						</div>
 					</div>
 					{subscription.plan_id !== "hobby" && subscription.current_period_start && (
 						<>
 							<div>
-								<span className="font-medium text-gray-500">Current Period:</span>
+								<span className="font-medium text-gray-500">{t("billing.current_period")}</span>
 								<div className="mt-1">
 									{formatDate(subscription.current_period_start)} -{" "}
 									{formatDate(subscription.current_period_end)}
 								</div>
 							</div>
 							<div>
-								<span className="font-medium text-gray-500">Next Billing:</span>
+								<span className="font-medium text-gray-500">{t("billing.next_billing")}</span>
 								<div className="mt-1">
 									{subscription.cancel_at_period_end
-										? "Cancelled at period end"
+										? t("billing.cancelled_at_end")
 										: formatDate(subscription.current_period_end)}
 								</div>
 							</div>
@@ -127,12 +131,9 @@ export function SubscriptionCard({ subscription }: SubscriptionCardProps) {
 							className="w-full"
 							variant="outline"
 						>
-							{isManagingSubscription ? "Opening..." : "Manage Subscription & Billing"}
+							{isManagingSubscription ? t("billing.manage_opening") : t("billing.manage")}
 						</Button>
-						<p className="text-sm text-gray-500 mt-2 text-center">
-							Manage your subscription, update payment methods, view invoice history, download
-							invoices, and more
-						</p>
+						<p className="text-sm text-gray-500 mt-2 text-center">{t("billing.manage_desc")}</p>
 					</div>
 				)}
 			</CardContent>

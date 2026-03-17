@@ -1,76 +1,79 @@
 import { CONTACT, PLAN_IDS } from "@/constants/pricing";
+import i18n from "@/i18n";
 import type { PlanId, PricingPlan, PricingTier } from "@/types/pricing";
 
-const PRICING_PLANS: PricingPlan[] = [
-	{
-		id: PLAN_IDS.HOBBY,
-		name: "Hobby",
-		description: "Perfect for getting started and small projects.",
-		price: "Free",
-		quota: 50,
-		popular: false,
-		action: "register",
-		gradientFrom: "from-gray-500",
-		gradientTo: "to-yellow-500",
-		features: [
-			"50 queries per week",
-			"5 requests per minute",
-			"MCP fully supported",
-			"Semantic Search for RAG",
-			"Keyword search",
-			"Hybrid search",
-			"Community support",
-		],
-	},
-	{
-		id: PLAN_IDS.PRO,
-		name: "Pro",
-		description: "Best for professional developers and growing teams.",
-		price: "$1 / week",
-		quota: 50000,
-		popular: true,
-		action: "modal",
-		gradientFrom: "from-green-500",
-		gradientTo: "to-brand-tertiary",
-		features: [
-			"50,000 queries per week",
-			"50 requests per minute",
-			"MCP fully supported",
-			"Semantic Search for RAG",
-			"Keyword search",
-			"Hybrid search",
-			"Community support",
-			"Multiple MCP tokens",
-			"Faster response time",
-			"Usage analytics",
-		],
-	},
-	{
-		id: PLAN_IDS.ENTERPRISE,
-		name: "Enterprise",
-		description: "Advanced features for large teams and organizations.",
-		price: "Custom",
-		quota: -1,
-		popular: false,
-		action: "contact",
-		gradientFrom: "from-red-400",
-		gradientTo: "to-brand-tertiary",
-		features: [
-			"Unlimited queries",
-			"Unlimited requests per minute",
-			"MCP fully supported",
-			"Semantic Search for RAG",
-			"Keyword search",
-			"Hybrid search",
-			"Community support",
-			"Multiple MCP tokens",
-			"Faster response time",
-			"Usage analytics",
-			"Dedicated infrastructure",
-			"24/7 premium support",
-		],
-	},
-];
+function buildPricingPlans(): PricingPlan[] {
+	return [
+		{
+			id: PLAN_IDS.HOBBY,
+			name: i18n.t("plans.hobby"),
+			description: i18n.t("plans.hobby_desc"),
+			price: "Free",
+			quota: 50,
+			popular: false,
+			action: "register",
+			gradientFrom: "from-gray-500",
+			gradientTo: "to-yellow-500",
+			features: [
+				i18n.t("plans.queries_per_week", { count: 50 }),
+				i18n.t("plans.requests_per_minute", { count: 5 }),
+				i18n.t("plans.mcp_supported"),
+				i18n.t("plans.semantic_search"),
+				i18n.t("plans.keyword_search"),
+				i18n.t("plans.hybrid_search"),
+				i18n.t("plans.community_support"),
+			],
+		},
+		{
+			id: PLAN_IDS.PRO,
+			name: i18n.t("plans.pro"),
+			description: i18n.t("plans.pro_desc"),
+			price: "$1 / week",
+			quota: 50000,
+			popular: true,
+			action: "modal",
+			gradientFrom: "from-green-500",
+			gradientTo: "to-brand-tertiary",
+			features: [
+				i18n.t("plans.queries_per_week", { count: "50,000" }),
+				i18n.t("plans.requests_per_minute", { count: 50 }),
+				i18n.t("plans.mcp_supported"),
+				i18n.t("plans.semantic_search"),
+				i18n.t("plans.keyword_search"),
+				i18n.t("plans.hybrid_search"),
+				i18n.t("plans.community_support"),
+				i18n.t("plans.multiple_tokens"),
+				i18n.t("plans.faster_response"),
+				i18n.t("plans.usage_analytics"),
+			],
+		},
+		{
+			id: PLAN_IDS.ENTERPRISE,
+			name: i18n.t("plans.enterprise"),
+			description: i18n.t("plans.enterprise_desc"),
+			price: "Custom",
+			quota: -1,
+			popular: false,
+			action: "contact",
+			gradientFrom: "from-red-400",
+			gradientTo: "to-brand-tertiary",
+			features: [
+				i18n.t("plans.unlimited_queries"),
+				i18n.t("plans.unlimited_rpm"),
+				i18n.t("plans.mcp_supported"),
+				i18n.t("plans.semantic_search"),
+				i18n.t("plans.keyword_search"),
+				i18n.t("plans.hybrid_search"),
+				i18n.t("plans.community_support"),
+				i18n.t("plans.multiple_tokens"),
+				i18n.t("plans.faster_response"),
+				i18n.t("plans.usage_analytics"),
+				i18n.t("plans.dedicated_infra"),
+				i18n.t("plans.premium_support"),
+			],
+		},
+	];
+}
 
 export const getActionHref = (action: PricingPlan["action"]): string => {
 	switch (action) {
@@ -99,12 +102,12 @@ export const createPricingTier = (plan: PricingPlan): PricingTier => ({
 	href: getActionHref(plan.action),
 });
 
-export const getPricingPlans = (): PricingPlan[] => PRICING_PLANS;
+export const getPricingPlans = (): PricingPlan[] => buildPricingPlans();
 
-export const getPricingTiers = (): PricingTier[] => PRICING_PLANS.map(createPricingTier);
+export const getPricingTiers = (): PricingTier[] => buildPricingPlans().map(createPricingTier);
 
 export const getPlanById = (id: PlanId): PricingPlan | undefined => {
-	const plan = PRICING_PLANS.find((plan) => plan.id === id);
+	const plan = buildPricingPlans().find((plan) => plan.id === id);
 	if (!plan) {
 		console.warn(`Pricing plan not found: ${id}`);
 	}

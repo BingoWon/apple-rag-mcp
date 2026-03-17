@@ -2,6 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { Button } from "@/components/ui/Button";
@@ -29,6 +30,7 @@ const deleteConfirmationSchema = z.object({
 type DeleteConfirmationData = z.infer<typeof deleteConfirmationSchema>;
 
 export function DeleteAccount() {
+	const { t } = useTranslation();
 	const [isLoading, setIsLoading] = useState(false);
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
 	const { user, logout } = useAuth();
@@ -44,7 +46,7 @@ export function DeleteAccount() {
 			const response = await api.deleteAccount();
 
 			if (response.success) {
-				toast.success("Account deleted successfully.\nYou will be redirected to the homepage.");
+				toast.success(t("settings.delete_success"));
 
 				// Close dialog
 				setIsDialogOpen(false);
@@ -55,11 +57,10 @@ export function DeleteAccount() {
 					navigate("/");
 				}, 2000);
 			} else {
-				throw new Error(response.error?.message || "Failed to delete account");
+				throw new Error(response.error?.message || t("settings.delete_error"));
 			}
 		} catch (error) {
-			const errorMessage =
-				error instanceof Error ? error.message : "Failed to delete account. Please try again.";
+			const errorMessage = error instanceof Error ? error.message : t("settings.delete_error");
 			toast.error(`Error\n${errorMessage}`);
 		} finally {
 			setIsLoading(false);
@@ -74,10 +75,10 @@ export function DeleteAccount() {
 	return (
 		<Card className="border-red-200 dark:border-red-800">
 			<CardHeader>
-				<CardTitle className="text-red-600 dark:text-red-400">Delete Account</CardTitle>
-				<CardDescription>
-					Permanently delete your account and all data. This cannot be undone.
-				</CardDescription>
+				<CardTitle className="text-red-600 dark:text-red-400">
+					{t("settings.delete_title")}
+				</CardTitle>
+				<CardDescription>{t("settings.delete_desc")}</CardDescription>
 			</CardHeader>
 			<CardContent>
 				<div className="space-y-4">
@@ -85,7 +86,7 @@ export function DeleteAccount() {
 						<div className="flex items-center gap-2">
 							<span className="text-sm">⚠️</span>
 							<p className="text-sm text-red-900 dark:text-red-100 font-semibold">
-								This will permanently delete your account, tokens, and all data.
+								{t("settings.delete_warning")}
 							</p>
 						</div>
 					</div>
@@ -98,17 +99,15 @@ export function DeleteAccount() {
 									className="w-auto"
 									onClick={() => setIsDialogOpen(true)}
 								>
-									Delete My Account
+									{t("settings.delete_btn")}
 								</Button>
 							</DialogTrigger>
 							<DialogContent className="sm:max-w-md">
 								<DialogHeader>
 									<DialogTitle className="text-red-600 dark:text-red-400">
-										Delete Account
+										{t("settings.delete_title")}
 									</DialogTitle>
-									<DialogDescription>
-										This will permanently delete your account and all data.
-									</DialogDescription>
+									<DialogDescription>{t("settings.delete_desc")}</DialogDescription>
 								</DialogHeader>
 
 								<form
@@ -117,10 +116,10 @@ export function DeleteAccount() {
 								>
 									<div>
 										<p className="text-sm text-muted-foreground mb-3">
-											Type <strong>DELETE</strong> to confirm:
+											{t("settings.delete_confirm_label")}:
 										</p>
 										<Input
-											placeholder="Type DELETE to confirm"
+											placeholder={t("settings.delete_confirm_placeholder")}
 											{...confirmForm.register("confirmation")}
 											error={confirmForm.formState.errors.confirmation?.message}
 											className="font-mono"
@@ -134,14 +133,14 @@ export function DeleteAccount() {
 											onClick={handleDialogClose}
 											disabled={isLoading}
 										>
-											Cancel
+											{t("common.cancel")}
 										</Button>
 										<Button
 											type="submit"
 											variant="destructive"
 											disabled={isLoading || !confirmForm.watch("confirmation")}
 										>
-											{isLoading ? "Deleting..." : "Delete Account"}
+											{isLoading ? t("settings.deleting") : t("settings.delete_title")}
 										</Button>
 									</DialogFooter>
 								</form>

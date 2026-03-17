@@ -1,10 +1,11 @@
 import { memo, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import type { TimeRange, TimeRangeSelectorProps } from "./types";
 
-const TIME_RANGE_OPTIONS = [
-	{ key: "24h" as const, label: "Last 24h" },
-	{ key: "7d" as const, label: "Last 7d" },
-	{ key: "30d" as const, label: "Last 30d" },
+const TIME_RANGE_KEYS = [
+	{ key: "24h" as const, labelKey: "chart.last_24h" },
+	{ key: "7d" as const, labelKey: "chart.last_7d" },
+	{ key: "30d" as const, labelKey: "chart.last_30d" },
 ] as const;
 
 /**
@@ -12,6 +13,8 @@ const TIME_RANGE_OPTIONS = [
  * 优雅的交互设计，支持键盘操作
  */
 const TimeRangeSelector = memo<TimeRangeSelectorProps>(({ timeRange, onTimeRangeChange }) => {
+	const { t } = useTranslation();
+
 	const handleClick = useCallback(
 		(range: TimeRange) => {
 			onTimeRangeChange(range);
@@ -32,7 +35,7 @@ const TimeRangeSelector = memo<TimeRangeSelectorProps>(({ timeRange, onTimeRange
 
 	return (
 		<div className="flex gap-2">
-			{TIME_RANGE_OPTIONS.map(({ key, label }) => (
+			{TIME_RANGE_KEYS.map(({ key, labelKey }) => (
 				<div
 					key={key}
 					role="button"
@@ -49,7 +52,7 @@ const TimeRangeSelector = memo<TimeRangeSelectorProps>(({ timeRange, onTimeRange
 					}}
 					onKeyDown={(e) => handleKeyDown(e, key)}
 				>
-					{label}
+					{t(labelKey)}
 				</div>
 			))}
 		</div>

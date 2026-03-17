@@ -1,4 +1,5 @@
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/Button";
 
 export interface PaginationControlsProps {
@@ -28,6 +29,7 @@ export function PaginationControls({
 	showPageSizeSelector = true,
 	showInfo = true,
 }: PaginationControlsProps) {
+	const { t } = useTranslation();
 	// Always render pagination controls, even for single page or no data
 	// This provides consistent UI and shows current pagination state
 
@@ -74,7 +76,7 @@ export function PaginationControls({
 			<div className="flex items-center gap-4">
 				{showPageSizeSelector && (
 					<div className="flex items-center gap-2">
-						<span className="text-sm text-muted-foreground">Show</span>
+						<span className="text-sm text-muted-foreground">{t("pagination.show")}</span>
 						<div className="flex items-center gap-1">
 							{pageSizeOptions.map((size) => (
 								<Button
@@ -89,15 +91,17 @@ export function PaginationControls({
 								</Button>
 							))}
 						</div>
-						<span className="text-sm text-muted-foreground">per page</span>
+						<span className="text-sm text-muted-foreground">{t("pagination.per_page")}</span>
 					</div>
 				)}
 
 				{showInfo && (
 					<div className="text-sm text-muted-foreground">
-						{total > 0
-							? `Showing ${startIndex} to ${endIndex} of ${total} entries`
-							: `Showing 0 to 0 of 0 entries`}
+						{t("common.showing_range", {
+							from: total > 0 ? startIndex : 0,
+							to: total > 0 ? endIndex : 0,
+							total,
+						})}
 					</div>
 				)}
 			</div>
@@ -112,7 +116,7 @@ export function PaginationControls({
 					className="flex items-center gap-1"
 				>
 					<IconChevronLeft className="h-4 w-4" />
-					Previous
+					{t("common.previous")}
 				</Button>
 
 				<div className="flex items-center space-x-1">
@@ -137,7 +141,7 @@ export function PaginationControls({
 					disabled={currentPage === totalPages || isLoading}
 					className="flex items-center gap-1"
 				>
-					Next
+					{t("common.next")}
 					<IconChevronRight className="h-4 w-4" />
 				</Button>
 			</div>

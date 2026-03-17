@@ -3,6 +3,8 @@
  * Converts technical error codes to user-friendly messages
  */
 
+import i18n from "@/i18n";
+
 export interface FriendlyError {
 	title: string;
 	message: string;
@@ -10,180 +12,137 @@ export interface FriendlyError {
 	action?: string;
 }
 
-/**
- * Error code to friendly message mapping
- */
-const ERROR_MESSAGES: Record<string, FriendlyError> = {
-	// Authentication errors
+interface ErrorKeyMapping {
+	titleKey: string;
+	messageKey: string;
+	suggestionKey?: string;
+}
+
+const ERROR_KEY_MAP: Record<string, ErrorKeyMapping> = {
 	INVALID_CREDENTIALS: {
-		title: "Login Failed",
-		message: "Invalid email or password",
-		suggestion: "Please check your credentials and try again",
-		action: "Retry",
+		titleKey: "errors.invalid_credentials_title",
+		messageKey: "errors.invalid_credentials",
+		suggestionKey: "errors.invalid_credentials_suggestion",
 	},
-
 	TOKEN_EXPIRED: {
-		title: "Session Expired",
-		message: "Your session has expired",
-		suggestion: "Please log in again to continue",
-		action: "Login",
+		titleKey: "errors.token_expired_title",
+		messageKey: "errors.token_expired",
+		suggestionKey: "errors.token_expired_suggestion",
 	},
-
 	INSUFFICIENT_PERMISSIONS: {
-		title: "Access Denied",
-		message: "You don't have permission for this action",
-		suggestion: "Contact support or upgrade your plan",
-		action: "Contact Support",
+		titleKey: "errors.access_denied_title",
+		messageKey: "errors.access_denied",
+		suggestionKey: "errors.access_denied_suggestion",
 	},
-
 	USER_NOT_FOUND: {
-		title: "User Not Found",
-		message: "No account found with this email",
-		suggestion: "Check your email or create an account",
-		action: "Sign Up",
+		titleKey: "errors.user_not_found_title",
+		messageKey: "errors.user_not_found",
+		suggestionKey: "errors.user_not_found_suggestion",
 	},
-
 	EMAIL_ALREADY_EXISTS: {
-		title: "Email Taken",
-		message: "This email is already registered",
-		suggestion: "Use a different email or reset password",
-		action: "Reset Password",
+		titleKey: "errors.email_taken_title",
+		messageKey: "errors.email_taken",
+		suggestionKey: "errors.email_taken_suggestion",
 	},
-
-	// Request errors
 	INVALID_REQUEST: {
-		title: "Invalid Request",
-		message: "The request format is incorrect",
-		suggestion: "Please check your input and try again",
-		action: "Retry",
+		titleKey: "errors.invalid_request_title",
+		messageKey: "errors.invalid_request",
+		suggestionKey: "errors.invalid_request_suggestion",
 	},
-
 	RESOURCE_NOT_FOUND: {
-		title: "Not Found",
-		message: "The requested resource was not found",
-		suggestion: "Check the URL or return to homepage",
-		action: "Go Home",
+		titleKey: "errors.not_found_title",
+		messageKey: "errors.not_found",
+		suggestionKey: "errors.not_found_suggestion",
 	},
-
 	RESOURCE_ALREADY_EXISTS: {
-		title: "Already Exists",
-		message: "This resource already exists",
-		suggestion: "Use a different name or check for duplicates",
-		action: "Try Different Name",
+		titleKey: "errors.already_exists_title",
+		messageKey: "errors.already_exists",
+		suggestionKey: "errors.already_exists_suggestion",
 	},
-
-	// Quota and rate limiting errors
 	QUOTA_EXCEEDED: {
-		title: "Quota Exceeded",
-		message: "You've reached your usage limit",
-		suggestion: "Upgrade your plan for more usage",
-		action: "Upgrade Plan",
+		titleKey: "errors.quota_exceeded_title",
+		messageKey: "errors.quota_exceeded",
+		suggestionKey: "errors.quota_exceeded_suggestion",
 	},
-
 	RATE_LIMIT_EXCEEDED: {
-		title: "Too Many Requests",
-		message: "Please slow down and try again",
-		suggestion: "Wait a moment before making more requests",
-		action: "Wait and Retry",
+		titleKey: "errors.rate_limit_title",
+		messageKey: "errors.rate_limit",
+		suggestionKey: "errors.rate_limit_suggestion",
 	},
-
-	// System errors
 	INTERNAL_ERROR: {
-		title: "Server Error",
-		message: "Something went wrong on our end",
-		suggestion: "Please try again or contact support",
-		action: "Contact Support",
+		titleKey: "errors.server_error_title",
+		messageKey: "errors.server_error",
+		suggestionKey: "errors.server_error_suggestion",
 	},
-
 	NETWORK_ERROR: {
-		title: "Connection Error",
-		message: "Unable to connect to server",
-		suggestion: "Check your internet connection",
-		action: "Retry",
+		titleKey: "errors.network_error_title",
+		messageKey: "errors.network_error",
+		suggestionKey: "errors.network_error_suggestion",
 	},
-
 	TIMEOUT_ERROR: {
-		title: "Request Timeout",
-		message: "The request took too long",
-		suggestion: "Please try again",
-		action: "Retry",
+		titleKey: "errors.timeout_title",
+		messageKey: "errors.timeout",
+		suggestionKey: "errors.timeout_suggestion",
 	},
-
-	// MCP Token errors
 	INVALID_MCP_TOKEN: {
-		title: "Invalid Token",
-		message: "Your MCP token is invalid or expired",
-		suggestion: "Generate a new token",
-		action: "Generate Token",
+		titleKey: "errors.invalid_token_title",
+		messageKey: "errors.invalid_token",
+		suggestionKey: "errors.invalid_token_suggestion",
 	},
-
 	MCP_TOKEN_EXPIRED: {
-		title: "Token Expired",
-		message: "Your MCP token has expired",
-		suggestion: "Generate a new token to continue",
-		action: "Generate New Token",
+		titleKey: "errors.mcp_token_expired_title",
+		messageKey: "errors.mcp_token_expired",
+		suggestionKey: "errors.mcp_token_expired_suggestion",
 	},
-
-	// Search errors
 	SEARCH_FAILED: {
-		title: "Search Failed",
-		message: "Search service is temporarily unavailable",
-		suggestion: "Please try again later",
-		action: "Retry Search",
+		titleKey: "errors.search_failed_title",
+		messageKey: "errors.search_failed",
+		suggestionKey: "errors.search_failed_suggestion",
 	},
-
 	EMPTY_QUERY: {
-		title: "Empty Search",
-		message: "Please enter a search query",
-		suggestion: "Type keywords to search",
-		action: "Enter Keywords",
+		titleKey: "errors.empty_query_title",
+		messageKey: "errors.empty_query",
+		suggestionKey: "errors.empty_query_suggestion",
 	},
-
-	// Payment errors
 	PAYMENT_FAILED: {
-		title: "Payment Failed",
-		message: "Payment could not be processed",
-		suggestion: "Check your payment details and try again",
-		action: "Retry Payment",
+		titleKey: "errors.payment_failed_title",
+		messageKey: "errors.payment_failed",
+		suggestionKey: "errors.payment_failed_suggestion",
 	},
-
 	SUBSCRIPTION_EXPIRED: {
-		title: "Subscription Expired",
-		message: "Your subscription has expired",
-		suggestion: "Renew to continue using all features",
-		action: "Renew Now",
+		titleKey: "errors.subscription_expired_title",
+		messageKey: "errors.subscription_expired",
+		suggestionKey: "errors.subscription_expired_suggestion",
 	},
-
-	// OAuth errors
 	OAUTH_FAILED: {
-		title: "OAuth Failed",
-		message: "Third-party login is temporarily unavailable",
-		suggestion: "Try email login instead",
-		action: "Use Email Login",
+		titleKey: "errors.oauth_failed_title",
+		messageKey: "errors.oauth_failed",
+		suggestionKey: "errors.oauth_failed_suggestion",
 	},
-
 	OAUTH_CANCELLED: {
-		title: "Login Cancelled",
-		message: "You cancelled the login process",
-		suggestion: "Try again or use a different method",
-		action: "Try Again",
+		titleKey: "errors.oauth_cancelled_title",
+		messageKey: "errors.oauth_cancelled",
+		suggestionKey: "errors.oauth_cancelled_suggestion",
 	},
-
-	// Verification errors
 	EMAIL_NOT_VERIFIED: {
-		title: "Email Not Verified",
-		message: "Please verify your email address",
-		suggestion: "Check your inbox for verification link",
-		action: "Resend Email",
+		titleKey: "errors.email_not_verified_title",
+		messageKey: "errors.email_not_verified",
+		suggestionKey: "errors.email_not_verified_suggestion",
 	},
-
 	VERIFICATION_FAILED: {
-		title: "Verification Failed",
-		message: "Verification link is invalid or expired",
-		suggestion: "Request a new verification email",
-		action: "Resend",
+		titleKey: "errors.verification_failed_title",
+		messageKey: "errors.verification_failed",
+		suggestionKey: "errors.verification_failed_suggestion",
 	},
 };
+
+function resolveError(mapping: ErrorKeyMapping): FriendlyError {
+	return {
+		title: i18n.t(mapping.titleKey),
+		message: i18n.t(mapping.messageKey),
+		suggestion: mapping.suggestionKey ? i18n.t(mapping.suggestionKey) : undefined,
+	};
+}
 
 /**
  * Convert technical error codes to user-friendly error messages
@@ -196,8 +155,8 @@ export function getFriendlyError(
 	fallbackMessage?: string,
 ): FriendlyError {
 	// Return mapped error if available
-	if (errorCode && ERROR_MESSAGES[errorCode]) {
-		return ERROR_MESSAGES[errorCode];
+	if (errorCode && ERROR_KEY_MAP[errorCode]) {
+		return resolveError(ERROR_KEY_MAP[errorCode]);
 	}
 
 	// Try to infer from common error patterns
@@ -211,7 +170,7 @@ export function getFriendlyError(
 		lowerFallback.includes("credential") ||
 		lowerFallback.includes("login")
 	) {
-		return ERROR_MESSAGES.INVALID_CREDENTIALS;
+		return resolveError(ERROR_KEY_MAP.INVALID_CREDENTIALS);
 	}
 
 	// Token-related error inference
@@ -221,7 +180,7 @@ export function getFriendlyError(
 		lowerFallback.includes("token") ||
 		lowerFallback.includes("expired")
 	) {
-		return ERROR_MESSAGES.TOKEN_EXPIRED;
+		return resolveError(ERROR_KEY_MAP.TOKEN_EXPIRED);
 	}
 
 	// Permission-related error inference
@@ -231,7 +190,7 @@ export function getFriendlyError(
 		lowerFallback.includes("permission") ||
 		lowerFallback.includes("unauthorized")
 	) {
-		return ERROR_MESSAGES.INSUFFICIENT_PERMISSIONS;
+		return resolveError(ERROR_KEY_MAP.INSUFFICIENT_PERMISSIONS);
 	}
 
 	// Network-related error inference
@@ -241,15 +200,14 @@ export function getFriendlyError(
 		lowerFallback.includes("network") ||
 		lowerFallback.includes("connection")
 	) {
-		return ERROR_MESSAGES.NETWORK_ERROR;
+		return resolveError(ERROR_KEY_MAP.NETWORK_ERROR);
 	}
 
 	// Default generic error message
 	return {
-		title: "Error",
-		message: fallbackMessage || "Something went wrong",
-		suggestion: "Please try again or contact support",
-		action: "Retry",
+		title: i18n.t("errors.generic_title"),
+		message: fallbackMessage || i18n.t("errors.generic"),
+		suggestion: i18n.t("errors.generic_suggestion"),
 	};
 }
 

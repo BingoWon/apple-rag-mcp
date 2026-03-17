@@ -1,5 +1,6 @@
 import { IconCheck } from "@tabler/icons-react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ModalBody, ModalContent, useModal } from "@/components/ui/animated-modal";
 import { Button } from "@/components/ui/Button";
 import { PRO_PRICING_OPTIONS } from "@/constants/pricing";
@@ -35,6 +36,7 @@ const getDiscountBadgeColor = (index: number): string => {
 };
 
 export function PricingModal({ planName }: PricingModalProps) {
+	const { t } = useTranslation();
 	const { setOpen } = useModal();
 	const [selectedOption, setSelectedOption] = useState<PricingOption["id"]>("weekly");
 	const [isLoading, setIsLoading] = useState(false);
@@ -68,10 +70,10 @@ export function PricingModal({ planName }: PricingModalProps) {
 			<ModalContent className="space-y-6">
 				{/* Header */}
 				<div className="text-center">
-					<h2 className="text-2xl font-semibold text-foreground">Choose Your {planName} Plan</h2>
-					<p className="text-sm text-muted-foreground mt-2">
-						Select the billing cycle that works best for you
-					</p>
+					<h2 className="text-2xl font-semibold text-foreground">
+						{t("pricing.choose_plan", { plan: planName })}
+					</h2>
+					<p className="text-sm text-muted-foreground mt-2">{t("pricing.choose_cycle")}</p>
 				</div>
 
 				{/* Pricing Options */}
@@ -103,7 +105,7 @@ export function PricingModal({ planName }: PricingModalProps) {
 							>
 								{option.popular && (
 									<span className="absolute top-0 left-4 -translate-y-1/2 z-10 bg-yellow-500 text-white px-3 py-1 text-xs font-semibold rounded-full whitespace-nowrap shadow-lg">
-										Most Popular
+										{t("pricing.most_popular")}
 									</span>
 								)}
 
@@ -144,7 +146,7 @@ export function PricingModal({ planName }: PricingModalProps) {
 				{/* Action Buttons */}
 				<div className="flex gap-3 pt-5 border-t border-border">
 					<Button variant="outline" onClick={handleClose} className="flex-1">
-						Cancel
+						{t("common.cancel")}
 					</Button>
 					<Button
 						variant="primary"
@@ -153,7 +155,7 @@ export function PricingModal({ planName }: PricingModalProps) {
 						disabled={!selectedPricingOption || isLoading}
 						loading={isLoading}
 					>
-						{isLoading ? "Processing..." : "Subscribe Now"}
+						{isLoading ? t("common.processing") : t("pricing.subscribe_now")}
 					</Button>
 				</div>
 			</ModalContent>

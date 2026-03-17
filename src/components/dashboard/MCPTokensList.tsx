@@ -8,6 +8,7 @@ import {
 } from "@tabler/icons-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/Button";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import { DropdownMenu, type DropdownMenuItem } from "@/components/ui/DropdownMenu";
@@ -27,6 +28,7 @@ interface MCPTokensListProps {
 }
 
 export function MCPTokensList({ tokens, onRefresh, isLoading = false }: MCPTokensListProps) {
+	const { t } = useTranslation();
 	const { updateMCPToken, deleteMCPToken } = useDashboardStore();
 	const [visibleTokens, setVisibleTokens] = useState<Set<string>>(new Set());
 
@@ -35,7 +37,7 @@ export function MCPTokensList({ tokens, onRefresh, isLoading = false }: MCPToken
 		onRefresh,
 		itemType: "MCP Token",
 		title: "Delete MCP Token",
-		successMessage: (name) => `MCP Token Deleted\n"${name}" has been deleted successfully.`,
+		successMessage: (name) => t("tokens.deleted_success", { name }),
 		errorMessage: "Error\nFailed to delete MCP token",
 	});
 
@@ -69,7 +71,7 @@ export function MCPTokensList({ tokens, onRefresh, isLoading = false }: MCPToken
 
 	const handleAddToCursor = (token: MCPToken) => {
 		MCPConfigService.openCursorLink(token.mcp_token);
-		toast.success("Look for the Cursor window and click 'Install' to add MCP.");
+		toast.success(t("tokens.cursor_hint"));
 	};
 
 	const handleCopyForClient = async (token: MCPToken, clientType: string, clientName: string) => {
@@ -85,19 +87,19 @@ export function MCPTokensList({ tokens, onRefresh, isLoading = false }: MCPToken
 				| "generic",
 		});
 		await navigator.clipboard.writeText(configJson);
-		toast.success(`${clientName} configuration copied to clipboard!`);
+		toast.success(t("tokens.config_copied", { client: clientName }));
 	};
 
 	const handleInstallVSCode = (token: MCPToken) => {
 		const installUrl = MCPConfigService.generateVSCodeInstallUrl(token.mcp_token);
 		window.open(installUrl, "_blank");
-		toast.success("Look for the VS Code window and click 'Install' to add MCP.");
+		toast.success(t("tokens.vscode_hint"));
 	};
 
 	const handleInstallVSCodeInsiders = (token: MCPToken) => {
 		const installUrl = MCPConfigService.generateVSCodeInsidersInstallUrl(token.mcp_token);
 		window.open(installUrl, "_blank");
-		toast.success("Look for the VS Code Insiders window and click 'Install' to add MCP.");
+		toast.success(t("tokens.vscode_insiders_hint"));
 	};
 
 	// 使用统一的时间处理工具库
@@ -107,7 +109,7 @@ export function MCPTokensList({ tokens, onRefresh, isLoading = false }: MCPToken
 	const columns: DataTableColumn[] = [
 		{
 			key: "name",
-			label: "Name",
+			label: t("common.name"),
 			render: (_, row: MCPToken) => (
 				<div className="max-w-xs">
 					<EditableName id={row.id} initialName={row.name} onUpdate={updateMCPToken} type="token" />
@@ -116,7 +118,7 @@ export function MCPTokensList({ tokens, onRefresh, isLoading = false }: MCPToken
 		},
 		{
 			key: "mcp_token",
-			label: "Token",
+			label: t("tokens.token"),
 			render: (_, row: MCPToken) => (
 				<div className="space-y-2">
 					<div className="flex items-center space-x-2">
@@ -128,7 +130,7 @@ export function MCPTokensList({ tokens, onRefresh, isLoading = false }: MCPToken
 								size="icon"
 								variant="ghost"
 								onClick={() => toggleTokenVisibility(row.id)}
-								title={visibleTokens.has(row.id) ? "Hide token" : "Show token"}
+								title={visibleTokens.has(row.id) ? t("tokens.hide_token") : t("tokens.show_token")}
 								className="text-muted hover:text-light"
 							>
 								{visibleTokens.has(row.id) ? (
@@ -141,7 +143,7 @@ export function MCPTokensList({ tokens, onRefresh, isLoading = false }: MCPToken
 								size="icon"
 								variant="ghost"
 								onClick={() => handleCopyMcpToken(row)}
-								title="Copy token"
+								title={t("tokens.copy_token")}
 								className="text-muted hover:text-light"
 							>
 								<IconClipboard className="h-4 w-4" />
@@ -153,17 +155,17 @@ export function MCPTokensList({ tokens, onRefresh, isLoading = false }: MCPToken
 		},
 		{
 			key: "created_at",
-			label: "Created",
+			label: t("common.created"),
 			render: (value) => (
 				<div className="text-sm text-muted-foreground select-none">{formatDate(value)}</div>
 			),
 		},
 		{
 			key: "last_used_at",
-			label: "Last Used",
+			label: t("tokens.last_used"),
 			render: (value) => (
 				<div className="text-sm text-muted-foreground select-none">
-					{value ? formatDate(value) : "Never"}
+					{value ? formatDate(value) : t("common.never")}
 				</div>
 			),
 		},
@@ -174,13 +176,13 @@ export function MCPTokensList({ tokens, onRefresh, isLoading = false }: MCPToken
 				const menuItems: DropdownMenuItem[] = [
 					{
 						key: "copy-json",
-						label: "Copy JSON",
+						label: t("tokens.copy_json"),
 						icon: <IconClipboard className="h-4 w-4" />,
 						onClick: () => handleCopyMcpConfig(row),
 					},
 					{
 						key: "add-to-cursor",
-						label: "Add to Cursor",
+						label: t("tokens.add_cursor"),
 						icon: (
 							<img
 								src="https://cursor.com/_next/static/media/placeholder-logo.da8a9d2b.webp"
@@ -194,7 +196,7 @@ export function MCPTokensList({ tokens, onRefresh, isLoading = false }: MCPToken
 					},
 					{
 						key: "copy-for-augmentcode",
-						label: "Copy for Augment Code",
+						label: t("tokens.copy_augment"),
 						icon: (
 							<img
 								src="https://www.augmentcode.com/favicon.ico"
@@ -208,7 +210,7 @@ export function MCPTokensList({ tokens, onRefresh, isLoading = false }: MCPToken
 					},
 					{
 						key: "copy-for-cline",
-						label: "Copy for Cline",
+						label: t("tokens.copy_cline"),
 						icon: (
 							<img
 								src="https://cline.bot/assets/branding/favicons/favicon-32x32.png"
@@ -222,7 +224,7 @@ export function MCPTokensList({ tokens, onRefresh, isLoading = false }: MCPToken
 					},
 					{
 						key: "copy-for-roocode",
-						label: "Copy for Roo Code",
+						label: t("tokens.copy_roo"),
 						icon: (
 							<img
 								src="https://roocode.com/favicon.ico"
@@ -236,7 +238,7 @@ export function MCPTokensList({ tokens, onRefresh, isLoading = false }: MCPToken
 					},
 					{
 						key: "install-vscode",
-						label: "Install in VS Code",
+						label: t("tokens.install_vscode"),
 						icon: (
 							<img
 								src="https://api.iconify.design/vscode-icons:file-type-vscode.svg"
@@ -250,7 +252,7 @@ export function MCPTokensList({ tokens, onRefresh, isLoading = false }: MCPToken
 					},
 					{
 						key: "install-vscode-insiders",
-						label: "Install in VS Code Insiders",
+						label: t("tokens.install_vscode_insiders"),
 						icon: (
 							<img
 								src="https://api.iconify.design/vscode-icons:file-type-vscode-insiders.svg"
@@ -264,7 +266,7 @@ export function MCPTokensList({ tokens, onRefresh, isLoading = false }: MCPToken
 					},
 					{
 						key: "delete",
-						label: "Delete",
+						label: t("common.delete"),
 						icon: <IconTrash className="h-4 w-4" />,
 						onClick: () => handleDeleteClick(row.id, row.name),
 						variant: "destructive" as const,
@@ -302,7 +304,7 @@ export function MCPTokensList({ tokens, onRefresh, isLoading = false }: MCPToken
 	if (isLoading) {
 		return (
 			<div className="flex items-center justify-center py-12">
-				<LoaderFive text="Loading MCP tokens..." />
+				<LoaderFive text={t("tokens.loading")} />
 			</div>
 		);
 	}
@@ -314,10 +316,10 @@ export function MCPTokensList({ tokens, onRefresh, isLoading = false }: MCPToken
 				<div className="mx-auto h-12 w-12 text-gray-500 dark:text-gray-400">
 					<IconKey className="h-12 w-12" />
 				</div>
-				<h3 className="mt-2 text-sm font-medium text-gray-100 dark:text-gray-100">No MCP tokens</h3>
-				<p className="mt-1 text-sm text-gray-400 dark:text-gray-400">
-					Get started by creating a new MCP token.
-				</p>
+				<h3 className="mt-2 text-sm font-medium text-gray-100 dark:text-gray-100">
+					{t("tokens.empty")}
+				</h3>
+				<p className="mt-1 text-sm text-gray-400 dark:text-gray-400">{t("tokens.empty_desc")}</p>
 			</div>
 		);
 	}

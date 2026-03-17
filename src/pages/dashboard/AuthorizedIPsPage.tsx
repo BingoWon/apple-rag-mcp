@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { AuthorizedIPsList } from "@/components/dashboard/AuthorizedIPsList";
 import {
@@ -40,6 +41,7 @@ interface AuthorizedIP {
 }
 
 export default function AuthorizedIPsPage() {
+	const { t } = useTranslation();
 	const [ips, setIPs] = useState<AuthorizedIP[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
 	const [isCreating, setIsCreating] = useState(false);
@@ -69,11 +71,11 @@ export default function AuthorizedIPsPage() {
 				setIPs(Array.isArray(response.data) ? response.data : []);
 			}
 		} catch (_error) {
-			toast.error("Failed to load authorized IPs");
+			toast.error(t("ips.load_error"));
 		} finally {
 			setIsLoading(false);
 		}
-	}, []);
+	}, [t]);
 
 	useEffect(() => {
 		loadIPs();
@@ -92,16 +94,16 @@ export default function AuthorizedIPsPage() {
 					total_ips: ips.length + 1,
 				});
 
-				toast.success(`Authorized IP Added\n"${data.name}" has been added successfully.`);
+				toast.success(t("ips.added_success", { name: data.name }));
 				form.reset();
 				closeModal?.(); // Close modal on success
 				loadIPs();
 			} else {
-				const errorMessage = response.error?.message || "Failed to create authorized IP";
+				const errorMessage = response.error?.message || t("ips.create_error");
 				toast.error(errorMessage);
 			}
 		} catch (error) {
-			const errorMessage = error instanceof Error ? error.message : "Failed to add authorized IP";
+			const errorMessage = error instanceof Error ? error.message : t("ips.create_error");
 			toast.error(errorMessage);
 		} finally {
 			setIsCreating(false);
@@ -140,10 +142,8 @@ export default function AuthorizedIPsPage() {
 		<div className="space-y-6">
 			{/* Header */}
 			<div>
-				<h1 className="text-2xl font-bold text-light">Authorized IP Addresses</h1>
-				<p className="mt-1 text-sm text-muted">
-					Configure IP addresses for automatic authentication with MCP without tokens
-				</p>
+				<h1 className="text-2xl font-bold text-light">{t("ips.title")}</h1>
+				<p className="mt-1 text-sm text-muted">{t("ips.subtitle")}</p>
 			</div>
 
 			{/* Current IP Info */}
@@ -155,13 +155,10 @@ export default function AuthorizedIPsPage() {
 						</div>
 						<div className="ml-3">
 							<h3 className="text-sm font-medium text-light">
-								Your Current IP Address: <span className="font-mono text-brand">{currentIP}</span>
+								{t("ips.current_ip")} <span className="font-mono text-brand">{currentIP}</span>
 							</h3>
 							<div className="mt-2 text-sm text-muted">
-								<p>
-									When connecting from authorized IPs, you won't need to provide MCP tokens. You'll
-									still get the same features and rate limits as your subscription plan.
-								</p>
+								<p>{t("ips.current_ip_desc")}</p>
 							</div>
 						</div>
 					</div>
@@ -172,12 +169,12 @@ export default function AuthorizedIPsPage() {
 			<Card>
 				<CardHeader>
 					<div className="flex items-center justify-between">
-						<CardTitle>Your Authorized IPs ({ips.length}/10)</CardTitle>
+						<CardTitle>{t("ips.your_ips", { count: ips.length })}</CardTitle>
 						<Modal>
 							<ModalTrigger>
 								<Button variant="primary" disabled={ips.length >= 10}>
 									<IconSquareRoundedPlus className="h-4 w-4 mr-2" />
-									Add IP Address
+									{t("ips.add")}
 								</Button>
 							</ModalTrigger>
 							<AddIPModal
@@ -206,10 +203,7 @@ export default function AuthorizedIPsPage() {
 				<Card>
 					<CardContent className="p-4">
 						<div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-							<p className="text-sm text-yellow-700 dark:text-yellow-300">
-								Maximum of 10 authorized IP addresses reached. Delete an existing IP to add a new
-								one.
-							</p>
+							<p className="text-sm text-yellow-700 dark:text-yellow-300">{t("ips.max_reached")}</p>
 						</div>
 					</CardContent>
 				</Card>
@@ -218,13 +212,13 @@ export default function AuthorizedIPsPage() {
 			{/* Usage Instructions */}
 			<Card>
 				<CardContent className="p-4">
-					<h3 className="text-sm font-medium text-light mb-2">How IP Authentication Works:</h3>
+					<h3 className="text-sm font-medium text-light mb-2">{t("ips.how_title")}</h3>
 					<ul className="text-sm text-muted space-y-1">
-						<li>• Add up to 10 IP addresses (home, office, mobile hotspot, etc.)</li>
-						<li>• When using MCP from these IPs, authentication is automatic</li>
-						<li>• No need to configure or remember MCP tokens</li>
-						<li>• You still get the same features and rate limits as your subscription plan</li>
-						<li>• IP and token authentication work independently - you can use either method</li>
+						<li>• {t("ips.how_1")}</li>
+						<li>• {t("ips.how_2")}</li>
+						<li>• {t("ips.how_3")}</li>
+						<li>• {t("ips.how_4")}</li>
+						<li>• {t("ips.how_5")}</li>
 					</ul>
 				</CardContent>
 			</Card>
@@ -241,6 +235,7 @@ interface AddIPModalProps {
 }
 
 function AddIPModal({ currentIP, form, isCreating, onSubmit, fillCurrentIP }: AddIPModalProps) {
+	const { t } = useTranslation();
 	const { setOpen } = useModal();
 
 	const handleClose = () => {
@@ -253,10 +248,8 @@ function AddIPModal({ currentIP, form, isCreating, onSubmit, fillCurrentIP }: Ad
 			<ModalContent className="space-y-6">
 				{/* Header */}
 				<div className="text-center">
-					<h2 className="text-xl font-semibold text-foreground">Add Authorized IP</h2>
-					<p className="text-sm text-muted-foreground mt-2">
-						Add a new IP address for automatic authentication
-					</p>
+					<h2 className="text-xl font-semibold text-foreground">{t("ips.add_title")}</h2>
+					<p className="text-sm text-muted-foreground mt-2">{t("ips.add_subtitle")}</p>
 				</div>
 
 				<form
@@ -271,12 +264,12 @@ function AddIPModal({ currentIP, form, isCreating, onSubmit, fillCurrentIP }: Ad
 								htmlFor="ip_address"
 								className="block text-sm font-medium text-foreground mb-2"
 							>
-								IP Address
+								{t("ips.ip_label")}
 							</label>
 							<div className="inline-flex items-center gap-2">
 								<Input
 									id="ip_address"
-									placeholder="192.168.1.100"
+									placeholder={t("ips.ip_placeholder")}
 									{...form.register("ip_address")}
 									error={form.formState.errors.ip_address?.message}
 									className="w-auto min-w-[200px]"
@@ -289,8 +282,8 @@ function AddIPModal({ currentIP, form, isCreating, onSubmit, fillCurrentIP }: Ad
 									className="text-sm p-0 h-auto"
 								>
 									{currentIP && currentIP !== "Unable to detect"
-										? `Use Current: ${currentIP}`
-										: "Use Current IP"}
+										? t("ips.use_current", { ip: currentIP })
+										: t("ips.use_current_fallback")}
 								</Button>
 							</div>
 							{form.formState.errors.ip_address && (
@@ -301,8 +294,8 @@ function AddIPModal({ currentIP, form, isCreating, onSubmit, fillCurrentIP }: Ad
 						</div>
 
 						<Input
-							label="Name"
-							placeholder="Enter a name for this IP (e.g., Home Office, Mobile)"
+							label={t("ips.name_label")}
+							placeholder={t("ips.name_placeholder")}
 							{...form.register("name")}
 							error={form.formState.errors.name?.message}
 						/>
@@ -316,7 +309,7 @@ function AddIPModal({ currentIP, form, isCreating, onSubmit, fillCurrentIP }: Ad
 							disabled={isCreating}
 							className="flex-1"
 						>
-							Cancel
+							{t("common.cancel")}
 						</Button>
 						<Button
 							type="submit"
@@ -325,7 +318,7 @@ function AddIPModal({ currentIP, form, isCreating, onSubmit, fillCurrentIP }: Ad
 							disabled={!form.formState.isValid}
 							className="flex-1"
 						>
-							Add Authorized IP
+							{t("ips.add_btn")}
 						</Button>
 					</div>
 				</form>

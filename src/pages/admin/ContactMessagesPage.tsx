@@ -4,6 +4,7 @@
  */
 import { IconEye, IconEyeCheck, IconLock, IconMessageCircle } from "@tabler/icons-react";
 import { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { MessageReplyDialog } from "@/components/admin/MessageReplyDialog";
 import { Button } from "@/components/ui/Button";
 import { api } from "@/lib/api";
@@ -28,6 +29,7 @@ interface MessageStats {
 }
 
 export default function AdminContactMessagesPage() {
+	const { t } = useTranslation();
 	const [messages, setMessages] = useState<AdminContactMessage[]>([]);
 	const [total, setTotal] = useState(0);
 	const [stats, setStats] = useState<MessageStats>({
@@ -107,7 +109,7 @@ export default function AdminContactMessagesPage() {
 					className="bg-gray-200 dark:bg-gray-800 text-gray-500 dark:text-gray-400 cursor-not-allowed hover:bg-gray-200 dark:hover:bg-gray-800"
 				>
 					<IconLock className="w-4 h-4 mr-1.5" />
-					Read-only
+					{t("admin.read_only")}
 				</Button>
 			);
 		}
@@ -121,7 +123,7 @@ export default function AdminContactMessagesPage() {
 					className="bg-blue-600 text-white hover:bg-blue-700 whitespace-nowrap"
 				>
 					<IconMessageCircle className="w-4 h-4 mr-1.5" />
-					Reply
+					{t("admin.reply")}
 				</Button>
 			);
 		}
@@ -136,7 +138,7 @@ export default function AdminContactMessagesPage() {
 						className="bg-green-600 text-white hover:bg-green-700 whitespace-nowrap"
 					>
 						<IconEyeCheck className="w-4 h-4 mr-1.5" />
-						Read
+						{t("admin.read")}
 					</Button>
 					<span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
 						{formatDateCompact(message.replied_at!)}
@@ -154,7 +156,7 @@ export default function AdminContactMessagesPage() {
 					className="bg-orange-600 text-white hover:bg-orange-700 whitespace-nowrap"
 				>
 					<IconEye className="w-4 h-4 mr-1.5" />
-					Unread
+					{t("admin.unread")}
 				</Button>
 				<span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
 					{formatDateCompact(message.replied_at!)}
@@ -172,9 +174,11 @@ export default function AdminContactMessagesPage() {
 			{/* Header */}
 			<div className="flex items-center justify-between">
 				<div>
-					<h1 className="text-2xl font-bold text-gray-900 dark:text-white">Contact Messages</h1>
+					<h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+						{t("admin.contact_messages")}
+					</h1>
 					<p className="text-gray-600 dark:text-gray-400 mt-1">
-						User inquiries and feedback submitted through FAB button
+						{t("admin.contact_messages_subtitle")}
 					</p>
 				</div>
 				<Button
@@ -183,26 +187,26 @@ export default function AdminContactMessagesPage() {
 					loading={isLoading}
 					variant="primary"
 				>
-					Refresh
+					{t("common.refresh")}
 				</Button>
 			</div>
 
 			{/* Stats */}
 			<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
 				<div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-					<p className="text-sm text-gray-600 dark:text-gray-400">Total</p>
+					<p className="text-sm text-gray-600 dark:text-gray-400">{t("admin.total")}</p>
 					<p className="text-2xl font-bold text-gray-900 dark:text-white">{total}</p>
 				</div>
 				<div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-					<p className="text-sm text-gray-600 dark:text-gray-400">Pending</p>
+					<p className="text-sm text-gray-600 dark:text-gray-400">{t("admin.pending")}</p>
 					<p className="text-2xl font-bold text-blue-600">{stats.pending}</p>
 				</div>
 				<div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-					<p className="text-sm text-gray-600 dark:text-gray-400">Replied</p>
+					<p className="text-sm text-gray-600 dark:text-gray-400">{t("admin.replied")}</p>
 					<p className="text-2xl font-bold text-green-600">{stats.replied}</p>
 				</div>
 				<div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-					<p className="text-sm text-gray-600 dark:text-gray-400">Read</p>
+					<p className="text-sm text-gray-600 dark:text-gray-400">{t("admin.read")}</p>
 					<p className="text-2xl font-bold text-gray-600 dark:text-gray-400">{stats.readByUser}</p>
 				</div>
 			</div>
@@ -221,16 +225,16 @@ export default function AdminContactMessagesPage() {
 						<thead className="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
 							<tr>
 								<th className="w-1/5 px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-									Email
+									{t("admin.col_email")}
 								</th>
 								<th className="w-2/5 px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-									Message
+									{t("admin.col_message")}
 								</th>
 								<th className="w-1/6 px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-									Date
+									{t("admin.date")}
 								</th>
 								<th className="w-1/6 px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-									Action
+									{t("admin.action")}
 								</th>
 							</tr>
 						</thead>
@@ -249,7 +253,7 @@ export default function AdminContactMessagesPage() {
 										colSpan={4}
 										className="px-6 py-12 text-center text-gray-500 dark:text-gray-400"
 									>
-										No messages found
+										{t("admin.no_messages")}
 									</td>
 								</tr>
 							) : (
@@ -263,19 +267,19 @@ export default function AdminContactMessagesPage() {
 												{message.user_id ? (
 													<>
 														<p className="font-medium text-gray-900 dark:text-white break-words">
-															{message.email || "No email"}
+															{message.email || t("admin.no_email")}
 														</p>
 														<p className="text-blue-600 dark:text-blue-400 text-xs whitespace-nowrap">
-															✓ Logged-in user
+															{t("admin.logged_in_user")}
 														</p>
 													</>
 												) : (
 													<>
 														<p className="font-medium text-gray-500 dark:text-gray-400 break-words">
-															{message.email || "Anonymous"}
+															{message.email || t("admin.anonymous")}
 														</p>
 														<p className="text-amber-600 dark:text-amber-400 text-xs whitespace-nowrap">
-															⚠️ Anonymous feedback
+															{t("admin.anonymous_feedback")}
 														</p>
 													</>
 												)}
@@ -288,7 +292,7 @@ export default function AdminContactMessagesPage() {
 												</p>
 												{message.admin_reply && (
 													<p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-1 break-words">
-														💬 Reply: {message.admin_reply}
+														{t("admin.reply_preview", { reply: message.admin_reply })}
 													</p>
 												)}
 											</div>
@@ -308,7 +312,11 @@ export default function AdminContactMessagesPage() {
 				{!isLoading && messages.length > 0 && (
 					<div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
 						<p className="text-sm text-gray-600 dark:text-gray-400">
-							Showing {offset + 1} to {Math.min(offset + limit, total)} of {total} messages
+							{t("common.showing_range", {
+								from: offset + 1,
+								to: Math.min(offset + limit, total),
+								total,
+							})}
 						</p>
 						<div className="flex gap-2">
 							<Button
@@ -316,14 +324,14 @@ export default function AdminContactMessagesPage() {
 								disabled={currentPage === 1}
 								variant="secondary"
 							>
-								Previous
+								{t("common.previous")}
 							</Button>
 							<Button
 								onClick={() => handlePageChange(currentPage + 1)}
 								disabled={!hasMore}
 								variant="secondary"
 							>
-								Next
+								{t("common.next")}
 							</Button>
 						</div>
 					</div>

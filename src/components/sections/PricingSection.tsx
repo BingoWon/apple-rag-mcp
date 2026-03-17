@@ -1,5 +1,6 @@
 import { IconCheck } from "@tabler/icons-react";
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { Modal, ModalTrigger } from "@/components/ui/animated-modal";
 import { Button } from "@/components/ui/Button";
@@ -12,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { PricingModal } from "./PricingModal";
 
 export function PricingSection() {
+	const { t } = useTranslation();
 	const tiers = getPricingTiers();
 
 	// Track pricing section view
@@ -44,13 +46,11 @@ export function PricingSection() {
 			id="pricing"
 		>
 			<div className="text-center">
-				<h2 className="text-base font-semibold leading-7 text-brand">Pricing</h2>
+				<h2 className="text-base font-semibold leading-7 text-brand">{t("pricing.eyebrow")}</h2>
 				<p className="mt-2 text-3xl font-bold tracking-tight text-light sm:text-4xl">
-					Choose the right plan for you
+					{t("pricing.title")}
 				</p>
-				<p className="mt-4 sm:mt-6 text-lg leading-8 text-muted">
-					Start free and scale as you grow. All plans include access to our AI-powered MCP.
-				</p>
+				<p className="mt-4 sm:mt-6 text-lg leading-8 text-muted">{t("pricing.subtitle")}</p>
 			</div>
 			<div className="mx-auto mt-4 sm:mt-10 grid max-w-md grid-cols-1 gap-y-6 lg:mx-0 lg:max-w-none lg:grid-cols-3 lg:gap-x-8 lg:gap-y-0 lg:items-start">
 				{tiers.map((tier) => (
@@ -80,7 +80,7 @@ export function PricingSection() {
 										</h3>
 										{tier.popular ? (
 											<p className="rounded-full bg-brand/10 px-2.5 py-1 text-xs font-semibold leading-5 text-brand">
-												Most popular
+												{t("pricing.most_popular")}
 											</p>
 										) : null}
 									</div>
@@ -105,7 +105,7 @@ export function PricingSection() {
 										className="mt-6 sm:mt-8 w-full"
 										onClick={activateFabContact}
 									>
-										Contact us
+										{t("common.contact_us")}
 									</Button>
 								) : tier.action === "register" ? (
 									<Link to={tier.href}>
@@ -113,7 +113,7 @@ export function PricingSection() {
 											variant={tier.popular ? "primary" : "outline"}
 											className="mt-6 sm:mt-8 w-full"
 										>
-											Get started
+											{t("common.get_started")}
 										</Button>
 									</Link>
 								) : (
@@ -126,7 +126,7 @@ export function PricingSection() {
 													: "border border-default bg-transparent text-light hover:bg-secondary hover:border-border-light",
 											)}
 										>
-											Get started
+											{t("common.get_started")}
 										</ModalTrigger>
 										<PricingModal planName={tier.name} />
 									</Modal>
@@ -139,7 +139,7 @@ export function PricingSection() {
 
 			{/* Supported Clients - Global Section */}
 			<div className="mt-4 md:mt-0">
-				<h3 className="text-lg font-semibold text-light mb-4">Supported Clients:</h3>
+				<h3 className="text-lg font-semibold text-light mb-4">{t("pricing.supported_clients")}</h3>
 				<p className="text-sm text-muted leading-relaxed">{SUPPORTED_CLIENTS.join(", ")}</p>
 			</div>
 		</div>

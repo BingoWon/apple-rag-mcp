@@ -2,7 +2,8 @@
  * Admin Search Logs Page
  * Display and manage search_logs table
  */
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { api } from "@/lib/api";
 
@@ -19,43 +20,47 @@ interface AdminSearchLog {
 	created_at: string;
 }
 
-const columns = [
-	{ key: "user_id", label: "User ID", width: "w-16" },
-	{ key: "mcp_token", label: "Token", width: "w-16" },
-	{
-		key: "requested_query",
-		label: "Query",
-		width: "w-[400px]",
-		render: (_: unknown, row: Record<string, unknown>) => {
-			const requested = row.requested_query as string;
-			const actual = row.actual_query as string;
-			const isSame = requested === actual;
-
-			return isSame ? (
-				<div className="text-xs truncate" title={requested}>
-					{requested}
-				</div>
-			) : (
-				<div className="text-xs space-y-0.5">
-					<div className="truncate" title={requested}>
-						<span className="text-muted-foreground">→</span> {requested}
-					</div>
-					<div className="truncate text-muted-foreground" title={actual}>
-						<span>⇢</span> {actual}
-					</div>
-				</div>
-			);
-		},
-	},
-	{ key: "result_count", label: "Results", width: "w-20" },
-	{ key: "response_time_ms", label: "Time (s)", width: "w-24" },
-	{ key: "status_code", label: "Status", width: "w-20" },
-	{ key: "error_code", label: "Error", width: "w-32" },
-	{ key: "country_code", label: "🌍", width: "w-12" },
-	{ key: "created_at", label: "Created", width: "w-40" },
-];
-
 export default function AdminSearchLogsPage() {
+	const { t } = useTranslation();
+
+	const columns = useMemo(
+		() => [
+			{ key: "user_id", label: t("admin.col_user_id"), width: "w-16" },
+			{ key: "mcp_token", label: t("admin.col_token"), width: "w-16" },
+			{
+				key: "requested_query",
+				label: t("admin.col_query"),
+				width: "w-[400px]",
+				render: (_: unknown, row: Record<string, unknown>) => {
+					const requested = row.requested_query as string;
+					const actual = row.actual_query as string;
+					const isSame = requested === actual;
+
+					return isSame ? (
+						<div className="text-xs truncate" title={requested}>
+							{requested}
+						</div>
+					) : (
+						<div className="text-xs space-y-0.5">
+							<div className="truncate" title={requested}>
+								<span className="text-muted-foreground">→</span> {requested}
+							</div>
+							<div className="truncate text-muted-foreground" title={actual}>
+								<span>⇢</span> {actual}
+							</div>
+						</div>
+					);
+				},
+			},
+			{ key: "result_count", label: t("admin.col_results"), width: "w-20" },
+			{ key: "response_time_ms", label: t("admin.col_time_s"), width: "w-24" },
+			{ key: "status_code", label: t("admin.col_status"), width: "w-20" },
+			{ key: "error_code", label: t("admin.col_error"), width: "w-32" },
+			{ key: "country_code", label: "🌍", width: "w-12" },
+			{ key: "created_at", label: t("admin.col_created"), width: "w-40" },
+		],
+		[t],
+	);
 	const [logs, setLogs] = useState<AdminSearchLog[]>([]);
 	const [total, setTotal] = useState(0);
 	const [limit, setLimit] = useState(50);
@@ -113,8 +118,8 @@ export default function AdminSearchLogsPage() {
 	return (
 		<div className="space-y-6">
 			<AdminTable
-				title="Search Logs Table"
-				description="Comprehensive logging of all search operations and query activities"
+				title={t("admin.search_logs_table")}
+				description={t("admin.search_logs_table_desc")}
 				columns={columns}
 				data={logs}
 				total={total}

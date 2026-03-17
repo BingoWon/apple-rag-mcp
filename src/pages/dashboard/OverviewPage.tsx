@@ -1,5 +1,6 @@
 import { Suspense, useEffect, useRef } from "react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 import { MCPUsageGuide } from "@/components/dashboard/MCPUsageGuide";
 import StatsCards from "@/components/dashboard/StatsCards";
@@ -9,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useDashboardStore } from "@/stores/dashboard";
 
 function DashboardOverviewContent() {
+	const { t } = useTranslation();
 	const { toolCallsStats, refreshDashboard } = useDashboardStore();
 
 	const [searchParams] = useSearchParams();
@@ -27,14 +29,14 @@ function DashboardOverviewContent() {
 					const authData = JSON.parse(atob(decodeURIComponent(authParam)));
 					await loginWithToken(authData.jwtToken);
 
-					toast.success(`Welcome ${authData.name}! Successfully authenticated via OAuth.`);
+					toast.success(t("dashboard.welcome_oauth", { name: authData.name }));
 
 					// Clean URL parameters
 					const url = new URL(window.location.href);
 					url.searchParams.delete("auth");
 					window.history.replaceState({}, "", url.toString());
 				} catch (_error) {
-					toast.error("Authentication failed. Please try again.");
+					toast.error(t("dashboard.auth_failed"));
 				}
 			}
 
@@ -47,14 +49,15 @@ function DashboardOverviewContent() {
 		searchParams,
 		loginWithToken, // Load dashboard data
 		refreshDashboard,
+		t,
 	]);
 
 	return (
 		<div className="space-y-6">
 			{/* Header */}
 			<div>
-				<h1 className="text-2xl font-bold text-light">Dashboard Overview</h1>
-				<p className="mt-1 text-sm text-muted">Monitor your MCP usage and manage your account</p>
+				<h1 className="text-2xl font-bold text-light">{t("dashboard.title")}</h1>
+				<p className="mt-1 text-sm text-muted">{t("dashboard.subtitle")}</p>
 			</div>
 
 			{/* Main Content - Left/Right Layout */}

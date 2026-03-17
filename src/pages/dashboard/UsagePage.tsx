@@ -1,6 +1,7 @@
 import { IconClipboard, IconClock, IconRefresh } from "@tabler/icons-react";
 import { useCallback } from "react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { DataTable, type DataTableColumn, DataTableRenderers } from "@/components/ui/DataTable";
@@ -20,6 +21,8 @@ interface UsageLog {
 }
 
 export default function UsagePage() {
+	const { t } = useTranslation();
+
 	// Create properly typed API call functions
 	const fetchSearchLogs = useCallback(
 		async (page: number, limit: number): Promise<PaginatedResponse<UsageLog>> => {
@@ -52,14 +55,14 @@ export default function UsagePage() {
 	const searchColumns: DataTableColumn[] = [
 		{
 			key: "mcp_token",
-			label: "MCP Token",
+			label: t("usage.mcp_token"),
 			render: (value) => (
-				<div className="font-medium text-foreground text-sm">{value || "Not Used"}</div>
+				<div className="font-medium text-foreground text-sm">{value || t("usage.not_used")}</div>
 			),
 		},
 		{
 			key: "query",
-			label: "Query Text",
+			label: t("usage.query_text"),
 			render: (value) => (
 				<div className="text-foreground text-sm max-w-xs">
 					{DataTableRenderers.truncateText(value || "", 50)}
@@ -68,17 +71,17 @@ export default function UsagePage() {
 		},
 		{
 			key: "result_count",
-			label: "Result Count",
+			label: t("usage.result_count"),
 			render: (value) => <div className="text-muted-foreground text-sm">{value}</div>,
 		},
 		{
 			key: "status",
-			label: "Status",
+			label: t("common.status"),
 			render: (value) => DataTableRenderers.statusBadge(value === "success" ? 200 : 500),
 		},
 		{
 			key: "created_at",
-			label: "Time",
+			label: t("usage.time"),
 			render: (value) => (
 				<div className="text-muted-foreground text-sm">{DataTableRenderers.formatDate(value)}</div>
 			),
@@ -89,18 +92,18 @@ export default function UsagePage() {
 	const fetchColumns: DataTableColumn[] = [
 		{
 			key: "mcp_token",
-			label: "MCP Token",
+			label: t("usage.mcp_token"),
 			render: (value) => (
-				<div className="font-medium text-foreground text-sm">{value || "Not Used"}</div>
+				<div className="font-medium text-foreground text-sm">{value || t("usage.not_used")}</div>
 			),
 		},
 		{
 			key: "query",
-			label: "URL",
+			label: t("usage.url"),
 			render: (value) => (
 				<div className="text-foreground text-sm flex items-center gap-2">
 					<span className="truncate cursor-default flex-1 min-w-0">
-						{DataTableRenderers.truncateText(value || "No URL", 100)}
+						{DataTableRenderers.truncateText(value || t("usage.no_url"), 100)}
 					</span>
 					{value && (
 						<div className="flex-shrink-0">
@@ -110,9 +113,9 @@ export default function UsagePage() {
 								onClick={async () => {
 									try {
 										await navigator.clipboard.writeText(value);
-										toast.success("URL copied to clipboard");
+										toast.success(t("common.url_copied"));
 									} catch (_error) {
-										toast.error("Failed to copy URL");
+										toast.error(t("common.copy_failed"));
 									}
 								}}
 								title="Copy URL"
@@ -127,12 +130,12 @@ export default function UsagePage() {
 		},
 		{
 			key: "status",
-			label: "Status",
+			label: t("common.status"),
 			render: (value) => DataTableRenderers.statusBadge(value === "success" ? 200 : 500),
 		},
 		{
 			key: "created_at",
-			label: "Time",
+			label: t("usage.time"),
 			render: (value) => (
 				<div className="text-muted-foreground text-sm">{DataTableRenderers.formatDate(value)}</div>
 			),
@@ -142,22 +145,22 @@ export default function UsagePage() {
 	const tabItems = [
 		{
 			id: "search",
-			label: "Search Logs",
+			label: t("usage.search_logs"),
 			badge: searchPagination.total,
 			content: (
 				<Card>
 					<CardHeader>
 						<CardTitle className="flex items-center justify-between">
 							<div>
-								<span>Search Tool Calls</span>
+								<span>{t("usage.search_calls")}</span>
 								<p className="text-sm text-muted-foreground mt-1 font-normal">
-									View detailed logs of your search operations
+									{t("usage.search_calls_desc")}
 								</p>
 							</div>
 							<div className="flex items-center gap-4">
 								<div className="flex items-center gap-2 text-sm text-muted-foreground">
 									<IconClock className="h-4 w-4" />
-									Last updated: {new Date().toLocaleTimeString()}
+									{t("common.last_updated", { time: new Date().toLocaleTimeString() })}
 								</div>
 								<Button
 									variant="outline"
@@ -167,7 +170,7 @@ export default function UsagePage() {
 									className="flex items-center gap-2"
 								>
 									<IconRefresh className="h-4 w-4" />
-									Refresh
+									{t("common.refresh")}
 								</Button>
 							</div>
 						</CardTitle>
@@ -195,22 +198,22 @@ export default function UsagePage() {
 		},
 		{
 			id: "fetch",
-			label: "Fetch Logs",
+			label: t("usage.fetch_logs"),
 			badge: fetchPagination.total,
 			content: (
 				<Card>
 					<CardHeader>
 						<CardTitle className="flex items-center justify-between">
 							<div>
-								<span>Fetch Tool Calls</span>
+								<span>{t("usage.fetch_calls")}</span>
 								<p className="text-sm text-muted-foreground mt-1 font-normal">
-									View detailed logs of your page fetch operations
+									{t("usage.fetch_calls_desc")}
 								</p>
 							</div>
 							<div className="flex items-center gap-4">
 								<div className="flex items-center gap-2 text-sm text-muted-foreground">
 									<IconClock className="h-4 w-4" />
-									Last updated: {new Date().toLocaleTimeString()}
+									{t("common.last_updated", { time: new Date().toLocaleTimeString() })}
 								</div>
 								<Button
 									variant="outline"
@@ -220,7 +223,7 @@ export default function UsagePage() {
 									className="flex items-center gap-2"
 								>
 									<IconRefresh className="h-4 w-4" />
-									Refresh
+									{t("common.refresh")}
 								</Button>
 							</div>
 						</CardTitle>
@@ -252,10 +255,8 @@ export default function UsagePage() {
 		<div className="space-y-6">
 			{/* Header */}
 			<div>
-				<h1 className="text-2xl font-bold text-light">Usage Logs</h1>
-				<p className="mt-1 text-sm text-muted">
-					View detailed logs of your MCP usage - search operations and page fetches
-				</p>
+				<h1 className="text-2xl font-bold text-light">{t("usage.title")}</h1>
+				<p className="mt-1 text-sm text-muted">{t("usage.subtitle")}</p>
 			</div>
 
 			{/* Error State */}

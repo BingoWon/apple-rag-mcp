@@ -4,6 +4,7 @@
  */
 import { IconEye, IconEyeOff, IconShieldCheck } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/Button";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
@@ -15,6 +16,7 @@ interface AdminAuthProps {
 }
 
 export function AdminAuth({ onAuthenticated }: AdminAuthProps) {
+	const { t } = useTranslation();
 	const [password, setPassword] = useState("");
 	const [showPassword, setShowPassword] = useState(false);
 	const [error, setError] = useState("");
@@ -72,9 +74,9 @@ export function AdminAuth({ onAuthenticated }: AdminAuthProps) {
 				"status" in error.response &&
 				error.response.status === 401
 			) {
-				setError("Invalid admin password");
+				setError(t("admin.auth_invalid"));
 			} else {
-				setError("Authentication failed. Please try again.");
+				setError(t("admin.auth_failed"));
 			}
 			setPassword("");
 		}
@@ -95,15 +97,15 @@ export function AdminAuth({ onAuthenticated }: AdminAuthProps) {
 					<div className="mx-auto h-16 w-16 bg-primary rounded-full flex items-center justify-center">
 						<IconShieldCheck className="h-8 w-8 text-primary-foreground" />
 					</div>
-					<h2 className="mt-6 text-3xl font-bold text-foreground">Admin Access</h2>
-					<p className="mt-2 text-muted-foreground">Enter admin password to continue</p>
+					<h2 className="mt-6 text-3xl font-bold text-foreground">{t("admin.auth_title")}</h2>
+					<p className="mt-2 text-muted-foreground">{t("admin.auth_subtitle")}</p>
 				</div>
 
 				{/* Form */}
 				<form name="admin-login" className="mt-8 space-y-6" onSubmit={handleSubmit}>
 					<div>
 						<label htmlFor="password" className="sr-only">
-							Admin Password
+							{t("admin.auth_password")}
 						</label>
 						<div className="relative">
 							<input
@@ -113,7 +115,7 @@ export function AdminAuth({ onAuthenticated }: AdminAuthProps) {
 								value={password}
 								onChange={(e) => setPassword(e.target.value)}
 								className="relative block w-full px-3 py-3 border border-gray-700 bg-gray-800 text-white placeholder-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand pr-10"
-								placeholder="Admin password"
+								placeholder={t("admin.auth_placeholder")}
 								autoComplete="current-password"
 								required
 								disabled={isLoading}
@@ -148,13 +150,13 @@ export function AdminAuth({ onAuthenticated }: AdminAuthProps) {
 						className="w-full"
 						loading={isLoading}
 					>
-						{isLoading ? "Verifying..." : "Access Admin Dashboard"}
+						{isLoading ? t("admin.auth_verifying") : t("admin.auth_submit")}
 					</Button>
 				</form>
 
 				{/* Footer */}
 				<div className="text-center">
-					<p className="text-xs text-gray-500">Admin access is password protected for security</p>
+					<p className="text-xs text-gray-500">{t("admin.auth_notice")}</p>
 				</div>
 			</div>
 		</div>

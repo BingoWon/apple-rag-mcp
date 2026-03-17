@@ -2,7 +2,8 @@
  * Admin Authorized IPs Page
  * Display and manage authorized IP addresses across all users
  */
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { api } from "@/lib/api";
 
@@ -17,17 +18,21 @@ interface AdminAuthorizedIP {
 	last_used?: string;
 }
 
-const columns = [
-	{ key: "user_email", label: "User Email", width: "w-64" },
-	{ key: "user_name", label: "User Name", width: "w-48" },
-	{ key: "name", label: "IP Name", width: "w-48" },
-	{ key: "ip_address", label: "IP Address", width: "w-40" },
-	{ key: "last_used", label: "Last Used", width: "w-40" },
-	{ key: "created_at", label: "Created", width: "w-40" },
-	{ key: "updated_at", label: "Updated", width: "w-40" },
-];
-
 export default function AdminAuthorizedIPsPage() {
+	const { t } = useTranslation();
+
+	const columns = useMemo(
+		() => [
+			{ key: "user_email", label: t("admin.col_user_email"), width: "w-64" },
+			{ key: "user_name", label: t("admin.col_user_name"), width: "w-48" },
+			{ key: "name", label: t("admin.col_ip_name"), width: "w-48" },
+			{ key: "ip_address", label: t("admin.col_ip_address"), width: "w-40" },
+			{ key: "last_used", label: t("admin.col_last_used"), width: "w-40" },
+			{ key: "created_at", label: t("admin.col_created"), width: "w-40" },
+			{ key: "updated_at", label: t("admin.col_updated"), width: "w-40" },
+		],
+		[t],
+	);
 	const [ips, setIPs] = useState<AdminAuthorizedIP[]>([]);
 	const [total, setTotal] = useState(0);
 	const [limit, setLimit] = useState(50);
@@ -84,8 +89,8 @@ export default function AdminAuthorizedIPsPage() {
 	return (
 		<div className="space-y-6">
 			<AdminTable
-				title="Authorized IP Addresses"
-				description={`All authorized IP addresses across users (${total} total)`}
+				title={t("admin.authorized_ips_table")}
+				description={t("admin.authorized_ips_table_desc", { total })}
 				columns={columns}
 				data={ips}
 				total={total}

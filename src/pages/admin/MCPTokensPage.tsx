@@ -2,7 +2,8 @@
  * Admin MCP Tokens Page
  * Display and manage mcp_tokens table
  */
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { api } from "@/lib/api";
 
@@ -15,16 +16,20 @@ interface AdminMCPToken {
 	updated_at: string;
 }
 
-const columns = [
-	{ key: "user_id", label: "User ID", width: "w-16" },
-	{ key: "name", label: "Name", width: "w-48" },
-	{ key: "mcp_token", label: "Token", width: "w-40" },
-	{ key: "last_used_at", label: "Last Used", width: "w-40" },
-	{ key: "created_at", label: "Created", width: "w-40" },
-	{ key: "updated_at", label: "Updated", width: "w-40" },
-];
-
 export default function AdminMCPTokensPage() {
+	const { t } = useTranslation();
+
+	const columns = useMemo(
+		() => [
+			{ key: "user_id", label: t("admin.col_user_id"), width: "w-16" },
+			{ key: "name", label: t("admin.col_name"), width: "w-48" },
+			{ key: "mcp_token", label: t("admin.col_token"), width: "w-40" },
+			{ key: "last_used_at", label: t("admin.col_last_used"), width: "w-40" },
+			{ key: "created_at", label: t("admin.col_created"), width: "w-40" },
+			{ key: "updated_at", label: t("admin.col_updated"), width: "w-40" },
+		],
+		[t],
+	);
 	const [tokens, setTokens] = useState<AdminMCPToken[]>([]);
 	const [total, setTotal] = useState(0);
 	const [limit, setLimit] = useState(50);
@@ -82,8 +87,8 @@ export default function AdminMCPTokensPage() {
 	return (
 		<div className="space-y-6">
 			<AdminTable
-				title="MCP Tokens Table"
-				description="Model Context Protocol tokens for API access control"
+				title={t("admin.mcp_tokens_table")}
+				description={t("admin.mcp_tokens_table_desc")}
 				columns={columns}
 				data={tokens}
 				total={total}

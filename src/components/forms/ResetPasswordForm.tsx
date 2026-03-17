@@ -2,6 +2,7 @@ import { IconCheck, IconEye, IconEyeOff } from "@tabler/icons-react";
 import type React from "react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
 import { FormContainer } from "@/components/ui/FormContainer";
@@ -14,6 +15,7 @@ export function ResetPasswordForm() {
 	const navigate = useNavigate();
 	const [searchParams] = useSearchParams();
 	const token = searchParams.get("token");
+	const { t } = useTranslation();
 
 	const [password, setPassword] = useState("");
 	const [confirmPassword, setConfirmPassword] = useState("");
@@ -25,14 +27,14 @@ export function ResetPasswordForm() {
 	// Redirect if no token
 	useEffect(() => {
 		if (!token) {
-			toast.error("Invalid or missing reset token\nRedirecting to forgot password page...");
+			toast.error(t("auth.invalid_token"));
 			navigate("/forgot-password");
 		}
 	}, [token, navigate]);
 
 	const validatePassword = (password: string) => {
 		if (password.length < 8) {
-			return "Password must be at least 8 characters long";
+			return t("auth.password_min_length");
 		}
 		return "";
 	};
@@ -50,13 +52,13 @@ export function ResetPasswordForm() {
 		}
 
 		if (password !== confirmPassword) {
-			toast.error("Passwords don't match\nPlease ensure both passwords are identical.");
+			toast.error(t("auth.passwords_mismatch"));
 			setIsLoading(false);
 			return;
 		}
 
 		if (!token) {
-			toast.error("Invalid reset token\nPlease request a new password reset.");
+			toast.error(t("auth.invalid_token"));
 			setIsLoading(false);
 			return;
 		}
@@ -66,20 +68,17 @@ export function ResetPasswordForm() {
 
 			if (result.success) {
 				setSuccess(true);
-				toast.success("Password reset successfully!\nYou can now sign in with your new password.");
+				toast.success(t("auth.reset_success"));
 
 				// Redirect to login after 2 seconds
 				setTimeout(() => {
 					navigate("/login");
 				}, 2000);
 			} else {
-				toast.error(
-					result.error?.message ||
-						"Failed to reset password\nPlease try again or request a new reset link.",
-				);
+				toast.error(result.error?.message || t("auth.reset_failed"));
 			}
 		} catch (_error) {
-			toast.error("An unexpected error occurred\nPlease try again later.");
+			toast.error(t("auth.unexpected_error"));
 		} finally {
 			setIsLoading(false);
 		}
@@ -92,21 +91,19 @@ export function ResetPasswordForm() {
 	if (success) {
 		return (
 			<FormContainer
-				title="Password Reset Complete"
-				subtitle="Your password has been successfully updated"
+				title={t("auth.reset_complete_title")}
+				subtitle={t("auth.reset_complete_subtitle")}
 			>
 				<div className="space-y-6 text-center">
 					<div className="mx-auto w-16 h-16 bg-success/10 rounded-full flex items-center justify-center">
 						<IconCheck className="w-8 h-8 text-success" />
 					</div>
 
-					<p className="text-muted-foreground">
-						You will be redirected to the login page shortly, or you can click below to continue.
-					</p>
+					<p className="text-muted-foreground">{t("auth.reset_redirect")}</p>
 
 					<Link to="/login">
 						<Button variant="primary" className="w-full">
-							Continue to Sign In →
+							{t("auth.continue_signin")}
 						</Button>
 					</Link>
 				</div>
@@ -115,10 +112,10 @@ export function ResetPasswordForm() {
 	}
 
 	return (
-		<FormContainer title="Reset Your Password" subtitle="Enter your new password below">
+		<FormContainer title={t("auth.reset_title")} subtitle={t("auth.reset_subtitle")}>
 			<form name="reset-password" onSubmit={handleSubmit} className="space-y-6">
 				<LabelInputContainer>
-					<Label htmlFor="password">New Password</Label>
+					<Label htmlFor="password">{t("auth.new_password")}</Label>
 					<div className="relative">
 						<Input
 							id="password"
@@ -141,13 +138,11 @@ export function ResetPasswordForm() {
 							{showPassword ? <IconEyeOff className="w-4 h-4" /> : <IconEye className="w-4 h-4" />}
 						</Button>
 					</div>
-					<p className="text-sm text-muted-foreground">
-						Password must be at least 8 characters long
-					</p>
+					<p className="text-sm text-muted-foreground">{t("auth.password_min_length")}</p>
 				</LabelInputContainer>
 
 				<LabelInputContainer>
-					<Label htmlFor="confirmPassword">Confirm New Password</Label>
+					<Label htmlFor="confirmPassword">{t("auth.confirm_new_password")}</Label>
 					<div className="relative">
 						<Input
 							id="confirmPassword"
@@ -177,7 +172,7 @@ export function ResetPasswordForm() {
 				</LabelInputContainer>
 
 				<Button variant="primary" type="submit" disabled={isLoading} className="w-full">
-					{isLoading ? "Resetting Password..." : "Reset Password →"}
+					{isLoading ? t("auth.resetting") : t("auth.reset_btn")}
 				</Button>
 
 				{/* Back to Login Link */}
@@ -186,7 +181,7 @@ export function ResetPasswordForm() {
 						to="/login"
 						className="text-sm font-medium text-brand hover:text-brand/80 transition-colors"
 					>
-						Back to Sign In
+						{t("auth.back_to_signin")}
 					</Link>
 				</div>
 			</form>

@@ -1,10 +1,12 @@
 import { IconBrandGithub } from "@tabler/icons-react";
 import type React from "react";
+import { useTranslation } from "react-i18next";
 import { ArrowButton } from "@/components/ui/arrow-button";
 import ColourfulText from "@/components/ui/colourful-text";
 import { cn } from "@/lib/utils";
 
 export const HeroContent: React.FC = () => {
+	const { t } = useTranslation();
 	// Rainbow button styles - organized for better maintainability
 	const rainbowButtonStyles = cn(
 		// Base layout and interaction - Safari optimized
@@ -37,17 +39,16 @@ export const HeroContent: React.FC = () => {
 		<div className="mb-0 px-4 text-center text-3xl font-bold text-light md:mb-36 md:px-0" id="hero">
 			<div className="text-center md:mb-20">
 				<h1 className="text-4xl md:text-7xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-light to-muted mb-8 max-w-5xl mx-auto leading-tight">
-					Inject <ColourfulText text="Apple Expertise" />
+					{t("hero.title_inject")} <ColourfulText text={t("hero.title_apple")} />
 					<br />
-					into AI Agents via MCP
+					{t("hero.title_into")}
 				</h1>
 				<p className="text-lg text-muted max-w-3xl mx-auto">
-					Here's to the{" "}
+					{t("hero.subtitle_heres")}{" "}
 					<span className="font-extrabold text-white bg-gradient-to-r from-brand to-brand-secondary px-2 py-1 rounded-lg text-xl tracking-wide transform -rotate-2 inline-block hover:rotate-0 transition-transform duration-300">
-						Vibe Coders
+						{t("hero.subtitle_vibecoders")}
 					</span>
-					. Born with Apple DNA. RAG infuses your agents with official documentation and video
-					insights.
+					{t("hero.subtitle_desc")}
 				</p>
 
 				{/* CTA Buttons */}
@@ -62,7 +63,7 @@ export const HeroContent: React.FC = () => {
 						<div className="flex items-center">
 							<IconBrandGithub className="size-5 text-white" />
 							<span className="ml-2 text-white lg:inline p-1 text-base font-semibold">
-								Star on GitHub
+								{t("nav.star_github")}
 							</span>
 						</div>
 					</a>

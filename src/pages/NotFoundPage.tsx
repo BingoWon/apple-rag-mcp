@@ -1,11 +1,14 @@
 import { IconArrowLeft, IconHome } from "@tabler/icons-react";
 import { motion } from "motion/react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
 import { activateFabContact } from "@/components/ui/FabButton";
 import { LampContainer } from "@/components/ui/lamp";
 
 export default function NotFound() {
+	const { t } = useTranslation();
+
 	return (
 		<div className="min-h-screen flex flex-col">
 			<LampContainer>
@@ -19,7 +22,7 @@ export default function NotFound() {
 					}}
 					className="mt-8 bg-gradient-to-br from-slate-300 to-slate-500 py-4 bg-clip-text text-center text-5xl font-medium tracking-tight text-transparent md:text-7xl"
 				>
-					404 <br /> Page Not Found
+					404 <br /> {t("notfound.title")}
 				</motion.h1>
 
 				<motion.p
@@ -32,7 +35,7 @@ export default function NotFound() {
 					}}
 					className="mt-6 text-center text-slate-400 text-lg max-w-md"
 				>
-					The page you're looking for seems to have wandered off into the digital void.
+					{t("notfound.subtitle")}
 				</motion.p>
 
 				<motion.div
@@ -51,7 +54,7 @@ export default function NotFound() {
 							className="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-900 px-6 py-3"
 						>
 							<IconHome className="h-5 w-5" />
-							Back to Home
+							{t("notfound.home")}
 						</Button>
 					</Link>
 
@@ -62,7 +65,7 @@ export default function NotFound() {
 						className="flex items-center gap-2 border-slate-400 text-slate-400 hover:bg-slate-400 hover:text-slate-900 px-6 py-3"
 					>
 						<IconArrowLeft className="h-5 w-5" />
-						Go Back
+						{t("notfound.back")}
 					</Button>
 				</motion.div>
 
@@ -76,7 +79,7 @@ export default function NotFound() {
 					}}
 					className="mt-8 flex flex-col items-center gap-3"
 				>
-					<p className="text-center text-slate-500 text-sm">Think this is an error?</p>
+					<p className="text-center text-slate-500 text-sm">{t("notfound.is_error")}</p>
 					<Button
 						variant="link"
 						size="sm"
@@ -84,7 +87,7 @@ export default function NotFound() {
 						className="text-slate-400 hover:text-slate-200 underline-offset-4"
 						data-nav-action="fab-contact"
 					>
-						Contact
+						{t("nav.contact")}
 					</Button>
 				</motion.div>
 			</LampContainer>

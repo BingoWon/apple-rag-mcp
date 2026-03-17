@@ -12,54 +12,55 @@ import {
 	IconUsers,
 	IconWorld,
 } from "@tabler/icons-react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
 const adminSections = [
 	{
-		title: "Users",
-		description: "Manage user accounts and profiles",
+		titleKey: "admin.users",
+		descKey: "admin.users_desc",
 		href: "/admin/users",
 		icon: IconUsers,
 		color: "bg-brand",
 	},
 	{
-		title: "MCP Tokens",
-		description: "Monitor API tokens and usage",
+		titleKey: "nav.mcp_tokens",
+		descKey: "admin.mcp_tokens_desc",
 		href: "/admin/mcp-tokens",
 		icon: IconKey,
 		color: "bg-brand-secondary",
 	},
 	{
-		title: "Authorized IPs",
-		description: "Manage IP address access control",
+		titleKey: "nav.authorized_ips",
+		descKey: "admin.authorized_ips_desc",
 		href: "/admin/authorized-ips",
 		icon: IconWorld,
 		color: "bg-red-500",
 	},
 	{
-		title: "Search Logs",
-		description: "Track search operations and query activities",
+		titleKey: "admin.search_logs",
+		descKey: "admin.search_logs_desc",
 		href: "/admin/search-logs",
 		icon: IconSearch,
 		color: "bg-orange-500",
 	},
 	{
-		title: "Fetch Logs",
-		description: "Track page fetch operations and content retrieval",
+		titleKey: "admin.fetch_logs",
+		descKey: "admin.fetch_logs_desc",
 		href: "/admin/fetch-logs",
 		icon: IconDownload,
 		color: "bg-amber-500",
 	},
 	{
-		title: "User Subscriptions",
-		description: "Manage subscription plans and billing",
+		titleKey: "admin.subscriptions",
+		descKey: "admin.subscriptions_desc",
 		href: "/admin/user-subscriptions",
 		icon: IconCreditCard,
 		color: "bg-green-500",
 	},
 	{
-		title: "Contact Messages",
-		description: "View user inquiries and feedback",
+		titleKey: "admin.contact_messages",
+		descKey: "admin.contact_messages_desc",
 		href: "/admin/contact-messages",
 		icon: IconMessageCircle,
 		color: "bg-pink-500",
@@ -67,14 +68,14 @@ const adminSections = [
 ];
 
 export default function AdminDashboard() {
+	const { t } = useTranslation();
+
 	return (
 		<div className="space-y-6">
 			{/* Page Header */}
 			<div>
-				<h2 className="text-2xl font-bold text-white">Admin Dashboard</h2>
-				<p className="text-gray-400 mt-1">
-					Administrative tools for managing the Apple RAG MCP system
-				</p>
+				<h2 className="text-2xl font-bold text-white">{t("admin.dashboard")}</h2>
+				<p className="text-gray-400 mt-1">{t("admin.dashboard_desc")}</p>
 			</div>
 
 			{/* Admin Sections Grid */}
@@ -93,9 +94,9 @@ export default function AdminDashboard() {
 								</div>
 								<div className="ml-4">
 									<h3 className="text-lg font-medium text-foreground group-hover:text-primary transition-colors">
-										{section.title}
+										{t(section.titleKey)}
 									</h3>
-									<p className="text-sm text-muted-foreground mt-1">{section.description}</p>
+									<p className="text-sm text-muted-foreground mt-1">{t(section.descKey)}</p>
 								</div>
 							</div>
 						</Link>

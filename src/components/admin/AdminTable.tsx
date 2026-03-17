@@ -3,6 +3,7 @@
  * Reusable table component for displaying database records with pagination
  */
 import { IconChevronLeft, IconChevronRight, IconRefresh } from "@tabler/icons-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
@@ -47,6 +48,7 @@ export function AdminTable<T = Record<string, unknown>>({
 	onRefresh,
 	onPageChange,
 }: AdminTableProps<T>) {
+	const { t } = useTranslation();
 	// Calculate pagination info
 	const totalPages = Math.ceil(total / limit);
 	const startIndex = offset + 1;
@@ -143,7 +145,7 @@ export function AdminTable<T = Record<string, unknown>>({
 							className="flex items-center gap-2"
 						>
 							<IconRefresh className="h-4 w-4" />
-							Refresh
+							{t("common.refresh")}
 						</Button>
 					)}
 				</CardTitle>
@@ -160,7 +162,7 @@ export function AdminTable<T = Record<string, unknown>>({
 				{total > limit && (
 					<div className="flex items-center justify-between px-6 py-4 border-t">
 						<div className="text-sm text-muted-foreground">
-							Showing {startIndex} to {endIndex} of {total} entries
+							{t("common.showing_range", { from: startIndex, to: endIndex, total })}
 						</div>
 						<div className="flex items-center space-x-2">
 							<Button
@@ -171,7 +173,7 @@ export function AdminTable<T = Record<string, unknown>>({
 								className="flex items-center gap-1"
 							>
 								<IconChevronLeft className="h-4 w-4" />
-								Previous
+								{t("common.previous")}
 							</Button>
 
 							<div className="flex items-center space-x-1">
@@ -210,7 +212,7 @@ export function AdminTable<T = Record<string, unknown>>({
 								disabled={currentPage === totalPages || isLoading}
 								className="flex items-center gap-1"
 							>
-								Next
+								{t("common.next")}
 								<IconChevronRight className="h-4 w-4" />
 							</Button>
 						</div>
