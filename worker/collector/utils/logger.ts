@@ -1,18 +1,3 @@
-import { notifyAlert } from "./telegram-notifier.js";
+import { Logger } from "../../shared/logger.js";
 
-class Logger {
-	info(message: string): void {
-		console.log(message);
-	}
-
-	async warn(message: string): Promise<void> {
-		console.warn(message);
-	}
-
-	async error(message: string): Promise<void> {
-		console.error(message);
-		await notifyAlert(message);
-	}
-}
-
-export const logger = new Logger();
+export const logger = new Logger("[COLLECTOR]");

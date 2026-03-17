@@ -109,7 +109,7 @@ export async function generateAccessToken(
 		plan_type: planType,
 		permissions,
 		iat: Math.floor(Date.now() / 1000),
-		exp: Math.floor(Date.now() / 1000) + 100 * 365 * 24 * 60 * 60, // 100 years - 永久登录
+		exp: Math.floor(Date.now() / 1000) + 100 * 365 * 24 * 60 * 60,
 		jti: sessionId,
 	};
 
@@ -129,7 +129,7 @@ export async function generateRefreshToken(
 		jti: sessionId,
 		type: "refresh",
 		iat: Math.floor(Date.now() / 1000),
-		exp: Math.floor(Date.now() / 1000) + 100 * 365 * 24 * 60 * 60, // 100 years - 永久登录
+		exp: Math.floor(Date.now() / 1000) + 100 * 365 * 24 * 60 * 60,
 	};
 
 	return signJWT(payload, secret);

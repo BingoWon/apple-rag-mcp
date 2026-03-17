@@ -1,10 +1,9 @@
 /**
- * 现代化OAuth服务 - 统一JWT认证架构
- * OAuth登录 → JWT Token生成 → 统一认证系统
+ * OAuth service with unified JWT auth: OAuth login → JWT token generation
  */
 
+import type { Env } from "../../shared/types.js";
 import type { User } from "../types";
-import type { Env } from "../types/env";
 import { generateTokenPair } from "../utils/jwt-simple";
 import { generateUUID } from "../utils/security";
 import { notifyTelegram } from "../utils/telegram-notifier.js";
@@ -39,14 +38,12 @@ export class OAuthService {
 	constructor(private env: Env) {}
 
 	/**
-	 * 获取OAuth授权URL
+	 * Returns OAuth authorization URL.
 	 */
 	getAuthUrl(provider: "google" | "github", state?: string): string {
-		// 使用 OAUTH_REDIRECT_BASE 环境变量，支持开发和生产环境
 		const baseUrl = this.env.OAUTH_REDIRECT_BASE || "https://apple-rag.com/api";
 		const redirectUri = `${baseUrl}/oauth/${provider}/callback`;
 
-		// 调试日志：记录实际使用的重定向URI
 		console.log(`Website OAuth ${provider} redirect URI:`, redirectUri);
 
 		if (provider === "google") {
@@ -74,7 +71,7 @@ export class OAuthService {
 	}
 
 	/**
-	 * 处理OAuth回调并生成JWT Token
+	 * Handles OAuth callback and issues JWT token.
 	 */
 	async handleCallback(
 		provider: "google" | "github",
@@ -91,16 +88,9 @@ export class OAuthService {
 		error?: string;
 	}> {
 		try {
-			// 1. 用授权码换取访问令牌
 			const tokens = await this.exchangeCodeForTokens(provider, code);
-
-			// 2. 获取用户信息
 			const userInfo = await this.getUserInfo(provider, tokens.access_token);
-
-			// 3. 在数据库中创建或更新用户
 			const user = await this.createOrUpdateUser(userInfo);
-
-			// 4. 生成JWT Token供网站认证使用
 			const jwtToken = await this.generateJwtToken(user, userAgent, ipAddress);
 
 			return {
@@ -121,7 +111,7 @@ export class OAuthService {
 	}
 
 	/**
-	 * 用授权码换取访问令牌
+	 * Exchanges authorization code for access tokens.
 	 */
 	private async exchangeCodeForTokens(
 		provider: "google" | "github",
@@ -176,7 +166,7 @@ export class OAuthService {
 	}
 
 	/**
-	 * 获取用户信息
+	 * Fetches user profile from provider.
 	 */
 	private async getUserInfo(
 		provider: "google" | "github",
@@ -260,13 +250,11 @@ export class OAuthService {
 	}
 
 	/**
-	 * 创建或更新用户 - 现代化邮箱处理和严格隔离策略
+	 * Creates or updates user. Emails normalized; users isolated by provider.
 	 */
 	private async createOrUpdateUser(userInfo: UserProfile): Promise<UserProfile> {
-		// 规范化邮箱地址
 		const normalizedEmail = userInfo.email.toLowerCase().trim();
 
-		// 严格隔离策略：只检查相同 provider 的用户
 		const existingUser = await this.env.DB.prepare(
 			"SELECT * FROM users WHERE provider = ? AND provider_id = ?",
 		)
@@ -274,7 +262,6 @@ export class OAuthService {
 			.first();
 
 		if (existingUser) {
-			// 更新现有用户 - 使用规范化邮箱
 			const now = new Date().toISOString();
 			await this.env.DB.prepare(
 				`UPDATE users SET
@@ -284,11 +271,9 @@ export class OAuthService {
 				.bind(normalizedEmail, userInfo.name, userInfo.avatar, now, now, existingUser.id)
 				.run();
 
-			// Get user's subscription plan type
 			const { getUserPlanType } = await import("../utils/subscription");
 			const planType = await getUserPlanType(existingUser.id as string, this.env.DB);
 
-			// 获取更新后的完整用户数据，包含数据库时间戳
 			const updatedUser = await this.env.DB.prepare(
 				"SELECT id, email, name, avatar, provider, provider_id, created_at, updated_at FROM users WHERE id = ?",
 			)
@@ -304,7 +289,6 @@ export class OAuthService {
 				updated_at: updatedUser?.updated_at as string,
 			};
 		} else {
-			// 检查是否存在相同邮箱的其他认证方式用户
 			const emailConflict = await this.env.DB.prepare(
 				"SELECT id, provider FROM users WHERE LOWER(email) = ?",
 			)
@@ -318,7 +302,6 @@ export class OAuthService {
 				);
 			}
 
-			// 创建新用户 - 使用规范化邮箱
 			const userId = crypto.randomUUID();
 			const now = new Date().toISOString();
 
@@ -339,7 +322,6 @@ export class OAuthService {
 				)
 				.run();
 
-			// 获取新创建用户的完整数据，包含数据库时间戳
 			const newUser = await this.env.DB.prepare(
 				"SELECT id, email, name, avatar, provider, provider_id, created_at, updated_at FROM users WHERE id = ?",
 			)
@@ -369,7 +351,7 @@ Email: ${normalizedEmail}`);
 	}
 
 	/**
-	 * 为用户生成JWT Token - 统一认证系统
+	 * Generates JWT for website auth.
 	 */
 	private async generateJwtToken(
 		user: UserProfile,
@@ -379,15 +361,12 @@ Email: ${normalizedEmail}`);
 		token: string;
 		expiresAt: string;
 	}> {
-		// Generate session ID (stateless JWT - no session object needed)
 		const sessionId = generateUUID();
 
-		// 获取用户订阅计划类型 (从 user_subscriptions 表)
 		const { getUserPlanType, getPlanPermissions } = await import("../utils/subscription");
 		const planType = await getUserPlanType(user.id, this.env.DB);
 		const permissions = getPlanPermissions(planType);
 
-		// 使用 createOrUpdateUser 返回的完整用户数据，无需额外查询
 		const userForToken: User = {
 			id: user.id,
 			email: user.email,
@@ -404,8 +383,6 @@ Email: ${normalizedEmail}`);
 			permissions,
 			this.env.JWT_SECRET!,
 		);
-
-		// Note: Using stateless JWT authentication - no session storage needed
 
 		return {
 			token: tokens.access_token,

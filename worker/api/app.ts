@@ -4,21 +4,17 @@ import { logger as honoLogger } from "hono/logger";
 import { prettyJSON } from "hono/pretty-json";
 import { requestId } from "hono/request-id";
 import { timing } from "hono/timing";
-import {
-	createCorsMiddleware,
-	preflightHandler,
-	securityHeadersMiddleware,
-} from "./middleware/cors";
-import adminRoutes from "./routes/admin";
-import { authRoutes } from "./routes/auth";
-import authorizedIPsRoutes from "./routes/authorized-ips";
-import contactMessagesRoutes from "./routes/contact-messages";
-import mcpTokenRoutes from "./routes/mcp-tokens";
-import { oauthRoutes } from "./routes/oauth";
-import stripeRoutes from "./routes/stripe";
-import usageLogsRoutes from "./routes/usage-logs";
-import userRoutes from "./routes/users";
-import type { AppEnv } from "./types/hono";
+import type { AppEnv } from "../shared/types.js";
+import { createCorsMiddleware, securityHeaders } from "./middleware/cors.js";
+import adminRoutes from "./routes/admin/index.js";
+import { authRoutes } from "./routes/auth.js";
+import authorizedIPsRoutes from "./routes/authorized-ips.js";
+import contactMessagesRoutes from "./routes/contact-messages.js";
+import mcpTokenRoutes from "./routes/mcp-tokens.js";
+import { oauthRoutes } from "./routes/oauth.js";
+import stripeRoutes from "./routes/stripe.js";
+import usageLogsRoutes from "./routes/usage-logs.js";
+import userRoutes from "./routes/users.js";
 import { configureTelegram } from "./utils/telegram-notifier.js";
 
 const apiApp = new OpenAPIHono<AppEnv>();
@@ -31,23 +27,16 @@ apiApp.use(prettyJSON());
 apiApp.onError(async (err, c) => {
 	console.error(`Unhandled error in ${c.req.method} ${c.req.path}: ${err.message}`);
 	return c.json(
-		{
-			success: false,
-			error: {
-				code: "INTERNAL_ERROR",
-				message: "An unexpected error occurred",
-			},
-		},
+		{ success: false, error: { code: "INTERNAL_ERROR", message: "An unexpected error occurred" } },
 		500,
 	);
 });
 
-apiApp.use(preflightHandler);
 apiApp.use(async (c, next) => {
 	const corsMiddleware = createCorsMiddleware(c.env);
 	return corsMiddleware(c, next);
 });
-apiApp.use(securityHeadersMiddleware);
+apiApp.use(securityHeaders);
 
 apiApp.use("*", async (c, next) => {
 	configureTelegram({
@@ -67,21 +56,11 @@ apiApp.route("/usage-logs", usageLogsRoutes);
 apiApp.route("/admin", adminRoutes);
 apiApp.route("/stripe", stripeRoutes);
 
-apiApp.get("/", (c) => {
-	return c.json({
-		name: "Apple RAG API",
-		version: "2.0.0",
-		description: "API gateway for user management and MCP token services",
-	});
-});
+apiApp.get("/", (c) => c.json({ name: "Apple RAG API", version: "2.0.0" }));
 
 apiApp.doc("/doc", {
 	openapi: "3.0.0",
-	info: {
-		version: "2.0.0",
-		title: "Apple RAG API",
-		description: "API gateway for user management and MCP token services",
-	},
+	info: { version: "2.0.0", title: "Apple RAG API" },
 });
 
 apiApp.get("/ui", swaggerUI({ url: "/api/doc" }));

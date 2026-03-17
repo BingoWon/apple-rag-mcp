@@ -2,7 +2,7 @@
  * Email service using Resend API
  */
 import { Resend } from "resend";
-import type { Env } from "../types/env";
+import type { Env } from "../../shared/types.js";
 import { logger } from "../utils/logger.js";
 
 export interface EmailTemplate {

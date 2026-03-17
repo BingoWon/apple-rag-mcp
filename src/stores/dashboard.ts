@@ -234,11 +234,11 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
 		});
 
 		try {
-			const { api } = await import("@/services/api");
-			const subscription = await api.stripe.getSubscription();
+			const response = await api.getUserSubscription();
+			const subscription = response.success ? (response.data as Subscription) : null;
 
 			set({
-				subscription,
+				subscription: subscription ?? get().subscription,
 				isLoadingSubscription: false,
 				errors: { ...get().errors, subscription: null },
 			});

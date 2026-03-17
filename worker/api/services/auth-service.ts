@@ -2,9 +2,22 @@
  * Authentication service
  */
 
+import type { Env } from "../../shared/types.js";
 import type { User } from "../types";
-import type { ApiResponse, LoginRequest, RegisterRequest } from "../types/api";
-import type { Env } from "../types/env";
+import type { ApiResponse } from "../types/api-response";
+
+interface LoginRequest {
+	email: string;
+	password: string;
+}
+
+interface RegisterRequest {
+	email: string;
+	password: string;
+	name?: string;
+	terms_accepted: boolean;
+}
+
 import { ResponseBuilder } from "../types/response";
 import { generateTokenPair, generateUUID, hashPassword, verifyPassword } from "../utils/security";
 import { EmailService } from "./email-service";

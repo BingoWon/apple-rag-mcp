@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { CardSpotlight } from "@/components/ui/card-spotlight";
 import { api } from "@/lib/api";
-import { formatDate } from "@/lib/utils/date";
+import { formatDateCompact } from "@/lib/datetime";
 import { useAuthStore } from "@/stores/auth";
 
 interface UnreadMessage {
@@ -120,7 +120,7 @@ export function UnreadReplyNotification() {
 						<div>
 							<div className="flex items-center justify-between mb-2">
 								<p className="text-sm font-semibold text-muted">Your Message</p>
-								<p className="text-xs text-faint">{formatDate(currentMessage.created_at)}</p>
+								<p className="text-xs text-faint">{formatDateCompact(currentMessage.created_at)}</p>
 							</div>
 							<div className="p-4 rounded-lg bg-secondary backdrop-blur-sm border border-default">
 								<p className="text-light whitespace-pre-wrap leading-relaxed">
@@ -133,7 +133,7 @@ export function UnreadReplyNotification() {
 						<div>
 							<div className="flex items-center justify-between mb-2">
 								<p className="text-sm font-semibold text-brand">Our Response</p>
-								<p className="text-xs text-faint">{formatDate(currentMessage.replied_at)}</p>
+								<p className="text-xs text-faint">{formatDateCompact(currentMessage.replied_at)}</p>
 							</div>
 							<div className="p-4 rounded-lg bg-blue-500/10 backdrop-blur-sm border border-blue-500/30">
 								<p className="text-light whitespace-pre-wrap leading-relaxed">

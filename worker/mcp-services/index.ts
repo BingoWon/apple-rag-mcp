@@ -36,7 +36,7 @@ export async function createServices(env: WorkerEnv): Promise<Services> {
 		};
 	} catch (error) {
 		// Import logger here to avoid circular dependency
-		const { logger } = await import("../utils/logger.js");
+		const { logger } = await import("../mcp-utils/logger.js");
 		logger.error(
 			`Service initialization failed: ${error instanceof Error ? error.message : String(error)}`,
 		);

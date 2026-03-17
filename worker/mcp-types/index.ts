@@ -1,9 +1,8 @@
 import type { ToolCallLogger } from "../mcp-services/tool-call-logger.js";
-import type { Env as UnifiedEnv } from "../shared/types.js";
+import type { Env } from "../shared/types.js";
 
-export type WorkerEnv = UnifiedEnv;
+export type WorkerEnv = Env;
 
-// MCP Protocol Types
 export interface MCPRequest {
 	jsonrpc: "2.0";
 	id: string | number;
@@ -30,7 +29,6 @@ export interface MCPNotification {
 	params?: Record<string, unknown>;
 }
 
-// Tool Types
 export interface ToolDefinition {
 	name: string;
 	description: string;
@@ -46,7 +44,6 @@ export interface ToolCall {
 	arguments: Record<string, unknown>;
 }
 
-// RAG Types
 export interface RAGQuery {
 	query: string;
 	result_count?: number;
@@ -78,7 +75,6 @@ export interface SearchResult {
 	mergedChunkIndices?: number[];
 }
 
-// Service Types
 export interface Services {
 	rag: RAGService;
 	auth: { optionalAuth(request: Request): Promise<AuthContext> };
@@ -122,19 +118,13 @@ export interface PageResult {
 	content: string;
 }
 
-// Configuration Types
 export interface AppConfig {
-	NODE_ENV?: "development" | "production";
 	RAG_DB_HOST: string;
 	RAG_DB_PORT: number;
 	RAG_DB_DATABASE: string;
 	RAG_DB_USER: string;
 	RAG_DB_PASSWORD: string;
 	RAG_DB_SSLMODE: string;
-	PORT?: number;
-	CLOUDFLARE_ACCOUNT_ID?: string;
-	CLOUDFLARE_API_TOKEN?: string;
-	CLOUDFLARE_D1_DATABASE_ID?: string;
 }
 
 export interface RateLimitResult {

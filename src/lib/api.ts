@@ -175,7 +175,6 @@ class ApiClient {
 		return this.post("/auth/refresh");
 	}
 
-	// OAuth endpoints - 现代化实现
 	async getGoogleAuthUrl(state?: string) {
 		return this.post("/oauth/google", { state });
 	}
@@ -184,9 +183,7 @@ class ApiClient {
 		return this.post("/oauth/github", { state });
 	}
 
-	// User endpoints (OAuth optimized - user info from JWT only)
-
-	// MCP Token endpoints
+	// MCP Tokens
 	async getMCPTokens() {
 		return this.get("/mcp-tokens");
 	}
@@ -306,7 +303,15 @@ class ApiClient {
 		return this.get("/stripe/subscription");
 	}
 
-	// User profile management (name only - email cannot be changed)
+	async createCheckoutSession(priceId: string): Promise<ApiResponse<{ url: string }>> {
+		return this.post("/stripe/checkout", { priceId, cancelUrl: window.location.href });
+	}
+
+	async createBillingPortalSession(): Promise<ApiResponse<{ url: string }>> {
+		return this.post("/stripe/billing-portal");
+	}
+
+	// User profile
 	async updateUserProfile(updates: { name?: string }) {
 		return this.put("/users/profile", updates);
 	}

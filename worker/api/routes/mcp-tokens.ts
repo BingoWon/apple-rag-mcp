@@ -14,7 +14,7 @@ import { createMCPTokenSchema } from "../utils/validation";
 
 const app = new OpenAPIHono<AppEnv>();
 
-// Modern MCP Token response schema (按照 database-schema.md 规范)
+// MCP Token response schema (per database-schema.md)
 const MCPTokenResponseSchema = z.object({
 	id: z.string(),
 	name: z.string(),

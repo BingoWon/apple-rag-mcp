@@ -5,7 +5,6 @@ export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));
 }
 
-// 重新导出极简时间处理函数
 export { formatDate } from "./datetime";
 
 export function formatCurrency(amount: number, currency = "USD") {

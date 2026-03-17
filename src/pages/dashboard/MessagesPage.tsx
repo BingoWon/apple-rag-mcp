@@ -6,8 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { activateFabContact } from "@/components/ui/FabButton";
 import { Input } from "@/components/ui/Input";
 import { api } from "@/lib/api";
+import { formatDateCompact } from "@/lib/datetime";
 import { cn } from "@/lib/utils";
-import { formatDate } from "@/lib/utils/date";
 
 interface Message {
 	id: string;
@@ -217,7 +217,9 @@ export default function MessagesPage() {
 												{message.user_read_at ? "Read" : "Unread"}
 											</span>
 										</div>
-										<span className="text-xs text-muted">{formatDate(message.created_at)}</span>
+										<span className="text-xs text-muted">
+											{formatDateCompact(message.created_at)}
+										</span>
 									</div>
 
 									{/* Your Message */}
@@ -238,7 +240,7 @@ export default function MessagesPage() {
 												</p>
 												{message.replied_at && (
 													<p className="text-xs text-blue-400 mt-2">
-														Replied on {formatDate(message.replied_at)}
+														Replied on {formatDateCompact(message.replied_at)}
 													</p>
 												)}
 											</div>

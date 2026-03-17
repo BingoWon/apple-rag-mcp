@@ -3,7 +3,7 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/Button";
 import { api } from "@/lib/api";
-import { formatDate } from "@/lib/utils/date";
+import { formatDateCompact } from "@/lib/datetime";
 
 interface ContactMessage {
 	id: string;
@@ -104,7 +104,7 @@ export function MessageReplyDialog({ message, onClose, onSuccess }: MessageReply
 							</div>
 							<div className="text-right">
 								<p className="text-sm text-muted">Date</p>
-								<p className="font-medium text-light">{formatDate(message.created_at)}</p>
+								<p className="font-medium text-light">{formatDateCompact(message.created_at)}</p>
 							</div>
 						</div>
 						{message.ip_address && (
@@ -141,11 +141,11 @@ export function MessageReplyDialog({ message, onClose, onSuccess }: MessageReply
 						<div>
 							<div className="flex items-center justify-between mb-2">
 								<p className="text-sm font-semibold text-subtle">
-									Admin Reply ({formatDate(message.replied_at!)}):
+									Admin Reply ({formatDateCompact(message.replied_at!)}):
 								</p>
 								{message.user_read_at && (
 									<span className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
-										✓ Read by user on {formatDate(message.user_read_at)}
+										✓ Read by user on {formatDateCompact(message.user_read_at)}
 									</span>
 								)}
 							</div>

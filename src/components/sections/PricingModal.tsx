@@ -47,9 +47,11 @@ export function PricingModal({ planName }: PricingModalProps) {
 		setIsLoading(true);
 
 		try {
-			const { api } = await import("@/services/api");
-			const { url } = await api.stripe.createCheckoutSession(selectedPricingOption.id);
-			window.location.href = url;
+			const { api } = await import("@/lib/api");
+			const response = await api.createCheckoutSession(selectedPricingOption.id);
+			if (response.success && response.data?.url) {
+				window.location.href = response.data.url;
+			}
 		} catch (error) {
 			console.error("Error creating checkout session:", error);
 		} finally {

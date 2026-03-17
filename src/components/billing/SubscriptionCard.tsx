@@ -3,8 +3,8 @@ import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
+import { api } from "@/lib/api";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import { api } from "@/services/api";
 import type { Subscription } from "@/types";
 
 interface SubscriptionCardProps {
@@ -48,9 +48,10 @@ export function SubscriptionCard({ subscription }: SubscriptionCardProps) {
 	const handleManageSubscription = async () => {
 		setIsManagingSubscription(true);
 		try {
-			const response = await api.stripe.createBillingPortalSession();
-			// Redirect to Stripe Customer Portal for all subscription management
-			window.location.href = response.url;
+			const response = await api.createBillingPortalSession();
+			if (response.success && response.data?.url) {
+				window.location.href = response.data.url;
+			}
 		} catch (error) {
 			console.error("Failed to create billing portal session:", error);
 			toast.error("Unable to open billing management. Please contact support if this persists.");

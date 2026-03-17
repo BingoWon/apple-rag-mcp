@@ -7,7 +7,7 @@ import { useCallback, useEffect, useState } from "react";
 import { MessageReplyDialog } from "@/components/admin/MessageReplyDialog";
 import { Button } from "@/components/ui/Button";
 import { api } from "@/lib/api";
-import { formatDate } from "@/lib/utils/date";
+import { formatDateCompact } from "@/lib/datetime";
 
 interface AdminContactMessage {
 	id: string;
@@ -139,7 +139,7 @@ export default function AdminContactMessagesPage() {
 						Read
 					</Button>
 					<span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
-						{formatDate(message.replied_at!)}
+						{formatDateCompact(message.replied_at!)}
 					</span>
 				</div>
 			);
@@ -157,7 +157,7 @@ export default function AdminContactMessagesPage() {
 					Unread
 				</Button>
 				<span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
-					{formatDate(message.replied_at!)}
+					{formatDateCompact(message.replied_at!)}
 				</span>
 			</div>
 		);
@@ -294,7 +294,7 @@ export default function AdminContactMessagesPage() {
 											</div>
 										</td>
 										<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-											{formatDate(message.created_at)}
+											{formatDateCompact(message.created_at)}
 										</td>
 										<td className="px-6 py-4">{getActionButton(message)}</td>
 									</tr>

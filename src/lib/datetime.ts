@@ -1,7 +1,3 @@
-/**
- * 极简时间格式化工具 - 只支持display-short格式
- */
-
 import {
 	DateTimeError,
 	type ParsedDateTime,
@@ -9,9 +5,6 @@ import {
 	type TimeKeyOptions,
 } from "./types/datetime";
 
-/**
- * ISO 8601 时间解析器
- */
 export function parseDateTime(input: string | Date | number): ParsedDateTime {
 	if (!input) {
 		return {
@@ -34,7 +27,6 @@ export function parseDateTime(input: string | Date | number): ParsedDateTime {
 			date = new Date(input);
 			hasTimezone = true;
 		} else {
-			// 直接解析 ISO 格式，假设所有字符串都是标准 ISO 8601 格式
 			const dateString = String(input).trim();
 			date = new Date(dateString);
 			hasTimezone = /[TZ]|[+-]\d{2}:?\d{2}$/.test(dateString);
@@ -60,10 +52,6 @@ export function parseDateTime(input: string | Date | number): ParsedDateTime {
 	}
 }
 
-/**
- * 创建时间键（用于数据聚合和图表）
- * 确保本地时间处理，避免UTC转换陷阱
- */
 export function createTimeKey(date: Date | string | number, options: TimeKeyOptions): string {
 	const parsed = parseDateTime(date);
 
@@ -78,11 +66,9 @@ export function createTimeKey(date: Date | string | number, options: TimeKeyOpti
 	const { precision, useLocalTime = true } = options;
 	const config = TIME_PRECISION_CONFIG[precision];
 
-	// 使用本地时间或UTC时间
 	const targetDate = useLocalTime ? parsed.date : new Date(parsed.date.toISOString());
 	const truncatedDate = config.truncate(targetDate);
 
-	// 手动构建时间字符串，避免时区转换
 	const year = truncatedDate.getFullYear();
 	const month = String(truncatedDate.getMonth() + 1).padStart(2, "0");
 	const day = String(truncatedDate.getDate()).padStart(2, "0");
@@ -105,44 +91,59 @@ export function createTimeKey(date: Date | string | number, options: TimeKeyOpti
 	}
 }
 
-/**
- * 格式化时间为 "Aug 23, 2025 at 17:44:27" 格式
- */
+function toDate(input: string | Date | number): Date | null {
+	const date =
+		input instanceof Date ? input : new Date(typeof input === "string" ? input.trim() : input);
+	return Number.isNaN(date.getTime()) ? null : date;
+}
+
 export function formatDate(input: string | Date | number): string {
-	try {
-		let date: Date;
+	const date = toDate(input);
+	if (!date) return "—";
 
-		if (input instanceof Date) {
-			date = input;
-		} else if (typeof input === "number") {
-			date = new Date(input);
-		} else {
-			// 直接解析 ISO 格式，不做向后兼容
-			date = new Date(String(input).trim());
-		}
+	const datePart = date.toLocaleDateString("en-US", {
+		year: "numeric",
+		month: "short",
+		day: "numeric",
+	});
+	const timePart = date.toLocaleTimeString("en-US", {
+		hour: "2-digit",
+		minute: "2-digit",
+		second: "2-digit",
+		hour12: false,
+	});
 
-		if (Number.isNaN(date.getTime())) {
-			return "—";
-		}
+	return `${datePart} at ${timePart}`;
+}
 
-		const dateOptions: Intl.DateTimeFormatOptions = {
-			year: "numeric",
-			month: "short",
-			day: "numeric",
-		};
+export function formatDateCompact(input: string | Date | number): string {
+	const date = toDate(input);
+	if (!date) return "—";
 
-		const timeOptions: Intl.DateTimeFormatOptions = {
-			hour: "2-digit",
-			minute: "2-digit",
-			second: "2-digit",
-			hour12: false,
-		};
+	return date.toLocaleString("en-US", {
+		year: "numeric",
+		month: "2-digit",
+		day: "2-digit",
+		hour: "2-digit",
+		minute: "2-digit",
+		hour12: false,
+	});
+}
 
-		const datePart = date.toLocaleDateString("en-US", dateOptions);
-		const timePart = date.toLocaleTimeString("en-US", timeOptions);
+export function formatRelativeTime(input: string | Date | number): string {
+	const date = toDate(input);
+	if (!date) return "—";
 
-		return `${datePart} at ${timePart}`;
-	} catch (_error) {
-		return "—";
-	}
+	const diffMs = Date.now() - date.getTime();
+	const diffSec = Math.floor(diffMs / 1000);
+	const diffMin = Math.floor(diffSec / 60);
+	const diffHour = Math.floor(diffMin / 60);
+	const diffDay = Math.floor(diffHour / 24);
+
+	if (diffSec < 60) return "just now";
+	if (diffMin < 60) return `${diffMin} minute${diffMin > 1 ? "s" : ""} ago`;
+	if (diffHour < 24) return `${diffHour} hour${diffHour > 1 ? "s" : ""} ago`;
+	if (diffDay < 7) return `${diffDay} day${diffDay > 1 ? "s" : ""} ago`;
+
+	return formatDateCompact(input);
 }
