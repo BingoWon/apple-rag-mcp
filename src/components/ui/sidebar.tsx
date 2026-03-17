@@ -220,7 +220,7 @@ export const SidebarLink = ({
 				"flex items-center group/sidebar py-2 rounded-lg transition-all duration-200 relative",
 				isActive
 					? "bg-brand text-white"
-					: "text-muted hover:text-light hover:bg-background/60",
+					: "text-muted hover:text-light hover:bg-tertiary",
 				className,
 			)}
 			style={{

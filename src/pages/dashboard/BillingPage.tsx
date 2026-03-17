@@ -11,12 +11,13 @@ import { useDashboardStore } from "@/stores/dashboard";
 function BillingPageContent() {
 	const { t } = useTranslation();
 	const [searchParams] = useSearchParams();
-	const { subscription, currentUsage, fetchSubscription } = useDashboardStore();
+	const { subscription, currentUsage, fetchSubscription, fetchCurrentUsage } = useDashboardStore();
 
 	const processedParams = useRef(new Set<string>());
 
 	useEffect(() => {
 		fetchSubscription();
+		fetchCurrentUsage();
 
 		// Check for success parameter from Stripe redirect
 		const successParam = searchParams.get("success");
@@ -38,7 +39,7 @@ function BillingPageContent() {
 			// Show success message
 			toast.success(t("billing.subscription_updated"));
 		}
-	}, [fetchSubscription, searchParams, t]);
+	}, [fetchSubscription, fetchCurrentUsage, searchParams, t]);
 
 	return (
 		<div className="space-y-6">

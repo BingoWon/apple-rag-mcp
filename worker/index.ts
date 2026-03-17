@@ -56,7 +56,7 @@ app.post("/api/collector/trigger", async (c) => {
 });
 
 app.notFound(async (c) => {
-	if (c.req.path.startsWith("/api/") || c.req.path.startsWith("/mcp")) {
+	if (c.req.path.startsWith("/api/") || c.req.path === "/mcp" || c.req.path.startsWith("/mcp/")) {
 		return c.json({ error: { message: "Not Found" } }, 404);
 	}
 	if (c.env.ASSETS) {
