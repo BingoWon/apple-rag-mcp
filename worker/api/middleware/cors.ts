@@ -2,12 +2,12 @@ import type { Context, Next } from "hono";
 import { cors } from "hono/cors";
 import type { Env } from "../../shared/types.js";
 
-export function createCorsMiddleware(requestOrigin: string, env: Env) {
+export function createCorsMiddleware(requestOrigin: string) {
 	return cors({
 		origin: (origin) => {
 			if (!origin) return origin;
 			if (origin === requestOrigin) return origin;
-			if (env.ENVIRONMENT === "development" && origin.startsWith("http://localhost:"))
+			if (requestOrigin.startsWith("http://localhost:") && origin.startsWith("http://localhost:"))
 				return origin;
 			return null;
 		},
@@ -24,7 +24,7 @@ export const securityHeaders = async (c: Context<{ Bindings: Env }>, next: Next)
 	c.res.headers.set("X-Content-Type-Options", "nosniff");
 	c.res.headers.set("X-Frame-Options", "DENY");
 	c.res.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
-	if (c.env.ENVIRONMENT === "production") {
+	if (new URL(c.req.url).protocol === "https:") {
 		c.res.headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
 	}
 };

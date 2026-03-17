@@ -8,7 +8,6 @@ compatibility_flags = ["nodejs_compat"]
 keep_vars = true
 
 [vars]
-ENVIRONMENT = "production"
 BATCH_SIZE = "40"
 BATCH_COUNT = "20"
 FORCE_UPDATE_ALL = "false"
@@ -40,7 +39,6 @@ name = "apple-rag-mcp-dev"
 workers_dev = true
 
 [env.development.vars]
-ENVIRONMENT = "development"
 
 [[env.development.d1_databases]]
 binding = "DB"

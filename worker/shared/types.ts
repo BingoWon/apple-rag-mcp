@@ -3,9 +3,6 @@ export interface Env {
 	DB: D1Database;
 	ASSETS: Fetcher;
 
-	// Environment
-	ENVIRONMENT: "development" | "production";
-
 	// API: Authentication secrets
 	JWT_SECRET: string;
 	ADMIN_PASSWORD: string;
