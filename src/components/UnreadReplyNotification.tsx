@@ -1,5 +1,5 @@
 import { IconCheck, IconMessageCircle, IconX } from "@tabler/icons-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { CardSpotlight } from "@/components/ui/card-spotlight";
 import { api } from "@/lib/api";
@@ -21,17 +21,7 @@ export function UnreadReplyNotification() {
 	const [isVisible, setIsVisible] = useState(false);
 	const [isMarking, setIsMarking] = useState(false);
 
-	// Check for unread messages when user logs in
-	useEffect(() => {
-		if (user) {
-			checkUnreadMessages();
-		} else {
-			setUnreadMessages([]);
-			setIsVisible(false);
-		}
-	}, [user, checkUnreadMessages]);
-
-	const checkUnreadMessages = async () => {
+	const checkUnreadMessages = useCallback(async () => {
 		try {
 			const response = await api.getUnreadReplies();
 			if (response.success && response.data) {
@@ -46,7 +36,16 @@ export function UnreadReplyNotification() {
 		} catch (error) {
 			console.error("Failed to check unread messages:", error);
 		}
-	};
+	}, []);
+
+	useEffect(() => {
+		if (user) {
+			checkUnreadMessages();
+		} else {
+			setUnreadMessages([]);
+			setIsVisible(false);
+		}
+	}, [user, checkUnreadMessages]);
 
 	const handleMarkAsRead = async () => {
 		if (unreadMessages.length === 0) return;
