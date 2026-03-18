@@ -1,13 +1,44 @@
-# Apple RAG MCP
+<div align="center">
 
-MCP server for Apple developer documentation with semantic search, RAG, and AI reranking. Covers all Apple frameworks, APIs, WWDC video transcripts, and Human Interface Guidelines.
+<img src="https://apple-rag.com/logo-with-text.svg" alt="Apple RAG MCP" width="400">
 
-**Endpoint**: `https://mcp.apple-rag.com`
+### The Apple docs MCP your AI actually deserves.
 
-## Setup
+*370,000+ docs. 1,300+ WWDC transcripts. Semantic + keyword + hybrid search. One clean tool.*
 
-### Cursor
+[![Install MCP Server](https://cursor.com/deeplink/mcp-install-light.svg)](https://cursor.com/en/install-mcp?name=apple-rag-mcp&config=eyJ1cmwiOiJodHRwczovL21jcC5hcHBsZS1yYWcuY29tIn0%3D)
 
+[![Install in VS Code](https://img.shields.io/badge/VS_Code-Apple_RAG_MCP-0098FF?style=flat&logo=visualstudiocode&logoColor=ffffff)](vscode:mcp/install?%7B%22name%22%3A%22apple-rag-mcp%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fmcp.apple-rag.com%22%7D) [![Install in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-Apple_RAG_MCP-24bfa5?style=flat&logo=visualstudiocode&logoColor=ffffff)](vscode-insiders:mcp/install?%7B%22name%22%3A%22apple-rag-mcp%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fmcp.apple-rag.com%22%7D)
+
+[🌐 Website](https://apple-rag.com) • [📊 Dashboard](https://apple-rag.com/overview)
+
+**English** | [中文](./README.zh-CN.md)
+
+</div>
+
+---
+
+## Not Just Another Docs Tool
+
+Others give you keyword search. We give you that, plus semantic understanding, plus AI-powered hybrid search that combines both intelligently. Every search mode you need, working together.
+
+**Minimal footprint. Maximum signal.** Our MCP tools are designed to be lean—no bloated responses, no wasted tokens, no noise cluttering your agent's context. Just the information that matters.
+
+---
+
+## Start in Seconds
+
+**One click:**
+
+[![Install MCP Server](https://cursor.com/deeplink/mcp-install-light.svg)](https://cursor.com/en/install-mcp?name=apple-rag-mcp&config=eyJ1cmwiOiJodHRwczovL21jcC5hcHBsZS1yYWcuY29tIn0%3D)
+
+[![Install in VS Code](https://img.shields.io/badge/VS_Code-Apple_RAG_MCP-0098FF?style=flat&logo=visualstudiocode&logoColor=ffffff)](vscode:mcp/install?%7B%22name%22%3A%22apple-rag-mcp%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fmcp.apple-rag.com%22%7D) [![Install in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-Apple_RAG_MCP-24bfa5?style=flat&logo=visualstudiocode&logoColor=ffffff)](vscode-insiders:mcp/install?%7B%22name%22%3A%22apple-rag-mcp%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fmcp.apple-rag.com%22%7D)
+
+Click the button above and your editor will automatically configure everything for you in seconds.
+
+### Option 2: Manual Setup for Other MCP Clients
+
+**JSON Configuration (Copy & Paste):**
 ```json
 {
   "mcpServers": {
@@ -18,113 +49,79 @@ MCP server for Apple developer documentation with semantic search, RAG, and AI r
 }
 ```
 
-### VS Code / VS Code Insiders
+**Manual Configuration Parameters:**
+- **MCP Type:** `Streamable HTTP`
+- **URL:** `https://mcp.apple-rag.com`
+- **Authentication:** `Optional` (MCP Token for higher limits)
+- **MCP Token:** Get yours at [apple-rag.com](https://apple-rag.com) for increased quota
 
-```json
-{
-  "mcpServers": {
-    "apple-rag-mcp": {
-      "url": "https://mcp.apple-rag.com"
-    }
-  }
-}
-```
+**Supported Clients:** Cursor, Claude Desktop, Cline, and all MCP-compatible tools.
 
-### Claude Code
+> **Note:** No MCP Token required to start! You get free queries without any authentication. Add an MCP Token later for higher usage limits.
 
-```bash
-claude mcp add --transport streamable-http apple-rag-mcp https://mcp.apple-rag.com
-```
+## 🌟 Why Developers Love Apple RAG MCP
 
-### Codex
+<table>
+<tr>
+<td width="50%">
 
-```bash
-codex mcp add apple-rag-mcp --url https://mcp.apple-rag.com
-```
+### ⚡ **Fast & Reliable**
+Get quick responses with our optimized search infrastructure. No more hunting through docs.
 
-### Cline / Roo Code
+### 🎯 **AI-Powered Hybrid Search**
+Advanced search technology combining Semantic Search for RAG, Keyword Search, and Hybrid Search with vector similarity and technical term matching provides accurate, contextual answers from Apple's documentation.
 
-```json
-{
-  "mcpServers": {
-    "apple-rag-mcp": {
-      "type": "streamable-http",
-      "url": "https://mcp.apple-rag.com"
-    }
-  }
-}
-```
+### 🔒 **Always Secure**
+MCP authentication ensures trusted access for your AI agents with enterprise-grade security.
 
-### Augment Code
+</td>
+<td width="50%">
 
-```json
-{
-  "mcpServers": {
-    "apple-rag-mcp": {
-      "type": "http",
-      "url": "https://mcp.apple-rag.com"
-    }
-  }
-}
-```
+### 📝 **Code Examples**
+Get practical code examples in Swift, Objective-C, and SwiftUI alongside documentation references.
 
-> Augment Code does not support Authorization headers. Use [Authorized IP Addresses](https://apple-rag.com/authorized-ips) instead.
+### 🔄 **Real-time Updates**
+Our documentation index is continuously updated to reflect the latest Apple developer resources.
 
-## Tools
+### 🆓 **Completely Free**
+Start immediately with no MCP Token required. Get an MCP Token for higher usage limits - all managed at [apple-rag.com](https://apple-rag.com).
 
-### search
+</td>
+</tr>
+</table>
 
-```
-search(query: string, result_count?: number)
-```
+## 🎯 Features
 
-Search Apple developer documentation and WWDC content using semantic RAG. Queries must be in English.
+- **🔍 Semantic Search for RAG** - Vector similarity with semantic understanding for intelligent retrieval
+- **🔎 Keyword Search** - Precise technical term matching for API names and specific terminology
+- **🎯 Hybrid Search** - Combined semantic and keyword search with AI reranking for optimal results
+- **📚 Complete Coverage** - iOS, macOS, watchOS, tvOS, visionOS documentation
+- **🎬 WWDC Videos** - Full transcripts from Apple Developer videos and WWDC sessions
+- **⚡ Fast Response** - Optimized for speed across all content types
+- **🚀 High Performance** - Multi-instance cluster deployment for maximum throughput
+- **🔄 Always Current** - Synced with Apple's latest docs and video content
+- **🛡️ Secure & Private** - Your queries stay private
+- **🌐 Universal MCP** - Works with any MCP-compatible client
 
-### fetch
+## 🧠 Agent Skill
 
-```
-fetch(url: string)
-```
+We provide an [Agent Skill](skills/apple-dev-docs/SKILL.md) that teaches AI agents how to use this MCP server effectively — including query best practices, search-then-fetch workflow, result completeness handling, and rate limit guidance.
 
-Retrieve the complete cleaned content of a specific Apple documentation page or WWDC video transcript by URL.
-
-## Access Tiers
-
-| Tier | Weekly | Per-minute | Price |
-|------|--------|-----------|-------|
-| Anonymous | Very limited | Very limited | Free |
-| Free | 50 | 5 | Free — [register](https://apple-rag.com) |
-| Pro | 50,000 | 50 | $1/week — [subscribe](https://apple-rag.com) |
-
-To authenticate, create an MCP Token on the [dashboard](https://apple-rag.com) and add it to your config:
-
-```json
-{
-  "mcpServers": {
-    "apple-rag-mcp": {
-      "url": "https://mcp.apple-rag.com",
-      "headers": {
-        "Authorization": "Bearer at_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-      }
-    }
-  }
-}
-```
-
-## Agent Skill
-
-An [Agent Skill](https://agentskills.io) is included at [`skills/apple-dev-docs/`](skills/apple-dev-docs/SKILL.md). It teaches AI agents when and how to use this MCP server — query best practices, search-then-fetch workflow, result handling, and rate limit guidance.
-
-**Install the skill** by copying the directory to your agent's skill location:
+**Install:** Copy the `skills/apple-dev-docs/` directory to your agent's skill location:
 
 | Platform | Destination |
 |----------|-------------|
-| Cursor | `~/.cursor/skills/apple-dev-docs/` or `.cursor/skills/apple-dev-docs/` |
+| Cursor | `~/.cursor/skills/apple-dev-docs/` |
 | Codex | `~/.codex/skills/apple-dev-docs/` |
-| Claude Code | Project directory |
 
-The skill includes an `agents/openai.yaml` for Codex MCP dependency declaration.
+Once installed, your AI agent will automatically know when and how to use Apple RAG MCP for Apple development questions.
 
-## License
+<div align="center">
 
-MIT
+---
+
+**Better docs. Better context. Better code.**
+
+[Get Started →](https://apple-rag.com)
+
+</div>
