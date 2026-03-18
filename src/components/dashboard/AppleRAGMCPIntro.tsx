@@ -1,68 +1,67 @@
-import { IconBook, IconExternalLink, IconSearch, IconBolt, IconRefresh } from "@tabler/icons-react";
-import { Button } from "@/components/ui/Button";
+import { IconBrain, IconCopy, IconCheck } from "@tabler/icons-react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 
-const features = [
-	{ icon: IconSearch, text: "Semantic + keyword + hybrid search", color: "#9595ff" },
-	{ icon: IconBook, text: "370k+ docs & 1,300+ WWDC transcripts", color: "#fca147" },
-	{ icon: IconBolt, text: "Optimized for speed & low token usage", color: "#42c16e" },
-	{ icon: IconRefresh, text: "Continuously updated data sources", color: "#dc5bb7" },
-];
+const SKILL_PATHS = [
+	{ platform: "Cursor", path: "~/.cursor/skills/apple-dev-docs/" },
+	{ platform: "Codex", path: "~/.codex/skills/apple-dev-docs/" },
+] as const;
 
 export function AppleRAGMCPIntro() {
+	const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
+
+	const handleCopy = (path: string, idx: number) => {
+		navigator.clipboard.writeText(path);
+		setCopiedIdx(idx);
+		setTimeout(() => setCopiedIdx(null), 2000);
+	};
+
 	return (
 		<Card className="mt-6">
 			<CardHeader className="pb-4">
-				<div className="flex items-center justify-between">
-					<div className="flex items-center gap-3">
-						<div className="p-2 rounded-lg bg-brand/10">
-							<img src="/logo.svg" alt="Apple RAG MCP" className="h-5 w-5" />
-						</div>
-						<div>
-							<CardTitle className="text-lg">Apple RAG MCP</CardTitle>
-							<p className="text-xs text-muted mt-1">
-								The Apple docs MCP your AI deserves
-							</p>
-						</div>
+				<div className="flex items-center gap-3">
+					<div className="p-2 rounded-lg bg-brand/10">
+						<IconBrain className="h-5 w-5 text-brand" />
 					</div>
-					<Button
-						size="sm"
-						variant="outline"
-						onClick={() => window.open("/", "_blank")}
-						className="text-sm"
-					>
-						<IconExternalLink className="h-4 w-4 mr-2" />
-						Learn More
-					</Button>
+					<div>
+						<CardTitle className="text-lg">Agent Skill</CardTitle>
+						<p className="text-xs text-muted mt-1">Teach your AI agent to use Apple RAG MCP</p>
+					</div>
 				</div>
 			</CardHeader>
 
 			<CardContent className="pt-0">
-				<div className="space-y-4">
-					<p className="text-sm text-muted leading-relaxed">
-						Give your AI agents instant access to Apple's entire developer ecosystem.
-						Three search modes working together to deliver precise, contextual answers.
-					</p>
+				<p className="text-sm text-muted leading-relaxed mb-4">
+					Copy <code className="text-xs bg-tertiary/80 px-1.5 py-0.5 rounded font-mono text-light">skills/apple-dev-docs/</code> to your agent's skill location:
+				</p>
 
-					<div className="grid grid-cols-2 gap-2">
-						{features.map((feature, index) => {
-							const Icon = feature.icon;
-							return (
-								<div
-									key={index}
-									className="flex items-center gap-2 p-2 rounded-md bg-tertiary/50"
-								>
-									<Icon
-										className="h-4 w-4 flex-shrink-0"
-										style={{ color: feature.color }}
-									/>
-									<span className="text-xs text-muted font-medium">
-										{feature.text}
-									</span>
-								</div>
-							);
-						})}
-					</div>
+				<div className="space-y-2">
+					{SKILL_PATHS.map((item, idx) => (
+						<div
+							key={idx}
+							className="flex items-center justify-between p-2.5 rounded-md bg-tertiary/50 group"
+						>
+							<div className="flex items-center gap-3 min-w-0">
+								<span className="text-xs font-semibold text-light w-14 shrink-0">
+									{item.platform}
+								</span>
+								<code className="text-xs font-mono text-muted truncate">
+									{item.path}
+								</code>
+							</div>
+							<button
+								type="button"
+								onClick={() => handleCopy(item.path, idx)}
+								className="ml-2 p-1 rounded text-muted hover:text-light hover:bg-tertiary transition-colors shrink-0"
+							>
+								{copiedIdx === idx ? (
+									<IconCheck className="h-3.5 w-3.5 text-green-500" />
+								) : (
+									<IconCopy className="h-3.5 w-3.5" />
+								)}
+							</button>
+						</div>
+					))}
 				</div>
 			</CardContent>
 		</Card>
