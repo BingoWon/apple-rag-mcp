@@ -3,12 +3,12 @@ import { AnimatePresence, motion } from "motion/react";
 
 import { useEffect, useMemo, useState } from "react";
 
-const CJK_RANGE =
+const CJK_REGEX =
 	/[\u2E80-\u9FFF\uF900-\uFAFF\uFE30-\uFE4F\u{20000}-\u{2FA1F}]/u;
 
 function splitForAnimation(text: string): string[] {
 	const segments: string[] = [];
-	const regex = /([a-zA-Z0-9']+|[^\sa-zA-Z0-9])(\s?)/gu;
+	const regex = /([a-zA-Z0-9]+|[^\sa-zA-Z0-9])(\s?)/gu;
 	let m: RegExpExecArray | null;
 	while ((m = regex.exec(text)) !== null) {
 		segments.push(m[1] + (m[2] ? "\u00A0" : ""));
@@ -16,13 +16,9 @@ function splitForAnimation(text: string): string[] {
 	return segments;
 }
 
-function hasCJK(text: string): boolean {
-	return CJK_RANGE.test(text);
-}
-
 function QuoteText({ text }: { text: string }) {
 	const segments = useMemo(() => {
-		if (hasCJK(text)) return splitForAnimation(text);
+		if (CJK_REGEX.test(text)) return splitForAnimation(text);
 		return text.split(" ").map((w) => `${w}\u00A0`);
 	}, [text]);
 

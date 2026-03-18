@@ -60,7 +60,6 @@ interface MobileNavMenuProps {
 	children: React.ReactNode;
 	className?: string;
 	isOpen: boolean;
-	onClose: () => void;
 }
 
 interface MobileNavHeaderProps {
@@ -351,7 +350,7 @@ export function AppNavbar() {
 					</div>
 				</MobileNavHeader>
 
-				<MobileNavMenu isOpen={isMobileMenuOpen} onClose={handleMenuClose}>
+				<MobileNavMenu isOpen={isMobileMenuOpen}>
 					{navItems.map((item, idx) => (
 						<a
 							key={`mobile-nav-${idx}`}

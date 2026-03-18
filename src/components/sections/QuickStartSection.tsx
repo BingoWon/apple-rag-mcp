@@ -1,15 +1,13 @@
 import { IconCheck, IconCopy } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { SUPPORTED_CLIENTS } from "@/constants/pricing";
+import { SUPPORTED_CLIENTS } from "@/constants/clients";
 
-const CONFIG_CODE = `{
-  "mcpServers": {
-    "apple-rag-mcp": {
-      "url": "https://mcp.apple-rag.com"
-    }
-  }
-}`;
+const CONFIG_CODE = JSON.stringify(
+	{ mcpServers: { "apple-rag-mcp": { url: "https://mcp.apple-rag.com" } } },
+	null,
+	2,
+);
 
 export function QuickStartSection() {
 	const { t } = useTranslation();
@@ -35,8 +33,7 @@ export function QuickStartSection() {
 				</div>
 
 				<div className="mx-auto max-w-2xl">
-					{/* macOS Terminal Window */}
-					<div className="rounded-xl overflow-hidden shadow-2xl border border-white/10 bg-[#1e1e1e]">
+					<div className="rounded-xl overflow-hidden shadow-2xl border border-black/10 dark:border-white/10 bg-[#1e1e1e]">
 						{/* Title Bar */}
 						<div className="flex items-center justify-between px-4 py-3 bg-[#2d2d2d] border-b border-white/5">
 							<div className="flex items-center gap-2">
@@ -68,31 +65,7 @@ export function QuickStartSection() {
 
 						{/* Code Area */}
 						<div className="p-5 overflow-x-auto">
-							<pre className="text-sm leading-relaxed font-mono">
-								<code>
-									<SyntaxLine>{"{"}</SyntaxLine>
-									<SyntaxLine indent={1}>
-										<JsonKey>"mcpServers"</JsonKey>
-										<Punctuation>: {"{"}</Punctuation>
-									</SyntaxLine>
-									<SyntaxLine indent={2}>
-										<JsonKey>"apple-rag-mcp"</JsonKey>
-										<Punctuation>: {"{"}</Punctuation>
-									</SyntaxLine>
-									<SyntaxLine indent={3}>
-										<JsonKey>"url"</JsonKey>
-										<Punctuation>: </Punctuation>
-										<JsonValue>"https://mcp.apple-rag.com"</JsonValue>
-									</SyntaxLine>
-									<SyntaxLine indent={2}>
-										<Punctuation>{"}"}</Punctuation>
-									</SyntaxLine>
-									<SyntaxLine indent={1}>
-										<Punctuation>{"}"}</Punctuation>
-									</SyntaxLine>
-									<SyntaxLine>{"}"}</SyntaxLine>
-								</code>
-							</pre>
+							<JsonHighlight code={CONFIG_CODE} />
 						</div>
 					</div>
 				</div>
@@ -102,8 +75,7 @@ export function QuickStartSection() {
 						{t("quickstart.supported_clients")}
 					</h3>
 					<p className="text-sm text-muted leading-relaxed">
-						{SUPPORTED_CLIENTS.filter((c) => c !== "and more...").join(" · ")}{" "}
-						· {t("quickstart.and_more")}
+						{SUPPORTED_CLIENTS.join(" · ")} · {t("quickstart.and_more")}
 					</p>
 				</div>
 			</div>
@@ -111,22 +83,35 @@ export function QuickStartSection() {
 	);
 }
 
-function SyntaxLine({ children, indent = 0 }: { children: React.ReactNode; indent?: number }) {
+function JsonHighlight({ code }: { code: string }) {
 	return (
-		<span className="block" style={{ paddingLeft: `${indent * 1.5}rem` }}>
-			{children}
-		</span>
+		<pre className="text-sm leading-relaxed font-mono text-[#d4d4d4]">
+			<code>
+				{code.split("\n").map((line, i) => (
+					<span key={i} className="block">
+						{tokenizeLine(line)}
+					</span>
+				))}
+			</code>
+		</pre>
 	);
 }
 
-function JsonKey({ children }: { children: React.ReactNode }) {
-	return <span className="text-[#9cdcfe]">{children}</span>;
-}
-
-function JsonValue({ children }: { children: React.ReactNode }) {
-	return <span className="text-[#ce9178]">{children}</span>;
-}
-
-function Punctuation({ children }: { children: React.ReactNode }) {
-	return <span className="text-[#d4d4d4]">{children}</span>;
+function tokenizeLine(line: string): React.ReactNode[] {
+	const result: React.ReactNode[] = [];
+	const re = /("(?:[^"\\]|\\.)*")(\s*:)?/g;
+	let last = 0;
+	let match: RegExpExecArray | null;
+	while ((match = re.exec(line)) !== null) {
+		if (match.index > last) result.push(line.slice(last, match.index));
+		result.push(
+			<span key={match.index} className={match[2] ? "text-[#9cdcfe]" : "text-[#ce9178]"}>
+				{match[1]}
+			</span>,
+		);
+		if (match[2]) result.push(match[2]);
+		last = match.index + match[0].length;
+	}
+	if (last < line.length) result.push(line.slice(last));
+	return result;
 }

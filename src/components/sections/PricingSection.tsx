@@ -163,7 +163,6 @@ export function PricingSection() {
 					</div>
 				))}
 			</div>
-
 		</div>
 	);
 }

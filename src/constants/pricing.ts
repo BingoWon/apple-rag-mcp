@@ -83,27 +83,3 @@ export const PRO_ONETIME_OPTIONS: PricingOption[] = [
 		popular: false,
 	},
 ];
-
-export const SUPPORTED_CLIENTS = [
-	"Cursor",
-	"Windsurf",
-	"VS Code",
-	"Claude Code",
-	"Codex CLI",
-	"Gemini CLI",
-	"Augment Code",
-	"Cline",
-	"Roo Code",
-	"Zed",
-	"Trae",
-	"Kiro",
-	"Smithery",
-	"BoltAI",
-	"Copilot Coding Agent",
-	"Lobe Chat",
-	"Warp",
-	"Opencode",
-	"Perplexity Desktop",
-	"LM Studio",
-	"and more...",
-] as const;
