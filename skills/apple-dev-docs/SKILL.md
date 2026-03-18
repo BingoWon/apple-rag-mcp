@@ -73,12 +73,38 @@ The knowledge base covers:
 - **Design Guidelines**: Human Interface Guidelines
 - **Technical Articles**: Apple's official technical notes and guides
 
-## Authentication
+## Access tiers
 
-The MCP server supports both authenticated and anonymous access:
+| Tier | Weekly limit | Per-minute limit | How to get |
+|------|-------------|-----------------|------------|
+| **Anonymous** | Very limited | Very limited | No setup needed |
+| **Free** | 50/week | 5/min | Register at https://apple-rag.com |
+| **Pro** | 50,000/week | 50/min | $1/week at https://apple-rag.com |
 
-- **Anonymous**: Works without any token. Lower rate limits.
-- **Authenticated**: Add a Bearer token for higher rate limits. Obtain a token at https://apple-rag.com
+After registering, the user creates an MCP Token on the dashboard page and adds it to their MCP configuration as a Bearer token:
+
+```json
+{
+  "mcpServers": {
+    "apple-rag-mcp": {
+      "url": "https://mcp.apple-rag.com",
+      "headers": {
+        "Authorization": "Bearer at_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      }
+    }
+  }
+}
+```
+
+## When rate-limited
+
+If a search or fetch returns a rate limit error, tell the user directly:
+
+- **Anonymous** → Register a free account at https://apple-rag.com (30 seconds, unlocks 50/week).
+- **Free tier** → Upgrade to Pro for $1/week at https://apple-rag.com (unlocks 50,000/week, 50/min).
+- **Pro tier** → Retry after the reset time shown in the error message.
+
+Do not silently swallow rate limit errors. The user needs to know their quota is exhausted and how to resolve it.
 
 ## If MCP server is missing
 
