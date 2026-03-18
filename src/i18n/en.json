@@ -253,7 +253,11 @@
 		"title": "Dashboard Overview",
 		"subtitle": "Monitor your MCP usage and manage your account",
 		"welcome_oauth": "Welcome {{name}}! Successfully authenticated via OAuth.",
-		"auth_failed": "Authentication failed. Please try again."
+		"auth_failed": "Authentication failed. Please try again.",
+		"skill_title": "Agent Skill",
+		"skill_subtitle": "Teach your AI agent to use Apple RAG MCP",
+		"skill_desc": "Copy <code>skills/apple-dev-docs/</code> from our <repo>GitHub repo</repo> to your agent's skill location:",
+		"skill_learn_more": "Learn More"
 	},
 
 	"tokens": {

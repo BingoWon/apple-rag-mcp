@@ -241,7 +241,11 @@
 		"title": "概览面板",
 		"subtitle": "监控 MCP 使用情况，管理你的账号",
 		"welcome_oauth": "欢迎，{{name}}！已通过 OAuth 成功登录。",
-		"auth_failed": "登录失败，请重试。"
+		"auth_failed": "登录失败，请重试。",
+		"skill_title": "Agent Skill",
+		"skill_subtitle": "让你的 AI Agent 学会使用 Apple RAG MCP",
+		"skill_desc": "从 <repo>GitHub 仓库</repo> 复制 <code>skills/apple-dev-docs/</code> 目录到对应位置：",
+		"skill_learn_more": "了解更多"
 	},
 
 	"tokens": {
