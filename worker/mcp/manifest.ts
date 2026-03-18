@@ -26,7 +26,7 @@ export const SERVER_MANIFEST = {
 		health: "https://mcp.apple-rag.com/health",
 	},
 	transport: {
-		type: "http",
+		type: "streamable-http",
 		methods: ["POST"],
 		headers: {
 			required: ["Content-Type"],

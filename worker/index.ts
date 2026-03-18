@@ -46,6 +46,13 @@ app.get("/mcp/manifest", (c) =>
 
 app.post("/mcp", (c) => handleMCPRequest(c));
 
+app.on(["GET", "DELETE"], "/mcp", (c) =>
+	c.text("Method Not Allowed", 405, {
+		Allow: "POST, OPTIONS",
+		"Access-Control-Allow-Origin": "*",
+	}),
+);
+
 app.post("/api/collector/trigger", async (c) => {
 	try {
 		await handleScheduled(c.env);
@@ -92,6 +99,13 @@ mcpApp.get("/manifest", (c) =>
 );
 
 mcpApp.post("/", (c) => handleMCPRequest(c));
+
+mcpApp.on(["GET", "DELETE"], "/", (c) =>
+	c.text("Method Not Allowed", 405, {
+		Allow: "POST, OPTIONS",
+		"Access-Control-Allow-Origin": "*",
+	}),
+);
 
 mcpApp.all("*", (c) =>
 	c.json({ error: "MCP endpoint", message: "POST / for protocol, GET /health or /manifest" }, 404),

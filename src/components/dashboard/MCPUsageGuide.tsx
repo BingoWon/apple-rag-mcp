@@ -104,7 +104,7 @@ export function MCPUsageGuide() {
 			value: "apple-rag-mcp",
 			copyMessage: t("guide.name_copied"),
 		},
-		{ label: t("guide.field_type"), value: "SSE / Streamable HTTP", copyable: false },
+		{ label: t("guide.field_type"), value: "Streamable HTTP", copyable: false },
 		{
 			label: t("guide.field_url"),
 			value: mcpServerUrl,

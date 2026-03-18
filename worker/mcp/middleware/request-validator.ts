@@ -37,7 +37,7 @@ export function isValidMCPNotification(body: unknown): body is MCPNotification {
 }
 
 /**
- * Validate protocol version
+ * Validate protocol version from initialize params (lenient — negotiation, not rejection)
  */
 export function validateProtocolVersion(version?: string): {
 	isValid: boolean;
@@ -50,6 +50,31 @@ export function validateProtocolVersion(version?: string): {
 		return {
 			isValid: true,
 			warning: `Unsupported protocol version: ${version}. Supported versions: ${SUPPORTED_MCP_VERSIONS.join(", ")}`,
+		};
+	}
+
+	return { isValid: true };
+}
+
+/**
+ * Validate MCP-Protocol-Version HTTP header on non-initialize requests.
+ * Per spec: absent header → assume 2025-03-26; invalid header → 400.
+ */
+export function validateProtocolVersionHeader(headerValue: string | null): {
+	isValid: boolean;
+	error?: { code: number; message: string };
+} {
+	if (!headerValue) {
+		return { isValid: true };
+	}
+
+	if (!SUPPORTED_MCP_VERSIONS.includes(headerValue as (typeof SUPPORTED_MCP_VERSIONS)[number])) {
+		return {
+			isValid: false,
+			error: {
+				code: MCP_ERROR_CODES.INVALID_REQUEST,
+				message: `Unsupported MCP protocol version: ${headerValue}. Supported: ${SUPPORTED_MCP_VERSIONS.join(", ")}`,
+			},
 		};
 	}
 

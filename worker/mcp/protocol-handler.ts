@@ -18,6 +18,7 @@ import {
 	isValidMCPRequest,
 	validateInitializeParams,
 	validateProtocolVersion,
+	validateProtocolVersionHeader,
 	validateToolCallParams,
 } from "./middleware/request-validator.js";
 import { FetchTool, type FetchToolArgs } from "./tools/fetch-tool.js";
@@ -145,6 +146,27 @@ export class MCPProtocolHandler {
 
 			// Parse JSON-RPC request with validation
 			const body = (await request.json()) as MCPRequest | MCPNotification;
+
+			// Validate MCP-Protocol-Version header (skip initialize — version is negotiated in body)
+			const isInitialize = isValidMCPRequest(body) && body.method === "initialize";
+			if (!isInitialize) {
+				const headerValidation = validateProtocolVersionHeader(
+					request.headers.get("MCP-Protocol-Version"),
+				);
+				if (!headerValidation.isValid) {
+					return new Response(
+						JSON.stringify({
+							jsonrpc: "2.0",
+							id: isValidMCPRequest(body) ? body.id : null,
+							error: {
+								code: headerValidation.error!.code,
+								message: headerValidation.error!.message,
+							},
+						}),
+						{ status: 400, headers: JSON_HEADERS },
+					);
+				}
+			}
 
 			// Validate request structure
 			if (isValidMCPRequest(body)) {
