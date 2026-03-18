@@ -83,6 +83,18 @@ app.notFound(async (c) => {
 // ─── MCP-only App (mcp.apple-rag.com) ───────────────────────
 const mcpApp = new Hono<HonoAppEnv>();
 
+mcpApp.onError((err, c) => {
+	console.error("MCP error:", err instanceof Error ? err.message : String(err));
+	return c.json(
+		{
+			jsonrpc: "2.0",
+			id: null,
+			error: { code: -32603, message: "Internal server error" },
+		},
+		500,
+	);
+});
+
 mcpApp.use(
 	"*",
 	cors({

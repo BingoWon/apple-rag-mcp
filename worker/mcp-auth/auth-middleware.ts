@@ -1,10 +1,8 @@
-/**
- * Simple MCP Authentication Middleware
- */
-
 import { IPAuthenticationService } from "../mcp-services/ip-authentication.js";
 import type { AuthContext } from "../mcp-types/index.js";
 import { logger } from "../mcp-utils/logger.js";
+import { extractClientInfo } from "../mcp-utils/request-info.js";
+import { TOKEN_FORMAT } from "../mcp/constants.js";
 import { TokenValidator, type UserTokenData } from "./token-validator.js";
 
 export class AuthMiddleware {
@@ -16,28 +14,16 @@ export class AuthMiddleware {
 		this.ipAuthService = new IPAuthenticationService(d1);
 	}
 
-	/**
-	 * Extract Bearer token from Authorization header
-	 * Handles multiple "Bearer" prefixes and validates token format
-	 */
 	private extractBearerToken(authHeader?: string): string | null {
 		if (!authHeader) return null;
-
-		// Remove all "Bearer " prefixes (case-insensitive, supports multiple)
 		const token = authHeader.replace(/^(Bearer\s+)+/gi, "").trim();
-
-		// Only return if it matches valid token format
-		return /^at_[a-f0-9]{32}$/.test(token) ? token : null;
+		return TOKEN_FORMAT.test(token) ? token : null;
 	}
 
-	/**
-	 * Optional authentication middleware
-	 * Validates token if present, or checks IP-based authentication, allows access without either
-	 */
 	async optionalAuth(request: Request): Promise<AuthContext> {
 		const authHeader = request.headers.get("authorization");
 		const token = this.extractBearerToken(authHeader || undefined);
-		const clientIP = this.getClientIP(request);
+		const { ip: clientIP } = extractClientInfo(request);
 
 		// Try token authentication first
 		if (token) {
@@ -84,18 +70,5 @@ export class AuthMiddleware {
 
 	async getUserData(userId: string): Promise<UserTokenData> {
 		return this.tokenValidator.getUserDataById(userId);
-	}
-
-	/**
-	 * Get client IP address from request (Worker optimized)
-	 */
-	private getClientIP(request: Request): string {
-		// Cloudflare provides client IP in CF-Connecting-IP header
-		return (
-			request.headers.get("CF-Connecting-IP") ||
-			request.headers.get("X-Forwarded-For") ||
-			request.headers.get("X-Real-IP") ||
-			"unknown"
-		);
 	}
 }

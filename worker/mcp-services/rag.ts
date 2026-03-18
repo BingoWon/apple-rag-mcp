@@ -1,15 +1,5 @@
-/**
- * Modern RAG Service - Cloudflare Worker Native
- * Optimized for edge computing with zero-dependency architecture
- */
-
-import type {
-	AppConfig,
-	RAGQuery,
-	RAGResult,
-	SearchResult,
-	WorkerEnv,
-} from "../mcp-types/index.js";
+import type { AppConfig, RAGQuery, RAGResult, SearchResult } from "../mcp-types/index.js";
+import type { Env } from "../shared/types.js";
 import { logger } from "../mcp-utils/logger.js";
 import { DatabaseService } from "./database.js";
 import { EmbeddingService } from "./embedding.js";
@@ -19,68 +9,34 @@ import { type RankedSearchResult, SearchEngine } from "./search-engine.js";
 export class RAGService {
 	readonly database: DatabaseService;
 	readonly embedding: EmbeddingService;
-	private readonly reranker: RerankerService;
 	private readonly searchEngine: SearchEngine;
 
-	constructor(config: AppConfig, env: WorkerEnv) {
+	constructor(config: AppConfig, env: Env) {
 		this.database = new DatabaseService(config);
 		this.embedding = new EmbeddingService(env.DEEPINFRA_API_KEY);
-		this.reranker = new RerankerService(env.DEEPINFRA_API_KEY);
-		this.searchEngine = new SearchEngine(this.database, this.embedding, this.reranker);
+		const reranker = new RerankerService(env.DEEPINFRA_API_KEY);
+		this.searchEngine = new SearchEngine(this.database, this.embedding, reranker);
 	}
 
-	/**
-	 * Initialize - no-op since database initialization is removed
-	 */
-	async initialize(): Promise<void> {
-		// No initialization needed - database trusted ready
-	}
-
-	/**
-	 * Perform RAG query with intelligent processing and detailed timing
-	 */
 	async query(request: RAGQuery): Promise<RAGResult> {
 		const startTime = Date.now();
 		const { query, result_count = 4 } = request;
 
-		// No started log - only completion with timing
-
-		// Input validation
 		if (!query?.trim()) {
-			return this.createErrorResponse(
-				query,
-				"Query cannot be empty. Please provide a search query to find relevant Apple Developer Documentation.",
-				"Try searching for topics like 'SwiftUI navigation', 'iOS app development', or 'API documentation'.",
-				startTime,
-			);
+			return this.emptyResult(query, startTime);
 		}
 
 		const trimmedQuery = query.trim();
 		if (trimmedQuery.length > 10000) {
-			return this.createErrorResponse(
-				query,
-				"Query is too long. Please limit your query to 10000 characters or less.",
-				"Try to make your query more concise and specific.",
-				startTime,
-			);
+			return this.emptyResult(query, startTime);
 		}
 
 		try {
-			// Initialize services (if not already initialized)
-			await this.initialize();
-
-			// Execute search
 			const resultCount = Math.min(Math.max(result_count, 1), 20);
-
-			const searchResult = await this.searchEngine.search(trimmedQuery, {
-				resultCount,
-			});
-
-			// Format results
+			const searchResult = await this.searchEngine.search(trimmedQuery, { resultCount });
 			const formattedResults = this.formatResults(searchResult.results);
 			const totalTime = Date.now() - startTime;
 
-			// Log completion with timing
 			logger.info(
 				`RAG query completed (${(totalTime / 1000).toFixed(1)}s) - results: ${formattedResults.length}, query: ${query.substring(0, 50)}`,
 			);
@@ -95,20 +51,12 @@ export class RAGService {
 			};
 		} catch (error) {
 			logger.error(
-				`RAG query failed for query "${trimmedQuery.substring(0, 50)}": ${error instanceof Error ? error.message : "Unknown error"}`,
+				`RAG query failed for "${trimmedQuery.substring(0, 50)}": ${error instanceof Error ? error.message : "Unknown error"}`,
 			);
-			return this.createErrorResponse(
-				trimmedQuery,
-				`Search failed: ${error instanceof Error ? error.message : "Unknown error"}`,
-				"Please try again with a different query or check your connection.",
-				startTime,
-			);
+			return this.emptyResult(trimmedQuery, startTime);
 		}
 	}
 
-	/**
-	 * Format search results for MCP response
-	 */
 	private formatResults(results: readonly RankedSearchResult[]): SearchResult[] {
 		return results.map((result) => ({
 			id: result.id,
@@ -122,15 +70,7 @@ export class RAGService {
 		}));
 	}
 
-	/**
-	 * Create standardized error response
-	 */
-	private createErrorResponse(
-		query: string,
-		_error: string,
-		_suggestion: string,
-		startTime: number,
-	): RAGResult {
+	private emptyResult(query: string, startTime: number): RAGResult {
 		return {
 			success: false,
 			query,
@@ -141,12 +81,7 @@ export class RAGService {
 		};
 	}
 
-	/**
-	 * Clean up resources
-	 */
 	async close(): Promise<void> {
-		if (this.database) {
-			await this.database.close();
-		}
+		await this.database?.close();
 	}
 }

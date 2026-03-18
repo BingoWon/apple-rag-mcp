@@ -1,30 +1,35 @@
-/**
- * Fetch Tool Handler
- * Handles MCP fetch tool requests for content retrieval
- */
-
-import type { AuthContext, MCPResponse, Services } from "../../mcp-types/index.js";
+import type { AuthContext, MCPResponse, Services, ToolDefinition } from "../../mcp-types/index.js";
 import { logger } from "../../mcp-utils/logger.js";
 import { buildRateLimitMessage, extractClientInfo } from "../../mcp-utils/request-info.js";
 import { validateAndNormalizeUrl } from "../../mcp-utils/url-processor.js";
+import { MCP_ERROR_CODES } from "../constants.js";
 import {
 	createErrorResponse,
 	createSuccessResponse,
 	createToolErrorResponse,
 	formatFetchResponse,
 } from "../formatters/response-formatter.js";
-import { MCP_ERROR_CODES } from "../protocol-handler.js";
 
 export interface FetchToolArgs {
 	url: string;
 }
 
 export class FetchTool {
+	static readonly INPUT_SCHEMA: ToolDefinition["inputSchema"] & { $schema: string } = {
+		$schema: "https://json-schema.org/draft/2020-12/schema",
+		type: "object",
+		properties: {
+			url: {
+				type: "string",
+				description: "URL of the Apple developer documentation or video to retrieve content for",
+				minLength: 1,
+			},
+		},
+		required: ["url"],
+	};
+
 	constructor(private services: Services) {}
 
-	/**
-	 * Handle fetch tool request
-	 */
 	async handle(
 		id: string | number,
 		args: FetchToolArgs,

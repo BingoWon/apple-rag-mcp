@@ -1,18 +1,11 @@
-/**
- * Modern Service Factory - Cloudflare Worker Native
- * Creates and configures all services with optimal performance
- */
-
 import { AuthMiddleware } from "../mcp-auth/auth-middleware.js";
-import type { AppConfig, Services, WorkerEnv } from "../mcp-types/index.js";
+import type { AppConfig, Services } from "../mcp-types/index.js";
+import type { Env } from "../shared/types.js";
 import { RAGService } from "./rag.js";
 import { RateLimitService } from "./rate-limit.js";
 import { ToolCallLogger } from "./tool-call-logger.js";
 
-/**
- * Create all services from Worker environment with validation
- */
-export async function createServices(env: WorkerEnv): Promise<Services> {
+export async function createServices(env: Env): Promise<Services> {
 	try {
 		// Convert Worker env to app config
 		const config = createAppConfig(env);
@@ -22,9 +15,6 @@ export async function createServices(env: WorkerEnv): Promise<Services> {
 		const rag = new RAGService(config, env);
 		const rateLimit = new RateLimitService(env.DB);
 		const logger = new ToolCallLogger(env.DB);
-
-		// Initialize async services
-		await rag.initialize();
 
 		return {
 			rag,
@@ -44,10 +34,7 @@ export async function createServices(env: WorkerEnv): Promise<Services> {
 	}
 }
 
-/**
- * Convert Worker environment to app configuration
- */
-function createAppConfig(env: WorkerEnv): AppConfig {
+function createAppConfig(env: Env): AppConfig {
 	return {
 		RAG_DB_HOST: env.RAG_DB_HOST,
 		RAG_DB_PORT: parseInt(env.RAG_DB_PORT, 10),

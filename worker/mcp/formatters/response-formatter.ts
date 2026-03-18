@@ -4,7 +4,7 @@
  */
 
 import type { MCPResponse, RAGResult } from "../../mcp-types/index.js";
-import { APP_CONSTANTS } from "../protocol-handler.js";
+import { MESSAGES } from "../constants.js";
 
 /**
  * Format RAG response with professional layout
@@ -15,7 +15,7 @@ export function formatRAGResponse(
 	wasAdjusted: boolean = false,
 ): string {
 	if (!ragResult || !ragResult.success || !ragResult.results || ragResult.results.length === 0) {
-		return APP_CONSTANTS.NO_RESULTS_MESSAGE;
+		return MESSAGES.NO_RESULTS;
 	}
 
 	const results = ragResult.results;
@@ -69,10 +69,9 @@ export function formatRAGResponse(
 
 	// Footer message for anonymous users
 	if (!isAuthenticated) {
-		response += `\n\n${APP_CONSTANTS.ANONYMOUS_ACCESS_MESSAGE}`;
+		response += `\n\n${MESSAGES.ANONYMOUS_ACCESS}`;
 	}
 
-	// Parameter range reminder for AI agents (only when parameter was adjusted)
 	if (wasAdjusted) {
 		response += `\n\nNote: The result_count parameter accepts values between 1 and 10. Values outside this range are automatically adjusted to the nearest valid limit.`;
 	}
@@ -103,15 +102,12 @@ export function formatFetchResponse(
 
 	// Footer message for anonymous users
 	if (!isAuthenticated) {
-		response += `\n\n${APP_CONSTANTS.ANONYMOUS_ACCESS_MESSAGE}`;
+		response += `\n\n${MESSAGES.ANONYMOUS_ACCESS}`;
 	}
 
 	return response;
 }
 
-/**
- * Create success response
- */
 export function createSuccessResponse(requestId: string | number, content: string): MCPResponse {
 	return {
 		jsonrpc: "2.0",
@@ -127,9 +123,6 @@ export function createSuccessResponse(requestId: string | number, content: strin
 	};
 }
 
-/**
- * Create error response
- */
 export function createErrorResponse(
 	requestId: string | number,
 	code: number,
@@ -145,13 +138,9 @@ export function createErrorResponse(
 	};
 }
 
-/**
- * Create tool execution error response
- */
 export function createToolErrorResponse(
 	requestId: string | number,
 	message: string,
-	data?: unknown,
 ): MCPResponse {
 	return {
 		jsonrpc: "2.0",
@@ -164,7 +153,6 @@ export function createToolErrorResponse(
 					text: message,
 				},
 			],
-			...(data ? { data } : {}),
 		},
 	};
 }

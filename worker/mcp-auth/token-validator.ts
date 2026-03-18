@@ -1,7 +1,4 @@
-/**
- * MCP Token Validator with D1 timeout protection
- */
-
+import { TOKEN_FORMAT } from "../mcp/constants.js";
 import { backgroundD1Write, withD1Timeout } from "../mcp-utils/d1-utils.js";
 import { logger } from "../mcp-utils/logger.js";
 
@@ -21,7 +18,7 @@ export class TokenValidator {
 	constructor(private d1: D1Database) {}
 
 	async validateToken(token: string): Promise<TokenValidationResult> {
-		if (!/^at_[a-f0-9]{32}$/.test(token)) {
+		if (!TOKEN_FORMAT.test(token)) {
 			return { valid: false, error: "Invalid token format" };
 		}
 

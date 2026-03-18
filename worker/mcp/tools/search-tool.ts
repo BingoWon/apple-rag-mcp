@@ -1,19 +1,14 @@
-/**
- * Search Tool Handler
- * Handles MCP search tool requests with RAG processing
- */
-
-import type { AuthContext, MCPResponse, Services } from "../../mcp-types/index.js";
+import type { AuthContext, MCPResponse, Services, ToolDefinition } from "../../mcp-types/index.js";
 import { logger } from "../../mcp-utils/logger.js";
 import { cleanQuerySafely } from "../../mcp-utils/query-cleaner.js";
 import { buildRateLimitMessage, extractClientInfo } from "../../mcp-utils/request-info.js";
+import { MCP_ERROR_CODES, MESSAGES } from "../constants.js";
 import {
 	createErrorResponse,
 	createSuccessResponse,
 	createToolErrorResponse,
 	formatRAGResponse,
 } from "../formatters/response-formatter.js";
-import { APP_CONSTANTS, MCP_ERROR_CODES } from "../protocol-handler.js";
 
 export interface SearchToolArgs {
 	query: string;
@@ -21,11 +16,30 @@ export interface SearchToolArgs {
 }
 
 export class SearchTool {
+	static readonly INPUT_SCHEMA: ToolDefinition["inputSchema"] & { $schema: string } = {
+		$schema: "https://json-schema.org/draft/2020-12/schema",
+		type: "object",
+		properties: {
+			query: {
+				type: "string",
+				description:
+					"Search query for Apple's official developer documentation and video content. Queries must be written in English and focus on technical concepts, APIs, frameworks, features, and version numbers rather than temporal information.",
+				minLength: 1,
+				maxLength: 10000,
+			},
+			result_count: {
+				type: "number",
+				description: "Number of results to return (1-10)",
+				minimum: 1,
+				maximum: 10,
+				default: 4,
+			},
+		},
+		required: ["query"],
+	};
+
 	constructor(private services: Services) {}
 
-	/**
-	 * Handle search tool request
-	 */
 	async handle(
 		id: string | number,
 		args: SearchToolArgs,
@@ -37,7 +51,7 @@ export class SearchTool {
 
 		// Validate query parameter
 		if (!query || typeof query !== "string" || query.trim().length === 0) {
-			return createToolErrorResponse(id, APP_CONSTANTS.MISSING_SEARCH_ERROR);
+			return createToolErrorResponse(id, MESSAGES.MISSING_SEARCH);
 		}
 
 		const requestedQuery = query;
@@ -111,7 +125,7 @@ export class SearchTool {
 				`RAG query failed for "${actualQuery}": ${error instanceof Error ? error.message : String(error)}`,
 			);
 
-			return createToolErrorResponse(id, APP_CONSTANTS.SEARCH_FAILED_ERROR);
+			return createToolErrorResponse(id, MESSAGES.SEARCH_FAILED);
 		}
 	}
 

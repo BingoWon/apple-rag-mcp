@@ -1,7 +1,4 @@
 import type { ToolCallLogger } from "../mcp-services/tool-call-logger.js";
-import type { Env } from "../shared/types.js";
-
-export type WorkerEnv = Env;
 
 export interface MCPRequest {
 	jsonrpc: "2.0";
@@ -86,7 +83,6 @@ export interface Services {
 
 export interface RAGService {
 	query(request: RAGQuery): Promise<RAGResult>;
-	initialize(): Promise<void>;
 }
 
 export interface AuthContext {

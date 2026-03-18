@@ -4,7 +4,7 @@
  */
 
 import type { MCPNotification, MCPRequest } from "../../mcp-types/index.js";
-import { MCP_ERROR_CODES, SUPPORTED_MCP_VERSIONS } from "../protocol-handler.js";
+import { MCP_ERROR_CODES, SUPPORTED_MCP_VERSIONS } from "../constants.js";
 
 /**
  * Validate MCP request structure
