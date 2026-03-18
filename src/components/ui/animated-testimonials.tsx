@@ -1,7 +1,51 @@
 import { IconArrowLeft, IconArrowRight } from "@tabler/icons-react";
 import { AnimatePresence, motion } from "motion/react";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+
+const CJK_RANGE =
+	/[\u2E80-\u9FFF\uF900-\uFAFF\uFE30-\uFE4F\u{20000}-\u{2FA1F}]/u;
+
+function splitForAnimation(text: string): string[] {
+	const segments: string[] = [];
+	const regex = /([a-zA-Z0-9']+|[^\sa-zA-Z0-9])(\s?)/gu;
+	let m: RegExpExecArray | null;
+	while ((m = regex.exec(text)) !== null) {
+		segments.push(m[1] + (m[2] ? "\u00A0" : ""));
+	}
+	return segments;
+}
+
+function hasCJK(text: string): boolean {
+	return CJK_RANGE.test(text);
+}
+
+function QuoteText({ text }: { text: string }) {
+	const segments = useMemo(() => {
+		if (hasCJK(text)) return splitForAnimation(text);
+		return text.split(" ").map((w) => `${w}\u00A0`);
+	}, [text]);
+
+	return (
+		<motion.p className="mt-8 text-lg text-subtle leading-relaxed">
+			{segments.map((segment, index) => (
+				<motion.span
+					key={index}
+					initial={{ filter: "blur(10px)", opacity: 0, y: 5 }}
+					animate={{ filter: "blur(0px)", opacity: 1, y: 0 }}
+					transition={{
+						duration: 0.2,
+						ease: [0.4, 0, 0.2, 1],
+						delay: 0.02 * index,
+					}}
+					className="inline-block"
+				>
+					{segment}
+				</motion.span>
+			))}
+		</motion.p>
+	);
+}
 
 type Testimonial = {
 	quote: string;
@@ -119,31 +163,7 @@ export const AnimatedTestimonials = ({
 					>
 						<h3 className="text-2xl font-bold text-light">{testimonials[active].name}</h3>
 						<p className="text-sm text-muted mt-1">{testimonials[active].designation}</p>
-						<motion.p className="mt-8 text-lg text-subtle leading-relaxed">
-							{testimonials[active].quote.split(" ").map((word, index) => (
-								<motion.span
-									key={index}
-									initial={{
-										filter: "blur(10px)",
-										opacity: 0,
-										y: 5,
-									}}
-									animate={{
-										filter: "blur(0px)",
-										opacity: 1,
-										y: 0,
-									}}
-									transition={{
-										duration: 0.2,
-										ease: [0.4, 0, 0.2, 1],
-										delay: 0.02 * index,
-									}}
-									className="inline-block"
-								>
-									{word}&nbsp;
-								</motion.span>
-							))}
-						</motion.p>
+						<QuoteText text={testimonials[active].quote} />
 					</motion.div>
 					<div className="flex gap-4 pt-12 md:pt-0">
 						<button

@@ -66,7 +66,7 @@
 
 	"hero": {
 		"title_inject": "将",
-		"title_apple": "Apple 专业知识",
+		"title_apple": "Apple 开发文档",
 		"title_into": "通过 MCP 注入 AI Agent",
 		"subtitle_heres": "致敬每一位",
 		"subtitle_vibecoders": "Vibe Coder",
@@ -87,6 +87,14 @@
 		"code_examples_desc": "搜索结果附带 Swift、Objective-C 和 SwiftUI 实用代码示例。",
 		"realtime_updates": "实时更新",
 		"realtime_updates_desc": "文档索引持续同步，始终反映最新 Apple 开发资源。"
+	},
+
+	"quickstart": {
+		"eyebrow": "极简接入",
+		"title": "零 Token 配置，秒级启动",
+		"subtitle": "无需注册，无需令牌。只需将以下配置粘贴到你的 MCP 客户端，即可立即开始使用。",
+		"supported_clients": "支持的客户端：",
+		"and_more": "等更多..."
 	},
 
 	"datasources": {
@@ -122,7 +130,6 @@
 		"title": "选择适合你的方案",
 		"subtitle": "免费起步，按需升级。所有方案均可使用 AI 驱动的 MCP。",
 		"most_popular": "最受欢迎",
-		"supported_clients": "支持的客户端：",
 		"choose_plan": "选择 {{plan}} 方案",
 		"choose_cycle": "请选择最适合你的计费周期",
 		"subscribe_now": "立即订阅",
@@ -136,7 +143,6 @@
 		"semiannual": "半年付费",
 		"annual": "按年付费",
 		"discount": "省 {{percent}}%",
-		"and_more": "等更多...",
 		"tab_subscription": "订阅",
 		"tab_onetime": "单次购买",
 		"buy_now": "立即购买",

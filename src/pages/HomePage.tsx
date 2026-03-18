@@ -3,6 +3,7 @@ import { CTASection } from "@/components/sections/CTASection";
 import { DataSourcesShowcase } from "@/components/sections/DataSourcesSection";
 import { FeaturesSection } from "@/components/sections/FeaturesSection";
 import { PricingSection } from "@/components/sections/PricingSection";
+import { QuickStartSection } from "@/components/sections/QuickStartSection";
 import { TestimonialsSection } from "@/components/sections/TestimonialsSection";
 import { HeroSection } from "@/components/ui/hero-section";
 import { AppNavbar } from "@/components/ui/resizable-navbar";
@@ -16,6 +17,7 @@ export default function HomePage() {
 			<TracingBeam>
 				<main>
 					<FeaturesSection />
+					<QuickStartSection />
 					<DataSourcesShowcase />
 					<TestimonialsSection />
 					<PricingSection />

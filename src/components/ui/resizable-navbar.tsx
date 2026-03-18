@@ -275,14 +275,9 @@ export const UserMenu = ({ user, onLogout }: Omit<UserMenuProps, "visible">) => 
 
 			{/* 按钮 - 只在初始状态下显示 */}
 			{!visible && (
-				<>
-					<Button variant="gradient" asChild>
-						<a href="/overview/">{t("common.dashboard")}</a>
-					</Button>
-					<Button variant="ghost" onClick={onLogout}>
-						{t("common.logout")}
-					</Button>
-				</>
+				<Button variant="gradient" asChild>
+					<a href="/overview/">{t("common.dashboard")}</a>
+				</Button>
 			)}
 		</>
 	);
@@ -330,14 +325,9 @@ export function AppNavbar() {
 					{isAuthenticated ? (
 						<UserMenu user={user} onLogout={handleLogout} />
 					) : (
-						<>
-							<Button variant="secondary" asChild>
-								<a href="/login">{t("common.login")}</a>
-							</Button>
-							<Button variant="primary" asChild>
-								<a href="/register">{t("common.sign_up")}</a>
-							</Button>
-						</>
+						<Button variant="primary" asChild>
+							<a href="/login">{t("common.get_started")}</a>
+						</Button>
 					)}
 				</div>
 			</NavBody>
@@ -394,23 +384,13 @@ export function AppNavbar() {
 										{t("common.dashboard")}
 									</a>
 								</Button>
-								<Button variant="secondary" className="w-full" onClick={handleLogout}>
-									{t("common.logout")}
-								</Button>
 							</>
 						) : (
-							<>
-								<Button variant="secondary" className="w-full" asChild>
-									<a href="/login" onClick={handleMenuClose}>
-										{t("common.login")}
-									</a>
-								</Button>
-								<Button variant="gradient" className="w-full" asChild>
-									<a href="/register" onClick={handleMenuClose}>
-										{t("common.sign_up")}
-									</a>
-								</Button>
-							</>
+							<Button variant="gradient" className="w-full" asChild>
+								<a href="/login" onClick={handleMenuClose}>
+									{t("common.get_started")}
+								</a>
+							</Button>
 						)}
 					</div>
 				</MobileNavMenu>

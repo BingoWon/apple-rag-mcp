@@ -6,7 +6,6 @@ import { Modal, ModalTrigger } from "@/components/ui/animated-modal";
 import { Button } from "@/components/ui/Button";
 import { EvervaultCard, Icon } from "@/components/ui/evervault-card";
 import { activateFabContact } from "@/components/ui/FabButton";
-import { SUPPORTED_CLIENTS } from "@/constants/pricing";
 import { useAuth } from "@/hooks/useAuth";
 import { trackEvent } from "@/lib/analytics";
 import { getPricingTiers } from "@/lib/plans";
@@ -165,13 +164,6 @@ export function PricingSection() {
 				))}
 			</div>
 
-			{/* Supported Clients - Global Section */}
-			<div className="mt-4 md:mt-0">
-				<h3 className="text-lg font-semibold text-light mb-4">{t("pricing.supported_clients")}</h3>
-				<p className="text-sm text-muted leading-relaxed">
-					{SUPPORTED_CLIENTS.filter((c) => c !== "and more...").join(", ")}, {t("pricing.and_more")}
-				</p>
-			</div>
 		</div>
 	);
 }
