@@ -1,0 +1,12 @@
+interface:
+  display_name: "Apple Dev Docs"
+  short_description: "Search Apple developer documentation and WWDC content with semantic RAG"
+  default_prompt: "Search Apple developer documentation using the apple-rag-mcp MCP server, retrieve full content when needed, and answer with concise, cited guidance."
+
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "apple-rag-mcp"
+      description: "Apple Developer Documentation RAG MCP server"
+      transport: "streamable_http"
+      url: "https://mcp.apple-rag.com"
