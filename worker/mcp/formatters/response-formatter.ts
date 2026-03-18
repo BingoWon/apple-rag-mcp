@@ -138,10 +138,7 @@ export function createErrorResponse(
 	};
 }
 
-export function createToolErrorResponse(
-	requestId: string | number,
-	message: string,
-): MCPResponse {
+export function createToolErrorResponse(requestId: string | number, message: string): MCPResponse {
 	return {
 		jsonrpc: "2.0",
 		id: requestId,

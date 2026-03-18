@@ -1,8 +1,8 @@
+import { TOKEN_FORMAT } from "../mcp/constants.js";
 import { IPAuthenticationService } from "../mcp-services/ip-authentication.js";
 import type { AuthContext } from "../mcp-types/index.js";
 import { logger } from "../mcp-utils/logger.js";
 import { extractClientInfo } from "../mcp-utils/request-info.js";
-import { TOKEN_FORMAT } from "../mcp/constants.js";
 import { TokenValidator, type UserTokenData } from "./token-validator.js";
 
 export class AuthMiddleware {

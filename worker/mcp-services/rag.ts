@@ -1,6 +1,6 @@
 import type { AppConfig, RAGQuery, RAGResult, SearchResult } from "../mcp-types/index.js";
-import type { Env } from "../shared/types.js";
 import { logger } from "../mcp-utils/logger.js";
+import type { Env } from "../shared/types.js";
 import { DatabaseService } from "./database.js";
 import { EmbeddingService } from "./embedding.js";
 import { RerankerService } from "./reranker.js";
