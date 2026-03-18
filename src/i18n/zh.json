@@ -66,7 +66,7 @@
 
 	"hero": {
 		"title_inject": "将",
-		"title_apple": "Apple 开发文档",
+		"title_apple": "Apple 开发者文档",
 		"title_into": "通过 MCP 注入 AI Agent",
 		"subtitle_heres": "致敬每一位",
 		"subtitle_vibecoders": "Vibe Coder",
@@ -111,10 +111,10 @@
 
 	"testimonials": {
 		"eyebrow": "用户好评",
-		"title": "开发者们都爱上了！",
+		"title": "开发者们用得顺手",
 		"subtitle": "看看为什么开发者们纷纷把 Apple RAG MCP 加入自己的技术栈。",
-		"quote1": "我从零 iOS 基础到成功发布应用，而且不需要自己手写一行代码。对我这种非专业开发者来说，这 MCP 简直是魔法！",
-		"quote2": "以前的 LLM 勉强够用，但在正经 Apple 开发中总差那么点意思。这个 MCP 彻底改变了局面——终于有 AI 能真正理解 Apple 生态了。",
+		"quote1": "我从零 iOS 开发基础 到 成功发布应用，不需要自己手写一行代码。对我这种非专业开发者来说，这 MCP 太香了！",
+		"quote2": "以前的 LLM 勉强够用，但在正经 Apple 开发中总差那么点意思。这个 MCP 彻底改变了局面，终于有 AI 能真正理解 Apple 生态了。",
 		"quote3": "我找这类方案找了很久，甚至评估过自己做一个。这个产品的架构设计和实现质量都相当过硬。",
 		"quote4": "不得不说，定价策略设计得很巧妙。实惠与价值的平衡恰到好处，完全契合我的工作流。",
 		"quote5": "很高兴看到这样优质的商业 MCP 产品出现。这对整个生态是好事，也说明认真做 MCP 确实能创造价值。",
@@ -126,7 +126,7 @@
 	},
 
 	"pricing": {
-		"eyebrow": "价格方案",
+		"eyebrow": "订阅价格",
 		"title": "选择适合你的方案",
 		"subtitle": "免费起步，按需升级。所有方案均可使用 AI 驱动的 MCP。",
 		"most_popular": "最受欢迎",
@@ -649,7 +649,7 @@
 	},
 
 	"footer": {
-		"tagline": "Think Vibe Coding. 当 RAG 遇上 Model Context Protocol，你的 AI Agent 不只是编写 Apple 代码——它们精通 Apple。",
+		"tagline": "当 RAG 遇上 MCP，你的 AI Agent 不只是编写代码，它们精通关于 Apple 的一切。",
 		"copyright": "© 2025 Apple RAG MCP · 版权所有",
 		"privacy": "隐私政策",
 		"terms": "服务条款",

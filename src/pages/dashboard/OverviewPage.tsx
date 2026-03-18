@@ -5,6 +5,7 @@ import { useSearchParams } from "react-router-dom";
 import { MCPUsageGuide } from "@/components/dashboard/MCPUsageGuide";
 import StatsCards from "@/components/dashboard/StatsCards";
 import { ToolCallsChart } from "@/components/dashboard/ToolCallsChart";
+import { AppleRAGMCPIntro } from "@/components/dashboard/AppleRAGMCPIntro";
 import { XcodeBuildMCPRecommendation } from "@/components/dashboard/XcodeBuildMCPRecommendation";
 import { useAuth } from "@/hooks/useAuth";
 import { useDashboardStore } from "@/stores/dashboard";
@@ -77,6 +78,7 @@ function DashboardOverviewContent() {
 						totalToolCalls={toolCallsStats?.total_tool_calls || 0}
 						totalResults={toolCallsStats?.total_results || 0}
 					/>
+					<AppleRAGMCPIntro />
 					<XcodeBuildMCPRecommendation />
 				</div>
 			</div>

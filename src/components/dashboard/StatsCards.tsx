@@ -15,7 +15,7 @@ const StatsCards = () => {
 	const stats: StatCard[] = [
 		{
 			icon: IconFileText,
-			value: "372,119",
+			value: "373,047",
 			label: "Apple Doc Pages",
 			color: "#9595ff",
 			clickable: true,
@@ -23,7 +23,7 @@ const StatsCards = () => {
 		},
 		{
 			icon: IconVideo,
-			value: "1,356",
+			value: "1,409",
 			label: "WWDC Videos",
 			color: "#fca147",
 			clickable: true,
@@ -31,7 +31,7 @@ const StatsCards = () => {
 		},
 		{
 			icon: IconDatabase,
-			value: "395,656",
+			value: "396,516",
 			label: "Chunks",
 			color: "#42c16e",
 			clickable: false,
