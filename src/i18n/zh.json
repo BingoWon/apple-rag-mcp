@@ -245,7 +245,14 @@
 		"skill_title": "Agent Skill",
 		"skill_subtitle": "让你的 AI Agent 学会使用 Apple RAG MCP",
 		"skill_desc": "从 <repo>GitHub 仓库</repo> 复制 <code>skills/apple-dev-docs/</code> 目录到对应位置：",
-		"skill_learn_more": "了解更多"
+		"skill_learn_more": "了解更多",
+		"xcode_subtitle": "推荐的第三方 MCP",
+		"xcode_desc": "将 AI Agent 与完整的 Xcode 操作连接。支持自主构建、测试和部署——Xcode 能做的，AI Agent 现在也能做。",
+		"xcode_explore": "GitHub 探索",
+		"xcode_feat_xcode": "完整 Xcode 操作",
+		"xcode_feat_platforms": "全 Apple 平台",
+		"xcode_feat_project": "项目与包管理",
+		"xcode_feat_ai": "AI Agent 自动化"
 	},
 
 	"tokens": {

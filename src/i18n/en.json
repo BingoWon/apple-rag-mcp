@@ -257,7 +257,14 @@
 		"skill_title": "Agent Skill",
 		"skill_subtitle": "Teach your AI agent to use Apple RAG MCP",
 		"skill_desc": "Copy <code>skills/apple-dev-docs/</code> from our <repo>GitHub repo</repo> to your agent's skill location:",
-		"skill_learn_more": "Learn More"
+		"skill_learn_more": "Learn More",
+		"xcode_subtitle": "Recommended third-party MCP",
+		"xcode_desc": "Bridges AI agents with complete Xcode operations. Enables autonomous building, testing, and deployment - everything Xcode can do, AI agents can now do.",
+		"xcode_explore": "Explore on GitHub",
+		"xcode_feat_xcode": "Full Xcode operations",
+		"xcode_feat_platforms": "All Apple platforms",
+		"xcode_feat_project": "Project & package mgmt",
+		"xcode_feat_ai": "AI agent automation"
 	},
 
 	"tokens": {

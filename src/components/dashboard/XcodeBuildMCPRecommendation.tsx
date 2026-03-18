@@ -6,36 +6,19 @@ import {
 	IconRocket,
 	IconStar,
 } from "@tabler/icons-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 
-export function XcodeBuildMCPRecommendation() {
-	const features = [
-		{
-			icon: IconBrandApple,
-			text: "Full Xcode operations",
-			color: "#42c16e",
-		},
-		{
-			icon: IconDeviceMobile,
-			text: "All Apple platforms",
-			color: "#9595ff",
-		},
-		{
-			icon: IconCode,
-			text: "Project & package mgmt",
-			color: "#fca147",
-		},
-		{
-			icon: IconRocket,
-			text: "AI agent automation",
-			color: "#dc5bb7",
-		},
-	];
+const FEATURES = [
+	{ icon: IconBrandApple, key: "xcode_feat_xcode", color: "#42c16e" },
+	{ icon: IconDeviceMobile, key: "xcode_feat_platforms", color: "#9595ff" },
+	{ icon: IconCode, key: "xcode_feat_project", color: "#fca147" },
+	{ icon: IconRocket, key: "xcode_feat_ai", color: "#dc5bb7" },
+] as const;
 
-	const handleGitHubClick = () => {
-		window.open("https://github.com/cameroncooke/XcodeBuildMCP", "_blank");
-	};
+export function XcodeBuildMCPRecommendation() {
+	const { t } = useTranslation();
 
 	return (
 		<Card className="mt-6">
@@ -47,34 +30,36 @@ export function XcodeBuildMCPRecommendation() {
 						</div>
 						<div>
 							<CardTitle className="text-lg">XcodeBuildMCP</CardTitle>
-							<p className="text-xs text-muted mt-1">Recommended third-party MCP</p>
+							<p className="text-xs text-muted mt-1">{t("dashboard.xcode_subtitle")}</p>
 						</div>
 					</div>
-					<Button size="sm" variant="outline" onClick={handleGitHubClick} className="text-sm">
+					<Button
+						size="sm"
+						variant="outline"
+						onClick={() => window.open("https://github.com/cameroncooke/XcodeBuildMCP", "_blank")}
+						className="text-sm"
+					>
 						<IconBrandGithub className="h-4 w-4 mr-2" />
-						Explore on GitHub
+						{t("dashboard.xcode_explore")}
 					</Button>
 				</div>
 			</CardHeader>
 
 			<CardContent className="pt-0">
 				<div className="space-y-4">
-					{/* Project Info */}
-					<div>
-						<p className="text-sm text-muted leading-relaxed">
-							Bridges AI agents with complete Xcode operations. Enables autonomous building,
-							testing, and deployment - everything Xcode can do, AI agents can now do.
-						</p>
-					</div>
+					<p className="text-sm text-muted leading-relaxed">
+						{t("dashboard.xcode_desc")}
+					</p>
 
-					{/* Features Grid */}
 					<div className="grid grid-cols-2 gap-2">
-						{features.map((feature, index) => {
+						{FEATURES.map((feature, index) => {
 							const Icon = feature.icon;
 							return (
 								<div key={index} className="flex items-center gap-2 p-2 rounded-md bg-tertiary/50">
 									<Icon className="h-4 w-4 flex-shrink-0" style={{ color: feature.color }} />
-									<span className="text-xs text-muted font-medium">{feature.text}</span>
+									<span className="text-xs text-muted font-medium">
+										{t(`dashboard.${feature.key}`)}
+									</span>
 								</div>
 							);
 						})}

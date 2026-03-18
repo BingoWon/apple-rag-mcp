@@ -130,7 +130,7 @@ export function generateTomlString(token: string): string {
 
 export function generateClaudeCodeCommand(token: string, serverUrl?: string): string {
 	const url = serverUrl || DEFAULT_SERVER_URL;
-	return `claude mcp add --transport streamable-http --header "Authorization: Bearer ${token}" ${SERVER_NAME} ${url}`;
+	return `claude mcp add --transport http --header "Authorization: Bearer ${token}" -- ${SERVER_NAME} ${url}`;
 }
 
 export function generateCursorLink(token: string): string {
