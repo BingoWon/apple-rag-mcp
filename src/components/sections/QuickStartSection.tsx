@@ -95,16 +95,16 @@ export function QuickStartSection() {
 							</pre>
 						</div>
 					</div>
+				</div>
 
-					<div className="mt-8 text-center">
-						<h3 className="text-sm font-semibold text-light mb-2">
-							{t("quickstart.supported_clients")}
-						</h3>
-						<p className="text-sm text-muted leading-relaxed">
-							{SUPPORTED_CLIENTS.filter((c) => c !== "and more...").join(" · ")}{" "}
-							· {t("quickstart.and_more")}
-						</p>
-					</div>
+				<div className="mt-10 text-center">
+					<h3 className="text-sm font-semibold text-light mb-2">
+						{t("quickstart.supported_clients")}
+					</h3>
+					<p className="text-sm text-muted leading-relaxed">
+						{SUPPORTED_CLIENTS.filter((c) => c !== "and more...").join(" · ")}{" "}
+						· {t("quickstart.and_more")}
+					</p>
 				</div>
 			</div>
 		</div>

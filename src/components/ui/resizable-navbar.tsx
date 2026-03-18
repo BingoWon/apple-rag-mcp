@@ -326,7 +326,7 @@ export function AppNavbar() {
 						<UserMenu user={user} onLogout={handleLogout} />
 					) : (
 						<Button variant="primary" asChild>
-							<a href="/login">{t("common.get_started")}</a>
+							<a href="/login">{t("common.login")} / {t("common.sign_up")}</a>
 						</Button>
 					)}
 				</div>
@@ -388,7 +388,7 @@ export function AppNavbar() {
 						) : (
 							<Button variant="gradient" className="w-full" asChild>
 								<a href="/login" onClick={handleMenuClose}>
-									{t("common.get_started")}
+									{t("common.login")} / {t("common.sign_up")}
 								</a>
 							</Button>
 						)}
