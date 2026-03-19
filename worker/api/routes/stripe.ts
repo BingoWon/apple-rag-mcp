@@ -927,7 +927,8 @@ async function handleOneTimePayment(
 				.first();
 
 			if (userResult?.email) {
-				const telegramMessage = `💳 New One-time Payment\nEmail: ${userResult.email}\nPlan: Pro Pass\nAmount: $${price}\nDuration: ${durationDays} days\nExpires: ${periodEnd.toISOString().split("T")[0]}`;
+				const currencySymbol = session.currency?.toUpperCase() === "CNY" ? "¥" : "$";
+				const telegramMessage = `💳 New One-time Payment\nEmail: ${userResult.email}\nPlan: Pro Pass\nAmount: ${currencySymbol}${price}\nDuration: ${durationDays} days\nExpires: ${periodEnd.toISOString().split("T")[0]}`;
 				await notifyTelegram(telegramMessage, "alerts");
 			}
 		} catch (_notificationError) {
