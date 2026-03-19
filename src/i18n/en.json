@@ -264,7 +264,15 @@
 		"xcode_feat_xcode": "Full Xcode operations",
 		"xcode_feat_platforms": "All Apple platforms",
 		"xcode_feat_project": "Project & package mgmt",
-		"xcode_feat_ai": "AI agent automation"
+		"xcode_feat_ai": "AI agent automation",
+		"stats_status": "Status",
+		"stats_freshness": "Data automatically updated daily to ensure freshness!",
+		"stats_heading": "Our most comprehensive Apple knowledge base for AI agents",
+		"stats_date": "Data as of {{date}}",
+		"stats_doc_pages": "Apple Doc Pages",
+		"stats_wwdc_videos": "WWDC Videos",
+		"stats_chunks": "Chunks",
+		"stats_embedded": "Embedded"
 	},
 
 	"tokens": {

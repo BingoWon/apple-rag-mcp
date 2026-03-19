@@ -252,7 +252,15 @@
 		"xcode_feat_xcode": "完整 Xcode 操作",
 		"xcode_feat_platforms": "全 Apple 平台",
 		"xcode_feat_project": "项目与包管理",
-		"xcode_feat_ai": "AI Agent 自动化"
+		"xcode_feat_ai": "AI Agent 自动化",
+		"stats_status": "状态",
+		"stats_freshness": "数据每日自动更新，保持最新！",
+		"stats_heading": "为 AI Agent 打造的最全 Apple 知识库",
+		"stats_date": "数据截至 {{date}}",
+		"stats_doc_pages": "Apple 文档页",
+		"stats_wwdc_videos": "WWDC 视频",
+		"stats_chunks": "向量分块",
+		"stats_embedded": "已嵌入"
 	},
 
 	"tokens": {
@@ -773,7 +781,7 @@
 	"chart": {
 		"usage_trends": "使用趋势",
 		"tool_calls": "工具调用",
-		"results": "结果",
+		"results": "结果数量",
 		"last_24h": "近 24 小时",
 		"last_7d": "近 7 天",
 		"last_30d": "近 30 天",
