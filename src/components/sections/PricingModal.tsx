@@ -110,7 +110,7 @@ export function PricingModal({ planName, defaultTab = "subscription" }: PricingM
 				</div>
 
 				{/* Payment Type Toggle */}
-				<div className="flex gap-1 rounded-xl bg-secondary p-1">
+				<div className="flex gap-1 rounded-xl border border-border bg-secondary p-1">
 					<button
 						type="button"
 						disabled={subscriptionTabDisabled}
@@ -153,7 +153,10 @@ export function PricingModal({ planName, defaultTab = "subscription" }: PricingM
 						{onetimeTabDisabled ? (
 							<IconLock className="w-3.5 h-3.5" />
 						) : (
-							<IconBrandAlipay className="w-4 h-4" />
+							<>
+								<IconCreditCard className="w-4 h-4" />
+								<IconBrandAlipay className="w-4 h-4" />
+							</>
 						)}
 						{t("pricing.tab_onetime")}
 					</button>
