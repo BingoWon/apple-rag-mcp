@@ -237,7 +237,7 @@ export function PricingModal({ planName, defaultTab = "subscription" }: PricingM
 					{isOneTime ? (
 						<>
 							<Button
-								variant="outline"
+								variant="primary"
 								onClick={() => handleCheckout("alipay")}
 								className="flex-1"
 								disabled={!selectedPricingOption || isLoading}

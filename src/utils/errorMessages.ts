@@ -44,6 +44,11 @@ const ERROR_KEY_MAP: Record<string, ErrorKeyMapping> = {
 		messageKey: "errors.email_taken",
 		suggestionKey: "errors.email_taken_suggestion",
 	},
+	VALIDATION_ERROR: {
+		titleKey: "errors.validation_error_title",
+		messageKey: "errors.validation_error",
+		suggestionKey: "errors.validation_error_suggestion",
+	},
 	INVALID_REQUEST: {
 		titleKey: "errors.invalid_request_title",
 		messageKey: "errors.invalid_request",
@@ -203,10 +208,15 @@ export function getFriendlyError(
 		return resolveError(ERROR_KEY_MAP.NETWORK_ERROR);
 	}
 
-	// Default generic error message
+	// Sanitize fallback: never display raw JSON/arrays to users
+	const safeFallback =
+		fallbackMessage && /^\s*[{[]/.test(fallbackMessage)
+			? undefined
+			: fallbackMessage;
+
 	return {
 		title: i18n.t("errors.generic_title"),
-		message: fallbackMessage || i18n.t("errors.generic"),
+		message: safeFallback || i18n.t("errors.generic"),
 		suggestion: i18n.t("errors.generic_suggestion"),
 	};
 }

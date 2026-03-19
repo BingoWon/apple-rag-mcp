@@ -2,15 +2,14 @@
  * User management routes
  * Implements user quota, statistics, and profile management
  */
-import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { createRoute, z } from "@hono/zod-openapi";
 import { ApiErrorCode } from "../constants/error-codes";
 import { authMiddleware } from "../middleware/auth";
 import type { User } from "../types";
-import type { AppEnv } from "../types/hono";
-
 import { logger } from "../utils/logger";
+import { createOpenAPIApp } from "../utils/openapi";
 
-const app = new OpenAPIHono<AppEnv>();
+const app = createOpenAPIApp();
 
 // Simplified response schemas
 const QuotaResponseSchema = z.object({

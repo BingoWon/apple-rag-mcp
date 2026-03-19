@@ -2,14 +2,14 @@
  * MCP Tool Call Logs Routes
  * Modern implementation for tracking separated search and fetch tool call logs
  */
-import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { createRoute, z } from "@hono/zod-openapi";
 import { ApiErrorCode } from "../constants/error-codes";
 import { authMiddleware } from "../middleware/auth";
 import type { User } from "../types";
-import type { AppEnv } from "../types/hono";
 import { logger } from "../utils/logger";
+import { createOpenAPIApp } from "../utils/openapi";
 
-const app = new OpenAPIHono<AppEnv>();
+const app = createOpenAPIApp();
 
 // Apply JWT authentication middleware to all routes
 app.use("*", authMiddleware);

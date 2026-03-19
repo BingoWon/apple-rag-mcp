@@ -2,11 +2,11 @@
  * OAuth Authentication Routes
  * Unified OAuth handling for Google and GitHub
  */
-import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { createRoute, z } from "@hono/zod-openapi";
 import { OAuthService } from "../services/oauth-service";
-import type { AppEnv } from "../types/hono";
+import { createOpenAPIApp } from "../utils/openapi";
 
-const app = new OpenAPIHono<AppEnv>();
+const app = createOpenAPIApp();
 
 // Unified OAuth provider type
 const OAuthProvider = z.enum(["google", "github"]);

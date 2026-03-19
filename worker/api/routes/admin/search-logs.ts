@@ -2,11 +2,11 @@
  * Admin Search Logs API
  * Administrative access to search_logs table
  */
-import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import type { AppEnv } from "../../types/hono";
+import { createRoute, z } from "@hono/zod-openapi";
 import { logger } from "../../utils/logger";
+import { createOpenAPIApp } from "../../utils/openapi";
 
-const app = new OpenAPIHono<AppEnv>();
+const app = createOpenAPIApp();
 
 const AdminSearchLogSchema = z.object({
 	id: z.string(),

@@ -1,13 +1,12 @@
 /**
  * Authentication routes
  */
-import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { createRoute, z } from "@hono/zod-openapi";
 import { authMiddleware } from "../middleware/auth";
 import { AuthService } from "../services/auth-service";
 import type { User } from "../types";
-import type { AppEnv } from "../types/hono";
+import { createOpenAPIApp } from "../utils/openapi";
 import { notifyTelegram } from "../utils/telegram-notifier";
-// Removed unused imports for simplified implementation
 import {
 	forgotPasswordSchema,
 	loginSchema,
@@ -15,7 +14,7 @@ import {
 	resetPasswordSchema,
 } from "../utils/validation";
 
-const app = new OpenAPIHono<AppEnv>();
+const app = createOpenAPIApp();
 
 // Response schemas
 const UserSchema = z.object({

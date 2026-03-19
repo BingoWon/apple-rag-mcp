@@ -3,9 +3,8 @@
  * Provides administrative access to database tables for development/debugging
  * WARNING: No authentication - use only in development environment
  */
-import { OpenAPIHono } from "@hono/zod-openapi";
-import type { AppEnv } from "../../types/hono";
 import { logger } from "../../utils/logger.js";
+import { createOpenAPIApp } from "../../utils/openapi";
 import authorizedIPsAdmin from "./authorized-ips";
 import contactMessagesAdmin from "./contact-messages";
 import fetchLogsAdmin from "./fetch-logs";
@@ -14,10 +13,9 @@ import searchLogsAdmin from "./search-logs";
 import userSubscriptionsAdmin from "./user-subscriptions";
 import usersAdmin from "./users";
 
-// Admin authentication constants
 const ADMIN_PASSWORD_HEADER = "X-Admin-Password" as const;
 
-const app = new OpenAPIHono<AppEnv>();
+const app = createOpenAPIApp();
 
 // Admin password authentication
 app.use("*", async (c, next) => {

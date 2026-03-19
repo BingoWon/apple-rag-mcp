@@ -2,11 +2,11 @@
  * Admin User Subscriptions API
  * Administrative access to user_subscriptions table
  */
-import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import type { AppEnv } from "../../types/hono";
+import { createRoute, z } from "@hono/zod-openapi";
 import { logger } from "../../utils/logger";
+import { createOpenAPIApp } from "../../utils/openapi";
 
-const app = new OpenAPIHono<AppEnv>();
+const app = createOpenAPIApp();
 
 // User subscription schema for admin view
 const AdminUserSubscriptionSchema = z.object({

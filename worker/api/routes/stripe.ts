@@ -1,4 +1,3 @@
-import { OpenAPIHono } from "@hono/zod-openapi";
 import type { Context } from "hono";
 import Stripe from "stripe";
 import { z } from "zod";
@@ -6,9 +5,10 @@ import { authMiddleware } from "../middleware/auth";
 import { UnifiedErrorCode } from "../types/api-response";
 import type { AppEnv } from "../types/hono";
 import { logger } from "../utils/logger.js";
+import { createOpenAPIApp } from "../utils/openapi";
 import { notifyTelegram } from "../utils/telegram-notifier";
 
-const stripe = new OpenAPIHono<AppEnv>();
+const stripe = createOpenAPIApp();
 
 function formatBillingInterval(interval: string, intervalCount: number): string {
 	if (interval === "month" && intervalCount === 6) return "6 months";

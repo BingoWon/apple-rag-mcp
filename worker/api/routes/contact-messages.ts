@@ -2,14 +2,14 @@
  * Contact Messages Routes (User-facing)
  * Endpoints for users to submit messages and view replies
  */
-import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { createRoute, z } from "@hono/zod-openapi";
 import { authMiddleware, optionalAuthMiddleware } from "../middleware/auth";
-import type { AppEnv } from "../types/hono";
 import { isValidEmail } from "../utils/email";
 import { logger } from "../utils/logger";
+import { createOpenAPIApp } from "../utils/openapi";
 import { notifyTelegram } from "../utils/telegram-notifier";
 
-const app = new OpenAPIHono<AppEnv>();
+const app = createOpenAPIApp();
 
 type UnreadReplyRow = {
 	id: string;

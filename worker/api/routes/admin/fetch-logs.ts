@@ -2,11 +2,11 @@
  * Admin Fetch Logs API
  * Administrative access to fetch_logs table
  */
-import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import type { AppEnv } from "../../types/hono";
+import { createRoute, z } from "@hono/zod-openapi";
 import { logger } from "../../utils/logger";
+import { createOpenAPIApp } from "../../utils/openapi";
 
-const app = new OpenAPIHono<AppEnv>();
+const app = createOpenAPIApp();
 
 const AdminFetchLogSchema = z.object({
 	id: z.string(),

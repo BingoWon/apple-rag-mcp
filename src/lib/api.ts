@@ -5,6 +5,16 @@ import { ADMIN_PASSWORD_HEADER, ADMIN_SESSION_KEY } from "./constants";
 
 let isLoggingOut = false;
 
+function extractErrorMessage(data: unknown): string | null {
+	if (Array.isArray(data) && data.length > 0 && typeof data[0]?.message === "string") {
+		return data[0].message;
+	}
+	if (typeof data === "object" && data !== null && "message" in data) {
+		return String((data as Record<string, unknown>).message);
+	}
+	return null;
+}
+
 class ApiClient {
 	private client: AxiosInstance;
 
@@ -81,17 +91,21 @@ class ApiClient {
 			return response.data;
 		} catch (error: unknown) {
 			const axiosError = error as AxiosError<ApiResponse>;
-			// For auth endpoints, return the error response data instead of throwing
-			if (
-				axiosError.response?.data &&
-				(url.includes("/auth/login") || url.includes("/auth/register"))
-			) {
-				return axiosError.response.data;
-			}
+			const respData = axiosError.response?.data;
 
-			// For other endpoints, if we have a structured error response, return it
-			if (axiosError.response?.data?.success === false) {
-				return axiosError.response.data;
+			if (respData) {
+				if (respData.success === false && respData.error) {
+					return respData;
+				}
+
+				// Normalize unexpected formats (e.g. raw Zod validation error arrays)
+				const message = extractErrorMessage(respData);
+				if (message) {
+					return {
+						success: false,
+						error: { code: "VALIDATION_ERROR", message },
+					} as ApiResponse<T>;
+				}
 			}
 
 			throw error;

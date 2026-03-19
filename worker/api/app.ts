@@ -1,10 +1,8 @@
 import { swaggerUI } from "@hono/swagger-ui";
-import { OpenAPIHono } from "@hono/zod-openapi";
 import { logger as honoLogger } from "hono/logger";
 import { prettyJSON } from "hono/pretty-json";
 import { requestId } from "hono/request-id";
 import { timing } from "hono/timing";
-import type { AppEnv } from "../shared/types.js";
 import { createCorsMiddleware, securityHeaders } from "./middleware/cors.js";
 import adminRoutes from "./routes/admin/index.js";
 import { authRoutes } from "./routes/auth.js";
@@ -15,9 +13,10 @@ import { oauthRoutes } from "./routes/oauth.js";
 import stripeRoutes from "./routes/stripe.js";
 import usageLogsRoutes from "./routes/usage-logs.js";
 import userRoutes from "./routes/users.js";
+import { createOpenAPIApp } from "./utils/openapi.js";
 import { configureTelegram } from "./utils/telegram-notifier.js";
 
-const apiApp = new OpenAPIHono<AppEnv>();
+const apiApp = createOpenAPIApp();
 
 apiApp.use("*", honoLogger());
 apiApp.use("*", requestId());

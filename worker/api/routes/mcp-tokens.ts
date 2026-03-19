@@ -3,16 +3,16 @@
  * Handles MCP token creation, management, and validation
  */
 
-import { createRoute, OpenAPIHono } from "@hono/zod-openapi";
+import { createRoute } from "@hono/zod-openapi";
 import { z } from "zod";
 import { ApiErrorCode } from "../constants/error-codes";
 import { authMiddleware } from "../middleware/auth";
 import type { User } from "../types";
-import type { AppEnv } from "../types/hono";
 import { logger } from "../utils/logger";
+import { createOpenAPIApp } from "../utils/openapi";
 import { createMCPTokenSchema } from "../utils/validation";
 
-const app = new OpenAPIHono<AppEnv>();
+const app = createOpenAPIApp();
 
 // MCP Token response schema (per database-schema.md)
 const MCPTokenResponseSchema = z.object({

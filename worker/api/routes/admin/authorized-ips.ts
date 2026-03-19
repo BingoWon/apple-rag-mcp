@@ -3,11 +3,10 @@
  * Admin endpoints for managing authorized IP addresses across all users
  */
 
-import { OpenAPIHono } from "@hono/zod-openapi";
-import type { AppEnv } from "../../types/hono";
 import { logger } from "../../utils/logger.js";
+import { createOpenAPIApp } from "../../utils/openapi";
 
-const app = new OpenAPIHono<AppEnv>();
+const app = createOpenAPIApp();
 
 /**
  * GET /admin/authorized-ips
