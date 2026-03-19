@@ -81,6 +81,13 @@ const PRICES = {
 	onetime_annual: (env: AppEnv["Bindings"]) => env.STRIPE_PRICE_ID_PRO_ONETIME_ANNUAL,
 } as const;
 
+const PRICES_CNY: Partial<Record<keyof typeof PRICES, (env: AppEnv["Bindings"]) => string>> = {
+	onetime_weekly: (env) => env.STRIPE_PRICE_ID_PRO_ONETIME_WEEKLY_CNY,
+	onetime_monthly: (env) => env.STRIPE_PRICE_ID_PRO_ONETIME_MONTHLY_CNY,
+	onetime_semiannual: (env) => env.STRIPE_PRICE_ID_PRO_ONETIME_SEMIANNUAL_CNY,
+	onetime_annual: (env) => env.STRIPE_PRICE_ID_PRO_ONETIME_ANNUAL_CNY,
+};
+
 const ONETIME_DURATIONS: Record<string, number> = {
 	onetime_weekly: 7,
 	onetime_monthly: 30,
@@ -118,6 +125,7 @@ stripe.openapi(
 								"onetime_annual",
 							]),
 							cancelUrl: z.string().optional(),
+							paymentMethod: z.enum(["card", "alipay"]).optional(),
 						}),
 					},
 				},
@@ -165,7 +173,7 @@ stripe.openapi(
 	},
 	async (c): Promise<Response> => {
 		try {
-			const { priceId, cancelUrl } = await c.req.json();
+			const { priceId, cancelUrl, paymentMethod } = await c.req.json();
 			const user = c.get("user");
 
 			if (!c.env.STRIPE_SECRET_KEY) {
@@ -181,7 +189,11 @@ stripe.openapi(
 				);
 			}
 
-			const priceIdValue = PRICES[priceId as keyof typeof PRICES](c.env);
+			const useAlipay = paymentMethod === "alipay" && priceId.startsWith("onetime_");
+			const priceLookup = useAlipay
+				? PRICES_CNY[priceId as keyof typeof PRICES]
+				: PRICES[priceId as keyof typeof PRICES];
+			const priceIdValue = priceLookup?.(c.env);
 			if (!priceIdValue) {
 				return c.json(
 					{
@@ -257,9 +269,13 @@ stripe.openapi(
 					paymentType: isOneTime ? "one_time" : "subscription",
 					priceId,
 				},
-				allow_promotion_codes: true,
+				allow_promotion_codes: !useAlipay,
 				billing_address_collection: "auto",
 			};
+
+			if (useAlipay) {
+				sessionParams.payment_method_types = ["alipay"];
+			}
 
 			if (!isOneTime) {
 				sessionParams.subscription_data = {

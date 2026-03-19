@@ -146,6 +146,8 @@
 		"tab_subscription": "Subscription",
 		"tab_onetime": "One-time Pass",
 		"buy_now": "Buy Now",
+		"pay_alipay": "Alipay",
+		"pay_card": "Card",
 		"onetime_note": "No auto-renewal",
 		"onetime_weekly": "Weekly Pass",
 		"onetime_monthly": "Monthly Pass",

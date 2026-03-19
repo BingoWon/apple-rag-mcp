@@ -309,8 +309,11 @@ class ApiClient {
 		return this.get("/stripe/subscription");
 	}
 
-	async createCheckoutSession(priceId: string): Promise<ApiResponse<{ url: string }>> {
-		return this.post("/stripe/checkout", { priceId, cancelUrl: window.location.href });
+	async createCheckoutSession(
+		priceId: string,
+		paymentMethod?: "card" | "alipay",
+	): Promise<ApiResponse<{ url: string }>> {
+		return this.post("/stripe/checkout", { priceId, cancelUrl: window.location.href, paymentMethod });
 	}
 
 	async createBillingPortalSession(): Promise<ApiResponse<{ url: string }>> {

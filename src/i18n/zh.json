@@ -146,6 +146,8 @@
 		"tab_subscription": "订阅",
 		"tab_onetime": "单次购买",
 		"buy_now": "立即购买",
+		"pay_alipay": "支付宝",
+		"pay_card": "银行卡",
 		"onetime_note": "不自动续费",
 		"onetime_weekly": "周卡",
 		"onetime_monthly": "月卡",

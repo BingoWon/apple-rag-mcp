@@ -1,4 +1,4 @@
-import { IconCheck, IconLock } from "@tabler/icons-react";
+import { IconBrandAlipay, IconCheck, IconCreditCard, IconLock } from "@tabler/icons-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
@@ -69,7 +69,7 @@ export function PricingModal({ planName, defaultTab = "subscription" }: PricingM
 
 	const selectedPricingOption = options.find((opt) => opt.id === selectedOption);
 
-	const handleSubscribe = async () => {
+	const handleCheckout = async (paymentMethod?: "card" | "alipay") => {
 		if (!selectedPricingOption) return;
 
 		if (!isAuthenticated) {
@@ -83,7 +83,7 @@ export function PricingModal({ planName, defaultTab = "subscription" }: PricingM
 
 		try {
 			const { api } = await import("@/lib/api");
-			const response = await api.createCheckoutSession(selectedPricingOption.id);
+			const response = await api.createCheckoutSession(selectedPricingOption.id, paymentMethod);
 			if (response.success && response.data?.url) {
 				window.location.href = response.data.url;
 			} else {
@@ -234,19 +234,40 @@ export function PricingModal({ planName, defaultTab = "subscription" }: PricingM
 					<Button variant="outline" onClick={() => setOpen(false)} className="flex-1">
 						{t("common.cancel")}
 					</Button>
-					<Button
-						variant="primary"
-						onClick={handleSubscribe}
-						className="flex-1"
-						disabled={!selectedPricingOption || isLoading}
-						loading={isLoading}
-					>
-						{isLoading
-							? t("common.processing")
-							: isOneTime
-								? t("pricing.buy_now")
-								: t("pricing.subscribe_now")}
-					</Button>
+					{isOneTime ? (
+						<>
+							<Button
+								variant="outline"
+								onClick={() => handleCheckout("alipay")}
+								className="flex-1"
+								disabled={!selectedPricingOption || isLoading}
+								loading={isLoading}
+							>
+								<IconBrandAlipay className="w-4 h-4 mr-1.5" />
+								{t("pricing.pay_alipay")}
+							</Button>
+							<Button
+								variant="primary"
+								onClick={() => handleCheckout("card")}
+								className="flex-1"
+								disabled={!selectedPricingOption || isLoading}
+								loading={isLoading}
+							>
+								<IconCreditCard className="w-4 h-4 mr-1.5" />
+								{t("pricing.pay_card")}
+							</Button>
+						</>
+					) : (
+						<Button
+							variant="primary"
+							onClick={() => handleCheckout()}
+							className="flex-1"
+							disabled={!selectedPricingOption || isLoading}
+							loading={isLoading}
+						>
+							{isLoading ? t("common.processing") : t("pricing.subscribe_now")}
+						</Button>
+					)}
 				</div>
 			</ModalContent>
 		</ModalBody>
