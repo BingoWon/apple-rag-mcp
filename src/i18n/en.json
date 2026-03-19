@@ -130,6 +130,8 @@
 		"title": "Choose the right plan for you",
 		"subtitle": "Start free and scale as you grow. All plans include access to our AI-powered MCP.",
 		"most_popular": "Most popular",
+		"badge_card": "Card",
+		"badge_alipay": "Alipay",
 		"choose_plan": "Choose Your {{plan}} Plan",
 		"choose_cycle": "Select the billing cycle that works best for you",
 		"subscribe_now": "Subscribe Now",

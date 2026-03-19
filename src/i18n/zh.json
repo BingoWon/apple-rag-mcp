@@ -130,6 +130,8 @@
 		"title": "选择适合你的方案",
 		"subtitle": "免费起步，按需升级。所有方案均可使用 AI 驱动的 MCP。",
 		"most_popular": "最受欢迎",
+		"badge_card": "银行卡",
+		"badge_alipay": "支付宝",
 		"choose_plan": "选择 {{plan}} 方案",
 		"choose_cycle": "请选择最适合你的计费周期",
 		"subscribe_now": "立即订阅",

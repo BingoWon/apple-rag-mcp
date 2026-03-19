@@ -110,22 +110,28 @@ export function PricingModal({ planName, defaultTab = "subscription" }: PricingM
 				</div>
 
 				{/* Payment Type Toggle */}
-				<div className="flex rounded-lg overflow-hidden border-2 border-brand">
+				<div className="flex gap-1 rounded-xl bg-secondary p-1">
 					<button
 						type="button"
 						disabled={subscriptionTabDisabled}
 						title={subscriptionTabDisabled ? t("pricing.tab_disabled_has_onetime") : undefined}
 						className={cn(
-							"flex-1 py-2.5 px-4 text-sm font-medium transition-colors duration-200 flex items-center justify-center gap-1.5",
+							"flex-1 py-2.5 px-4 text-sm font-medium rounded-lg transition-all duration-200 flex items-center justify-center gap-1.5",
 							subscriptionTabDisabled && "opacity-40 cursor-not-allowed",
-							!subscriptionTabDisabled && !isOneTime && "bg-brand text-white",
+							!subscriptionTabDisabled &&
+								!isOneTime &&
+								"bg-[#635BFF] text-white shadow-sm",
 							!subscriptionTabDisabled &&
 								isOneTime &&
-								"bg-secondary text-muted-foreground hover:text-foreground hover:bg-accent",
+								"text-muted-foreground hover:text-foreground hover:bg-accent",
 						)}
 						onClick={() => handleTabChange("subscription")}
 					>
-						{subscriptionTabDisabled && <IconLock className="w-3.5 h-3.5" />}
+						{subscriptionTabDisabled ? (
+							<IconLock className="w-3.5 h-3.5" />
+						) : (
+							<IconCreditCard className="w-4 h-4" />
+						)}
 						{t("pricing.tab_subscription")}
 					</button>
 					<button
@@ -133,16 +139,22 @@ export function PricingModal({ planName, defaultTab = "subscription" }: PricingM
 						disabled={onetimeTabDisabled}
 						title={onetimeTabDisabled ? t("pricing.tab_disabled_has_subscription") : undefined}
 						className={cn(
-							"flex-1 py-2.5 px-4 text-sm font-medium transition-colors duration-200 flex items-center justify-center gap-1.5",
+							"flex-1 py-2.5 px-4 text-sm font-medium rounded-lg transition-all duration-200 flex items-center justify-center gap-1.5",
 							onetimeTabDisabled && "opacity-40 cursor-not-allowed",
-							!onetimeTabDisabled && isOneTime && "bg-brand text-white",
+							!onetimeTabDisabled &&
+								isOneTime &&
+								"bg-[#1677FF] text-white shadow-sm",
 							!onetimeTabDisabled &&
 								!isOneTime &&
-								"bg-secondary text-muted-foreground hover:text-foreground hover:bg-accent",
+								"text-muted-foreground hover:text-foreground hover:bg-accent",
 						)}
 						onClick={() => handleTabChange("one_time")}
 					>
-						{onetimeTabDisabled && <IconLock className="w-3.5 h-3.5" />}
+						{onetimeTabDisabled ? (
+							<IconLock className="w-3.5 h-3.5" />
+						) : (
+							<IconBrandAlipay className="w-4 h-4" />
+						)}
 						{t("pricing.tab_onetime")}
 					</button>
 				</div>
@@ -236,37 +248,35 @@ export function PricingModal({ planName, defaultTab = "subscription" }: PricingM
 					</Button>
 					{isOneTime ? (
 						<>
-							<Button
-								variant="primary"
+							<button
+								type="button"
 								onClick={() => handleCheckout("alipay")}
-								className="flex-1"
 								disabled={!selectedPricingOption || isLoading}
-								loading={isLoading}
+								className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-medium text-white bg-[#1677FF] hover:bg-[#1677FF]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
 							>
-								<IconBrandAlipay className="w-4 h-4 mr-1.5" />
+								<IconBrandAlipay className="w-4 h-4" />
 								{t("pricing.pay_alipay")}
-							</Button>
-							<Button
-								variant="primary"
+							</button>
+							<button
+								type="button"
 								onClick={() => handleCheckout("card")}
-								className="flex-1"
 								disabled={!selectedPricingOption || isLoading}
-								loading={isLoading}
+								className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-medium text-white bg-[#635BFF] hover:bg-[#635BFF]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
 							>
-								<IconCreditCard className="w-4 h-4 mr-1.5" />
+								<IconCreditCard className="w-4 h-4" />
 								{t("pricing.pay_card")}
-							</Button>
+							</button>
 						</>
 					) : (
-						<Button
-							variant="primary"
+						<button
+							type="button"
 							onClick={() => handleCheckout()}
-							className="flex-1"
 							disabled={!selectedPricingOption || isLoading}
-							loading={isLoading}
+							className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-medium text-white bg-[#635BFF] hover:bg-[#635BFF]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
 						>
+							<IconCreditCard className="w-4 h-4" />
 							{isLoading ? t("common.processing") : t("pricing.subscribe_now")}
-						</Button>
+						</button>
 					)}
 				</div>
 			</ModalContent>
