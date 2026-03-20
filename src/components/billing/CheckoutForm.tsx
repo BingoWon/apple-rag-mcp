@@ -82,7 +82,7 @@ export function CheckoutForm({ plan, clientSecret, onSuccess }: CheckoutFormProp
 				colorBackground: "#ffffff",
 				colorText: "#1f2937",
 				colorDanger: "#ef4444",
-				fontFamily: "Inter, system-ui, sans-serif",
+				fontFamily: '"Inter", "Noto Sans SC", system-ui, sans-serif',
 				spacingUnit: "4px",
 				borderRadius: "6px",
 			},

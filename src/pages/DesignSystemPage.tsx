@@ -307,20 +307,132 @@ export default function DesignSystemPage() {
 					</CardContent>
 				</Card>
 
-				{/* Typography */}
+				{/* Font Families */}
 				<Card className="mb-8">
 					<CardHeader>
-						<CardTitle>Typography</CardTitle>
+						<CardTitle>Font Families</CardTitle>
+					</CardHeader>
+					<CardContent>
+						<div className="space-y-8">
+							{/* Sans — Inter + Noto Sans SC */}
+							<div>
+								<div className="flex items-baseline gap-3 mb-4">
+									<h3 className="text-lg font-medium">Sans</h3>
+									<span className="text-xs text-muted-foreground font-mono">
+										font-sans → Inter + Noto Sans SC
+									</span>
+								</div>
+								<div className="space-y-3 font-sans">
+									<p className="text-2xl font-bold tracking-tight">
+										The quick brown fox jumps over the lazy dog
+									</p>
+									<p className="text-2xl font-bold tracking-tight">
+										为开发者打造的 AI 驱动 Apple 文档搜索引擎
+									</p>
+									<div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+										<div>
+											<p className="text-base font-normal">Regular 400</p>
+											<p className="text-xs text-muted-foreground">AaBbCc 测试</p>
+										</div>
+										<div>
+											<p className="text-base font-medium">Medium 500</p>
+											<p className="text-xs text-muted-foreground">AaBbCc 测试</p>
+										</div>
+										<div>
+											<p className="text-base font-semibold">Semibold 600</p>
+											<p className="text-xs text-muted-foreground">AaBbCc 测试</p>
+										</div>
+										<div>
+											<p className="text-base font-bold">Bold 700</p>
+											<p className="text-xs text-muted-foreground">AaBbCc 测试</p>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							{/* Mono — JetBrains Mono */}
+							<div>
+								<div className="flex items-baseline gap-3 mb-4">
+									<h3 className="text-lg font-medium">Mono</h3>
+									<span className="text-xs text-muted-foreground font-mono">
+										font-mono → JetBrains Mono
+									</span>
+								</div>
+								<div className="space-y-3 font-mono">
+									<div className="p-4 rounded-lg bg-[#1e1e1e] text-[#d4d4d4] text-sm leading-relaxed">
+										<span className="text-[#569cd6]">const</span>{" "}
+										<span className="text-[#9cdcfe]">config</span>{" "}
+										<span className="text-[#d4d4d4]">=</span>{" "}
+										<span className="text-[#d4d4d4]">{"{"}</span>
+										<br />
+										{"  "}
+										<span className="text-[#9cdcfe]">url</span>
+										<span className="text-[#d4d4d4]">:</span>{" "}
+										<span className="text-[#ce9178]">"https://mcp.apple-rag.com"</span>
+										<br />
+										<span className="text-[#d4d4d4]">{"}"}</span>
+										<span className="text-[#d4d4d4]">;</span>
+									</div>
+									<div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+										<div>
+											<p className="text-sm font-normal">Regular 400</p>
+											<p className="text-xs text-muted-foreground">0123456789</p>
+										</div>
+										<div>
+											<p className="text-sm font-medium">Medium 500</p>
+											<p className="text-xs text-muted-foreground">0123456789</p>
+										</div>
+										<div>
+											<p className="text-sm font-semibold">Semibold 600</p>
+											<p className="text-xs text-muted-foreground">0123456789</p>
+										</div>
+										<div>
+											<p className="text-sm font-bold">Bold 700</p>
+											<p className="text-xs text-muted-foreground">0123456789</p>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							{/* Bilingual Pairing */}
+							<div>
+								<div className="flex items-baseline gap-3 mb-4">
+									<h3 className="text-lg font-medium">Bilingual Pairing</h3>
+									<span className="text-xs text-muted-foreground font-mono">
+										Inter + Noto Sans SC seamless mixing
+									</span>
+								</div>
+								<div className="p-4 rounded-lg border border-border bg-card space-y-2">
+									<p className="text-base leading-relaxed">
+										Apple RAG MCP 让你的 AI Agent 成为 Apple 开发专家。通过 RAG
+										技术访问官方 Swift 文档、WWDC 洞察，支持 Cursor、VS Code、Claude
+										Code 等所有 MCP 兼容客户端。
+									</p>
+									<p className="text-sm text-muted-foreground leading-relaxed">
+										Transform your AI agents into Apple development experts. Access
+										official Swift docs, WWDC insights, and platform mastery through
+										the Model Context Protocol.
+									</p>
+								</div>
+							</div>
+						</div>
+					</CardContent>
+				</Card>
+
+				{/* Typography Scale */}
+				<Card className="mb-8">
+					<CardHeader>
+						<CardTitle>Typography Scale</CardTitle>
 					</CardHeader>
 					<CardContent>
 						<div className="space-y-4">
 							<div>
-								<h1 className="text-4xl font-bold">Heading 1 - 4xl Bold</h1>
-								<p className="text-sm text-muted-foreground">text-4xl font-bold</p>
+								<h1 className="text-4xl font-bold tracking-tight">Heading 1 - 4xl Bold</h1>
+								<p className="text-sm text-muted-foreground">text-4xl font-bold tracking-tight</p>
 							</div>
 							<div>
-								<h2 className="text-3xl font-semibold">Heading 2 - 3xl Semibold</h2>
-								<p className="text-sm text-muted-foreground">text-3xl font-semibold</p>
+								<h2 className="text-3xl font-semibold tracking-tight">Heading 2 - 3xl Semibold</h2>
+								<p className="text-sm text-muted-foreground">text-3xl font-semibold tracking-tight</p>
 							</div>
 							<div>
 								<h3 className="text-2xl font-medium">Heading 3 - 2xl Medium</h3>
@@ -333,6 +445,10 @@ export default function DesignSystemPage() {
 							<div>
 								<p className="text-sm text-muted-foreground">Small Text - SM Muted</p>
 								<p className="text-xs text-muted-foreground">text-sm text-muted-foreground</p>
+							</div>
+							<div>
+								<p className="font-mono text-sm">Monospace Text — font-mono text-sm</p>
+								<p className="text-xs text-muted-foreground">font-mono text-sm</p>
 							</div>
 						</div>
 					</CardContent>

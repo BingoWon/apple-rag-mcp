@@ -15,6 +15,10 @@
  */
 
 @theme {
+  /* Font Families - overrides Tailwind defaults for font-sans / font-mono */
+  --font-sans: "Inter", "Noto Sans SC", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+
   /* Background Colors - generates bg-primary, bg-secondary, etc. */
   --color-primary: #0a0a0a;
   --color-secondary: #0f0f0f;
