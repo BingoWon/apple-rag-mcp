@@ -126,3 +126,8 @@ MCP 认证确保你的 AI agent 获得可信的访问权限，具备企业级安
 
 </div>
 
+---
+
+## 致谢
+
+我们认可并感谢 [LINUX DO](https://linux.do/) 社区。
