@@ -327,7 +327,11 @@ class ApiClient {
 		priceId: string,
 		paymentMethod?: "card" | "alipay",
 	): Promise<ApiResponse<{ url: string }>> {
-		return this.post("/stripe/checkout", { priceId, cancelUrl: window.location.href, paymentMethod });
+		return this.post("/stripe/checkout", {
+			priceId,
+			cancelUrl: window.location.href,
+			paymentMethod,
+		});
 	}
 
 	async createBillingPortalSession(): Promise<ApiResponse<{ url: string }>> {

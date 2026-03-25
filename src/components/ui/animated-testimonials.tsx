@@ -3,15 +3,15 @@ import { AnimatePresence, motion } from "motion/react";
 
 import { useEffect, useMemo, useState } from "react";
 
-const CJK_REGEX =
-	/[\u2E80-\u9FFF\uF900-\uFAFF\uFE30-\uFE4F\u{20000}-\u{2FA1F}]/u;
+const CJK_REGEX = /[\u2E80-\u9FFF\uF900-\uFAFF\uFE30-\uFE4F\u{20000}-\u{2FA1F}]/u;
 
 function splitForAnimation(text: string): string[] {
 	const segments: string[] = [];
 	const regex = /([a-zA-Z0-9]+|[^\sa-zA-Z0-9])(\s?)/gu;
-	let m: RegExpExecArray | null;
-	while ((m = regex.exec(text)) !== null) {
+	let m = regex.exec(text);
+	while (m !== null) {
 		segments.push(m[1] + (m[2] ? "\u00A0" : ""));
+		m = regex.exec(text);
 	}
 	return segments;
 }

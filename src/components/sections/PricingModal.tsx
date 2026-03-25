@@ -118,9 +118,7 @@ export function PricingModal({ planName, defaultTab = "subscription" }: PricingM
 						className={cn(
 							"flex-1 py-2.5 px-4 text-sm font-medium rounded-lg transition-all duration-200 flex items-center justify-center gap-1.5",
 							subscriptionTabDisabled && "opacity-40 cursor-not-allowed",
-							!subscriptionTabDisabled &&
-								!isOneTime &&
-								"bg-[#635BFF] text-white shadow-sm",
+							!subscriptionTabDisabled && !isOneTime && "bg-[#635BFF] text-white shadow-sm",
 							!subscriptionTabDisabled &&
 								isOneTime &&
 								"text-muted-foreground hover:text-foreground hover:bg-accent",
@@ -141,9 +139,7 @@ export function PricingModal({ planName, defaultTab = "subscription" }: PricingM
 						className={cn(
 							"flex-1 py-2.5 px-4 text-sm font-medium rounded-lg transition-all duration-200 flex items-center justify-center gap-1.5",
 							onetimeTabDisabled && "opacity-40 cursor-not-allowed",
-							!onetimeTabDisabled &&
-								isOneTime &&
-								"bg-[#1677FF] text-white shadow-sm",
+							!onetimeTabDisabled && isOneTime && "bg-[#1677FF] text-white shadow-sm",
 							!onetimeTabDisabled &&
 								!isOneTime &&
 								"text-muted-foreground hover:text-foreground hover:bg-accent",

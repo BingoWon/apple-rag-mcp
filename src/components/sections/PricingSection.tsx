@@ -95,18 +95,18 @@ export function PricingSection() {
 										>
 											{tier.name}
 										</h3>
-									{tier.popular ? (
-										<div className="flex items-center gap-1.5">
-											<span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold text-white bg-[#635BFF]">
-												<IconCreditCard className="w-3 h-3" />
-												{t("pricing.badge_card")}
-											</span>
-											<span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold text-white bg-[#1677FF]">
-												<IconBrandAlipay className="w-3 h-3" />
-												{t("pricing.badge_alipay")}
-											</span>
-										</div>
-									) : null}
+										{tier.popular ? (
+											<div className="flex items-center gap-1.5">
+												<span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold text-white bg-[#635BFF]">
+													<IconCreditCard className="w-3 h-3" />
+													{t("pricing.badge_card")}
+												</span>
+												<span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold text-white bg-[#1677FF]">
+													<IconBrandAlipay className="w-3 h-3" />
+													{t("pricing.badge_alipay")}
+												</span>
+											</div>
+										) : null}
 									</div>
 									<p className="mt-3 sm:mt-4 text-sm leading-6 text-muted">{tier.description}</p>
 									<p className="mt-4 sm:mt-6 flex items-baseline gap-x-1">

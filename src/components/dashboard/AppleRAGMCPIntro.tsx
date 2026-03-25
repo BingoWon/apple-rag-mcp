@@ -52,8 +52,18 @@ export function AppleRAGMCPIntro() {
 					<Trans
 						i18nKey="dashboard.skill_desc"
 						components={{
-							code: <code className="text-xs bg-tertiary/80 px-1.5 py-0.5 rounded font-mono text-light" />,
-							repo: <a href={REPO_URL} target="_blank" rel="noopener noreferrer" className="text-brand hover:underline" />,
+							code: (
+								<code className="text-xs bg-tertiary/80 px-1.5 py-0.5 rounded font-mono text-light" />
+							),
+							repo: (
+								// biome-ignore lint/a11y/useAnchorContent: Content provided by Trans component at runtime
+								<a
+									href={REPO_URL}
+									target="_blank"
+									rel="noopener noreferrer"
+									className="text-brand hover:underline"
+								/>
+							),
 						}}
 					/>
 				</p>
@@ -68,9 +78,7 @@ export function AppleRAGMCPIntro() {
 								<span className="text-xs font-semibold text-light w-14 shrink-0">
 									{item.platform}
 								</span>
-								<code className="text-xs font-mono text-muted truncate">
-									{item.path}
-								</code>
+								<code className="text-xs font-mono text-muted truncate">{item.path}</code>
 							</div>
 							<button
 								type="button"

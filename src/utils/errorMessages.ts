@@ -210,9 +210,7 @@ export function getFriendlyError(
 
 	// Sanitize fallback: never display raw JSON/arrays to users
 	const safeFallback =
-		fallbackMessage && /^\s*[{[]/.test(fallbackMessage)
-			? undefined
-			: fallbackMessage;
+		fallbackMessage && /^\s*[{[]/.test(fallbackMessage) ? undefined : fallbackMessage;
 
 	return {
 		title: i18n.t("errors.generic_title"),

@@ -325,7 +325,9 @@ export function AppNavbar() {
 						<UserMenu user={user} onLogout={handleLogout} />
 					) : (
 						<Button variant="primary" asChild>
-							<a href="/login">{t("common.login")} / {t("common.sign_up")}</a>
+							<a href="/login">
+								{t("common.login")} / {t("common.sign_up")}
+							</a>
 						</Button>
 					)}
 				</div>

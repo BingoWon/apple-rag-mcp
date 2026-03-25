@@ -10,8 +10,7 @@ export function createOpenAPIApp() {
 	return new OpenAPIHono<AppEnv>({
 		defaultHook: (result, c) => {
 			if (!result.success) {
-				const firstMessage =
-					result.error.issues?.[0]?.message || "Invalid request data";
+				const firstMessage = result.error.issues?.[0]?.message || "Invalid request data";
 				return c.json(
 					{
 						success: false,

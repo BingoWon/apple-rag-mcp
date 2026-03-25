@@ -47,9 +47,7 @@ export function XcodeBuildMCPRecommendation() {
 
 			<CardContent className="pt-0">
 				<div className="space-y-4">
-					<p className="text-sm text-muted leading-relaxed">
-						{t("dashboard.xcode_desc")}
-					</p>
+					<p className="text-sm text-muted leading-relaxed">{t("dashboard.xcode_desc")}</p>
 
 					<div className="grid grid-cols-2 gap-2">
 						{FEATURES.map((feature, index) => {

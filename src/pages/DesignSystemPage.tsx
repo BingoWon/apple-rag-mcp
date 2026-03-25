@@ -404,14 +404,12 @@ export default function DesignSystemPage() {
 								</div>
 								<div className="p-4 rounded-lg border border-border bg-card space-y-2">
 									<p className="text-base leading-relaxed">
-										Apple RAG MCP 让你的 AI Agent 成为 Apple 开发专家。通过 RAG
-										技术访问官方 Swift 文档、WWDC 洞察，支持 Cursor、VS Code、Claude
-										Code 等所有 MCP 兼容客户端。
+										Apple RAG MCP 让你的 AI Agent 成为 Apple 开发专家。通过 RAG 技术访问官方 Swift
+										文档、WWDC 洞察，支持 Cursor、VS Code、Claude Code 等所有 MCP 兼容客户端。
 									</p>
 									<p className="text-sm text-muted-foreground leading-relaxed">
-										Transform your AI agents into Apple development experts. Access
-										official Swift docs, WWDC insights, and platform mastery through
-										the Model Context Protocol.
+										Transform your AI agents into Apple development experts. Access official Swift
+										docs, WWDC insights, and platform mastery through the Model Context Protocol.
 									</p>
 								</div>
 							</div>
@@ -432,7 +430,9 @@ export default function DesignSystemPage() {
 							</div>
 							<div>
 								<h2 className="text-3xl font-semibold tracking-tight">Heading 2 - 3xl Semibold</h2>
-								<p className="text-sm text-muted-foreground">text-3xl font-semibold tracking-tight</p>
+								<p className="text-sm text-muted-foreground">
+									text-3xl font-semibold tracking-tight
+								</p>
 							</div>
 							<div>
 								<h3 className="text-2xl font-medium">Heading 3 - 2xl Medium</h3>

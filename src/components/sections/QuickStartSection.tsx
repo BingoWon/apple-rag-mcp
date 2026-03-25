@@ -130,8 +130,8 @@ function tokenizeLine(line: string): React.ReactNode[] {
 	const result: React.ReactNode[] = [];
 	const re = /("(?:[^"\\]|\\.)*")(\s*:)?/g;
 	let last = 0;
-	let match: RegExpExecArray | null;
-	while ((match = re.exec(line)) !== null) {
+	let match = re.exec(line);
+	while (match !== null) {
 		if (match.index > last) result.push(line.slice(last, match.index));
 		result.push(
 			<span key={match.index} className={match[2] ? "text-[#9cdcfe]" : "text-[#ce9178]"}>
@@ -140,6 +140,7 @@ function tokenizeLine(line: string): React.ReactNode[] {
 		);
 		if (match[2]) result.push(match[2]);
 		last = match.index + match[0].length;
+		match = re.exec(line);
 	}
 	if (last < line.length) result.push(line.slice(last));
 	return result;

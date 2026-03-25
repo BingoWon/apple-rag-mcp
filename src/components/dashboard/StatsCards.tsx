@@ -74,9 +74,7 @@ const StatsCards = () => {
 					</div>
 				</div>
 				<div className="text-center mb-5">
-					<h3 className="text-xl font-bold text-light mb-2">
-						{t("dashboard.stats_heading")}
-					</h3>
+					<h3 className="text-xl font-bold text-light mb-2">{t("dashboard.stats_heading")}</h3>
 					<p className="text-muted text-sm opacity-75">
 						{t("dashboard.stats_date", { date: yesterdayDate })}
 					</p>
