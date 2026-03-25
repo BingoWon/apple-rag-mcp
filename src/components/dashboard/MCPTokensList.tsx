@@ -75,21 +75,25 @@ export function MCPTokensList({ tokens, onRefresh, isLoading = false }: MCPToken
 	};
 
 	const handleCopyForClient = async (token: MCPToken, clientType: string, clientName: string) => {
-		const typedClient = clientType as
-			| "cursor"
-			| "augmentcode"
-			| "cline"
-			| "roocode"
-			| "vscode"
-			| "vscode-insiders"
-			| "generic";
-		const configJson = MCPConfigService.generateJsonString({
-			token: token.mcp_token,
-			clientType: typedClient,
-		});
-		await navigator.clipboard.writeText(configJson);
-		if (typedClient === "augmentcode") MCPConfigService.showAugmentCodeWarning();
-		toast.success(t("tokens.config_copied", { client: clientName }));
+		try {
+			const typedClient = clientType as
+				| "cursor"
+				| "augmentcode"
+				| "cline"
+				| "roocode"
+				| "vscode"
+				| "vscode-insiders"
+				| "generic";
+			const configJson = MCPConfigService.generateJsonString({
+				token: token.mcp_token,
+				clientType: typedClient,
+			});
+			await navigator.clipboard.writeText(configJson);
+			if (typedClient === "augmentcode") MCPConfigService.showAugmentCodeWarning();
+			toast.success(t("tokens.config_copied", { client: clientName }));
+		} catch {
+			toast.error(t("common.copy_failed"));
+		}
 	};
 
 	const handleInstallVSCode = (token: MCPToken) => {

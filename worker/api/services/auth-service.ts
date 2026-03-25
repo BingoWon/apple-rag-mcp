@@ -130,7 +130,7 @@ export class AuthService {
 			});
 		} catch (error) {
 			console.error("Registration error:", error);
-			return ResponseBuilder.error("Registration failed", "INTERNAL_ERROR");
+			return ResponseBuilder.error("INTERNAL_ERROR", "Registration failed");
 		}
 	}
 
@@ -162,13 +162,13 @@ export class AuthService {
 			const user = userResult as unknown as User | null;
 
 			if (!user || !user.password_hash || !user.id) {
-				return ResponseBuilder.error("Invalid email or password", "INVALID_CREDENTIALS");
+				return ResponseBuilder.error("INVALID_CREDENTIALS", "Invalid email or password");
 			}
 
 			// Verify password
 			const isValidPassword = await verifyPassword(request.password, user.password_hash);
 			if (!isValidPassword) {
-				return ResponseBuilder.error("Invalid email or password", "INVALID_CREDENTIALS");
+				return ResponseBuilder.error("INVALID_CREDENTIALS", "Invalid email or password");
 			}
 
 			// Generate tokens (stateless JWT - no session object needed)

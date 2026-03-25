@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { DataTable, type DataTableColumn, DataTableRenderers } from "@/components/ui/DataTable";
 import { PaginationControls } from "@/components/ui/PaginationControls";
 import { Tabs } from "@/components/ui/usage-tabs";
-import { type AdminPaginatedResponse, usePagination } from "@/hooks/usePagination";
+import { type PaginatedApiResponse, usePagination } from "@/hooks/usePagination";
 import { api } from "@/lib/api";
 
 interface UsageLog {
@@ -25,17 +25,17 @@ export default function UsagePage() {
 
 	// Create properly typed API call functions
 	const fetchSearchLogs = useCallback(
-		async (page: number, limit: number): Promise<AdminPaginatedResponse<UsageLog>> => {
+		async (page: number, limit: number): Promise<PaginatedApiResponse<UsageLog>> => {
 			const response = await api.getUsageSearchLogs(limit, page);
-			return response as AdminPaginatedResponse<UsageLog>;
+			return response as PaginatedApiResponse<UsageLog>;
 		},
 		[],
 	);
 
 	const fetchFetchLogs = useCallback(
-		async (page: number, limit: number): Promise<AdminPaginatedResponse<UsageLog>> => {
+		async (page: number, limit: number): Promise<PaginatedApiResponse<UsageLog>> => {
 			const response = await api.getUsageFetchLogs(limit, page);
-			return response as AdminPaginatedResponse<UsageLog>;
+			return response as PaginatedApiResponse<UsageLog>;
 		},
 		[],
 	);

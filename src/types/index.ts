@@ -40,12 +40,6 @@ export interface RegisterData {
 	terms_accepted: boolean;
 }
 
-export interface AuthResponse {
-	user: User;
-	token: string;
-	expires_at: string;
-}
-
 export interface MCPToken {
 	id: string;
 	name: string;
@@ -110,19 +104,6 @@ export interface Subscription {
 	billing_interval: string;
 	payment_type?: "subscription" | "one_time";
 	stripe_customer_id?: string;
-}
-
-export interface PaginationInfo {
-	page: number;
-	limit: number;
-	total: number;
-	has_next: boolean;
-	has_prev: boolean;
-}
-
-export interface PaginatedResponse<T> {
-	items: T[];
-	pagination: PaginationInfo;
 }
 
 export interface AuthTokens {

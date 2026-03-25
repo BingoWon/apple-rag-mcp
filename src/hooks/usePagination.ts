@@ -11,7 +11,7 @@ export interface PaginationState {
 	error: string | null;
 }
 
-export interface AdminPaginatedResponse<T> {
+export interface PaginatedApiResponse<T> {
 	success: boolean;
 	data: {
 		items: T[];
@@ -45,7 +45,7 @@ export interface UsePaginationReturn<T> extends PaginationState {
 }
 
 export function usePagination<T>(
-	fetchFn: (page: number, limit: number) => Promise<AdminPaginatedResponse<T>>,
+	fetchFn: (page: number, limit: number) => Promise<PaginatedApiResponse<T>>,
 	options: UsePaginationOptions = {},
 ): UsePaginationReturn<T> {
 	const { initialPageSize = 20, pageSizeOptions = [20, 50, 100] } = options;

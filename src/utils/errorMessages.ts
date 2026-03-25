@@ -9,7 +9,6 @@ export interface FriendlyError {
 	title: string;
 	message: string;
 	suggestion?: string;
-	action?: string;
 }
 
 interface ErrorKeyMapping {

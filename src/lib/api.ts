@@ -220,10 +220,6 @@ class ApiClient {
 		return this.delete(`/mcp-tokens/${id}`);
 	}
 
-	async getMCPToken(id: string) {
-		return this.get(`/mcp-tokens/${id}`);
-	}
-
 	async getUserQuota() {
 		return this.get("/users/quota");
 	}

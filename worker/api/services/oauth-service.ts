@@ -375,6 +375,7 @@ Email: ${normalizedEmail}`);
 			email: user.email,
 			name: user.name,
 			avatar: user.avatar,
+			provider: user.provider ?? "oauth",
 			created_at: user.created_at!,
 			updated_at: user.updated_at!,
 		};

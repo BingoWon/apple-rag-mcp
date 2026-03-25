@@ -934,13 +934,13 @@ async function handleOneTimePayment(
 function mapStripeStatus(stripeStatus: string): string {
 	const statusMap: Record<string, string> = {
 		active: "active",
-		canceled: "cancelled",
+		canceled: "canceled",
 		past_due: "past_due",
 		trialing: "active",
 		incomplete: "inactive",
 		incomplete_expired: "inactive",
 		unpaid: "past_due",
-		paused: "cancelled",
+		paused: "canceled",
 	};
 
 	return statusMap[stripeStatus] || "inactive";
