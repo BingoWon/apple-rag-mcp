@@ -156,7 +156,11 @@ html {
 /* Global Transition for All Interactive Elements */
 button,
 a {
-	transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+	transition: color 200ms cubic-bezier(0.4, 0, 0.2, 1),
+		background-color 200ms cubic-bezier(0.4, 0, 0.2, 1),
+		border-color 200ms cubic-bezier(0.4, 0, 0.2, 1),
+		opacity 200ms cubic-bezier(0.4, 0, 0.2, 1),
+		box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Global Cursor for All Interactive Elements (Desktop Only) */
@@ -170,9 +174,13 @@ a {
 	}
 }
 
-/* Optional: Utility classes for specific needs (if needed) */
+/* Optional: Utility classes for specific needs */
 .smooth {
-	transition: all var(--transition-duration) var(--transition-timing);
+	transition: color var(--transition-duration) var(--transition-timing),
+		background-color var(--transition-duration) var(--transition-timing),
+		border-color var(--transition-duration) var(--transition-timing),
+		opacity var(--transition-duration) var(--transition-timing),
+		box-shadow var(--transition-duration) var(--transition-timing);
 }
 
 /* Essential layout styles only */

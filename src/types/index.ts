@@ -1,4 +1,3 @@
-// User types
 export interface User {
 	id: string;
 	email: string;
@@ -10,7 +9,6 @@ export interface User {
 	permissions?: string[];
 }
 
-// API types
 export interface ApiError {
 	code: string;
 	message: string;
@@ -30,7 +28,6 @@ export interface ApiResponse<T = unknown> {
 	meta?: ApiMeta;
 }
 
-// Auth types
 export interface LoginCredentials {
 	email: string;
 	password: string;
@@ -49,16 +46,14 @@ export interface AuthResponse {
 	expires_at: string;
 }
 
-// MCP Token types
 export interface MCPToken {
 	id: string;
 	name: string;
-	mcp_token: string; // Complete token - now available in list for user convenience
+	mcp_token: string;
 	last_used_at?: string;
 	created_at: string;
 }
 
-// Tool Calls types
 export interface ToolCallsStats {
 	total_tool_calls: number;
 	total_results: number;
@@ -77,58 +72,6 @@ export interface CurrentUsage {
 	usage_percentage: number;
 }
 
-// Note: Subscription and pricing types removed - not supported by backend
-
-// Component types
-export interface ButtonProps {
-	variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
-	size?: "default" | "sm" | "lg" | "icon";
-	children: React.ReactNode;
-	className?: string;
-	disabled?: boolean;
-	loading?: boolean;
-}
-
-export interface InputProps {
-	label?: string;
-	error?: string;
-	helperText?: string;
-	required?: boolean;
-}
-
-// Navigation types
-export interface NavItem {
-	name: string;
-	href: string;
-	icon?: React.ComponentType<{ className?: string }>;
-	current?: boolean;
-}
-
-// Chart types
-export interface ChartDataPoint {
-	date: string;
-	value: number;
-	label?: string;
-}
-
-export interface ChartProps {
-	data: ChartDataPoint[];
-	height?: number;
-	color?: string;
-	showGrid?: boolean;
-	showTooltip?: boolean;
-}
-
-// User quota types
-export interface UserQuota {
-	current_usage: number;
-	limit: number;
-	remaining: number;
-	reset_at: string;
-	usage_percentage: number;
-}
-
-// MCP Usage Log types
 export interface UsageLogItem {
 	id: string;
 	query: string | null;
@@ -139,10 +82,10 @@ export interface UsageLogItem {
 	created_at: string;
 }
 
-// Note: Use PaginatedResponse<UsageLogItem> for paginated usage logs
-
-// Pricing and billing types
-export interface PricingPlan {
+/**
+ * Stripe checkout plan shape — distinct from the UI PricingPlan in types/pricing.ts
+ */
+export interface CheckoutPlan {
 	id: string;
 	name: string;
 	description: string;
@@ -169,23 +112,6 @@ export interface Subscription {
 	stripe_customer_id?: string;
 }
 
-export interface RAGQueryResult {
-	id: string;
-	content: string;
-	source: string;
-	relevance_score: number;
-	metadata?: Record<string, unknown>;
-}
-
-export interface RAGQueryResponse {
-	query: string;
-	results: RAGQueryResult[];
-	total_results: number;
-	response_time: number;
-	query_id: string;
-}
-
-// Pagination types
 export interface PaginationInfo {
 	page: number;
 	limit: number;
@@ -199,33 +125,6 @@ export interface PaginatedResponse<T> {
 	pagination: PaginationInfo;
 }
 
-// Admin types
-export interface AdminTokensResponse {
-	tokens: MCPToken[];
-	total: number;
-}
-
-export interface AdminUsageLogsResponse {
-	logs: UsageLogItem[];
-	total: number;
-}
-
-export interface AdminUsersResponse {
-	users: User[];
-	total: number;
-}
-
-export interface AdminSubscriptionsResponse {
-	subscriptions: Subscription[];
-	total: number;
-}
-
-// Auth response types
-export interface AuthUrlResponse {
-	auth_url: string;
-}
-
-// Additional auth types for store compatibility
 export interface AuthTokens {
 	access_token?: string;
 	token?: string;

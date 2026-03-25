@@ -102,5 +102,3 @@ export const useOutsideClick = (
 		};
 	}, [handleEvent, mouseEvents, touchEvents, escapeKey, enabled]);
 };
-
-export default useOutsideClick;

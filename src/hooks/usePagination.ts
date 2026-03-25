@@ -11,7 +11,7 @@ export interface PaginationState {
 	error: string | null;
 }
 
-export interface PaginatedResponse<T> {
+export interface AdminPaginatedResponse<T> {
 	success: boolean;
 	data: {
 		items: T[];
@@ -45,7 +45,7 @@ export interface UsePaginationReturn<T> extends PaginationState {
 }
 
 export function usePagination<T>(
-	fetchFn: (page: number, limit: number) => Promise<PaginatedResponse<T>>,
+	fetchFn: (page: number, limit: number) => Promise<AdminPaginatedResponse<T>>,
 	options: UsePaginationOptions = {},
 ): UsePaginationReturn<T> {
 	const { initialPageSize = 20, pageSizeOptions = [20, 50, 100] } = options;
@@ -107,7 +107,7 @@ export function usePagination<T>(
 		(size: number) => {
 			if (size !== pageSize) {
 				setPageSize(size);
-				fetchData(1, size); // Reset to first page when changing page size
+				fetchData(1, size);
 			}
 		},
 		[fetchData, pageSize],
@@ -129,10 +129,10 @@ export function usePagination<T>(
 		}
 	}, [hasPrev, currentPage, goToPage]);
 
-	// Initial fetch
+	// biome-ignore lint/correctness/useExhaustiveDependencies: only run on mount or when fetchFn identity changes
 	useEffect(() => {
-		fetchData(1, pageSize);
-	}, [fetchData, pageSize]);
+		fetchData(1, initialPageSize);
+	}, [fetchData]);
 
 	return {
 		data,

@@ -368,7 +368,5 @@ class ApiClient {
 
 export const api = new ApiClient();
 
-// Export individual functions for convenience
-export const forgotPassword = (email: string) => api.forgotPassword(email);
 export const resetPassword = (token: string, password: string) =>
 	api.resetPassword(token, password);

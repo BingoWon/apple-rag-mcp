@@ -54,18 +54,3 @@ export interface Env {
 	TELEGRAM_ALERT_BOT_URL?: string;
 	TELEGRAM_STATS_BOT_URL?: string;
 }
-
-export interface AppEnv {
-	Bindings: Env;
-	Variables: {
-		user: {
-			id: string;
-			email: string;
-			name?: string;
-		};
-		userId: string;
-		permissions: string[];
-		plan_type: string;
-		mcpToken: string;
-	};
-}

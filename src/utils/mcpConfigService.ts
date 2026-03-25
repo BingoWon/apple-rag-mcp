@@ -67,57 +67,55 @@ export function generateConfig(options: MCPConfigOptions) {
 }
 
 export function generateJsonString(options: MCPConfigOptions): string {
-	const jsonString = JSON.stringify(generateConfig(options), null, 2);
+	return JSON.stringify(generateConfig(options), null, 2);
+}
 
-	if (options.clientType === "augmentcode") {
-		Promise.all([import("react-hot-toast"), import("react"), import("@tabler/icons-react")]).then(
-			([{ default: toast }, React, { IconAlertTriangle }]) => {
-				const handleClick = () => {
-					window.open("/authorized-ips", "_blank");
-				};
+export function showAugmentCodeWarning(): void {
+	Promise.all([import("react-hot-toast"), import("react"), import("@tabler/icons-react")]).then(
+		([{ default: toast }, React, { IconAlertTriangle }]) => {
+			const handleClick = () => {
+				window.open("/authorized-ips", "_blank");
+			};
 
-				toast.custom(
-					() =>
-						React.createElement(
-							"div",
-							{
-								onClick: handleClick,
-								style: {
-									background: "var(--color-warning)",
-									color: "var(--color-inverse)",
-									border: "2px solid var(--color-warning)",
-									borderRadius: "12px",
-									fontSize: "15px",
-									fontWeight: "600",
-									boxShadow: "0 8px 25px rgba(251, 191, 36, 0.3)",
-									padding: "10px 14px",
-									cursor: "pointer",
-									display: "flex",
-									alignItems: "center",
-									gap: "12px",
-									userSelect: "none",
-									maxWidth: "470px",
-								},
+			toast.custom(
+				() =>
+					React.createElement(
+						"div",
+						{
+							onClick: handleClick,
+							style: {
+								background: "var(--color-warning)",
+								color: "var(--color-inverse)",
+								border: "2px solid var(--color-warning)",
+								borderRadius: "12px",
+								fontSize: "15px",
+								fontWeight: "600",
+								boxShadow: "0 8px 25px rgba(251, 191, 36, 0.3)",
+								padding: "10px 14px",
+								cursor: "pointer",
+								display: "flex",
+								alignItems: "center",
+								gap: "12px",
+								userSelect: "none",
+								maxWidth: "470px",
 							},
-							React.createElement(IconAlertTriangle, {
-								size: 20,
-								style: { flexShrink: 0 },
-							}),
-							React.createElement(
-								"span",
-								null,
-								"Augment Code doesn't support Authorization headers. Click to configure Authorized IP Addresses!",
-							),
+						},
+						React.createElement(IconAlertTriangle, {
+							size: 20,
+							style: { flexShrink: 0 },
+						}),
+						React.createElement(
+							"span",
+							null,
+							"Augment Code doesn't support Authorization headers. Click to configure Authorized IP Addresses!",
 						),
-					{
-						duration: 12000,
-					},
-				);
-			},
-		);
-	}
-
-	return jsonString;
+					),
+				{
+					duration: 12000,
+				},
+			);
+		},
+	);
 }
 
 export function generateTomlString(token: string): string {
@@ -199,6 +197,7 @@ export const MCPConfigService = {
 	generateServerConfig,
 	generateConfig,
 	generateJsonString,
+	showAugmentCodeWarning,
 	generateTomlString,
 	generateClaudeCodeCommand,
 	generateCursorLink,

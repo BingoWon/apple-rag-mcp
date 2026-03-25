@@ -33,7 +33,6 @@ interface AuthState {
 	logout: () => void;
 	refreshUser: () => Promise<void>;
 	updateUser: (updates: Partial<User>) => void;
-	setLoading: (loading: boolean) => void;
 	setHydrated: (hydrated: boolean) => void;
 }
 
@@ -207,7 +206,6 @@ export const useAuthStore = create<AuthState>()(
 				}
 			},
 
-			setLoading: (loading: boolean) => set({ isLoading: loading }),
 			setHydrated: (hydrated: boolean) => set({ isHydrated: hydrated }),
 		}),
 		{

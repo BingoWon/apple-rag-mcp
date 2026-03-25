@@ -174,23 +174,3 @@ export function useErrorHandler(defaultOptions: ErrorHandlerOptions = {}) {
 			getFriendlyErrorMessage(errorCode, fallback),
 	};
 }
-
-/**
- * Simplified error handling hook, returns only the handler function
- */
-export function useSimpleErrorHandler() {
-	const { handleError } = useErrorHandler();
-	return handleError;
-}
-
-/**
- * API error handling hook, specialized for handling API responses
- */
-export function useApiErrorHandler() {
-	const { handleApiError, handleNetworkError } = useErrorHandler();
-
-	return {
-		handleApiError,
-		handleNetworkError,
-	};
-}

@@ -34,7 +34,6 @@ interface DashboardState {
 	fetchSubscription: () => Promise<boolean>;
 	refreshDashboard: () => Promise<void>;
 	clearError: (key: keyof DashboardState["errors"]) => void;
-	setLoading: (key: string, loading: boolean) => void;
 }
 
 export const useDashboardStore = create<DashboardState>((set, get) => ({
@@ -273,9 +272,5 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
 		set((state) => ({
 			errors: { ...state.errors, [key]: null },
 		}));
-	},
-
-	setLoading: (key: string, loading: boolean) => {
-		set({ [`isLoading${key}`]: loading } as Record<string, boolean>);
 	},
 }));

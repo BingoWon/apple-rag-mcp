@@ -125,9 +125,3 @@ Once installed, your AI agent will automatically know when and how to use Apple 
 [Get Started →](https://apple-rag.com)
 
 </div>
-
----
-
-## Acknowledgments
-
-We acknowledge the [LINUX DO](https://linux.do/) community.

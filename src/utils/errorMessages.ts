@@ -233,43 +233,7 @@ export function getFriendlyErrorMessage(
 	return friendlyError.message;
 }
 
-/**
- * Get complete error message (including suggestions and actions)
- * @param errorCode Technical error code
- * @param fallbackMessage Fallback error message
- * @returns Complete error message string
- */
-export function getFullErrorMessage(
-	errorCode: string | undefined,
-	fallbackMessage?: string,
-): string {
-	const friendlyError = getFriendlyError(errorCode, fallbackMessage);
-	let message = friendlyError.message;
-
-	if (friendlyError.suggestion) {
-		message += `\n\n${friendlyError.suggestion}`;
-	}
-
-	return message;
-}
-
-/**
- * Check if error is critical (requires special handling)
- * @param errorCode Error code
- * @returns Whether the error is critical
- */
 export function isCriticalError(errorCode: string | undefined): boolean {
 	const criticalErrors = ["INTERNAL_ERROR", "NETWORK_ERROR", "TIMEOUT_ERROR", "PAYMENT_FAILED"];
-
 	return errorCode ? criticalErrors.includes(errorCode) : false;
-}
-
-/**
- * Get suggested action for error
- * @param errorCode Error code
- * @returns Suggested action text
- */
-export function getErrorAction(errorCode: string | undefined): string | undefined {
-	const friendlyError = getFriendlyError(errorCode);
-	return friendlyError.action;
 }

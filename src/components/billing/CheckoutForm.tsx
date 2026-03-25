@@ -3,10 +3,10 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/Button";
 import { getStripe } from "@/lib/stripe";
-import type { PricingPlan } from "@/types";
+import type { CheckoutPlan } from "@/types";
 
 interface CheckoutFormProps {
-	plan: PricingPlan;
+	plan: CheckoutPlan;
 	clientSecret: string;
 	onSuccess?: () => void;
 }

@@ -2,6 +2,8 @@
  * Rate Limiting Service with D1 timeout protection
  */
 
+import { OAUTH_SUBSCRIPTION_QUOTAS } from "../api/types/permissions.js";
+import { getUserPlanType } from "../api/utils/subscription.js";
 import type { AuthContext } from "../mcp-types/index.js";
 import { withD1Timeout } from "../mcp-utils/d1-utils.js";
 import { logger } from "../mcp-utils/logger.js";
@@ -18,18 +20,6 @@ interface RateLimitResult {
 	minuteResetAt?: string;
 }
 
-interface PlanLimits {
-	weeklyQueries: number;
-	requestsPerMinute: number;
-}
-
-const PLAN_LIMITS: Record<string, PlanLimits> = {
-	anonymous: { weeklyQueries: 30, requestsPerMinute: 3 },
-	hobby: { weeklyQueries: 50, requestsPerMinute: 5 },
-	pro: { weeklyQueries: 50000, requestsPerMinute: 50 },
-	enterprise: { weeklyQueries: -1, requestsPerMinute: -1 },
-};
-
 export class RateLimitService {
 	constructor(private d1: D1Database) {}
 
@@ -40,7 +30,8 @@ export class RateLimitService {
 				? await this.getPlanType(authContext.userId)
 				: "anonymous";
 
-		const limits = PLAN_LIMITS[planType] || PLAN_LIMITS.hobby;
+		const quota = OAUTH_SUBSCRIPTION_QUOTAS[planType] || OAUTH_SUBSCRIPTION_QUOTAS.hobby;
+		const limits = { weeklyQueries: quota.week, requestsPerMinute: quota.minute };
 
 		const [weeklyUsage, minuteUsage] = await Promise.all([
 			this.getUsageCount(identifier, "weekly"),
@@ -72,31 +63,7 @@ export class RateLimitService {
 	}
 
 	private async getPlanType(userId: string): Promise<string> {
-		return withD1Timeout(
-			async () => {
-				const result = await this.d1
-					.prepare(
-						`SELECT plan_type, payment_type, current_period_end FROM user_subscriptions
-             WHERE user_id = ? AND status = 'active' LIMIT 1`,
-					)
-					.bind(userId)
-					.first();
-
-				if (!result) return "hobby";
-
-				if (
-					result.payment_type === "one_time" &&
-					result.current_period_end &&
-					new Date(result.current_period_end as string) < new Date()
-				) {
-					return "hobby";
-				}
-
-				return (result.plan_type as string) || "hobby";
-			},
-			"hobby",
-			"get_plan_type",
-		);
+		return withD1Timeout(() => getUserPlanType(userId, this.d1), "hobby", "get_plan_type");
 	}
 
 	private async getUsageCount(identifier: string, period: "weekly" | "minute"): Promise<number> {
@@ -141,9 +108,6 @@ export class RateLimitService {
 	}
 
 	private getMinuteResetTime(): string {
-		const next = new Date();
-		next.setSeconds(0, 0);
-		next.setMinutes(next.getMinutes() + 1);
-		return next.toISOString();
+		return new Date(Date.now() + 60_000).toISOString();
 	}
 }

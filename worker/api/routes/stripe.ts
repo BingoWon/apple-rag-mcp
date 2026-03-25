@@ -1,9 +1,10 @@
 import type { Context } from "hono";
 import Stripe from "stripe";
 import { z } from "zod";
+import { ApiErrorCode } from "../constants/error-codes";
 import { authMiddleware } from "../middleware/auth";
-import { UnifiedErrorCode } from "../types/api-response";
 import type { AppEnv } from "../types/hono";
+import { OAUTH_SUBSCRIPTION_QUOTAS } from "../types/permissions";
 import { logger } from "../utils/logger.js";
 import { createOpenAPIApp } from "../utils/openapi";
 import { notifyTelegram } from "../utils/telegram-notifier";
@@ -181,7 +182,7 @@ stripe.openapi(
 					{
 						success: false,
 						error: {
-							code: UnifiedErrorCode.SERVICE_UNAVAILABLE,
+							code: ApiErrorCode.SERVICE_UNAVAILABLE,
 							message: "Stripe configuration error",
 						},
 					},
@@ -198,7 +199,7 @@ stripe.openapi(
 				return c.json(
 					{
 						success: false,
-						error: { code: UnifiedErrorCode.INVALID_REQUEST, message: "Invalid price ID" },
+						error: { code: ApiErrorCode.INVALID_REQUEST, message: "Invalid price ID" },
 					},
 					400,
 				);
@@ -227,7 +228,7 @@ stripe.openapi(
 						{
 							success: false,
 							error: {
-								code: UnifiedErrorCode.INVALID_REQUEST,
+								code: ApiErrorCode.INVALID_REQUEST,
 								message: "CONFLICT_SUBSCRIPTION_ACTIVE",
 							},
 						},
@@ -240,7 +241,7 @@ stripe.openapi(
 						{
 							success: false,
 							error: {
-								code: UnifiedErrorCode.INVALID_REQUEST,
+								code: ApiErrorCode.INVALID_REQUEST,
 								message: "CONFLICT_ONETIME_ACTIVE",
 							},
 						},
@@ -291,7 +292,7 @@ stripe.openapi(
 				{
 					success: false,
 					error: {
-						code: UnifiedErrorCode.INTERNAL_ERROR,
+						code: ApiErrorCode.INTERNAL_ERROR,
 						message: "Failed to create checkout session",
 						details: error instanceof Error ? error.message : "Unknown error",
 					},
@@ -360,7 +361,7 @@ stripe.openapi(
 		const user = c.get("user");
 		if (!user) {
 			return c.json(
-				{ success: false, error: { code: UnifiedErrorCode.UNAUTHORIZED, message: "Unauthorized" } },
+				{ success: false, error: { code: ApiErrorCode.UNAUTHORIZED, message: "Unauthorized" } },
 				401,
 			);
 		}
@@ -382,7 +383,7 @@ stripe.openapi(
 					{
 						success: false,
 						error: {
-							code: UnifiedErrorCode.SUBSCRIPTION_NOT_FOUND,
+							code: ApiErrorCode.SUBSCRIPTION_NOT_FOUND,
 							message: "No billing information found",
 						},
 					},
@@ -408,7 +409,7 @@ stripe.openapi(
 				{
 					success: false,
 					error: {
-						code: UnifiedErrorCode.INTERNAL_ERROR,
+						code: ApiErrorCode.INTERNAL_ERROR,
 						message: "Failed to create billing portal session",
 					},
 				},
@@ -466,33 +467,13 @@ stripe.openapi(
 			.bind(user.id)
 			.first();
 
-		// Plan configuration for quotas and names only
-		const PLAN_CONFIG: Record<
-			string,
-			{
-				name: string;
-				weekly_quota: number;
-				minute_quota: number;
-			}
-		> = {
-			hobby: {
-				name: "Hobby",
-				weekly_quota: 10,
-				minute_quota: 1,
-			},
-			pro: {
-				name: "Pro",
-				weekly_quota: 10000,
-				minute_quota: 20,
-			},
-			enterprise: {
-				name: "Enterprise",
-				weekly_quota: -1,
-				minute_quota: -1,
-			},
+		const PLAN_NAMES: Record<string, string> = {
+			hobby: "Hobby",
+			pro: "Pro",
+			enterprise: "Enterprise",
 		};
 
-		let planType = (result?.plan_type as keyof typeof PLAN_CONFIG) || "hobby";
+		let planType = (result?.plan_type as string) || "hobby";
 		const paymentType = (result?.payment_type as string) || "subscription";
 		let status = (result?.status as string) || "active";
 
@@ -505,7 +486,7 @@ stripe.openapi(
 			status = "inactive";
 		}
 
-		const planConfig = PLAN_CONFIG[planType];
+		const quota = OAUTH_SUBSCRIPTION_QUOTAS[planType] || OAUTH_SUBSCRIPTION_QUOTAS.hobby;
 		const price = result?.price ?? 0;
 		const billingInterval = result?.billing_interval ?? "month";
 
@@ -514,13 +495,13 @@ stripe.openapi(
 			data: {
 				id: result?.stripe_subscription_id || `mock_${user.id}`,
 				plan_id: planType,
-				plan_name: planConfig.name,
+				plan_name: PLAN_NAMES[planType] || "Hobby",
 				status,
 				current_period_start: result?.current_period_start,
 				current_period_end: result?.current_period_end,
 				cancel_at_period_end: Boolean(result?.cancel_at_period_end),
-				weekly_quota: planConfig.weekly_quota,
-				minute_quota: planConfig.minute_quota,
+				weekly_quota: quota.week,
+				minute_quota: quota.minute,
 				price: price,
 				billing_interval: billingInterval,
 				payment_type: paymentType,

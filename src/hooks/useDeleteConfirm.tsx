@@ -56,12 +56,6 @@ export function useDeleteConfirm({
 		}
 	};
 
-	const _handleDeleteCancel = () => {
-		if (!isDeleting) {
-			setDeleteItem(null);
-		}
-	};
-
 	const DeleteModal = () =>
 		deleteItem ? (
 			<Modal key={`delete-${deleteItem.id}`}>

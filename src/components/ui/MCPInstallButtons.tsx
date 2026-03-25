@@ -77,6 +77,7 @@ const CLIENT_CONFIGS: Record<Exclude<MCPClientType, "generic">, ClientConfig> = 
 			});
 			await navigator.clipboard.writeText(configJson);
 			toast.success("Augment Code configuration copied to clipboard!");
+			MCPConfigService.showAugmentCodeWarning();
 		},
 	},
 	vscode: {

@@ -103,6 +103,10 @@ app.on(["GET", "DELETE"], "/mcp", (c) =>
 );
 
 app.post("/api/collector/trigger", async (c) => {
+	const adminPassword = c.req.header("X-Admin-Password");
+	if (!adminPassword || adminPassword !== c.env.ADMIN_PASSWORD) {
+		return c.json({ error: "Unauthorized" }, 401);
+	}
 	try {
 		await handleScheduled(c.env);
 		return c.json({ message: "Processing completed" });
