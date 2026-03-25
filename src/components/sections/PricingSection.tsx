@@ -144,7 +144,7 @@ export function PricingSection() {
 									<Button
 										variant={tier.popular ? "primary" : "outline"}
 										className="mt-6 sm:mt-8 w-full"
-										onClick={() => navigate("/dashboard/billing")}
+										onClick={() => navigate("/billing/")}
 									>
 										{subscription?.payment_type === "one_time"
 											? t("pricing.view_plan")
