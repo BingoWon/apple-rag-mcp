@@ -94,7 +94,10 @@
 		"title": "零 Token 配置，秒级启动",
 		"subtitle": "无需注册，无需令牌。只需将以下配置粘贴到你的 MCP 客户端，即可立即开始使用。",
 		"supported_clients": "支持的客户端：",
-		"and_more": "等更多..."
+		"and_more": "等更多...",
+		"pro_queries": "每周 5 万次查询",
+		"pro_speed": "响应速度提升 10 倍",
+		"pro_cta": "查看方案"
 	},
 
 	"datasources": {

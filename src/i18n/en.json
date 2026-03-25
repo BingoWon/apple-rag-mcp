@@ -94,7 +94,10 @@
 		"title": "Zero Token Setup, Instant Start",
 		"subtitle": "No sign-up, no token required. Just paste this config into your MCP client and start using it right away.",
 		"supported_clients": "Supported Clients:",
-		"and_more": "and more..."
+		"and_more": "and more...",
+		"pro_queries": "50K queries / week",
+		"pro_speed": "10x faster responses",
+		"pro_cta": "See plans"
 	},
 
 	"datasources": {

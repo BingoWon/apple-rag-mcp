@@ -1,4 +1,4 @@
-import { IconCheck, IconCopy } from "@tabler/icons-react";
+import { IconBolt, IconCheck, IconCopy, IconRocket, IconSparkles } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { SUPPORTED_CLIENTS } from "@/constants/clients";
@@ -68,6 +68,35 @@ export function QuickStartSection() {
 							<JsonHighlight code={CONFIG_CODE} />
 						</div>
 					</div>
+				</div>
+
+				{/* Pro Upgrade Banner */}
+				<div className="mx-auto max-w-2xl mt-6">
+					<a
+						href="#pricing"
+						className="group block rounded-xl border border-brand/20 bg-brand/5 hover:bg-brand/10 transition-colors duration-200 px-5 py-4"
+					>
+						<div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-0 justify-between">
+							<div className="flex flex-wrap items-center gap-2 text-sm">
+								<span className="inline-flex items-center gap-1 text-brand font-semibold">
+									<IconRocket className="w-4 h-4" />
+									Pro
+								</span>
+								<span className="inline-flex items-center gap-1 text-muted">
+									<IconBolt className="w-3.5 h-3.5 text-brand/70" />
+									{t("quickstart.pro_queries")}
+								</span>
+								<span className="text-muted/40">·</span>
+								<span className="inline-flex items-center gap-1 text-muted">
+									<IconSparkles className="w-3.5 h-3.5 text-brand/70" />
+									{t("quickstart.pro_speed")}
+								</span>
+							</div>
+							<span className="text-sm font-medium text-brand group-hover:underline whitespace-nowrap">
+								{t("quickstart.pro_cta")} →
+							</span>
+						</div>
+					</a>
 				</div>
 
 				<div className="mt-10 text-center">
