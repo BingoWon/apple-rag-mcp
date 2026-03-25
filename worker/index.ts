@@ -36,6 +36,55 @@ app.onError((err, c) => {
 
 app.get("/health", (c) => c.json({ status: "ok" }));
 
+// ─── SEO ──────────────────────────────────────────────────────
+app.get("/robots.txt", (c) => {
+	const body = [
+		"User-agent: *",
+		"Allow: /",
+		"",
+		"Disallow: /api/",
+		"Disallow: /admin/",
+		"Disallow: /overview",
+		"Disallow: /settings",
+		"Disallow: /messages",
+		"Disallow: /usage",
+		"Disallow: /authorized-ips",
+		"Disallow: /mcp-tokens",
+		"Disallow: /billing",
+		"Disallow: /success",
+		"Disallow: /design-system",
+		"",
+		"Sitemap: https://apple-rag.com/sitemap.xml",
+	].join("\n");
+	return c.text(body, 200, {
+		"Content-Type": "text/plain",
+		"Cache-Control": "public, max-age=86400",
+	});
+});
+
+app.get("/sitemap.xml", (c) => {
+	const base = "https://apple-rag.com";
+	const pages = [
+		{ loc: "/", priority: "1.0", changefreq: "daily" },
+		{ loc: "/register", priority: "0.6", changefreq: "monthly" },
+		{ loc: "/login", priority: "0.4", changefreq: "monthly" },
+		{ loc: "/privacy-policy", priority: "0.2", changefreq: "yearly" },
+		{ loc: "/terms-of-service", priority: "0.2", changefreq: "yearly" },
+	];
+	const today = new Date().toISOString().split("T")[0];
+	const urls = pages
+		.map(
+			(p) =>
+				`  <url>\n    <loc>${base}${p.loc}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>${p.changefreq}</changefreq>\n    <priority>${p.priority}</priority>\n  </url>`,
+		)
+		.join("\n");
+	const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>`;
+	return c.text(xml, 200, {
+		"Content-Type": "application/xml",
+		"Cache-Control": "public, max-age=86400",
+	});
+});
+
 app.route("/api", apiApp);
 
 app.get("/mcp/health", (c) => c.json({ ...HEALTH_STATUS, timestamp: new Date().toISOString() }));

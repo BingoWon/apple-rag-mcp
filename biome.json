@@ -7,7 +7,7 @@
 	},
 	"files": {
 		"ignoreUnknown": true,
-		"includes": ["**", "!**/dist", "!**/node_modules", "!**/.wrangler"]
+		"includes": ["**", "!**/dist", "!**/node_modules", "!**/.wrangler", "!index.html"]
 	},
 	"css": {
 		"parser": {
