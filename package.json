@@ -1,6 +1,6 @@
 {
 	"name": "apple-rag-mcp",
-	"version": "4.17.0",
+	"version": "4.17.1",
 	"private": true,
 	"type": "module",
 	"engines": {
