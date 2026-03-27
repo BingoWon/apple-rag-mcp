@@ -116,6 +116,10 @@ We provide an [Agent Skill](skills/apple-dev-docs/SKILL.md) that teaches AI agen
 
 Once installed, your AI agent will automatically know when and how to use Apple RAG MCP for Apple development questions.
 
+## 📄 License
+
+This project is licensed under the [MIT License](LICENSE).
+
 <div align="center">
 
 ---

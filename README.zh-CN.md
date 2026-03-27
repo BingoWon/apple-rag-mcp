@@ -116,6 +116,10 @@ MCP 认证确保你的 AI agent 获得可信的访问权限，具备企业级安
 
 安装后，你的 AI agent 会自动知道何时以及如何使用 Apple RAG MCP 来回答 Apple 开发问题。
 
+## 📄 开源协议
+
+本项目基于 [MIT 协议](LICENSE) 开源。
+
 <div align="center">
 
 ---

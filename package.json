@@ -2,6 +2,7 @@
 	"name": "apple-rag-mcp",
 	"version": "4.18.3",
 	"private": true,
+	"license": "MIT",
 	"type": "module",
 	"engines": {
 		"node": ">=22.16.0",
