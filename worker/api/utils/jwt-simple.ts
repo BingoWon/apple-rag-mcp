@@ -113,7 +113,7 @@ export async function generateAccessToken(
 		jti: sessionId,
 	};
 
-	return signJWT(payload, secret);
+	return signJWT(payload as unknown as Record<string, unknown>, secret);
 }
 
 /**
@@ -132,7 +132,7 @@ export async function generateRefreshToken(
 		exp: Math.floor(Date.now() / 1000) + 100 * 365 * 24 * 60 * 60,
 	};
 
-	return signJWT(payload, secret);
+	return signJWT(payload as unknown as Record<string, unknown>, secret);
 }
 
 /**
@@ -160,7 +160,7 @@ export async function generateTokenPair(
  * Verify JWT token
  */
 export async function verifyToken(token: string, secret: string): Promise<JWTPayload> {
-	return (await verifyJWT(token, secret)) as JWTPayload;
+	return (await verifyJWT(token, secret)) as unknown as JWTPayload;
 }
 
 /**
@@ -170,7 +170,7 @@ export async function verifyRefreshToken(
 	token: string,
 	secret: string,
 ): Promise<RefreshTokenPayload> {
-	const payload = (await verifyJWT(token, secret)) as RefreshTokenPayload;
+	const payload = (await verifyJWT(token, secret)) as unknown as RefreshTokenPayload;
 	if (payload.type !== "refresh") {
 		throw new Error("Invalid token type");
 	}

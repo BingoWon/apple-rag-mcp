@@ -95,7 +95,7 @@ class ApiClient {
 
 			if (respData) {
 				if (respData.success === false && respData.error) {
-					return respData;
+					return respData as ApiResponse<T>;
 				}
 
 				// Normalize unexpected formats (e.g. raw Zod validation error arrays)
@@ -124,7 +124,7 @@ class ApiClient {
 			const axiosError = error as AxiosError<ApiResponse>;
 			// If we have a structured error response, return it
 			if (axiosError.response?.data?.success === false) {
-				return axiosError.response.data;
+				return axiosError.response.data as ApiResponse<T>;
 			}
 			throw error;
 		}
@@ -138,7 +138,7 @@ class ApiClient {
 			const axiosError = error as AxiosError<ApiResponse>;
 			// If we have a structured error response, return it
 			if (axiosError.response?.data?.success === false) {
-				return axiosError.response.data;
+				return axiosError.response.data as ApiResponse<T>;
 			}
 			throw error;
 		}

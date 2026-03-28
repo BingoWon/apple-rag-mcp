@@ -107,7 +107,9 @@ class AppleDocCollector {
 		]);
 
 		// Process documents through contentProcessor
-		const validDocResults = docApiResults.filter((r) => r.data);
+		const validDocResults = docApiResults
+			.filter((r): r is NonNullable<typeof r> => r != null)
+			.filter((r) => r.data);
 		const docProcessResults =
 			validDocResults.length > 0
 				? await this.contentProcessor.processDocuments(validDocResults)
@@ -118,7 +120,10 @@ class AppleDocCollector {
 		const processResultsMap = new Map<string, BatchResult<DocumentContent>>();
 
 		// Map document results (use filter to align indices)
-		const validDocUrls = docApiResults.filter((r) => r.data).map((r) => r.url);
+		const validDocUrls = docApiResults
+			.filter((r): r is NonNullable<typeof r> => r != null)
+			.filter((r) => r.data)
+			.map((r) => r.url);
 		docApiResults.forEach((result) => {
 			collectResultsMap.set(result.url, result);
 		});
@@ -383,11 +388,12 @@ class AppleDocCollector {
 			processResults.length > 0
 				? this.chunker.chunkTexts(
 						processResults
+							.filter((r): r is NonNullable<typeof r> => r != null)
 							.filter((r) => r.data)
 							.map((r) => ({
 								url: r.url,
-								title: r.data!.title,
-								content: r.data!.content,
+								title: r?.data?.title ?? null,
+								content: r?.data?.content ?? "",
 							})),
 					)
 				: [];

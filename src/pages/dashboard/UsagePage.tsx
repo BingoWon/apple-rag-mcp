@@ -57,7 +57,9 @@ export default function UsagePage() {
 			key: "mcp_token",
 			label: t("usage.mcp_token"),
 			render: (value) => (
-				<div className="font-medium text-foreground text-sm">{value || t("usage.not_used")}</div>
+				<div className="font-medium text-foreground text-sm">
+					{String(value || t("usage.not_used"))}
+				</div>
 			),
 		},
 		{
@@ -65,14 +67,14 @@ export default function UsagePage() {
 			label: t("usage.query_text"),
 			render: (value) => (
 				<div className="text-foreground text-sm max-w-xs">
-					{DataTableRenderers.truncateText(value || "", 50)}
+					{DataTableRenderers.truncateText(String(value || ""), 50)}
 				</div>
 			),
 		},
 		{
 			key: "result_count",
 			label: t("usage.result_count"),
-			render: (value) => <div className="text-muted-foreground text-sm">{value}</div>,
+			render: (value) => <div className="text-muted-foreground text-sm">{String(value)}</div>,
 		},
 		{
 			key: "status",
@@ -83,7 +85,9 @@ export default function UsagePage() {
 			key: "created_at",
 			label: t("usage.time"),
 			render: (value) => (
-				<div className="text-muted-foreground text-sm">{DataTableRenderers.formatDate(value)}</div>
+				<div className="text-muted-foreground text-sm">
+					{DataTableRenderers.formatDate(value as string)}
+				</div>
 			),
 		},
 	];
@@ -94,7 +98,9 @@ export default function UsagePage() {
 			key: "mcp_token",
 			label: t("usage.mcp_token"),
 			render: (value) => (
-				<div className="font-medium text-foreground text-sm">{value || t("usage.not_used")}</div>
+				<div className="font-medium text-foreground text-sm">
+					{String(value || t("usage.not_used"))}
+				</div>
 			),
 		},
 		{
@@ -103,16 +109,16 @@ export default function UsagePage() {
 			render: (value) => (
 				<div className="text-foreground text-sm flex items-center gap-2">
 					<span className="truncate cursor-default flex-1 min-w-0">
-						{DataTableRenderers.truncateText(value || t("usage.no_url"), 100)}
+						{DataTableRenderers.truncateText(String(value || t("usage.no_url")), 100)}
 					</span>
-					{value && (
+					{!!value && (
 						<div className="flex-shrink-0">
 							<Button
 								size="icon"
 								variant="ghost"
 								onClick={async () => {
 									try {
-										await navigator.clipboard.writeText(value);
+										await navigator.clipboard.writeText(String(value));
 										toast.success(t("common.url_copied"));
 									} catch (_error) {
 										toast.error(t("common.copy_failed"));
@@ -137,7 +143,9 @@ export default function UsagePage() {
 			key: "created_at",
 			label: t("usage.time"),
 			render: (value) => (
-				<div className="text-muted-foreground text-sm">{DataTableRenderers.formatDate(value)}</div>
+				<div className="text-muted-foreground text-sm">
+					{DataTableRenderers.formatDate(value as string)}
+				</div>
 			),
 		},
 	];

@@ -231,7 +231,7 @@ function UsageProgress({ usage, t }: { usage: CurrentUsage; t: TFunction }) {
 				/>
 			</div>
 			<div className="flex items-center justify-between text-xs text-faint">
-				<span>{t("billing.remaining", { count: usage.remaining.toLocaleString() })}</span>
+				<span>{t("billing.remaining", { count: usage.remaining })}</span>
 				<span>{t("billing.resets_on", { date: formatDate(usage.reset_at) })}</span>
 			</div>
 		</div>

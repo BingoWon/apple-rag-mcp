@@ -288,19 +288,11 @@
 		"show_token": "显示令牌",
 		"copy_token": "复制令牌",
 		"copy_json": "复制 JSON",
-		"add_cursor": "添加到 Cursor",
-		"copy_augment": "复制 Augment Code 配置",
-		"copy_cline": "复制 Cline 配置",
-		"copy_roo": "复制 Roo Code 配置",
-		"install_vscode": "安装到 VS Code",
-		"install_vscode_insiders": "安装到 VS Code Insiders",
+		"install_hint": "请在弹出的 {{client}} 窗口中点击 'Install' 添加 MCP。",
 		"loading": "正在加载令牌...",
 		"empty": "暂无 MCP 令牌",
 		"empty_desc": "创建你的第一个 MCP 令牌，开始使用吧。",
 		"config_copied": "{{client}} 配置已复制到剪贴板！",
-		"cursor_hint": "请在弹出的 Cursor 窗口中点击 'Install' 添加 MCP。",
-		"vscode_hint": "请在弹出的 VS Code 窗口中点击 'Install' 添加 MCP。",
-		"vscode_insiders_hint": "请在弹出的 VS Code Insiders 窗口中点击 'Install' 添加 MCP。",
 		"delete_title": "删除令牌",
 		"delete_error_full": "删除令牌失败"
 	},
@@ -352,7 +344,9 @@
 		"about_feature_4": "信任 IP 自动完成身份验证",
 		"token_higher_limits": "认证令牌享有更高查询配额，前往",
 		"usage_monitor": "前往",
-		"ip_auto_auth": "自动完成身份验证"
+		"ip_auto_auth": "自动完成身份验证",
+		"section_install": "一键安装",
+		"section_copy": "复制配置"
 	},
 
 	"ips": {

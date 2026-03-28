@@ -14,6 +14,8 @@
 		"deploy": "pnpm build && wrangler d1 migrations apply apple-rag-db --remote && wrangler deploy",
 		"deploy:dev": "pnpm build && wrangler deploy --env development",
 		"lint": "biome check --write .",
+		"typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p worker/tsconfig.json",
+		"check": "pnpm lint && pnpm typecheck",
 		"db:setup:local": "wrangler d1 execute apple-rag-db --local --file=./migrations/schema.sql",
 		"db:setup:remote": "wrangler d1 execute apple-rag-db --remote --file=./migrations/schema.sql"
 	},

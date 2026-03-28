@@ -1,5 +1,5 @@
 import { IconXboxX } from "@tabler/icons-react";
-import type { ReactNode } from "react";
+import type { Key, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/Badge";
 import { LoaderFive } from "@/components/ui/loader";
@@ -8,12 +8,14 @@ import { formatDate } from "@/lib/datetime";
 export interface DataTableColumn {
 	key: string;
 	label: string;
-	render?: (value: unknown, row: Record<string, unknown>) => ReactNode;
+	// biome-ignore lint/suspicious/noExplicitAny: row type varies by consumer
+	render?: (value: unknown, row: any) => ReactNode;
 }
 
 export interface DataTableProps {
 	columns: DataTableColumn[];
-	data: Array<Record<string, unknown>>;
+	// biome-ignore lint/suspicious/noExplicitAny: data rows are typed by consumer context
+	data: any[];
 	isLoading?: boolean;
 	error?: string | null;
 	className?: string;
@@ -31,7 +33,8 @@ export function DataTable({
 	const formatValue = (
 		value: unknown,
 		column: DataTableColumn,
-		row: Record<string, unknown>,
+		// biome-ignore lint/suspicious/noExplicitAny: row type varies
+		row: any,
 	): ReactNode => {
 		if (column.render) {
 			return column.render(value, row);
@@ -85,7 +88,7 @@ export function DataTable({
 						<tbody className="bg-background divide-y divide-border">
 							{data.map((row, index) => (
 								<tr
-									key={row.id || index}
+									key={(row.id as Key) || index}
 									className={`transition-colors duration-200 ${
 										index % 2 === 0 ? "bg-secondary/50" : "bg-background"
 									} hover:bg-secondary`}
@@ -116,21 +119,19 @@ export const DataTableRenderers = {
 					{successLabel || "Success"}
 				</Badge>
 			);
-		} else {
-			return (
-				<Badge variant="destructive" className="flex items-center gap-1 w-fit">
-					{errorLabel || "Error"}
-				</Badge>
-			);
 		}
+		return (
+			<Badge variant="destructive" className="flex items-center gap-1 w-fit">
+				{errorLabel || "Error"}
+			</Badge>
+		);
 	},
 
 	formatDate: (dateString: string) => {
-		// 使用统一的短格式时间显示 (Aug 23, 2025 at 17:44:27)
 		return formatDate(dateString);
 	},
 
-	truncateText: (text: string, maxLength: number = 50) => {
+	truncateText: (text: string, maxLength = 50) => {
 		if (!text) return "—";
 		return text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
 	},

@@ -226,21 +226,15 @@ export default function AuthorizedIPsPage() {
 	);
 }
 
-interface AddIPModalProps<T> {
+interface AddIPModalProps {
 	currentIP: string;
-	form: UseFormReturn<T>;
+	form: UseFormReturn<{ ip_address: string; name: string }>;
 	isCreating: boolean;
-	onSubmit: (data: T, closeModal?: () => void) => void;
+	onSubmit: (data: { ip_address: string; name: string }, closeModal?: () => void) => void;
 	fillCurrentIP: () => void;
 }
 
-function AddIPModal<T>({
-	currentIP,
-	form,
-	isCreating,
-	onSubmit,
-	fillCurrentIP,
-}: AddIPModalProps<T>) {
+function AddIPModal({ currentIP, form, isCreating, onSubmit, fillCurrentIP }: AddIPModalProps) {
 	const { t } = useTranslation();
 	const { setOpen } = useModal();
 

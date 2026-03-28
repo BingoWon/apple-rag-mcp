@@ -27,7 +27,7 @@ export function DeleteAccount() {
 			message: t("settings.delete_type_confirm"),
 		}),
 	});
-	type DeleteConfirmationData = z.infer<typeof deleteConfirmationSchema>;
+	type DeleteConfirmationData = { confirmation: string };
 
 	const [isLoading, setIsLoading] = useState(false);
 	const [isDialogOpen, setIsDialogOpen] = useState(false);

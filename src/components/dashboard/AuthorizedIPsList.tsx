@@ -65,7 +65,7 @@ export function AuthorizedIPsList({
 				label: t("ips.ip_label"),
 				render: (value) => (
 					<code className="text-sm font-mono text-subtle bg-tertiary px-2 py-1 rounded border border-default font-mono tracking-wider">
-						{value}
+						{String(value)}
 					</code>
 				),
 			},
@@ -73,7 +73,9 @@ export function AuthorizedIPsList({
 				key: "created_at",
 				label: t("common.created"),
 				render: (value) => (
-					<div className="text-sm text-muted-foreground select-none">{formatDate(value)}</div>
+					<div className="text-sm text-muted-foreground select-none">
+						{formatDate(value as string)}
+					</div>
 				),
 			},
 			{
@@ -81,7 +83,7 @@ export function AuthorizedIPsList({
 				label: t("tokens.last_used"),
 				render: (value) => (
 					<div className="text-sm text-muted-foreground select-none">
-						{value ? formatDate(value) : t("common.never")}
+						{value ? formatDate(value as string) : t("common.never")}
 					</div>
 				),
 			},

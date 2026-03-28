@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/Button";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import { DropdownMenu, type DropdownMenuItem } from "@/components/ui/DropdownMenu";
 import { LoaderFive } from "@/components/ui/loader";
+import { COPY_CLIENTS, INSTALL_CLIENTS } from "@/constants/mcpClients";
 import { useDeleteConfirm } from "@/hooks/useDeleteConfirm";
 import { formatDate } from "@/lib/utils";
 import { useDashboardStore } from "@/stores/dashboard";
@@ -20,6 +21,8 @@ import type { MCPToken } from "@/types";
 import { MCPConfigService } from "@/utils/mcpConfigService";
 import { copyMcpTokenToClipboard, getMcpTokenDisplayText } from "@/utils/mcpTokenUtils";
 import { EditableName } from "./EditableName";
+
+const DEFAULT_SERVER_URL = "https://mcp.apple-rag.com";
 
 interface MCPTokensListProps {
 	tokens: MCPToken[];
@@ -69,49 +72,62 @@ export function MCPTokensList({ tokens, onRefresh, isLoading = false }: MCPToken
 		);
 	};
 
-	const handleAddToCursor = (token: MCPToken) => {
-		MCPConfigService.openCursorLink(token.mcp_token);
-		toast.success(t("tokens.cursor_hint"));
+	/** Build dropdown menu items for a token, consuming the shared MCP_CLIENTS registry */
+	const buildMenuItems = (row: MCPToken): DropdownMenuItem[] => {
+		const installItems: DropdownMenuItem[] = INSTALL_CLIENTS.map((client) => ({
+			key: client.key,
+			label: client.label,
+			icon: <img src={client.logo} alt={client.alt} width={16} height={16} className="w-4 h-4" />,
+			onClick: async () => {
+				try {
+					const messageKey = await client.action(row.mcp_token, DEFAULT_SERVER_URL);
+					toast.success(t(messageKey, { client: client.label }));
+				} catch {
+					toast.error(t("common.copy_failed"));
+				}
+			},
+		}));
+
+		const copyItems: DropdownMenuItem[] = [
+			{
+				key: "copy-json",
+				label: t("tokens.copy_json"),
+				icon: <IconClipboard className="h-4 w-4" />,
+				onClick: () => handleCopyMcpConfig(row),
+			},
+			...COPY_CLIENTS.map((client) => ({
+				key: client.key,
+				label: client.label,
+				icon: <img src={client.logo} alt={client.alt} width={16} height={16} className="w-4 h-4" />,
+				onClick: async () => {
+					try {
+						const messageKey = await client.action(row.mcp_token, DEFAULT_SERVER_URL);
+						toast.success(t(messageKey, { client: client.label }));
+					} catch {
+						toast.error(t("common.copy_failed"));
+					}
+				},
+			})),
+		];
+
+		return [
+			{ key: "label-install", label: t("guide.section_install"), type: "label" as const },
+			...installItems,
+			{ key: "sep-1", label: "", type: "separator" as const },
+			{ key: "label-copy", label: t("guide.section_copy"), type: "label" as const },
+			...copyItems,
+			{ key: "sep-2", label: "", type: "separator" as const },
+			{
+				key: "delete",
+				label: t("common.delete"),
+				icon: <IconTrash className="h-4 w-4" />,
+				onClick: () => handleDeleteClick(row.id, row.name),
+				variant: "destructive" as const,
+				disabled: isDeleting === row.id,
+			},
+		];
 	};
 
-	const handleCopyForClient = async (token: MCPToken, clientType: string, clientName: string) => {
-		try {
-			const typedClient = clientType as
-				| "cursor"
-				| "augmentcode"
-				| "cline"
-				| "roocode"
-				| "vscode"
-				| "vscode-insiders"
-				| "generic";
-			const configJson = MCPConfigService.generateJsonString({
-				token: token.mcp_token,
-				clientType: typedClient,
-			});
-			await navigator.clipboard.writeText(configJson);
-			if (typedClient === "augmentcode") MCPConfigService.showAugmentCodeWarning();
-			toast.success(t("tokens.config_copied", { client: clientName }));
-		} catch {
-			toast.error(t("common.copy_failed"));
-		}
-	};
-
-	const handleInstallVSCode = (token: MCPToken) => {
-		const installUrl = MCPConfigService.generateVSCodeInstallUrl(token.mcp_token);
-		window.open(installUrl, "_blank");
-		toast.success(t("tokens.vscode_hint"));
-	};
-
-	const handleInstallVSCodeInsiders = (token: MCPToken) => {
-		const installUrl = MCPConfigService.generateVSCodeInsidersInstallUrl(token.mcp_token);
-		window.open(installUrl, "_blank");
-		toast.success(t("tokens.vscode_insiders_hint"));
-	};
-
-	// 使用统一的时间处理工具库
-	// formatDate 函数已从 utils 导入，无需本地定义
-
-	// Define columns for the DataTable
 	const columns: DataTableColumn[] = [
 		{
 			key: "name",
@@ -163,7 +179,9 @@ export function MCPTokensList({ tokens, onRefresh, isLoading = false }: MCPToken
 			key: "created_at",
 			label: t("common.created"),
 			render: (value) => (
-				<div className="text-sm text-muted-foreground select-none">{formatDate(value)}</div>
+				<div className="text-sm text-muted-foreground select-none">
+					{formatDate(value as string)}
+				</div>
 			),
 		},
 		{
@@ -171,142 +189,38 @@ export function MCPTokensList({ tokens, onRefresh, isLoading = false }: MCPToken
 			label: t("tokens.last_used"),
 			render: (value) => (
 				<div className="text-sm text-muted-foreground select-none">
-					{value ? formatDate(value) : t("common.never")}
+					{value ? formatDate(value as string) : t("common.never")}
 				</div>
 			),
 		},
 		{
 			key: "actions",
 			label: "",
-			render: (_, row: MCPToken) => {
-				const menuItems: DropdownMenuItem[] = [
-					{
-						key: "copy-json",
-						label: t("tokens.copy_json"),
-						icon: <IconClipboard className="h-4 w-4" />,
-						onClick: () => handleCopyMcpConfig(row),
-					},
-					{
-						key: "add-to-cursor",
-						label: t("tokens.add_cursor"),
-						icon: (
-							<img
-								src="https://cursor.com/_next/static/media/placeholder-logo.da8a9d2b.webp"
-								alt="Cursor"
-								width={16}
-								height={16}
-								className="w-4 h-4"
-							/>
-						),
-						onClick: () => handleAddToCursor(row),
-					},
-					{
-						key: "copy-for-augmentcode",
-						label: t("tokens.copy_augment"),
-						icon: (
-							<img
-								src="https://www.augmentcode.com/favicon.ico"
-								alt="Augment Code"
-								width={16}
-								height={16}
-								className="w-4 h-4"
-							/>
-						),
-						onClick: () => handleCopyForClient(row, "augmentcode", "Augment Code"),
-					},
-					{
-						key: "copy-for-cline",
-						label: t("tokens.copy_cline"),
-						icon: (
-							<img
-								src="https://cline.bot/assets/branding/favicons/favicon-32x32.png"
-								alt="Cline"
-								width={16}
-								height={16}
-								className="w-4 h-4"
-							/>
-						),
-						onClick: () => handleCopyForClient(row, "cline", "Cline"),
-					},
-					{
-						key: "copy-for-roocode",
-						label: t("tokens.copy_roo"),
-						icon: (
-							<img
-								src="https://roocode.com/favicon.ico"
-								alt="Roo Code"
-								width={16}
-								height={16}
-								className="w-4 h-4"
-							/>
-						),
-						onClick: () => handleCopyForClient(row, "roocode", "Roo Code"),
-					},
-					{
-						key: "install-vscode",
-						label: t("tokens.install_vscode"),
-						icon: (
-							<img
-								src="https://api.iconify.design/vscode-icons:file-type-vscode.svg"
-								alt="VS Code"
-								width={16}
-								height={16}
-								className="w-4 h-4"
-							/>
-						),
-						onClick: () => handleInstallVSCode(row),
-					},
-					{
-						key: "install-vscode-insiders",
-						label: t("tokens.install_vscode_insiders"),
-						icon: (
-							<img
-								src="https://api.iconify.design/vscode-icons:file-type-vscode-insiders.svg"
-								alt="VS Code Insiders"
-								width={16}
-								height={16}
-								className="w-4 h-4"
-							/>
-						),
-						onClick: () => handleInstallVSCodeInsiders(row),
-					},
-					{
-						key: "delete",
-						label: t("common.delete"),
-						icon: <IconTrash className="h-4 w-4" />,
-						onClick: () => handleDeleteClick(row.id, row.name),
-						variant: "destructive" as const,
-						disabled: isDeleting === row.id,
-					},
-				];
-
-				return (
-					<div className="text-right">
-						<DropdownMenu
-							trigger={
-								<Button
-									size="icon"
-									variant="ghost"
-									className="h-8 w-8 text-muted hover:text-light"
-									disabled={isDeleting === row.id}
-								>
-									{isDeleting === row.id ? (
-										<LoaderFive text="..." />
-									) : (
-										<IconDots className="h-4 w-4" />
-									)}
-								</Button>
-							}
-							items={menuItems}
-							align="right"
-						/>
-					</div>
-				);
-			},
+			render: (_, row: MCPToken) => (
+				<div className="text-right">
+					<DropdownMenu
+						trigger={
+							<Button
+								size="icon"
+								variant="ghost"
+								className="h-8 w-8 text-muted hover:text-light"
+								disabled={isDeleting === row.id}
+							>
+								{isDeleting === row.id ? (
+									<LoaderFive text="..." />
+								) : (
+									<IconDots className="h-4 w-4" />
+								)}
+							</Button>
+						}
+						items={buildMenuItems(row)}
+						align="right"
+					/>
+				</div>
+			),
 		},
 	];
 
-	// 加载状态：显示 LoaderFive
 	if (isLoading) {
 		return (
 			<div className="flex items-center justify-center py-12">
@@ -315,7 +229,6 @@ export function MCPTokensList({ tokens, onRefresh, isLoading = false }: MCPToken
 		);
 	}
 
-	// 空状态：只在不加载且数据为空时显示
 	if (tokens.length === 0) {
 		return (
 			<div className="p-6 text-center">
@@ -333,8 +246,6 @@ export function MCPTokensList({ tokens, onRefresh, isLoading = false }: MCPToken
 	return (
 		<>
 			<DataTable columns={columns} data={tokens} />
-
-			{/* Delete Confirmation Modal */}
 			<DeleteModal />
 		</>
 	);

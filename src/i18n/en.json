@@ -300,19 +300,11 @@
 		"show_token": "Show token",
 		"copy_token": "Copy token",
 		"copy_json": "Copy JSON",
-		"add_cursor": "Add to Cursor",
-		"copy_augment": "Copy for Augment Code",
-		"copy_cline": "Copy for Cline",
-		"copy_roo": "Copy for Roo Code",
-		"install_vscode": "Install in VS Code",
-		"install_vscode_insiders": "Install in VS Code Insiders",
+		"install_hint": "Look for the {{client}} window and click 'Install' to add MCP.",
 		"loading": "Loading MCP tokens...",
 		"empty": "No MCP tokens",
 		"empty_desc": "Get started by creating a new MCP token.",
 		"config_copied": "{{client}} configuration copied to clipboard!",
-		"cursor_hint": "Look for the Cursor window and click 'Install' to add MCP.",
-		"vscode_hint": "Look for the VS Code window and click 'Install' to add MCP.",
-		"vscode_insiders_hint": "Look for the VS Code Insiders window and click 'Install' to add MCP.",
 		"delete_title": "Delete MCP Token",
 		"delete_error_full": "Failed to delete MCP token"
 	},
@@ -364,7 +356,9 @@
 		"about_feature_4": "Automatic authentication for trusted IP addresses",
 		"token_higher_limits": "Authenticated tokens provide higher query limits in",
 		"usage_monitor": "Monitor your usage in",
-		"ip_auto_auth": "for automatic authentication"
+		"ip_auto_auth": "for automatic authentication",
+		"section_install": "One-click Install",
+		"section_copy": "Copy Configuration"
 	},
 
 	"ips": {

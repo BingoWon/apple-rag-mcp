@@ -5,7 +5,8 @@ import { logger } from "./utils/logger.js";
 class PostgreSQLManager {
 	constructor(private readonly sql: postgres.Sql) {}
 
-	private async withTransaction<T>(operation: (sql: postgres.Sql) => Promise<T>): Promise<T> {
+	// biome-ignore lint/suspicious/noExplicitAny: postgres.js TransactionSql generic type mismatch
+	private async withTransaction<T>(operation: (sql: any) => Promise<T>): Promise<T> {
 		return (await this.sql.begin(async (sql) => {
 			return await operation(sql);
 		})) as T;

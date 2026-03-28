@@ -235,11 +235,11 @@ export class OAuthService {
 
 				return {
 					id: `github_${userData.id}`,
-					email: primaryEmail,
-					name: userData.name || userData.login || "GitHub User",
-					avatar: userData.avatar_url,
+					email: primaryEmail as string,
+					name: (userData.name || userData.login || "GitHub User") as string,
+					avatar: userData.avatar_url as string | undefined,
 					provider: "github",
-					provider_id: userData.id.toString(),
+					provider_id: String(userData.id),
 				};
 			} catch (error) {
 				console.error("GitHub getUserInfo error:", error);

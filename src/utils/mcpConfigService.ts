@@ -58,6 +58,29 @@ export function generateServerConfig(options: MCPConfigOptions): MCPServerConfig
 	}
 }
 
+/**
+ * Generate Antigravity-specific MCP config.
+ * Antigravity uses `serverUrl` instead of `url` and includes Content-Type header.
+ */
+export function generateAntigravityConfig(token: string, serverUrl?: string) {
+	const url = serverUrl || DEFAULT_SERVER_URL;
+	return {
+		mcpServers: {
+			[SERVER_NAME]: {
+				serverUrl: url,
+				headers: {
+					Authorization: `Bearer ${token}`,
+					"Content-Type": "application/json",
+				},
+			},
+		},
+	};
+}
+
+export function generateAntigravityJsonString(token: string, serverUrl?: string): string {
+	return JSON.stringify(generateAntigravityConfig(token, serverUrl), null, 2);
+}
+
 export function generateConfig(options: MCPConfigOptions) {
 	return {
 		mcpServers: {
@@ -207,4 +230,6 @@ export const MCPConfigService = {
 	generateVSCodeInsidersInstallUrl,
 	generateVSCodeBadgeUrl,
 	generateVSCodeInsidersBadgeUrl,
+	generateAntigravityConfig,
+	generateAntigravityJsonString,
 };
