@@ -116,21 +116,23 @@ app.openapi(getUserSubscriptionsRoute, async (c) => {
 
 		const subscriptions = (subscriptionsResult.results || []).map(
 			(row: Record<string, unknown>) => ({
-				user_id: row.user_id,
-				stripe_customer_id: row.stripe_customer_id,
-				stripe_subscription_id: row.stripe_subscription_id,
-				plan_type: row.plan_type || "hobby",
-				status: row.status || "active",
-				current_period_start: row.current_period_start,
-				current_period_end: row.current_period_end,
+				user_id: String(row.user_id),
+				stripe_customer_id: row.stripe_customer_id ? String(row.stripe_customer_id) : null,
+				stripe_subscription_id: row.stripe_subscription_id
+					? String(row.stripe_subscription_id)
+					: null,
+				plan_type: String(row.plan_type || "hobby"),
+				status: String(row.status || "active"),
+				current_period_start: row.current_period_start ? String(row.current_period_start) : null,
+				current_period_end: row.current_period_end ? String(row.current_period_end) : null,
 				cancel_at_period_end: Boolean(row.cancel_at_period_end),
 				price: Number(row.price) || 0,
-				billing_interval: row.billing_interval || "month",
-				stripe_price_id: row.stripe_price_id,
-				payment_type: row.payment_type || "subscription",
-				updated_at: row.updated_at,
-				user_email: row.user_email || "N/A",
-				user_name: row.user_name || "N/A",
+				billing_interval: String(row.billing_interval || "month"),
+				stripe_price_id: row.stripe_price_id ? String(row.stripe_price_id) : null,
+				payment_type: String(row.payment_type || "subscription"),
+				updated_at: String(row.updated_at),
+				user_email: String(row.user_email || "N/A"),
+				user_name: String(row.user_name || "N/A"),
 			}),
 		);
 

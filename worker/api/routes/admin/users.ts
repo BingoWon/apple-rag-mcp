@@ -103,16 +103,16 @@ app.openapi(getUsersRoute, async (c) => {
 			.all();
 
 		const users = (usersResult.results || []).map((row: Record<string, unknown>) => ({
-			id: row.id,
-			email: row.email,
-			name: row.name || "N/A",
-			provider: row.provider || "email",
-			avatar: row.avatar || null,
-			plan_type: row.plan_type || "hobby",
-			subscription_status: row.subscription_status || "active",
-			last_login: row.last_login || null,
-			created_at: row.created_at,
-			updated_at: row.updated_at,
+			id: String(row.id),
+			email: String(row.email),
+			name: String(row.name || "N/A"),
+			provider: String(row.provider || "email"),
+			avatar: row.avatar ? String(row.avatar) : undefined,
+			plan_type: String(row.plan_type || "hobby"),
+			subscription_status: String(row.subscription_status || "active"),
+			last_login: row.last_login ? String(row.last_login) : undefined,
+			created_at: String(row.created_at),
+			updated_at: String(row.updated_at),
 		}));
 
 		return c.json(

@@ -7,3 +7,12 @@ dist/
 *.log
 .DS_Store
 references/
+
+# TypeScript
+*.tsbuildinfo
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo

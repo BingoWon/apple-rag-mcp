@@ -149,7 +149,7 @@ stripe.openapi(
 				content: {
 					"application/json": {
 						schema: z.object({
-							success: z.literal(false),
+							success: z.boolean(),
 							error: z.object({ code: z.string(), message: z.string() }),
 						}),
 					},
@@ -160,7 +160,7 @@ stripe.openapi(
 				content: {
 					"application/json": {
 						schema: z.object({
-							success: z.literal(false),
+							success: z.boolean(),
 							error: z.object({
 								code: z.string(),
 								message: z.string(),
@@ -172,7 +172,7 @@ stripe.openapi(
 			},
 		},
 	},
-	async (c): Promise<Response> => {
+	async (c) => {
 		try {
 			const { priceId, cancelUrl, paymentMethod } = await c.req.json();
 			const user = c.get("user");
@@ -254,7 +254,7 @@ stripe.openapi(
 			const finalCancelUrl = cancelUrl || `${origin}/#pricing`;
 
 			const stripeClient = new Stripe(c.env.STRIPE_SECRET_KEY, {
-				apiVersion: "2025-07-30.basil",
+				apiVersion: "2025-08-27.basil",
 			});
 
 			const sessionParams: Stripe.Checkout.SessionCreateParams = {
@@ -286,7 +286,7 @@ stripe.openapi(
 
 			const session = await stripeClient.checkout.sessions.create(sessionParams);
 
-			return c.json({ success: true, data: { url: session.url! } });
+			return c.json({ success: true as const, data: { url: session.url! } }, 200);
 		} catch (error) {
 			return c.json(
 				{
@@ -327,7 +327,7 @@ stripe.openapi(
 				content: {
 					"application/json": {
 						schema: z.object({
-							success: z.literal(false),
+							success: z.boolean(),
 							error: z.object({ code: z.string(), message: z.string() }),
 						}),
 					},
@@ -338,7 +338,7 @@ stripe.openapi(
 				content: {
 					"application/json": {
 						schema: z.object({
-							success: z.literal(false),
+							success: z.boolean(),
 							error: z.object({ code: z.string(), message: z.string() }),
 						}),
 					},
@@ -349,7 +349,7 @@ stripe.openapi(
 				content: {
 					"application/json": {
 						schema: z.object({
-							success: z.literal(false),
+							success: z.boolean(),
 							error: z.object({ code: z.string(), message: z.string() }),
 						}),
 					},
@@ -357,7 +357,7 @@ stripe.openapi(
 			},
 		},
 	},
-	async (c): Promise<Response> => {
+	async (c) => {
 		const user = c.get("user");
 		if (!user) {
 			return c.json(
@@ -393,7 +393,7 @@ stripe.openapi(
 
 			// Create Stripe client
 			const stripeClient = new Stripe(c.env.STRIPE_SECRET_KEY, {
-				apiVersion: "2025-07-30.basil",
+				apiVersion: "2025-08-27.basil",
 			});
 
 			// Create billing portal session with return URL that triggers refresh
@@ -402,7 +402,7 @@ stripe.openapi(
 				return_url: `${new URL(c.req.url).origin}/billing?refresh=true`,
 			});
 
-			return c.json({ success: true, data: { url: session.url } });
+			return c.json({ success: true as const, data: { url: session.url } }, 200);
 		} catch (error) {
 			console.error("Failed to create billing portal session:", error);
 			return c.json(
@@ -493,19 +493,33 @@ stripe.openapi(
 		return c.json({
 			success: true,
 			data: {
-				id: result?.stripe_subscription_id || `mock_${user.id}`,
-				plan_id: planType,
+				id: result?.stripe_subscription_id
+					? String(result.stripe_subscription_id)
+					: `mock_${user.id}`,
+				plan_id: planType as "hobby" | "pro" | "enterprise",
 				plan_name: PLAN_NAMES[planType] || "Hobby",
-				status,
-				current_period_start: result?.current_period_start,
-				current_period_end: result?.current_period_end,
+				status: status as
+					| "active"
+					| "canceled"
+					| "past_due"
+					| "trialing"
+					| "incomplete"
+					| "inactive",
+				current_period_start: result?.current_period_start
+					? String(result.current_period_start)
+					: undefined,
+				current_period_end: result?.current_period_end
+					? String(result.current_period_end)
+					: undefined,
 				cancel_at_period_end: Boolean(result?.cancel_at_period_end),
 				weekly_quota: quota.week,
 				minute_quota: quota.minute,
-				price: price,
-				billing_interval: billingInterval,
-				payment_type: paymentType,
-				stripe_customer_id: result?.stripe_customer_id,
+				price: Number(price),
+				billing_interval: String(billingInterval),
+				payment_type: paymentType as "subscription" | "one_time",
+				stripe_customer_id: result?.stripe_customer_id
+					? String(result.stripe_customer_id)
+					: undefined,
 			},
 		});
 	},
@@ -570,7 +584,7 @@ async function validateWebhook(c: Context<AppEnv>) {
 	}
 
 	const stripeClient = new Stripe(c.env.STRIPE_SECRET_KEY, {
-		apiVersion: "2025-07-30.basil",
+		apiVersion: "2025-08-27.basil",
 	});
 
 	const event = await stripeClient.webhooks.constructEventAsync(

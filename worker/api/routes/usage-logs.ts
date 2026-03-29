@@ -195,15 +195,14 @@ app.openapi(getUsageLogsRoute, async (c) => {
 			.bind(...queryParams)
 			.all();
 
-		// Process results with proper typing
 		const items = (dataResult.results || []).map((row: Record<string, unknown>) => ({
-			id: row.id,
-			query: row.query,
+			id: String(row.id),
+			query: row.query ? String(row.query) : null,
 			result_count: Number(row.result_count) || 0,
-			status: row.status,
+			status: row.status as "success" | "error",
 			mcp_token: row.mcp_token ? `${String(row.mcp_token).substring(0, 12)}...` : null,
-			created_at: row.created_at,
-			log_type: row.log_type,
+			created_at: String(row.created_at),
+			log_type: row.log_type as "search" | "fetch",
 		}));
 
 		const pagination = {

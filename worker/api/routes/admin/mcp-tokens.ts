@@ -95,13 +95,13 @@ app.openapi(getMCPTokensRoute, async (c) => {
 			.all();
 
 		const tokens = (tokensResult.results || []).map((row: Record<string, unknown>) => ({
-			id: row.id,
-			user_id: row.user_id,
-			name: row.name,
+			id: String(row.id),
+			user_id: String(row.user_id),
+			name: String(row.name),
 			mcp_token: row.mcp_token ? `${String(row.mcp_token).substring(0, 12)}...` : "N/A",
-			last_used_at: row.last_used_at,
-			created_at: row.created_at,
-			updated_at: row.updated_at,
+			last_used_at: row.last_used_at ? String(row.last_used_at) : null,
+			created_at: String(row.created_at),
+			updated_at: String(row.updated_at),
 		}));
 
 		return c.json(

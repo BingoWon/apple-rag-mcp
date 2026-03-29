@@ -118,11 +118,11 @@ app.openapi(listMCPTokensRoute, async (c) => {
 		// Transform database results to API format
 		// Include token value for user convenience (consider encryption in production)
 		const formattedTokens = (tokens.results || []).map((token: Record<string, unknown>) => ({
-			id: token.id,
-			name: token.name,
-			mcp_token: token.mcp_token, // Include token for user access
-			last_used_at: token.last_used_at,
-			created_at: token.created_at,
+			id: String(token.id),
+			name: String(token.name),
+			mcp_token: String(token.mcp_token), // Include token for user access
+			last_used_at: token.last_used_at ? String(token.last_used_at) : null,
+			created_at: String(token.created_at),
 		}));
 
 		return c.json({ success: true, data: formattedTokens }, 200);
@@ -230,7 +230,7 @@ app.openapi(createMCPTokenRoute, async (c) => {
 			.bind(user.id)
 			.first();
 
-		if (existingCount && (existingCount as Record<string, unknown>).count >= 10) {
+		if (existingCount && Number((existingCount as Record<string, unknown>).count) >= 10) {
 			return c.json(
 				{
 					success: false,
@@ -419,10 +419,12 @@ app.openapi(updateMCPTokenRoute, async (c) => {
 
 		// Return updated token data (without token value)
 		const updatedToken = {
-			id: id,
-			name: name,
-			last_used_at: existingToken.last_used_at,
-			created_at: existingToken.created_at,
+			id: String(id),
+			name: String(name),
+			last_used_at: existingToken.last_used_at ? String(existingToken.last_used_at) : null,
+			created_at: existingToken.created_at
+				? String(existingToken.created_at)
+				: new Date().toISOString(),
 		};
 
 		return c.json({ success: true, data: updatedToken }, 200);
@@ -547,7 +549,7 @@ app.openapi(deleteMCPTokenRoute, async (c) => {
 		return c.json(
 			{
 				success: true,
-				data: { message: "Token deleted successfully" },
+				message: "Token deleted successfully",
 			},
 			200,
 		);

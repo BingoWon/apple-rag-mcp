@@ -13,12 +13,5 @@
 		"resolveJsonModule": true,
 		"types": ["@cloudflare/workers-types"]
 	},
-	"include": [
-		"shared/**/*.ts",
-		"collector/**/*.ts",
-		"api/types/**/*.ts",
-		"api/utils/**/*.ts",
-		"api/services/**/*.ts",
-		"api/middleware/**/*.ts"
-	]
+	"include": ["./**/*.ts"]
 }
