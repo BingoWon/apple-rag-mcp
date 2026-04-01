@@ -70,7 +70,7 @@
 		"title_into": "通过 MCP 注入 AI Agent",
 		"subtitle_heres": "致敬每一位",
 		"subtitle_vibecoders": "Vibe Coder",
-		"subtitle_desc": "，生于 Apple 基因。RAG 为你的 Agent 注入官方文档与视频洞见。"
+		"subtitle_desc": "，源自 Apple 基因。RAG 为你的 Agent 注入官方文档与视频洞见。"
 	},
 
 	"features": {
@@ -90,9 +90,9 @@
 	},
 
 	"quickstart": {
-		"eyebrow": "极简接入",
-		"title": "零 Token 配置，秒级启动",
-		"subtitle": "无需注册，无需令牌。只需将以下配置粘贴到你的 MCP 客户端，即可立即开始使用。",
+		"eyebrow": "极速上手",
+		"title": "免 Token 配置，秒级启动",
+		"subtitle": "可免注册，免令牌。只需将以下配置粘贴到你的 MCP 客户端，即可立即开始使用。",
 		"supported_clients": "支持的客户端：",
 		"and_more": "等更多...",
 		"pro_queries": "请求频率提升 10 倍",
@@ -103,7 +103,7 @@
 	"datasources": {
 		"eyebrow": "全面的知识库",
 		"title": "多源数据，一站搜索",
-		"subtitle": "从官方文档到 WWDC 视频字幕——通过统一的 MCP 接口，为你的 AI Agent 注入全面的 Apple 开发知识。",
+		"subtitle": "从官方文档到 WWDC 视频字幕——用 MCP 为你的 AI Agent 接入最全最权威的 Apple 开发知识库。",
 		"docs_title": "Apple 开发者文档",
 		"docs_desc": "Apple 全部官方开发文档一站直达，AI 智能搜索帮你的 Agent 精准定位所需信息。",
 		"fight_title": "No shirt, no shoes, no weapons.",
