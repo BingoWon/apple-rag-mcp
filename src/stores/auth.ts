@@ -13,7 +13,8 @@ import { getFriendlyErrorMessage } from "@/utils/errorMessages";
 
 function isTokenExpired(token: string): boolean {
 	try {
-		const payload = JSON.parse(atob(token.split(".")[1]));
+		const base64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+		const payload = JSON.parse(atob(base64));
 		return payload.exp ? payload.exp * 1000 < Date.now() : false;
 	} catch {
 		return true;
