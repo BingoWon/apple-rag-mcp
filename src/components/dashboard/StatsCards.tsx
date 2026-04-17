@@ -18,7 +18,7 @@ const StatsCards = () => {
 	const stats: StatCard[] = [
 		{
 			icon: IconFileText,
-			value: "373,047",
+			value: "373,608",
 			labelKey: "dashboard.stats_doc_pages",
 			color: "#9595ff",
 			clickable: true,
@@ -26,7 +26,7 @@ const StatsCards = () => {
 		},
 		{
 			icon: IconVideo,
-			value: "1,409",
+			value: "1,412",
 			labelKey: "dashboard.stats_wwdc_videos",
 			color: "#fca147",
 			clickable: true,
@@ -34,7 +34,7 @@ const StatsCards = () => {
 		},
 		{
 			icon: IconDatabase,
-			value: "396,516",
+			value: "397,114",
 			labelKey: "dashboard.stats_chunks",
 			color: "#42c16e",
 			clickable: false,

@@ -123,7 +123,7 @@ Install the MCP server with the appropriate command for your client:
 
 **Claude Code**:
 ```bash
-claude mcp add --transport streamable-http apple-rag-mcp https://mcp.apple-rag.com
+claude mcp add --transport http --scope user apple-rag-mcp https://mcp.apple-rag.com
 ```
 
 **Codex**:
