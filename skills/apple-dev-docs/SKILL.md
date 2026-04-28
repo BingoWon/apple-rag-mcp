@@ -128,7 +128,8 @@ claude mcp add --transport http --scope user apple-rag-mcp https://mcp.apple-rag
 
 **Codex**:
 ```bash
-codex mcp add apple-rag-mcp --url https://mcp.apple-rag.com
+export APPLE_RAG_MCP_TOKEN="at_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+codex mcp add apple-rag-mcp --url https://mcp.apple-rag.com --bearer-token-env-var APPLE_RAG_MCP_TOKEN
 ```
 
 ## Quality rules

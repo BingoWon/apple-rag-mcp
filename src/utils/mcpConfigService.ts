@@ -30,6 +30,11 @@ export interface MCPConfigOptions {
 
 const DEFAULT_SERVER_URL = "https://mcp.apple-rag.com";
 const SERVER_NAME = "apple-rag-mcp";
+const CODEX_TOKEN_ENV_VAR = "APPLE_RAG_MCP_TOKEN";
+
+function shellQuote(value: string): string {
+	return `'${value.replace(/'/g, "'\\''")}'`;
+}
 
 export function generateServerConfig(options: MCPConfigOptions): MCPServerConfig {
 	const { token, serverUrl = DEFAULT_SERVER_URL, clientType = "generic" } = options;
@@ -141,11 +146,13 @@ export function showAugmentCodeWarning(): void {
 	);
 }
 
-export function generateTomlString(token: string): string {
+export function generateCodexCommand(
+	token: string,
+	serverUrl: string = DEFAULT_SERVER_URL,
+): string {
 	return [
-		"[mcp_servers.apple-rag-mcp]",
-		'url = "https://mcp.apple-rag.com"',
-		`bearer_token_env_var = "${token}"`,
+		`export ${CODEX_TOKEN_ENV_VAR}=${shellQuote(token)}`,
+		`codex mcp add ${SERVER_NAME} --url ${shellQuote(serverUrl)} --bearer-token-env-var ${CODEX_TOKEN_ENV_VAR}`,
 	].join("\n");
 }
 
@@ -221,7 +228,7 @@ export const MCPConfigService = {
 	generateConfig,
 	generateJsonString,
 	showAugmentCodeWarning,
-	generateTomlString,
+	generateCodexCommand,
 	generateClaudeCodeCommand,
 	generateCursorLink,
 	copyToClipboard,

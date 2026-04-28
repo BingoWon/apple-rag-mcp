@@ -79,9 +79,9 @@ export const MCP_CLIENTS: MCPClientConfig[] = [
 		alt: "OpenAI Codex",
 		label: "Codex",
 		category: "copy",
-		action: async (token) => {
-			const toml = MCPConfigService.generateTomlString(token);
-			await navigator.clipboard.writeText(toml);
+		action: async (token, serverUrl) => {
+			const command = MCPConfigService.generateCodexCommand(token, serverUrl);
+			await navigator.clipboard.writeText(command);
 			return "tokens.config_copied";
 		},
 	},

@@ -300,10 +300,6 @@ export function MCPUsageGuide() {
 											<div>
 												<p className="text-sm text-muted mb-3">
 													{t("guide.codex_desc")}{" "}
-													<code className="text-xs font-mono bg-secondary px-1 py-0.5 rounded">
-														~/.codex/config.toml
-													</code>{" "}
-													{t("guide.codex_desc_suffix")}{" "}
 													<a
 														href="https://github.com/openai/codex/blob/main/docs/config.md#mcp_servers"
 														target="_blank"
@@ -315,9 +311,12 @@ export function MCPUsageGuide() {
 													.
 												</p>
 												<CodeBlock
-													language="toml"
-													filename="config.toml"
-													code={MCPConfigService.generateTomlString(selectedToken.mcp_token)}
+													language="bash"
+													filename="terminal"
+													code={MCPConfigService.generateCodexCommand(
+														selectedToken.mcp_token,
+														mcpServerUrl,
+													)}
 												/>
 											</div>
 										</div>
