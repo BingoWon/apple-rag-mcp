@@ -228,6 +228,10 @@ class ApiClient {
 		return this.get(`/users/usage/stats?period=${period}`);
 	}
 
+	async getCorpusStats() {
+		return this.get("/stats/corpus");
+	}
+
 	async getUsageLogs(limit: number = 20, page: number = 1) {
 		return this.get(`/usage-logs/history?limit=${limit}&page=${page}`);
 	}

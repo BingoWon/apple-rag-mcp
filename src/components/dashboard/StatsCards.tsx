@@ -1,7 +1,10 @@
 import type { Icon } from "@tabler/icons-react";
 import { IconCircleCheck, IconDatabase, IconFileText, IconVideo } from "@tabler/icons-react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/Card";
+import { api } from "@/lib/api";
+import type { CorpusStats } from "@/types";
 
 interface StatCard {
 	icon: Icon;
@@ -14,11 +17,41 @@ interface StatCard {
 
 const StatsCards = () => {
 	const { t, i18n } = useTranslation();
+	const [corpusStats, setCorpusStats] = useState<CorpusStats | null>(null);
+
+	useEffect(() => {
+		let isMounted = true;
+
+		api
+			.getCorpusStats()
+			.then((response) => {
+				if (isMounted && response.success && response.data) {
+					setCorpusStats(response.data as CorpusStats);
+				}
+			})
+			.catch(() => {});
+
+		return () => {
+			isMounted = false;
+		};
+	}, []);
+
+	const formatNumber = (value: number | undefined) =>
+		typeof value === "number"
+			? new Intl.NumberFormat(i18n.language === "zh" ? "zh-CN" : "en-US").format(value)
+			: "...";
+
+	const statsDate = corpusStats?.generated_at
+		? new Date(corpusStats.generated_at).toLocaleDateString(
+				i18n.language === "zh" ? "zh-CN" : "en-US",
+				{ year: "numeric", month: "short", day: "numeric" },
+			)
+		: "...";
 
 	const stats: StatCard[] = [
 		{
 			icon: IconFileText,
-			value: "373,608",
+			value: formatNumber(corpusStats?.docs_total),
 			labelKey: "dashboard.stats_doc_pages",
 			color: "#9595ff",
 			clickable: true,
@@ -26,7 +59,7 @@ const StatsCards = () => {
 		},
 		{
 			icon: IconVideo,
-			value: "1,412",
+			value: formatNumber(corpusStats?.videos_total),
 			labelKey: "dashboard.stats_wwdc_videos",
 			color: "#fca147",
 			clickable: true,
@@ -34,14 +67,14 @@ const StatsCards = () => {
 		},
 		{
 			icon: IconDatabase,
-			value: "397,114",
+			value: formatNumber(corpusStats?.chunks_total),
 			labelKey: "dashboard.stats_chunks",
 			color: "#42c16e",
 			clickable: false,
 		},
 		{
 			icon: IconCircleCheck,
-			value: "100%",
+			value: `${corpusStats?.embedded_percentage ?? 100}%`,
 			labelKey: "dashboard.stats_embedded",
 			color: "#dc5bb7",
 			clickable: false,
@@ -53,11 +86,6 @@ const StatsCards = () => {
 			window.open(stat.url, "_blank");
 		}
 	};
-
-	const yesterdayDate = new Date(Date.now() - 24 * 60 * 60 * 1000).toLocaleDateString(
-		i18n.language === "zh" ? "zh-CN" : "en-US",
-		{ year: "numeric", month: "short", day: "numeric" },
-	);
 
 	return (
 		<Card className="mb-6">
@@ -76,7 +104,7 @@ const StatsCards = () => {
 				<div className="text-center mb-5">
 					<h3 className="text-xl font-bold text-light mb-2">{t("dashboard.stats_heading")}</h3>
 					<p className="text-muted text-sm opacity-75">
-						{t("dashboard.stats_date", { date: yesterdayDate })}
+						{t("dashboard.stats_date", { date: statsDate })}
 					</p>
 				</div>
 				<div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">

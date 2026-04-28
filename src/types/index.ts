@@ -58,6 +58,14 @@ export interface ToolCallsStats {
 	}>;
 }
 
+export interface CorpusStats {
+	docs_total: number;
+	videos_total: number;
+	chunks_total: number;
+	embedded_percentage: 100;
+	generated_at: string;
+}
+
 export interface CurrentUsage {
 	current_usage: number;
 	limit: number;
