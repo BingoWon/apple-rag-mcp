@@ -4,6 +4,8 @@
  * Single source of truth for all MCP client configurations.
  * Used by MCPInstallButtons (Overview page) and MCPTokensList (Tokens page dropdown).
  */
+
+import { showAugmentCodeWarning } from "@/utils/augmentCodeWarning";
 import { MCPConfigService } from "@/utils/mcpConfigService";
 
 export interface MCPClientConfig {
@@ -80,8 +82,8 @@ export const MCP_CLIENTS: MCPClientConfig[] = [
 		label: "Codex",
 		category: "copy",
 		action: async (token, serverUrl) => {
-			const command = MCPConfigService.generateCodexCommand(token, serverUrl);
-			await navigator.clipboard.writeText(command);
+			const toml = MCPConfigService.generateCodexTomlString(token, serverUrl);
+			await navigator.clipboard.writeText(toml);
 			return "tokens.config_copied";
 		},
 	},
@@ -110,7 +112,7 @@ export const MCP_CLIENTS: MCPClientConfig[] = [
 				clientType: "augmentcode",
 			});
 			await navigator.clipboard.writeText(json);
-			MCPConfigService.showAugmentCodeWarning();
+			showAugmentCodeWarning();
 			return "tokens.config_copied";
 		},
 	},

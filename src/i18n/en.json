@@ -343,7 +343,7 @@
 		"ip_auth_link": "Authorize your IP addresses",
 		"ip_auth_desc": "Higher query limits without requiring tokens for trusted IP addresses",
 		"codex_config": "Configuration",
-		"codex_desc": "Run this command in the terminal that launches Codex. For more detail, refer to the",
+		"codex_desc": "Add this snippet to ~/.codex/config.toml. For more detail, refer to the",
 		"official_docs": "official docs",
 		"claude_command": "CLI Command",
 		"claude_desc": "Run the following command in your terminal to add the MCP server to Claude Code:",

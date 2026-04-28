@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/Button";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import { DropdownMenu, type DropdownMenuItem } from "@/components/ui/DropdownMenu";
 import { LoaderFive } from "@/components/ui/loader";
+import { MCP_SERVER_URL } from "@/constants/mcp";
 import { COPY_CLIENTS, INSTALL_CLIENTS } from "@/constants/mcpClients";
 import { useDeleteConfirm } from "@/hooks/useDeleteConfirm";
 import { formatDate } from "@/lib/utils";
@@ -21,8 +22,6 @@ import type { MCPToken } from "@/types";
 import { MCPConfigService } from "@/utils/mcpConfigService";
 import { copyMcpTokenToClipboard, getMcpTokenDisplayText } from "@/utils/mcpTokenUtils";
 import { EditableName } from "./EditableName";
-
-const DEFAULT_SERVER_URL = "https://mcp.apple-rag.com";
 
 interface MCPTokensListProps {
 	tokens: MCPToken[];
@@ -80,7 +79,7 @@ export function MCPTokensList({ tokens, onRefresh, isLoading = false }: MCPToken
 			icon: <img src={client.logo} alt={client.alt} width={16} height={16} className="w-4 h-4" />,
 			onClick: async () => {
 				try {
-					const messageKey = await client.action(row.mcp_token, DEFAULT_SERVER_URL);
+					const messageKey = await client.action(row.mcp_token, MCP_SERVER_URL);
 					toast.success(t(messageKey, { client: client.label }));
 				} catch {
 					toast.error(t("common.copy_failed"));
@@ -101,7 +100,7 @@ export function MCPTokensList({ tokens, onRefresh, isLoading = false }: MCPToken
 				icon: <img src={client.logo} alt={client.alt} width={16} height={16} className="w-4 h-4" />,
 				onClick: async () => {
 					try {
-						const messageKey = await client.action(row.mcp_token, DEFAULT_SERVER_URL);
+						const messageKey = await client.action(row.mcp_token, MCP_SERVER_URL);
 						toast.success(t(messageKey, { client: client.label }));
 					} catch {
 						toast.error(t("common.copy_failed"));

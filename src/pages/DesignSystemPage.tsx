@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { MCP_SERVER_URL } from "@/constants/mcp";
 
 export default function DesignSystemPage() {
 	return (
@@ -368,7 +369,7 @@ export default function DesignSystemPage() {
 										{"  "}
 										<span className="text-[#9cdcfe]">url</span>
 										<span className="text-[#d4d4d4]">:</span>{" "}
-										<span className="text-[#ce9178]">"https://mcp.apple-rag.com"</span>
+										<span className="text-[#ce9178]">"{MCP_SERVER_URL}"</span>
 										<br />
 										<span className="text-[#d4d4d4]">{"}"}</span>
 										<span className="text-[#d4d4d4]">;</span>

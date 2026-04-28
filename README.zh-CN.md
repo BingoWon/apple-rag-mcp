@@ -4,7 +4,7 @@
 
 ### 你的 AI 真正需要的 Apple 文档 MCP。
 
-*370,000+ 文档。1,300+ WWDC 视频字幕。语义搜索 + 关键词搜索 + 混合搜索。一个干净的工具。*
+*Apple 文档。WWDC 视频字幕。语义搜索 + 关键词搜索 + 混合搜索。一个干净的工具。*
 
 [![Install MCP Server](https://cursor.com/deeplink/mcp-install-light.svg)](https://cursor.com/en/install-mcp?name=apple-rag-mcp&config=eyJ1cmwiOiJodHRwczovL21jcC5hcHBsZS1yYWcuY29tIn0%3D)
 
@@ -129,4 +129,3 @@ MCP 认证确保你的 AI agent 获得可信的访问权限，具备企业级安
 [立即开始 →](https://apple-rag.com)
 
 </div>
-

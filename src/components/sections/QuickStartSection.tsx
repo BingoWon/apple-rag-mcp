@@ -2,9 +2,10 @@ import { IconBolt, IconCheck, IconCopy, IconRocket, IconSparkles } from "@tabler
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { SUPPORTED_CLIENTS } from "@/constants/clients";
+import { MCP_SERVER_NAME, MCP_SERVER_URL } from "@/constants/mcp";
 
 const CONFIG_CODE = JSON.stringify(
-	{ mcpServers: { "apple-rag-mcp": { url: "https://mcp.apple-rag.com" } } },
+	{ mcpServers: { [MCP_SERVER_NAME]: { url: MCP_SERVER_URL } } },
 	null,
 	2,
 );

@@ -17,6 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { CodeBlock } from "@/components/ui/code-block";
 import { LoaderFive } from "@/components/ui/loader";
 import { MCPInstallButtons } from "@/components/ui/MCPInstallButtons";
+import { MCP_SERVER_NAME, MCP_SERVER_URL } from "@/constants/mcp";
 import { useDashboardStore } from "@/stores/dashboard";
 import { MCPConfigService } from "@/utils/mcpConfigService";
 
@@ -85,7 +86,7 @@ export function MCPUsageGuide() {
 	};
 
 	const selectedToken = mcpTokens.find((token) => token.id === selectedTokenId);
-	const mcpServerUrl = "https://mcp.apple-rag.com";
+	const mcpServerUrl = MCP_SERVER_URL;
 
 	// 通用复制函数
 	const copyToClipboard = async (text: string, successMessage: string) => {
@@ -101,7 +102,7 @@ export function MCPUsageGuide() {
 	const configParams = [
 		{
 			label: t("guide.field_name"),
-			value: "apple-rag-mcp",
+			value: MCP_SERVER_NAME,
 			copyMessage: t("guide.name_copied"),
 		},
 		{ label: t("guide.field_type"), value: "Streamable HTTP", copyable: false },
@@ -311,9 +312,9 @@ export function MCPUsageGuide() {
 													.
 												</p>
 												<CodeBlock
-													language="bash"
-													filename="terminal"
-													code={MCPConfigService.generateCodexCommand(
+													language="toml"
+													filename="~/.codex/config.toml"
+													code={MCPConfigService.generateCodexTomlString(
 														selectedToken.mcp_token,
 														mcpServerUrl,
 													)}

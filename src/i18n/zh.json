@@ -331,7 +331,7 @@
 		"ip_auth_link": "授权你的 IP 地址",
 		"ip_auth_desc": "信任 IP 免令牌认证，享受更高查询配额",
 		"codex_config": "配置方式",
-		"codex_desc": "在启动 Codex 的终端中执行以下命令。详情请参阅",
+		"codex_desc": "将以下片段添加到 ~/.codex/config.toml。详情请参阅",
 		"official_docs": "官方文档",
 		"claude_command": "CLI 命令",
 		"claude_desc": "在终端执行以下命令，将 MCP 服务器添加到 Claude Code：",

@@ -4,7 +4,7 @@
 
 ### The Apple docs MCP your AI actually deserves.
 
-*370,000+ docs. 1,300+ WWDC transcripts. Semantic + keyword + hybrid search. One clean tool.*
+*Apple docs. WWDC transcripts. Semantic + keyword + hybrid search. One clean tool.*
 
 [![Install MCP Server](https://cursor.com/deeplink/mcp-install-light.svg)](https://cursor.com/en/install-mcp?name=apple-rag-mcp&config=eyJ1cmwiOiJodHRwczovL21jcC5hcHBsZS1yYWcuY29tIn0%3D)
 

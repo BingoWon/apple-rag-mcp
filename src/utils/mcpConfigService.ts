@@ -1,7 +1,4 @@
-/**
- * Modern MCP Configuration Service
- * Unified, type-safe MCP configuration generation for all clients
- */
+import { MCP_SERVER_NAME, MCP_SERVER_URL } from "@/constants/mcp";
 
 export type MCPClientType =
 	| "cursor"
@@ -28,16 +25,17 @@ export interface MCPConfigOptions {
 	clientType?: MCPClientType;
 }
 
-const DEFAULT_SERVER_URL = "https://mcp.apple-rag.com";
-const SERVER_NAME = "apple-rag-mcp";
-const CODEX_TOKEN_ENV_VAR = "APPLE_RAG_MCP_TOKEN";
-
-function shellQuote(value: string): string {
-	return `'${value.replace(/'/g, "'\\''")}'`;
+function tomlString(value: string): string {
+	return `"${value
+		.replace(/\\/g, "\\\\")
+		.replace(/"/g, '\\"')
+		.replace(/\n/g, "\\n")
+		.replace(/\r/g, "\\r")
+		.replace(/\t/g, "\\t")}"`;
 }
 
 export function generateServerConfig(options: MCPConfigOptions): MCPServerConfig {
-	const { token, serverUrl = DEFAULT_SERVER_URL, clientType = "generic" } = options;
+	const { token, serverUrl = MCP_SERVER_URL, clientType = "generic" } = options;
 
 	switch (clientType) {
 		case "augmentcode":
@@ -68,10 +66,10 @@ export function generateServerConfig(options: MCPConfigOptions): MCPServerConfig
  * Antigravity uses `serverUrl` instead of `url` and includes Content-Type header.
  */
 export function generateAntigravityConfig(token: string, serverUrl?: string) {
-	const url = serverUrl || DEFAULT_SERVER_URL;
+	const url = serverUrl || MCP_SERVER_URL;
 	return {
 		mcpServers: {
-			[SERVER_NAME]: {
+			[MCP_SERVER_NAME]: {
 				serverUrl: url,
 				headers: {
 					Authorization: `Bearer ${token}`,
@@ -89,7 +87,7 @@ export function generateAntigravityJsonString(token: string, serverUrl?: string)
 export function generateConfig(options: MCPConfigOptions) {
 	return {
 		mcpServers: {
-			[SERVER_NAME]: generateServerConfig(options),
+			[MCP_SERVER_NAME]: generateServerConfig(options),
 		},
 	};
 }
@@ -98,67 +96,19 @@ export function generateJsonString(options: MCPConfigOptions): string {
 	return JSON.stringify(generateConfig(options), null, 2);
 }
 
-export function showAugmentCodeWarning(): void {
-	Promise.all([import("react-hot-toast"), import("react"), import("@tabler/icons-react")]).then(
-		([{ default: toast }, React, { IconAlertTriangle }]) => {
-			const handleClick = () => {
-				window.open("/authorized-ips", "_blank");
-			};
-
-			toast.custom(
-				() =>
-					React.createElement(
-						"div",
-						{
-							onClick: handleClick,
-							style: {
-								background: "var(--color-warning)",
-								color: "var(--color-inverse)",
-								border: "2px solid var(--color-warning)",
-								borderRadius: "12px",
-								fontSize: "15px",
-								fontWeight: "600",
-								boxShadow: "0 8px 25px rgba(251, 191, 36, 0.3)",
-								padding: "10px 14px",
-								cursor: "pointer",
-								display: "flex",
-								alignItems: "center",
-								gap: "12px",
-								userSelect: "none",
-								maxWidth: "470px",
-							},
-						},
-						React.createElement(IconAlertTriangle, {
-							size: 20,
-							style: { flexShrink: 0 },
-						}),
-						React.createElement(
-							"span",
-							null,
-							"Augment Code doesn't support Authorization headers. Click to configure Authorized IP Addresses!",
-						),
-					),
-				{
-					duration: 12000,
-				},
-			);
-		},
-	);
-}
-
-export function generateCodexCommand(
-	token: string,
-	serverUrl: string = DEFAULT_SERVER_URL,
-): string {
+export function generateCodexTomlString(token: string, serverUrl: string = MCP_SERVER_URL): string {
 	return [
-		`export ${CODEX_TOKEN_ENV_VAR}=${shellQuote(token)}`,
-		`codex mcp add ${SERVER_NAME} --url ${shellQuote(serverUrl)} --bearer-token-env-var ${CODEX_TOKEN_ENV_VAR}`,
+		`[mcp_servers.${MCP_SERVER_NAME}]`,
+		`url = ${tomlString(serverUrl)}`,
+		"",
+		`[mcp_servers.${MCP_SERVER_NAME}.http_headers]`,
+		`Authorization = ${tomlString(`Bearer ${token}`)}`,
 	].join("\n");
 }
 
 export function generateClaudeCodeCommand(token: string, serverUrl?: string): string {
-	const url = serverUrl || DEFAULT_SERVER_URL;
-	return `claude mcp add --transport http --scope user ${SERVER_NAME} ${url} --header "Authorization: Bearer ${token}"`;
+	const url = serverUrl || MCP_SERVER_URL;
+	return `claude mcp add --transport http --scope user ${MCP_SERVER_NAME} ${url} --header "Authorization: Bearer ${token}"`;
 }
 
 export function generateCursorLink(token: string): string {
@@ -167,7 +117,7 @@ export function generateCursorLink(token: string): string {
 	const base64Config = btoa(jsonConfig);
 
 	return `https://cursor.com/en/install-mcp?name=${encodeURIComponent(
-		SERVER_NAME,
+		MCP_SERVER_NAME,
 	)}&config=${encodeURIComponent(base64Config)}`;
 }
 
@@ -193,7 +143,7 @@ export function openCursorLink(token: string): void {
 
 export function generateVSCodeInstallUrl(token: string, serverUrl?: string): string {
 	const config = {
-		name: SERVER_NAME,
+		name: MCP_SERVER_NAME,
 		...generateServerConfig({ token, serverUrl }),
 	};
 	return `vscode:mcp/install?${encodeURIComponent(JSON.stringify(config))}`;
@@ -201,7 +151,7 @@ export function generateVSCodeInstallUrl(token: string, serverUrl?: string): str
 
 export function generateVSCodeInsidersInstallUrl(token: string, serverUrl?: string): string {
 	const config = {
-		name: SERVER_NAME,
+		name: MCP_SERVER_NAME,
 		...generateServerConfig({ token, serverUrl }),
 	};
 	return `vscode-insiders:mcp/install?${encodeURIComponent(JSON.stringify(config))}`;
@@ -227,8 +177,7 @@ export const MCPConfigService = {
 	generateServerConfig,
 	generateConfig,
 	generateJsonString,
-	showAugmentCodeWarning,
-	generateCodexCommand,
+	generateCodexTomlString,
 	generateClaudeCodeCommand,
 	generateCursorLink,
 	copyToClipboard,

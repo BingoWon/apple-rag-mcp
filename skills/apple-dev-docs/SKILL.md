@@ -123,13 +123,16 @@ Install the MCP server with the appropriate command for your client:
 
 **Claude Code**:
 ```bash
-claude mcp add --transport http --scope user apple-rag-mcp https://mcp.apple-rag.com
+claude mcp add --transport http --scope user apple-rag-mcp https://mcp.apple-rag.com --header "Authorization: Bearer at_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 ```
 
 **Codex**:
-```bash
-export APPLE_RAG_MCP_TOKEN="at_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-codex mcp add apple-rag-mcp --url https://mcp.apple-rag.com --bearer-token-env-var APPLE_RAG_MCP_TOKEN
+```toml
+[mcp_servers.apple-rag-mcp]
+url = "https://mcp.apple-rag.com"
+
+[mcp_servers.apple-rag-mcp.http_headers]
+Authorization = "Bearer at_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 ```
 
 ## Quality rules
