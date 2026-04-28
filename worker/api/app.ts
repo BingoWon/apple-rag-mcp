@@ -10,6 +10,7 @@ import authorizedIPsRoutes from "./routes/authorized-ips.js";
 import contactMessagesRoutes from "./routes/contact-messages.js";
 import mcpTokenRoutes from "./routes/mcp-tokens.js";
 import { oauthRoutes } from "./routes/oauth.js";
+import statsRoutes from "./routes/stats.js";
 import stripeRoutes from "./routes/stripe.js";
 import usageLogsRoutes from "./routes/usage-logs.js";
 import userRoutes from "./routes/users.js";
@@ -55,6 +56,7 @@ apiApp.route("/authorized-ips", authorizedIPsRoutes);
 apiApp.route("/usage-logs", usageLogsRoutes);
 apiApp.route("/admin", adminRoutes);
 apiApp.route("/stripe", stripeRoutes);
+apiApp.route("/stats", statsRoutes);
 
 apiApp.get("/", (c) => c.json({ name: "Apple RAG API", version: "2.0.0" }));
 
