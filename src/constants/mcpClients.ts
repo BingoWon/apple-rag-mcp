@@ -132,22 +132,6 @@ export const MCP_CLIENTS: MCPClientConfig[] = [
 			return "tokens.config_copied";
 		},
 	},
-	{
-		key: "roocode",
-		logo: "https://roocode.com/favicon.ico",
-		alt: "Roo Code",
-		label: "Roo Code",
-		category: "copy",
-		action: async (token, serverUrl) => {
-			const json = MCPConfigService.generateJsonString({
-				token,
-				serverUrl,
-				clientType: "roocode",
-			});
-			await navigator.clipboard.writeText(json);
-			return "tokens.config_copied";
-		},
-	},
 ];
 
 /** Clients that offer a one-click install flow */

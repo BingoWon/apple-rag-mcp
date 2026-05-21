@@ -15,7 +15,6 @@ export const SUPPORTED_CLIENTS = [
 	"Gemini CLI",
 	"Augment Code",
 	"Cline",
-	"Roo Code",
 	"Opencode",
 	"Zed",
 	"Trae",

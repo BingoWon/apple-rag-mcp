@@ -2,7 +2,6 @@ import { MCP_SERVER_NAME, MCP_SERVER_URL } from "@/constants/mcp";
 
 export type MCPClientType =
 	| "cursor"
-	| "roocode"
 	| "augmentcode"
 	| "cline"
 	| "vscode"
@@ -44,7 +43,6 @@ export function generateServerConfig(options: MCPConfigOptions): MCPServerConfig
 				type: "http",
 				headers: { Authorization: `Bearer ${token}` },
 			};
-		case "roocode":
 		case "cline":
 			return {
 				type: "streamable-http",
