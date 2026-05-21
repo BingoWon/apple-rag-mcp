@@ -14,6 +14,8 @@
 
 [🌐 官网](https://apple-rag.com) • [📊 控制台](https://apple-rag.com/overview)
 
+[![CI](https://github.com/BingoWon/apple-rag-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/BingoWon/apple-rag-mcp/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 [English](./README.md) | **中文**
 
 </div>

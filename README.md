@@ -14,6 +14,8 @@
 
 [🌐 Website](https://apple-rag.com) • [📊 Dashboard](https://apple-rag.com/overview)
 
+[![CI](https://github.com/BingoWon/apple-rag-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/BingoWon/apple-rag-mcp/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 **English** | [中文](./README.zh-CN.md)
 
 </div>
