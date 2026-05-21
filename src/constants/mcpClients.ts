@@ -64,18 +64,6 @@ export const MCP_CLIENTS: MCPClientConfig[] = [
 
 	// --- Copy Configuration ---
 	{
-		key: "claudecode",
-		logo: "https://api.iconify.design/logos:claude-icon.svg",
-		alt: "Claude Code",
-		label: "Claude Code",
-		category: "copy",
-		action: async (token, serverUrl) => {
-			const command = MCPConfigService.generateClaudeCodeCommand(token, serverUrl);
-			await navigator.clipboard.writeText(command);
-			return "tokens.config_copied";
-		},
-	},
-	{
 		key: "codex",
 		logo: "https://api.iconify.design/logos:openai-icon.svg",
 		alt: "OpenAI Codex",
@@ -84,6 +72,18 @@ export const MCP_CLIENTS: MCPClientConfig[] = [
 		action: async (token, serverUrl) => {
 			const toml = MCPConfigService.generateCodexTomlString(token, serverUrl);
 			await navigator.clipboard.writeText(toml);
+			return "tokens.config_copied";
+		},
+	},
+	{
+		key: "claudecode",
+		logo: "https://api.iconify.design/logos:claude-icon.svg",
+		alt: "Claude Code",
+		label: "Claude Code",
+		category: "copy",
+		action: async (token, serverUrl) => {
+			const command = MCPConfigService.generateClaudeCodeCommand(token, serverUrl);
+			await navigator.clipboard.writeText(command);
 			return "tokens.config_copied";
 		},
 	},

@@ -6,8 +6,8 @@
  * For actionable clients (install/copy flows), see `src/constants/mcpClients.ts`.
  */
 export const SUPPORTED_CLIENTS = [
-	"Claude Code",
 	"Codex CLI",
+	"Claude Code",
 	"Cursor",
 	"Antigravity",
 	"Windsurf",
