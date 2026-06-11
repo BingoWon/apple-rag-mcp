@@ -4,7 +4,7 @@
 
 ### 你的 AI 真正需要的 Apple 文档 MCP。
 
-*Apple 文档。WWDC 视频字幕。语义搜索 + 关键词搜索 + 混合搜索。一个干净的工具。*
+*Apple 文档。WWDC26 视频字幕。语义搜索 + 关键词搜索 + 混合搜索。一个干净的工具。*
 
 <a href="https://apple-rag.com"><img src="https://apple-rag.com/og-image.png" alt="Apple RAG MCP — apple-rag.com" width="800"></a>
 
@@ -85,7 +85,7 @@ MCP 认证确保你的 AI agent 获得可信的访问权限，具备企业级安
 获取 Swift、Objective-C 和 SwiftUI 的实用代码示例，以及文档参考。
 
 ### 🔄 **实时更新**
-我们的文档索引持续更新，以反映最新的 Apple 开发者资源。
+我们的文档索引持续跟进 WWDC26、Xcode 27 beta 以及最新 Apple 开发者资源。
 
 ### 🆓 **完全免费**
 无需 MCP Token 即可立即开始。获取 MCP Token 可获得更高使用限额——所有管理都在 [apple-rag.com](https://apple-rag.com)。
@@ -99,11 +99,11 @@ MCP 认证确保你的 AI agent 获得可信的访问权限，具备企业级安
 - **🔍 RAG 语义搜索** - 具有语义理解能力的向量相似度检索
 - **🔎 关键词搜索** - 精确的技术术语匹配，适用于 API 名称和特定术语
 - **🎯 混合搜索** - 结合语义和关键词搜索，配合 AI 重排序以获得最佳结果
-- **📚 完整覆盖** - iOS、macOS、watchOS、tvOS、visionOS 文档
-- **🎬 WWDC 视频** - Apple 开发者视频和 WWDC sessions 的完整字幕
+- **📚 完整覆盖** - iOS 27、iPadOS 27、macOS 27、watchOS 27、tvOS 27、visionOS 27 文档
+- **🎬 WWDC26 视频** - Apple 开发者视频和 WWDC26 sessions 的完整字幕
 - **⚡ 快速响应** - 针对所有内容类型优化速度
 - **🚀 高性能** - 多实例集群部署以实现最大吞吐量
-- **🔄 始终最新** - 与 Apple 最新文档和视频内容同步
+- **🔄 始终最新** - 与 Apple 最新文档、WWDC26 sessions 和 Xcode 27 beta 参考内容同步
 - **🛡️ 安全私密** - 你的查询保持私密
 - **🌐 通用 MCP** - 适用于任何兼容 MCP 的客户端
 

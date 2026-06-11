@@ -1,6 +1,6 @@
 # Apple RAG MCP
 
-> Transform your AI agents into Apple development experts with instant access to official Swift docs, design guidelines, and comprehensive Apple platform knowledge. Here's to the Vibe Coders - born with Apple DNA. RAG infuses your agents with official documentation and WWDC video transcripts.
+> Transform your AI agents into Apple development experts with instant access to official Swift docs, design guidelines, WWDC26 transcripts, and comprehensive Apple platform knowledge. Here's to the Vibe Coders - born with Apple DNA. RAG infuses your agents with WWDC26, iOS 27, and official documentation insights.
 
 ## Why Developers Love Apple RAG MCP
 
@@ -12,9 +12,9 @@
 
 **Code Examples**: Get practical code examples in Swift, Objective-C, and SwiftUI alongside documentation references.
 
-**Real-time Updates**: Our documentation index is continuously updated to reflect the latest Apple developer resources.
+**Real-time Updates**: Our documentation index tracks WWDC26, Xcode 27 beta, and the latest Apple developer resources.
 
-**Comprehensive Knowledge Base**: Multiple data sources, one search - from official documentation to WWDC video transcripts, all accessible through our unified MCP interface.
+**Comprehensive Knowledge Base**: Multiple data sources, one search - from official documentation to WWDC26 video transcripts, all accessible through our unified MCP interface.
 
 ## Quick Setup for AI Agents
 
@@ -67,7 +67,7 @@ For MCP clients that don't support JSON import:
 
 ## Available MCP Tools
 
-- **search**: Query Apple's official developer documentation and WWDC video transcripts using advanced RAG technology. Returns relevant content from frameworks, APIs, design guidelines, and WWDC sessions.
+- **search**: Query Apple's official developer documentation and WWDC26 video transcripts using advanced RAG technology. Returns relevant content from frameworks, APIs, design guidelines, WWDC26 sessions, and current iOS 27, iPadOS 27, macOS 27, watchOS 27, tvOS 27, and visionOS 27 platform references.
 - **fetch**: Retrieve complete cleaned content for specific Apple developer documentation or video by URL.
 
 ## Pricing & Benefits

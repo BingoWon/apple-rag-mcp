@@ -4,7 +4,7 @@
 
 ### The Apple docs MCP your AI actually deserves.
 
-*Apple docs. WWDC transcripts. Semantic + keyword + hybrid search. One clean tool.*
+*Apple docs. WWDC26 transcripts. Semantic + keyword + hybrid search. One clean tool.*
 
 <a href="https://apple-rag.com"><img src="https://apple-rag.com/og-image.png" alt="Apple RAG MCP — apple-rag.com" width="800"></a>
 
@@ -85,7 +85,7 @@ MCP authentication ensures trusted access for your AI agents with enterprise-gra
 Get practical code examples in Swift, Objective-C, and SwiftUI alongside documentation references.
 
 ### 🔄 **Real-time Updates**
-Our documentation index is continuously updated to reflect the latest Apple developer resources.
+Our documentation index is continuously updated for WWDC26, Xcode 27 beta, and the latest Apple developer resources.
 
 ### 🆓 **Completely Free**
 Start immediately with no MCP Token required. Get an MCP Token for higher usage limits - all managed at [apple-rag.com](https://apple-rag.com).
@@ -99,11 +99,11 @@ Start immediately with no MCP Token required. Get an MCP Token for higher usage 
 - **🔍 Semantic Search for RAG** - Vector similarity with semantic understanding for intelligent retrieval
 - **🔎 Keyword Search** - Precise technical term matching for API names and specific terminology
 - **🎯 Hybrid Search** - Combined semantic and keyword search with AI reranking for optimal results
-- **📚 Complete Coverage** - iOS, macOS, watchOS, tvOS, visionOS documentation
-- **🎬 WWDC Videos** - Full transcripts from Apple Developer videos and WWDC sessions
+- **📚 Complete Coverage** - iOS 27, iPadOS 27, macOS 27, watchOS 27, tvOS 27, and visionOS 27 documentation
+- **🎬 WWDC26 Videos** - Full transcripts from Apple Developer videos and WWDC26 sessions
 - **⚡ Fast Response** - Optimized for speed across all content types
 - **🚀 High Performance** - Multi-instance cluster deployment for maximum throughput
-- **🔄 Always Current** - Synced with Apple's latest docs and video content
+- **🔄 Always Current** - Synced with Apple's latest docs, WWDC26 sessions, and Xcode 27 beta references
 - **🛡️ Secure & Private** - Your queries stay private
 - **🌐 Universal MCP** - Works with any MCP-compatible client
 

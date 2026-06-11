@@ -60,7 +60,7 @@ Retrieve the full cleaned content of an Apple developer documentation page or WW
 
 **Avoid** — temporal language, vague terms, non-English:
 
-- ~~`latest SwiftUI changes in 2025`~~ → `SwiftUI new APIs`
+- ~~`latest SwiftUI changes from WWDC26`~~ → `SwiftUI new APIs`
 - ~~`how to make an app`~~ → `iOS app lifecycle UIApplicationDelegate`
 - ~~`SwiftUI 导航`~~ → `SwiftUI navigation`
 
@@ -68,8 +68,8 @@ Retrieve the full cleaned content of an Apple developer documentation page or WW
 
 The knowledge base covers:
 
-- **Apple Developer Documentation**: All frameworks and APIs across iOS, macOS, watchOS, tvOS, visionOS
-- **WWDC Sessions**: Video transcripts from WWDC presentations
+- **Apple Developer Documentation**: All frameworks and APIs across iOS, iPadOS, macOS, watchOS, tvOS, visionOS, including current platform 27 documentation
+- **WWDC Sessions**: Video transcripts from WWDC26 and earlier WWDC presentations
 - **Design Guidelines**: Human Interface Guidelines
 - **Technical Articles**: Apple's official technical notes and guides
 

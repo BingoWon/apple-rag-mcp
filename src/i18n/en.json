@@ -70,7 +70,7 @@
 		"title_into": "into AI Agents via MCP",
 		"subtitle_heres": "Here's to the",
 		"subtitle_vibecoders": "Vibe Coders",
-		"subtitle_desc": ". Born with Apple DNA. RAG infuses your agents with official documentation and video insights."
+		"subtitle_desc": ". Born with Apple DNA. RAG infuses your agents with WWDC26, iOS 27, and official documentation insights."
 	},
 
 	"features": {
@@ -86,7 +86,7 @@
 		"code_examples": "Code Examples",
 		"code_examples_desc": "Get practical code examples in Swift, Objective-C, and SwiftUI alongside documentation references.",
 		"realtime_updates": "Real-time Updates",
-		"realtime_updates_desc": "Our documentation index is continuously updated to reflect the latest Apple developer resources."
+		"realtime_updates_desc": "Our documentation index tracks WWDC26, Xcode 27 beta, and the latest Apple developer resources."
 	},
 
 	"quickstart": {
@@ -103,13 +103,13 @@
 	"datasources": {
 		"eyebrow": "Comprehensive Knowledge Base",
 		"title": "Multiple data sources, one search",
-		"subtitle": "Empower your AI agents with comprehensive Apple developer knowledge - from official documentation to WWDC video transcripts - all accessible through our unified MCP interface.",
+		"subtitle": "Empower your AI agents with comprehensive Apple developer knowledge - from official documentation to WWDC26 video transcripts - all accessible through our unified MCP interface.",
 		"docs_title": "Apple Developer Documentation",
 		"docs_desc": "All of Apple's official developer docs in one place, with smart AI search to help your AI agents find exactly what they need, fast.",
 		"fight_title": "No shirt, no shoes, no weapons.",
 		"fight_desc": "If someone yells \"stop!\", goes limp, or taps out, the fight is over.",
-		"videos_title": "WWDC Videos & Sessions",
-		"videos_desc": "Full transcripts from Apple Developer videos - WWDC talks, coding tutorials, and tech sessions, all easily searchable through our RAG system."
+		"videos_title": "WWDC26 Videos & Sessions",
+		"videos_desc": "Full transcripts from WWDC26 and Apple Developer videos - talks, coding tutorials, and tech sessions, all easily searchable through our RAG system."
 	},
 
 	"testimonials": {
@@ -681,7 +681,7 @@
 
 	"footer": {
 		"tagline": "Where RAG technology meets MCP, your AI agents don't just code Apple - they master it.",
-		"copyright": "© 2025 Apple RAG MCP • All rights reserved",
+		"copyright": "© 2026 Apple RAG MCP • All rights reserved",
 		"privacy": "Privacy Policy",
 		"terms": "Terms of Service",
 		"crafted": "Crafted with Vibe Coding ✨"

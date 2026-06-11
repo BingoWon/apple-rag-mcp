@@ -24,8 +24,8 @@
  * 【Object Output Format】
  * ```typescript
  * {
- *   title: "Article: Xcode 26 Beta 7 Release Notes\nUpdate your apps..." | null,
- *   content: "## Overview\nXcode 26 beta 7 includes SDKs..."
+ *   title: "Article: Xcode 27 Beta Release Notes\nUpdate your apps..." | null,
+ *   content: "## Overview\nXcode 27 beta includes SDKs..."
  * }
  * ```
  *
