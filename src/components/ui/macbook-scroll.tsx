@@ -128,11 +128,19 @@ export const Lid = ({
 				className="absolute inset-0 h-96 w-[32rem] rounded-2xl bg-[#010101] p-2 [will-change:transform]"
 			>
 				<div className="absolute inset-0 rounded-lg bg-[#272729]" />
-				<img
-					src="/MacBook_screenshot.jpeg"
-					alt="Apple Developer Documentation"
-					className="absolute inset-0 h-full w-full rounded-lg object-cover object-center"
-				/>
+				<picture>
+					<source srcSet="/wwdc26-macbook-screen.avif" type="image/avif" />
+					<img
+						src="/wwdc26-macbook-screen.jpg"
+						alt="WWDC26 Apple Developer Documentation"
+						width={1600}
+						height={1200}
+						decoding="async"
+						fetchPriority="high"
+						loading="eager"
+						className="absolute inset-0 h-full w-full rounded-lg object-cover object-center"
+					/>
+				</picture>
 			</motion.div>
 		</div>
 	);
