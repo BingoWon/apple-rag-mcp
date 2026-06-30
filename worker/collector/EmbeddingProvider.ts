@@ -1,13 +1,13 @@
 /**
- * Batch Embedding Provider - DeepInfra API
- * True batch API calls with 3x retry, 7s timeout.
+ * Embedding Provider - DeepInfra API
+ * Batched input requests against the standard embedding model with 3x retry.
  */
 
 import { logger } from "./utils/logger.js";
 
 const DEEPINFRA_CONFIG = {
 	API_URL: "https://api.deepinfra.com/v1/openai/embeddings",
-	MODEL: "Qwen/Qwen3-Embedding-4B-batch",
+	MODEL: "Qwen/Qwen3-Embedding-4B",
 	DIMENSION: 2560,
 	TIMEOUT_MS: 30_000,
 } as const;
