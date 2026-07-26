@@ -4,6 +4,8 @@ import { logger } from "./utils/logger.js";
 import { retryTransientPostgres } from "./utils/postgres-retry.js";
 
 class PostgreSQLManager {
+	private static readonly URL_INSERT_BATCH_SIZE = 100;
+
 	constructor(private readonly sql: postgres.Sql) {}
 
 	// biome-ignore lint/suspicious/noExplicitAny: postgres.js TransactionSql generic type mismatch
@@ -16,7 +18,7 @@ class PostgreSQLManager {
 	async batchInsertUrls(urls: string[]): Promise<number> {
 		if (urls.length === 0) return 0;
 
-		return await retryTransientPostgres(
+		const minCollectCount = await retryTransientPostgres(
 			async () => {
 				// Query minimum collect_count from Apple Developer URLs (excluding 0)
 				// This ensures new URLs integrate into normal scheduling without causing starvation
@@ -29,24 +31,47 @@ class PostgreSQLManager {
             0
           ) as min
         `;
-				const minCollectCount = parseInt(minResult[0]?.min || "0", 10);
-
-				const result = await this.sql`
-          INSERT INTO pages ${this.sql(urls.map((url) => ({ url, collect_count: minCollectCount })))}
-          ON CONFLICT (url) DO NOTHING
-        `;
-
-				return result.count;
+				return parseInt(minResult[0]?.min || "0", 10);
 			},
 			{
 				onRetry: ({ attempt, maxAttempts, delayMs, error }) => {
 					const message = error instanceof Error ? error.message : String(error);
 					logger.warn(
-						`PostgreSQL URL sync connection failed; retrying ${attempt}/${maxAttempts} in ${delayMs}ms: ${message}`,
+						`PostgreSQL URL sync scheduling query failed; retrying ${attempt}/${maxAttempts} in ${delayMs}ms: ${message}`,
 					);
 				},
 			},
 		);
+
+		let insertedCount = 0;
+		const batchCount = Math.ceil(urls.length / PostgreSQLManager.URL_INSERT_BATCH_SIZE);
+
+		for (let offset = 0; offset < urls.length; offset += PostgreSQLManager.URL_INSERT_BATCH_SIZE) {
+			const batchNumber = Math.floor(offset / PostgreSQLManager.URL_INSERT_BATCH_SIZE) + 1;
+			const urlBatch = urls.slice(offset, offset + PostgreSQLManager.URL_INSERT_BATCH_SIZE);
+
+			insertedCount += await retryTransientPostgres(
+				async () => {
+					const result = await this.sql`
+            INSERT INTO pages ${this.sql(
+							urlBatch.map((url) => ({ url, collect_count: minCollectCount })),
+						)}
+            ON CONFLICT (url) DO NOTHING
+          `;
+					return result.count;
+				},
+				{
+					onRetry: ({ attempt, maxAttempts, delayMs, error }) => {
+						const message = error instanceof Error ? error.message : String(error);
+						logger.warn(
+							`PostgreSQL URL sync batch ${batchNumber}/${batchCount} failed; retrying ${attempt}/${maxAttempts} in ${delayMs}ms: ${message}`,
+						);
+					},
+				},
+			);
+		}
+
+		return insertedCount;
 	}
 
 	async getBatchRecords(batchSize: number): Promise<DatabaseRecord[]> {
