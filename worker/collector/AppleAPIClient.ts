@@ -1,3 +1,10 @@
+import {
+	extractHlsSourceUrl,
+	extractHtmlTranscriptText,
+	fetchHlsSubtitleText,
+	HlsSubtitleUnavailableError,
+	isSupportedVideoPageUrl,
+} from "./hls-subtitles.js";
 import type { AppleAPIResponse, BatchResult, VideoContent } from "./types/index.js";
 import { BatchErrorHandler } from "./utils/batch-error-handler.js";
 
@@ -43,14 +50,25 @@ class AppleAPIClient {
 			(match) => `https://developer.apple.com${match[1]!.replace(/\/$/, "")}`,
 		);
 
-		return [...new Set(urls)]; // Deduplicate
+		return [...new Set(urls.filter(isSupportedVideoPageUrl))];
 	}
 
 	/**
 	 * Fetch video transcripts
 	 */
 	async fetchVideos(urls: string[]): Promise<BatchResult<VideoContent>[]> {
-		return await Promise.all(urls.map((url) => this.fetchSingleVideo(url)));
+		const results = new Array<BatchResult<VideoContent>>(urls.length);
+		let nextIndex = 0;
+
+		async function worker(client: AppleAPIClient): Promise<void> {
+			while (nextIndex < urls.length) {
+				const index = nextIndex++;
+				results[index] = await client.fetchSingleVideo(urls[index]!);
+			}
+		}
+
+		await Promise.all(Array.from({ length: Math.min(2, urls.length) }, () => worker(this)));
+		return results;
 	}
 
 	private async fetchSingleVideo(videoUrl: string): Promise<BatchResult<VideoContent>> {
@@ -76,21 +94,25 @@ class AppleAPIClient {
 			const titleMatch = html.match(/<meta[^>]+property="og:title"[^>]+content="([^"]+)"/);
 			const title = titleMatch?.[1] ?? "";
 
-			// Extract transcript - error if not found
-			const transcriptMatch = html.match(/<section id="transcript-content">([\s\S]*?)<\/section>/);
-			if (!transcriptMatch) {
-				throw new Error(`PERMANENT_ERROR:NO_TRANSCRIPT:${videoUrl}`);
+			const htmlTranscript = extractHtmlTranscriptText(html);
+			if (htmlTranscript) {
+				return { title: title || null, content: htmlTranscript };
 			}
 
-			const segmentPattern = /data-start="[0-9.]+"[^>]*>([^<]*)/g;
-			const segmentMatches = transcriptMatch[1]!.matchAll(segmentPattern);
-			const segments = [...segmentMatches].map((m) => m[1]!.trim()).filter((text) => text);
-
-			if (segments.length === 0) {
-				throw new Error(`PERMANENT_ERROR:EMPTY_TRANSCRIPT:${videoUrl}`);
+			const hlsSourceUrl = extractHlsSourceUrl(html);
+			if (hlsSourceUrl) {
+				try {
+					const hlsTranscript = await fetchHlsSubtitleText(hlsSourceUrl);
+					return { title: title || null, content: hlsTranscript };
+				} catch (error) {
+					if (error instanceof HlsSubtitleUnavailableError) {
+						throw new Error(`PERMANENT_ERROR:NO_SUBTITLES:${videoUrl}`);
+					}
+					throw error;
+				}
 			}
 
-			return { title: title || null, content: segments.join(" ") };
+			throw new Error(`PERMANENT_ERROR:EMPTY_TRANSCRIPT:${videoUrl}`);
 		});
 	}
 

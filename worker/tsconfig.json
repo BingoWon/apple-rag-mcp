@@ -13,5 +13,6 @@
 		"resolveJsonModule": true,
 		"types": ["@cloudflare/workers-types"]
 	},
-	"include": ["./**/*.ts"]
+	"include": ["./**/*.ts"],
+	"exclude": ["./**/*.test.ts"]
 }

@@ -11,6 +11,7 @@
 	"scripts": {
 		"dev": "vite",
 		"build": "vite build",
+		"test": "node --test worker/collector/hls-subtitles.test.ts",
 		"deploy": "pnpm build && wrangler d1 migrations apply apple-rag-db --remote && wrangler deploy",
 		"deploy:dev": "pnpm build && wrangler deploy --env development",
 		"lint": "biome check --write .",
