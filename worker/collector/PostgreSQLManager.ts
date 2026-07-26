@@ -1,6 +1,7 @@
 import type postgres from "postgres";
 import type { DatabaseRecord, DatabaseStats } from "./types/index.js";
 import { logger } from "./utils/logger.js";
+import { retryTransientPostgres } from "./utils/postgres-retry.js";
 
 class PostgreSQLManager {
 	constructor(private readonly sql: postgres.Sql) {}
@@ -15,25 +16,37 @@ class PostgreSQLManager {
 	async batchInsertUrls(urls: string[]): Promise<number> {
 		if (urls.length === 0) return 0;
 
-		// Query minimum collect_count from Apple Developer URLs (excluding 0)
-		// This ensures new URLs integrate into normal scheduling without causing starvation
-		const minResult = await this.sql`
-      SELECT COALESCE(
-        (SELECT MIN(collect_count)
-         FROM pages
-         WHERE url LIKE 'https://developer.apple.com/%'
-         AND collect_count > 0),
-        0
-      ) as min
-    `;
-		const minCollectCount = parseInt(minResult[0]?.min || "0", 10);
+		return await retryTransientPostgres(
+			async () => {
+				// Query minimum collect_count from Apple Developer URLs (excluding 0)
+				// This ensures new URLs integrate into normal scheduling without causing starvation
+				const minResult = await this.sql`
+          SELECT COALESCE(
+            (SELECT MIN(collect_count)
+             FROM pages
+             WHERE url LIKE 'https://developer.apple.com/%'
+             AND collect_count > 0),
+            0
+          ) as min
+        `;
+				const minCollectCount = parseInt(minResult[0]?.min || "0", 10);
 
-		const result = await this.sql`
-      INSERT INTO pages ${this.sql(urls.map((url) => ({ url, collect_count: minCollectCount })))}
-      ON CONFLICT (url) DO NOTHING
-    `;
+				const result = await this.sql`
+          INSERT INTO pages ${this.sql(urls.map((url) => ({ url, collect_count: minCollectCount })))}
+          ON CONFLICT (url) DO NOTHING
+        `;
 
-		return result.count;
+				return result.count;
+			},
+			{
+				onRetry: ({ attempt, maxAttempts, delayMs, error }) => {
+					const message = error instanceof Error ? error.message : String(error);
+					logger.warn(
+						`PostgreSQL URL sync connection failed; retrying ${attempt}/${maxAttempts} in ${delayMs}ms: ${message}`,
+					);
+				},
+			},
+		);
 	}
 
 	async getBatchRecords(batchSize: number): Promise<DatabaseRecord[]> {

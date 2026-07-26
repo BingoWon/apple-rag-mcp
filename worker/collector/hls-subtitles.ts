@@ -1,4 +1,5 @@
 const HLS_FETCH_TIMEOUT_MS = 20_000;
+const HLS_TOTAL_TIMEOUT_MS = 120_000;
 const HLS_SEGMENT_CONCURRENCY = 3;
 const HLS_MAX_SEGMENTS = 2_000;
 
@@ -12,6 +13,7 @@ interface HlsSubtitleTrack {
 interface FetchHlsSubtitleOptions {
 	readonly fetcher?: typeof fetch;
 	readonly timeoutMs?: number;
+	readonly totalTimeoutMs?: number;
 	readonly concurrency?: number;
 }
 
@@ -123,15 +125,24 @@ export async function fetchHlsSubtitleText(
 ): Promise<string> {
 	const fetcher = options.fetcher ?? fetch;
 	const timeoutMs = options.timeoutMs ?? HLS_FETCH_TIMEOUT_MS;
+	const totalTimeoutMs = options.totalTimeoutMs ?? HLS_TOTAL_TIMEOUT_MS;
 	const concurrency = Math.max(1, options.concurrency ?? HLS_SEGMENT_CONCURRENCY);
+	const deadline = Date.now() + totalTimeoutMs;
+	const fetchBeforeDeadline = (url: string) => {
+		const remainingMs = deadline - Date.now();
+		if (remainingMs <= 0) {
+			throw new Error(`HLS subtitle processing timed out after ${totalTimeoutMs}ms`);
+		}
+		return fetchText(fetcher, url, Math.min(timeoutMs, remainingMs));
+	};
 
-	const masterPlaylist = await fetchText(fetcher, masterPlaylistUrl, timeoutMs);
+	const masterPlaylist = await fetchBeforeDeadline(masterPlaylistUrl);
 	const subtitlePlaylistUrl = selectSubtitlePlaylistUrl(masterPlaylist, masterPlaylistUrl);
 	if (!subtitlePlaylistUrl) {
 		throw new HlsSubtitleUnavailableError("HLS playlist does not contain a subtitle track");
 	}
 
-	const subtitlePlaylist = await fetchText(fetcher, subtitlePlaylistUrl, timeoutMs);
+	const subtitlePlaylist = await fetchBeforeDeadline(subtitlePlaylistUrl);
 	if (/^\s*WEBVTT\b/i.test(subtitlePlaylist)) {
 		const directCues = extractWebVttCues(subtitlePlaylist);
 		if (directCues.length === 0) {
@@ -150,9 +161,7 @@ export async function fetchHlsSubtitleText(
 		);
 	}
 
-	const segmentTexts = await mapWithConcurrency(segmentUrls, concurrency, (url) =>
-		fetchText(fetcher, url, timeoutMs),
-	);
+	const segmentTexts = await mapWithConcurrency(segmentUrls, concurrency, fetchBeforeDeadline);
 	const cues = segmentTexts.flatMap(extractWebVttCues);
 	const deduplicated = cues.filter((cue, index) => index === 0 || cue !== cues[index - 1]);
 

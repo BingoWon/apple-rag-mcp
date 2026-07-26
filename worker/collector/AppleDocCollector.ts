@@ -56,8 +56,25 @@ class AppleDocCollector {
 	 * Returns count of newly inserted video URLs
 	 */
 	async discoverVideos(): Promise<number> {
-		const videoUrls = await this.apiClient.discoverVideoUrls();
-		const inserted = await this.dbManager.batchInsertUrls(videoUrls);
+		let videoUrls: string[];
+		try {
+			videoUrls = await this.apiClient.discoverVideoUrls();
+		} catch (error) {
+			throw new Error(
+				`Apple video index fetch failed: ${error instanceof Error ? error.message : String(error)}`,
+				{ cause: error },
+			);
+		}
+
+		let inserted: number;
+		try {
+			inserted = await this.dbManager.batchInsertUrls(videoUrls);
+		} catch (error) {
+			throw new Error(
+				`PostgreSQL video URL sync failed: ${error instanceof Error ? error.message : String(error)}`,
+				{ cause: error },
+			);
+		}
 
 		if (inserted > 0) {
 			logger.info(`🎬 Video discovery: ${inserted} new videos added`);

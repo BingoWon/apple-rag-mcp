@@ -10,6 +10,9 @@ import { BatchErrorHandler } from "./utils/batch-error-handler.js";
 
 class AppleAPIClient {
 	private static readonly PERMANENT_ERROR_CODES = [403, 404, 410];
+	private static readonly PAGE_FETCH_TIMEOUT_MS = 30_000;
+	private static readonly VIDEO_INDEX_TIMEOUT_MS = 30_000;
+	private static readonly VIDEO_INDEX_MAX_ATTEMPTS = 2;
 	private static readonly DEFAULT_HEADERS = {
 		Accept: "application/json",
 		"User-Agent":
@@ -32,18 +35,7 @@ class AppleAPIClient {
 	 * Discover all video URLs from Apple Developer Videos
 	 */
 	async discoverVideoUrls(): Promise<string[]> {
-		const response = await fetch(AppleAPIClient.ALL_VIDEOS_URL, {
-			headers: {
-				...AppleAPIClient.DEFAULT_HEADERS,
-				Accept: "text/html",
-			},
-		});
-
-		if (!response.ok) {
-			throw new Error(`Failed to fetch all-videos page: HTTP ${response.status}`);
-		}
-
-		const html = await response.text();
+		const html = await this.fetchVideoIndexHtml();
 		const pattern = /href="(\/videos\/play\/[^"]+)"/g;
 		const matches = html.matchAll(pattern);
 		const urls = [...matches].map(
@@ -51,6 +43,40 @@ class AppleAPIClient {
 		);
 
 		return [...new Set(urls.filter(isSupportedVideoPageUrl))];
+	}
+
+	private async fetchVideoIndexHtml(): Promise<string> {
+		let lastError: unknown;
+
+		for (let attempt = 1; attempt <= AppleAPIClient.VIDEO_INDEX_MAX_ATTEMPTS; attempt++) {
+			try {
+				const response = await fetch(AppleAPIClient.ALL_VIDEOS_URL, {
+					headers: {
+						...AppleAPIClient.DEFAULT_HEADERS,
+						Accept: "text/html",
+					},
+					signal: AbortSignal.timeout(AppleAPIClient.VIDEO_INDEX_TIMEOUT_MS),
+				});
+
+				if (!response.ok) {
+					throw new Error(`HTTP ${response.status}`);
+				}
+
+				return await response.text();
+			} catch (error) {
+				lastError = error;
+				if (attempt < AppleAPIClient.VIDEO_INDEX_MAX_ATTEMPTS) {
+					await new Promise((resolve) => setTimeout(resolve, 500));
+				}
+			}
+		}
+
+		throw new Error(
+			`Failed to fetch all-videos page after ${AppleAPIClient.VIDEO_INDEX_MAX_ATTEMPTS} attempts: ${
+				lastError instanceof Error ? lastError.message : String(lastError)
+			}`,
+			{ cause: lastError },
+		);
 	}
 
 	/**
@@ -78,6 +104,7 @@ class AppleAPIClient {
 					...AppleAPIClient.DEFAULT_HEADERS,
 					Accept: "text/html",
 				},
+				signal: AbortSignal.timeout(AppleAPIClient.PAGE_FETCH_TIMEOUT_MS),
 			});
 
 			if (AppleAPIClient.PERMANENT_ERROR_CODES.includes(response.status)) {
@@ -125,6 +152,7 @@ class AppleAPIClient {
 			const url = this.convertUrlToJsonApi(documentUrl);
 			const response = await fetch(url, {
 				headers: AppleAPIClient.DEFAULT_HEADERS,
+				signal: AbortSignal.timeout(AppleAPIClient.PAGE_FETCH_TIMEOUT_MS),
 			});
 
 			if (AppleAPIClient.PERMANENT_ERROR_CODES.includes(response.status)) {
