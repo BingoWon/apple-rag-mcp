@@ -1,46 +1,5 @@
 import type { ToolCallLogger } from "../mcp-services/tool-call-logger.js";
 
-export interface MCPRequest {
-	jsonrpc: "2.0";
-	id: string | number;
-	method: string;
-	params?: Record<string, unknown>;
-}
-
-export interface MCPResponse {
-	jsonrpc: "2.0";
-	id: string | number;
-	result?: unknown;
-	error?: MCPError;
-}
-
-export interface MCPError {
-	code: number;
-	message: string;
-	data?: unknown;
-}
-
-export interface MCPNotification {
-	jsonrpc: "2.0";
-	method: string;
-	params?: Record<string, unknown>;
-}
-
-export interface ToolDefinition {
-	name: string;
-	description: string;
-	inputSchema: {
-		type: "object";
-		properties: Record<string, unknown>;
-		required?: string[];
-	};
-}
-
-export interface ToolCall {
-	name: string;
-	arguments: Record<string, unknown>;
-}
-
 export interface RAGQuery {
 	query: string;
 	result_count?: number;

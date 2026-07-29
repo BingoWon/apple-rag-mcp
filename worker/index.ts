@@ -1,3 +1,4 @@
+import { originValidationResponse } from "@modelcontextprotocol/server";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { apiApp } from "./api/app.js";
@@ -10,6 +11,19 @@ import { configureTelegram } from "./mcp-utils/telegram-notifier.js";
 import type { Env } from "./shared/types.js";
 
 const MCP_HOSTNAME = "mcp.apple-rag.com";
+const MCP_ALLOWED_ORIGIN_HOSTNAMES = ["apple-rag.com", "www.apple-rag.com", MCP_HOSTNAME];
+const MCP_ALLOWED_ORIGINS = [
+	"https://apple-rag.com",
+	"https://www.apple-rag.com",
+	`https://${MCP_HOSTNAME}`,
+];
+const MCP_ALLOWED_HEADERS = [
+	"Content-Type",
+	"Authorization",
+	"MCP-Protocol-Version",
+	"Mcp-Method",
+	"Mcp-Name",
+];
 
 type HonoAppEnv = { Bindings: Env };
 
@@ -18,6 +32,11 @@ async function handleMCPRequest(c: {
 	executionCtx: ExecutionContext;
 	req: { raw: Request };
 }) {
+	const originRejection = originValidationResponse(c.req.raw, MCP_ALLOWED_ORIGIN_HOSTNAMES);
+	if (originRejection) {
+		return originRejection;
+	}
+
 	configureTelegram(c.env.TELEGRAM_DEFAULT_BOT_URL);
 	logger.setContext(c.executionCtx);
 	const services = await createServices(c.env);
@@ -93,6 +112,15 @@ app.get("/mcp/manifest", (c) =>
 	c.json(SERVER_MANIFEST, 200, { "Cache-Control": "public, max-age=3600" }),
 );
 
+app.use(
+	"/mcp",
+	cors({
+		origin: MCP_ALLOWED_ORIGINS,
+		allowMethods: ["POST", "OPTIONS"],
+		allowHeaders: MCP_ALLOWED_HEADERS,
+	}),
+);
+
 app.post("/mcp", (c) => handleMCPRequest(c));
 
 app.on(["GET", "DELETE"], "/mcp", (c) =>
@@ -151,9 +179,9 @@ mcpApp.onError((err, c) => {
 mcpApp.use(
 	"*",
 	cors({
-		origin: "*",
+		origin: MCP_ALLOWED_ORIGINS,
 		allowMethods: ["GET", "POST", "OPTIONS"],
-		allowHeaders: ["Content-Type", "Authorization", "MCP-Protocol-Version"],
+		allowHeaders: MCP_ALLOWED_HEADERS,
 	}),
 );
 

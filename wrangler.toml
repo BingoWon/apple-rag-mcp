@@ -32,15 +32,3 @@ head_sampling_rate = 1
 
 [triggers]
 crons = ["*/5 * * * *"]
-
-# Development Environment
-[env.development]
-name = "apple-rag-mcp-dev"
-workers_dev = true
-
-[env.development.vars]
-
-[[env.development.d1_databases]]
-binding = "DB"
-database_name = "apple-rag-db-dev"
-database_id = "5042640e-d698-4197-a285-6fe81d39e3e7"

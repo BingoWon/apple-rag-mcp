@@ -1,58 +1,46 @@
-import type { AuthContext, MCPResponse, Services, ToolDefinition } from "../../mcp-types/index.js";
+import type { CallToolResult } from "@modelcontextprotocol/server";
+import { z } from "zod";
+import type { AuthContext, Services } from "../../mcp-types/index.js";
 import { logger } from "../../mcp-utils/logger.js";
 import { cleanQuerySafely } from "../../mcp-utils/query-cleaner.js";
 import { buildRateLimitMessage, extractClientInfo } from "../../mcp-utils/request-info.js";
-import { MCP_ERROR_CODES, MESSAGES } from "../constants.js";
+import { MESSAGES } from "../constants.js";
 import {
-	createErrorResponse,
-	createSuccessResponse,
-	createToolErrorResponse,
+	createSuccessResult,
+	createToolErrorResult,
 	formatRAGResponse,
 } from "../formatters/response-formatter.js";
 
-export interface SearchToolArgs {
-	query: string;
-	result_count?: number;
-}
+export const SEARCH_TOOL_INPUT_SCHEMA = z.object({
+	query: z
+		.string()
+		.min(1)
+		.max(10000)
+		.describe(
+			"Search query for Apple's official developer documentation and video content. Queries must be written in English and focus on technical concepts, APIs, frameworks, features, and version numbers rather than temporal information.",
+		),
+	result_count: z
+		.number()
+		.int()
+		.min(1)
+		.max(10)
+		.optional()
+		.default(4)
+		.describe("Number of results to return (1-10)"),
+});
+
+export type SearchToolArgs = z.infer<typeof SEARCH_TOOL_INPUT_SCHEMA>;
 
 export class SearchTool {
-	static readonly INPUT_SCHEMA: ToolDefinition["inputSchema"] & { $schema: string } = {
-		$schema: "https://json-schema.org/draft/2020-12/schema",
-		type: "object",
-		properties: {
-			query: {
-				type: "string",
-				description:
-					"Search query for Apple's official developer documentation and video content. Queries must be written in English and focus on technical concepts, APIs, frameworks, features, and version numbers rather than temporal information.",
-				minLength: 1,
-				maxLength: 10000,
-			},
-			result_count: {
-				type: "number",
-				description: "Number of results to return (1-10)",
-				minimum: 1,
-				maximum: 10,
-				default: 4,
-			},
-		},
-		required: ["query"],
-	};
-
 	constructor(private services: Services) {}
 
 	async handle(
-		id: string | number,
 		args: SearchToolArgs,
 		authContext: AuthContext,
 		httpRequest: Request,
-	): Promise<MCPResponse> {
+	): Promise<CallToolResult> {
 		const startTime = Date.now();
-		let { query, result_count = 4 } = args;
-
-		// Validate query parameter
-		if (!query || typeof query !== "string" || query.trim().length === 0) {
-			return createToolErrorResponse(id, MESSAGES.MISSING_SEARCH);
-		}
+		const { query, result_count = 4 } = args;
 
 		const requestedQuery = query;
 		const actualQuery = cleanQuerySafely(query);
@@ -60,24 +48,6 @@ export class SearchTool {
 		if (actualQuery !== requestedQuery) {
 			logger.info(`Query cleaned: "${requestedQuery}" -> "${actualQuery}"`);
 		}
-
-		// Validate and clamp result_count parameter
-		let adjustedResultCount = result_count;
-		let wasAdjusted = false;
-
-		if (typeof result_count !== "number") {
-			adjustedResultCount = 4; // Default value
-			wasAdjusted = true;
-		} else if (result_count < 1) {
-			adjustedResultCount = 1;
-			wasAdjusted = true;
-		} else if (result_count > 10) {
-			adjustedResultCount = 10;
-			wasAdjusted = true;
-		}
-
-		// Update result_count for processing
-		result_count = adjustedResultCount;
 
 		try {
 			const { ip: clientIP, country: countryCode } = extractClientInfo(httpRequest);
@@ -96,11 +66,7 @@ export class SearchTool {
 					"RATE_LIMIT_EXCEEDED",
 				);
 
-				return createErrorResponse(
-					id,
-					MCP_ERROR_CODES.RATE_LIMIT_EXCEEDED,
-					buildRateLimitMessage(rateLimitResult, authContext),
-				);
+				return createToolErrorResult(buildRateLimitMessage(rateLimitResult, authContext));
 			}
 
 			const ragResult = await this.processQuery(
@@ -113,19 +79,15 @@ export class SearchTool {
 				startTime,
 			);
 
-			const formattedResponse = formatRAGResponse(
-				ragResult,
-				authContext.isAuthenticated,
-				wasAdjusted,
-			);
+			const formattedResponse = formatRAGResponse(ragResult, authContext.isAuthenticated);
 
-			return createSuccessResponse(id, formattedResponse);
+			return createSuccessResult(formattedResponse);
 		} catch (error) {
 			logger.error(
 				`RAG query failed for "${actualQuery}": ${error instanceof Error ? error.message : String(error)}`,
 			);
 
-			return createToolErrorResponse(id, MESSAGES.SEARCH_FAILED);
+			return createToolErrorResult(MESSAGES.SEARCH_FAILED);
 		}
 	}
 

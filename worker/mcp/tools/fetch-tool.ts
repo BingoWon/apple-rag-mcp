@@ -1,48 +1,34 @@
-import type { AuthContext, MCPResponse, Services, ToolDefinition } from "../../mcp-types/index.js";
+import type { CallToolResult } from "@modelcontextprotocol/server";
+import { z } from "zod";
+import type { AuthContext, Services } from "../../mcp-types/index.js";
 import { logger } from "../../mcp-utils/logger.js";
 import { buildRateLimitMessage, extractClientInfo } from "../../mcp-utils/request-info.js";
 import { validateAndNormalizeUrl } from "../../mcp-utils/url-processor.js";
-import { MCP_ERROR_CODES } from "../constants.js";
 import {
-	createErrorResponse,
-	createSuccessResponse,
-	createToolErrorResponse,
+	createSuccessResult,
+	createToolErrorResult,
 	formatFetchResponse,
 } from "../formatters/response-formatter.js";
 
-export interface FetchToolArgs {
-	url: string;
-}
+export const FETCH_TOOL_INPUT_SCHEMA = z.object({
+	url: z
+		.string()
+		.min(1)
+		.describe("URL of the Apple developer documentation or video to retrieve content for"),
+});
+
+export type FetchToolArgs = z.infer<typeof FETCH_TOOL_INPUT_SCHEMA>;
 
 export class FetchTool {
-	static readonly INPUT_SCHEMA: ToolDefinition["inputSchema"] & { $schema: string } = {
-		$schema: "https://json-schema.org/draft/2020-12/schema",
-		type: "object",
-		properties: {
-			url: {
-				type: "string",
-				description: "URL of the Apple developer documentation or video to retrieve content for",
-				minLength: 1,
-			},
-		},
-		required: ["url"],
-	};
-
 	constructor(private services: Services) {}
 
 	async handle(
-		id: string | number,
 		args: FetchToolArgs,
 		authContext: AuthContext,
 		httpRequest: Request,
-	): Promise<MCPResponse> {
+	): Promise<CallToolResult> {
 		const startTime = Date.now();
 		const { url } = args;
-
-		// Validate URL parameter
-		if (!url || typeof url !== "string" || url.trim().length === 0) {
-			return createToolErrorResponse(id, "URL parameter is required and must be a valid string");
-		}
 
 		const { ip: ipAddress, country: countryCode } = extractClientInfo(httpRequest);
 
@@ -61,11 +47,7 @@ export class FetchTool {
 				"RATE_LIMIT_EXCEEDED",
 			);
 
-			return createErrorResponse(
-				id,
-				MCP_ERROR_CODES.RATE_LIMIT_EXCEEDED,
-				buildRateLimitMessage(rateLimitResult, authContext),
-			);
+			return createToolErrorResult(buildRateLimitMessage(rateLimitResult, authContext));
 		}
 
 		try {
@@ -74,7 +56,7 @@ export class FetchTool {
 			if (!urlResult.isValid) {
 				logger.warn(`Invalid URL provided: ${url} - ${urlResult.error}`);
 
-				return createToolErrorResponse(id, `Invalid URL: ${urlResult.error}`);
+				return createToolErrorResult(`Invalid URL: ${urlResult.error}`);
 			}
 
 			// Use normalized URL for database lookup
@@ -95,7 +77,7 @@ export class FetchTool {
 					"NOT_FOUND",
 				);
 
-				return createToolErrorResponse(id, `No content found for URL: ${url}`);
+				return createToolErrorResult(`No content found for URL: ${url}`);
 			}
 
 			this.logFetch(authContext, url, processedUrl, page.id, responseTime, ipAddress, countryCode);
@@ -110,7 +92,7 @@ export class FetchTool {
 				authContext.isAuthenticated,
 			);
 
-			return createSuccessResponse(id, formattedContent);
+			return createSuccessResult(formattedContent);
 		} catch (error) {
 			this.logFetch(
 				authContext,
@@ -128,7 +110,7 @@ export class FetchTool {
 				`Fetch failed for URL ${url}: ${error instanceof Error ? error.message : String(error)}`,
 			);
 
-			return createToolErrorResponse(id, "Failed to fetch content from the specified URL");
+			return createToolErrorResult("Failed to fetch content from the specified URL");
 		}
 	}
 

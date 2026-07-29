@@ -56,6 +56,7 @@ Click the button above and your editor will automatically configure everything f
 **Manual Configuration Parameters:**
 - **MCP Type:** `Streamable HTTP`
 - **URL:** `https://mcp.apple-rag.com`
+- **Protocol:** `2026-07-28` with automatic compatibility for 2025 clients
 - **Authentication:** `Optional` (MCP Token for higher limits)
 - **MCP Token:** Get yours at [apple-rag.com](https://apple-rag.com) for increased quota
 

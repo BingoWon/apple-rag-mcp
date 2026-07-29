@@ -56,6 +56,7 @@
 **手动配置参数：**
 - **MCP 类型：** `Streamable HTTP`
 - **URL：** `https://mcp.apple-rag.com`
+- **协议：** `2026-07-28`，自动兼容 2025 版客户端
 - **认证：** `可选`（MCP Token 可获得更高限额）
 - **MCP Token：** 在 [apple-rag.com](https://apple-rag.com) 获取以增加配额
 

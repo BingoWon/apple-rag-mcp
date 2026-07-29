@@ -3,22 +3,27 @@
  * Centralized server discovery and capability information
  */
 
+import {
+	MCP_PROTOCOL_VERSION,
+	SERVER_NAME,
+	SERVER_VERSION,
+	SUPPORTED_MCP_VERSIONS,
+} from "./constants.js";
+
 export const SERVER_MANIFEST = {
 	name: "Apple RAG MCP Server",
 	title: "Apple Developer Documentation Search",
-	version: "2.0.0",
+	version: SERVER_VERSION,
 	description:
 		"Ultra-modern MCP server providing AI agents with comprehensive access to Apple's complete developer documentation using advanced RAG technology.",
-	protocolVersion: "2025-11-25",
-	supportedVersions: ["2025-11-25", "2025-06-18", "2025-03-26"],
+	protocolVersion: MCP_PROTOCOL_VERSION,
+	supportedVersions: SUPPORTED_MCP_VERSIONS,
 	capabilities: {
-		tools: { listChanged: true },
-		logging: {},
-		experimental: {},
+		tools: {},
 	},
 	serverInfo: {
-		name: "Apple RAG MCP Server",
-		version: "2.0.0",
+		name: SERVER_NAME,
+		version: SERVER_VERSION,
 	},
 	endpoints: {
 		mcp: "https://mcp.apple-rag.com",
@@ -29,8 +34,9 @@ export const SERVER_MANIFEST = {
 		type: "streamable-http",
 		methods: ["POST"],
 		headers: {
-			required: ["Content-Type"],
-			optional: ["Authorization", "MCP-Protocol-Version"],
+			required: ["Content-Type", "MCP-Protocol-Version", "Mcp-Method"],
+			conditional: ["Mcp-Name"],
+			optional: ["Authorization"],
 		},
 	},
 	authorization: {
@@ -42,7 +48,7 @@ export const SERVER_MANIFEST = {
 
 export const HEALTH_STATUS = {
 	status: "healthy",
-	version: "2.0.0",
-	protocol: "2025-11-25",
-	supportedVersions: ["2025-11-25", "2025-06-18", "2025-03-26"],
+	version: SERVER_VERSION,
+	protocol: MCP_PROTOCOL_VERSION,
+	supportedVersions: SUPPORTED_MCP_VERSIONS,
 } as const;

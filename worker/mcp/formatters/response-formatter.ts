@@ -3,17 +3,14 @@
  * Professional response formatting for MCP protocol
  */
 
-import type { MCPResponse, RAGResult } from "../../mcp-types/index.js";
+import type { CallToolResult } from "@modelcontextprotocol/server";
+import type { RAGResult } from "../../mcp-types/index.js";
 import { MESSAGES } from "../constants.js";
 
 /**
  * Format RAG response with professional layout
  */
-export function formatRAGResponse(
-	ragResult: RAGResult,
-	isAuthenticated: boolean,
-	wasAdjusted: boolean = false,
-): string {
+export function formatRAGResponse(ragResult: RAGResult, isAuthenticated: boolean): string {
 	if (!ragResult || !ragResult.success || !ragResult.results || ragResult.results.length === 0) {
 		return MESSAGES.NO_RESULTS;
 	}
@@ -72,10 +69,6 @@ export function formatRAGResponse(
 		response += `\n\n${MESSAGES.ANONYMOUS_ACCESS}`;
 	}
 
-	if (wasAdjusted) {
-		response += `\n\nNote: The result_count parameter accepts values between 1 and 10. Values outside this range are automatically adjusted to the nearest valid limit.`;
-	}
-
 	return response;
 }
 
@@ -108,48 +101,25 @@ export function formatFetchResponse(
 	return response;
 }
 
-export function createSuccessResponse(requestId: string | number, content: string): MCPResponse {
+export function createSuccessResult(content: string): CallToolResult {
 	return {
-		jsonrpc: "2.0",
-		id: requestId,
-		result: {
-			content: [
-				{
-					type: "text",
-					text: content,
-				},
-			],
-		},
+		content: [
+			{
+				type: "text",
+				text: content,
+			},
+		],
 	};
 }
 
-export function createErrorResponse(
-	requestId: string | number,
-	code: number,
-	message: string,
-): MCPResponse {
+export function createToolErrorResult(message: string): CallToolResult {
 	return {
-		jsonrpc: "2.0",
-		id: requestId,
-		error: {
-			code,
-			message,
-		},
-	};
-}
-
-export function createToolErrorResponse(requestId: string | number, message: string): MCPResponse {
-	return {
-		jsonrpc: "2.0",
-		id: requestId,
-		result: {
-			isError: true,
-			content: [
-				{
-					type: "text",
-					text: message,
-				},
-			],
-		},
+		isError: true,
+		content: [
+			{
+				type: "text",
+				text: message,
+			},
+		],
 	};
 }
