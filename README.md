@@ -106,7 +106,7 @@ Start immediately with no MCP Token required. Get an MCP Token for higher usage 
 - **🚀 High Performance** - Multi-instance cluster deployment for maximum throughput
 - **🔄 Always Current** - Synced with Apple's latest docs, WWDC26 sessions, and Xcode 27 beta references
 - **🛡️ Secure & Private** - Your queries stay private
-- **🌐 Universal MCP** - Works with any MCP-compatible client
+- **🌐 MCP 2026 Ready** - Stateless MCP `2026-07-28` with automatic compatibility for 2025 clients
 
 ## 🧠 Agent Skill
 
