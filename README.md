@@ -4,6 +4,8 @@
 
 ### The Apple docs MCP your AI actually deserves.
 
+[![MCP Toplist](https://mcptoplist.com/badge/com.apple-rag%2Fmcp-server.svg)](https://mcptoplist.com/server/com.apple-rag%2Fmcp-server)
+
 *Apple docs. WWDC26 transcripts. Semantic + keyword + hybrid search. One clean tool.*
 
 <a href="https://apple-rag.com"><img src="https://apple-rag.com/og-image.png" alt="Apple RAG MCP — apple-rag.com" width="800"></a>
