@@ -39,6 +39,7 @@ function createServices(): Services {
 				title: "Swift",
 				content: "Complete Swift documentation.",
 			}),
+			close: async () => {},
 		},
 		embedding: {
 			createEmbedding: async () => [],

@@ -200,4 +200,8 @@ export class DatabaseService {
 			throw new Error(`Page lookup failed: ${error}`);
 		}
 	}
+
+	async close(): Promise<void> {
+		await this.sql.end({ timeout: 0 }).catch(() => {});
+	}
 }

@@ -55,6 +55,7 @@ export interface DatabaseService {
 	semanticSearch(embedding: number[], options: SearchOptions): Promise<SearchResult[]>;
 	keywordSearch(query: string, options: SearchOptions): Promise<SearchResult[]>;
 	getPageByUrl(url: string): Promise<PageResult | null>;
+	close(): Promise<void>;
 }
 
 export interface EmbeddingService {

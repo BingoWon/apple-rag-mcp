@@ -7,14 +7,9 @@ import { RAGService } from "./rag.js";
 import { RateLimitService } from "./rate-limit.js";
 import { ToolCallLogger } from "./tool-call-logger.js";
 
-let sharedRag: RAGService | undefined;
-
 export async function createServices(env: Env, ctx: WaitUntilContext): Promise<Services> {
 	try {
-		if (!sharedRag) {
-			sharedRag = new RAGService(createAppConfig(env), env);
-		}
-		const rag = sharedRag;
+		const rag = new RAGService(createAppConfig(env), env);
 		const rateLimit = new RateLimitService(env.DB);
 		const logger = new ToolCallLogger(env.DB, ctx);
 

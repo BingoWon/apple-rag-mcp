@@ -55,9 +55,13 @@ async function handleMCPRequest(c: {
 
 	configureTelegram(c.env.TELEGRAM_DEFAULT_BOT_URL);
 	const services = await createServices(c.env, c.executionCtx);
-	const authContext = await services.auth.optionalAuth(c.req.raw);
-	const handler = new MCPProtocolHandler(services);
-	return handler.handleRequest(c.req.raw, authContext);
+	try {
+		const authContext = await services.auth.optionalAuth(c.req.raw);
+		const handler = new MCPProtocolHandler(services);
+		return await handler.handleRequest(c.req.raw, authContext);
+	} finally {
+		await services.database.close();
+	}
 }
 
 // ─── Main App (apple-rag.com) ────────────────────────────────
