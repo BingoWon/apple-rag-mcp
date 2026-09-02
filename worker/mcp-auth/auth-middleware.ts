@@ -9,9 +9,9 @@ export class AuthMiddleware {
 	private readonly tokenValidator: TokenValidator;
 	private readonly ipAuthService: IPAuthenticationService;
 
-	constructor(d1: D1Database) {
-		this.tokenValidator = new TokenValidator(d1);
-		this.ipAuthService = new IPAuthenticationService(d1);
+	constructor(d1: D1Database, ctx: ExecutionContext) {
+		this.tokenValidator = new TokenValidator(d1, ctx);
+		this.ipAuthService = new IPAuthenticationService(d1, ctx);
 	}
 
 	private extractBearerToken(authHeader?: string): string | null {

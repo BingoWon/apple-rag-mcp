@@ -3,7 +3,6 @@
  */
 
 import { backgroundD1Write } from "../mcp-utils/d1-utils.js";
-import { logger } from "../mcp-utils/logger.js";
 
 export interface SearchLogEntry {
 	userId: string;
@@ -32,14 +31,17 @@ export interface FetchLogEntry {
 }
 
 export class ToolCallLogger {
-	constructor(private d1: D1Database) {}
+	constructor(
+		private d1: D1Database,
+		private ctx: ExecutionContext,
+	) {}
 
 	logSearch(entry: SearchLogEntry): void {
-		backgroundD1Write(logger.getContext(), () => this.insertSearchLog(entry), "search_log");
+		backgroundD1Write(this.ctx, () => this.insertSearchLog(entry), "search_log");
 	}
 
 	logFetch(entry: FetchLogEntry): void {
-		backgroundD1Write(logger.getContext(), () => this.insertFetchLog(entry), "fetch_log");
+		backgroundD1Write(this.ctx, () => this.insertFetchLog(entry), "fetch_log");
 	}
 
 	private async insertSearchLog(entry: SearchLogEntry): Promise<void> {

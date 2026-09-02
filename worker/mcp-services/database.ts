@@ -17,9 +17,10 @@ export class DatabaseService {
 			username: config.RAG_DB_USER,
 			password: config.RAG_DB_PASSWORD,
 			ssl: config.RAG_DB_SSLMODE === "require",
-			max: 5,
-			idle_timeout: 60000,
-			connect_timeout: 10000,
+			max: 2,
+			idle_timeout: 30,
+			connect_timeout: 10,
+			max_lifetime: 60 * 30,
 			prepare: true,
 			connection: {
 				application_name: "apple-rag-mcp",

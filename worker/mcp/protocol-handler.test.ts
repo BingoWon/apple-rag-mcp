@@ -4,7 +4,6 @@ import type { AuthContext, Services } from "../mcp-types/index.js";
 import { MCPProtocolHandler } from "./protocol-handler.js";
 
 const MODERN_VERSION = "2026-07-28";
-const LEGACY_VERSION = "2025-11-25";
 
 function createServices(): Services {
 	return {
@@ -112,40 +111,6 @@ async function readPayload<T>(response: Response): Promise<T> {
 	return messages.at(-1) as T;
 }
 
-test("negotiates the requested supported legacy version", async () => {
-	const response = await send({
-		jsonrpc: "2.0",
-		id: "initialize",
-		method: "initialize",
-		params: {
-			protocolVersion: "2025-03-26",
-			capabilities: {},
-			clientInfo: { name: "apple-rag-test", version: "1.0.0" },
-		},
-	});
-
-	assert.equal(response.status, 200);
-	const payload = await readPayload<{
-		result: { protocolVersion: string };
-	}>(response);
-	assert.equal(payload.result.protocolVersion, "2025-03-26");
-});
-
-test("serves legacy ping through the compatibility handler", async () => {
-	const response = await send(
-		{
-			jsonrpc: "2.0",
-			id: "ping",
-			method: "ping",
-		},
-		{ "MCP-Protocol-Version": LEGACY_VERSION },
-	);
-
-	assert.equal(response.status, 200);
-	const payload = await readPayload<{ result: Record<string, unknown> }>(response);
-	assert.deepEqual(payload.result, {});
-});
-
 test("serves modern server discovery", async () => {
 	const response = await send(
 		{
@@ -170,7 +135,7 @@ test("serves modern server discovery", async () => {
 		};
 	}>(response);
 	assert.equal(payload.result.resultType, "complete");
-	assert.ok(payload.result.supportedVersions.includes(MODERN_VERSION));
+	assert.deepEqual(payload.result.supportedVersions, [MODERN_VERSION]);
 	assert.equal(payload.result.ttlMs, 3_600_000);
 	assert.equal(payload.result.cacheScope, "public");
 });

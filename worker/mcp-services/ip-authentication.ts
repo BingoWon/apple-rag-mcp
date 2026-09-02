@@ -4,7 +4,6 @@
 
 import type { UserTokenData } from "../mcp-auth/token-validator.js";
 import { backgroundD1Write, withD1Timeout } from "../mcp-utils/d1-utils.js";
-import { logger } from "../mcp-utils/logger.js";
 
 interface UserRecord {
 	user_id: string;
@@ -13,18 +12,17 @@ interface UserRecord {
 }
 
 export class IPAuthenticationService {
-	constructor(private d1: D1Database) {}
+	constructor(
+		private d1: D1Database,
+		private ctx: ExecutionContext,
+	) {}
 
 	async checkIPAuthentication(clientIP: string): Promise<UserTokenData | null> {
 		const user = await withD1Timeout(() => this.queryIP(clientIP), null, "ip_auth");
 
 		if (!user) return null;
 
-		backgroundD1Write(
-			logger.getContext(),
-			() => this.updateLastUsed(clientIP, user.user_id),
-			"ip_last_used",
-		);
+		backgroundD1Write(this.ctx, () => this.updateLastUsed(clientIP, user.user_id), "ip_last_used");
 
 		return {
 			userId: user.user_id,

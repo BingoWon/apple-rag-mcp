@@ -1,6 +1,5 @@
 import { TOKEN_FORMAT } from "../mcp/constants.js";
 import { backgroundD1Write, withD1Timeout } from "../mcp-utils/d1-utils.js";
-import { logger } from "../mcp-utils/logger.js";
 
 export interface TokenValidationResult {
 	valid: boolean;
@@ -15,7 +14,10 @@ export interface UserTokenData {
 }
 
 export class TokenValidator {
-	constructor(private d1: D1Database) {}
+	constructor(
+		private d1: D1Database,
+		private ctx: ExecutionContext,
+	) {}
 
 	async validateToken(token: string): Promise<TokenValidationResult> {
 		if (!TOKEN_FORMAT.test(token)) {
@@ -28,7 +30,7 @@ export class TokenValidator {
 			return { valid: false, error: "Token not found" };
 		}
 
-		backgroundD1Write(logger.getContext(), () => this.updateLastUsed(token), "token_last_used");
+		backgroundD1Write(this.ctx, () => this.updateLastUsed(token), "token_last_used");
 
 		return { valid: true, userData };
 	}

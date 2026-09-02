@@ -41,7 +41,7 @@ test("rejects an untrusted Origin before service initialization", async () => {
 				id: "origin",
 				method: "initialize",
 				params: {
-					protocolVersion: "2025-11-25",
+					protocolVersion: "2026-07-28",
 					capabilities: {},
 					clientInfo: { name: "apple-rag-test", version: "1.0.0" },
 				},

@@ -20,7 +20,6 @@ export class MCPProtocolHandler {
 
 	async handleRequest(request: Request, authContext: AuthContext): Promise<Response> {
 		const handler = createMcpHandler(() => this.createServer(request, authContext), {
-			legacy: "stateless",
 			onerror: (error) => {
 				void logger.error(`MCP protocol error: ${error.message}`);
 			},

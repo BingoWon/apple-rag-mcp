@@ -23,38 +23,31 @@ export class RAGService {
 		const { query, result_count = 4 } = request;
 
 		if (!query?.trim()) {
-			return this.emptyResult(query, startTime);
+			throw new Error("Search query cannot be empty");
 		}
 
 		const trimmedQuery = query.trim();
 		if (trimmedQuery.length > 10000) {
-			return this.emptyResult(query, startTime);
+			throw new Error("Search query exceeds 10,000 characters");
 		}
 
-		try {
-			const resultCount = Math.min(Math.max(result_count, 1), 20);
-			const searchResult = await this.searchEngine.search(trimmedQuery, { resultCount });
-			const formattedResults = this.formatResults(searchResult.results);
-			const totalTime = Date.now() - startTime;
+		const resultCount = Math.min(Math.max(result_count, 1), 10);
+		const searchResult = await this.searchEngine.search(trimmedQuery, { resultCount });
+		const formattedResults = this.formatResults(searchResult.results);
+		const totalTime = Date.now() - startTime;
 
-			logger.info(
-				`RAG query completed (${(totalTime / 1000).toFixed(1)}s) - results: ${formattedResults.length}, query: ${query.substring(0, 50)}`,
-			);
+		logger.info(
+			`RAG query completed (${(totalTime / 1000).toFixed(1)}s) - results: ${formattedResults.length}, query: ${query.substring(0, 50)}`,
+		);
 
-			return {
-				success: true,
-				query: trimmedQuery,
-				results: formattedResults,
-				additionalUrls: searchResult.additionalUrls,
-				count: formattedResults.length,
-				processing_time_ms: totalTime,
-			};
-		} catch (error) {
-			logger.error(
-				`RAG query failed for "${trimmedQuery.substring(0, 50)}": ${error instanceof Error ? error.message : "Unknown error"}`,
-			);
-			return this.emptyResult(trimmedQuery, startTime);
-		}
+		return {
+			success: true,
+			query: trimmedQuery,
+			results: formattedResults,
+			additionalUrls: searchResult.additionalUrls,
+			count: formattedResults.length,
+			processing_time_ms: totalTime,
+		};
 	}
 
 	private formatResults(results: readonly RankedSearchResult[]): SearchResult[] {
@@ -68,17 +61,6 @@ export class RAGService {
 			total_chunks: result.total_chunks,
 			mergedChunkIndices: result.mergedChunkIndices,
 		}));
-	}
-
-	private emptyResult(query: string, startTime: number): RAGResult {
-		return {
-			success: false,
-			query,
-			results: [],
-			additionalUrls: [],
-			count: 0,
-			processing_time_ms: Date.now() - startTime,
-		};
 	}
 
 	async close(): Promise<void> {

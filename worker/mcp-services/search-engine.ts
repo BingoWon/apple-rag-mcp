@@ -79,21 +79,37 @@ export class SearchEngine {
 		query: string,
 		resultCount: number,
 	): Promise<SearchEngineResult> {
-		// Step 1: Parallel candidate retrieval (4N each, no minimum limit)
 		const candidateCount = resultCount * 4;
 
-		const [semanticResults, keywordResults] = await Promise.all([
+		const [semanticOutcome, keywordOutcome] = await Promise.allSettled([
 			this.getSemanticCandidates(query, candidateCount),
 			this.getKeywordCandidates(query, candidateCount),
 		]);
 
-		// Step 2: Merge and deduplicate candidates
-		const mergedCandidates = this.mergeCandidates(semanticResults, keywordResults);
+		if (semanticOutcome.status === "rejected" && keywordOutcome.status === "rejected") {
+			throw new AggregateError(
+				[semanticOutcome.reason, keywordOutcome.reason],
+				"Semantic and keyword retrieval both failed",
+			);
+		}
 
-		// Step 3: Process results (title-based merging)
+		const semanticResults = semanticOutcome.status === "fulfilled" ? semanticOutcome.value : [];
+		const keywordResults = keywordOutcome.status === "fulfilled" ? keywordOutcome.value : [];
+
+		if (semanticOutcome.status === "rejected") {
+			logger.warn(`Semantic retrieval unavailable: ${String(semanticOutcome.reason)}`);
+		}
+		if (keywordOutcome.status === "rejected") {
+			logger.warn(`Keyword retrieval unavailable: ${String(keywordOutcome.reason)}`);
+		}
+
+		const mergedCandidates = this.mergeCandidates(semanticResults, keywordResults);
 		const processedResults = this.processResults(mergedCandidates);
 
-		// Step 4: AI reranking with fallback mechanism
+		if (processedResults.length === 0) {
+			return { results: [], additionalUrls: [] };
+		}
+
 		let finalResults: RankedSearchResult[];
 
 		try {
@@ -144,52 +160,34 @@ export class SearchEngine {
 	}
 
 	/**
-	 * Retrieve semantic search candidates with error handling
+	 * Retrieve semantic search candidates
 	 */
 	private async getSemanticCandidates(query: string, resultCount: number): Promise<SearchResult[]> {
 		const startTime = Date.now();
 
-		try {
-			const queryEmbedding = await this.embedding.createEmbedding(query);
-			const results = await this.database.semanticSearch(queryEmbedding, {
-				resultCount,
-			});
+		const queryEmbedding = await this.embedding.createEmbedding(query);
+		const results = await this.database.semanticSearch(queryEmbedding, { resultCount });
 
-			logger.info(
-				`Semantic search completed (${((Date.now() - startTime) / 1000).toFixed(1)}s): ${results.length} results`,
-			);
+		logger.info(
+			`Semantic search completed (${((Date.now() - startTime) / 1000).toFixed(1)}s): ${results.length} results`,
+		);
 
-			return results;
-		} catch (error) {
-			logger.error(
-				`Semantic search failed, falling back to keyword-only: ${error instanceof Error ? error.message : String(error)}`,
-			);
-			return [];
-		}
+		return results;
 	}
 
 	/**
-	 * Retrieve keyword search candidates with error handling
+	 * Retrieve keyword search candidates
 	 */
 	private async getKeywordCandidates(query: string, resultCount: number): Promise<SearchResult[]> {
 		const startTime = Date.now();
 
-		try {
-			const results = await this.database.keywordSearch(query, {
-				resultCount,
-			});
+		const results = await this.database.keywordSearch(query, { resultCount });
 
-			logger.info(
-				`Keyword search completed (${((Date.now() - startTime) / 1000).toFixed(1)}s): ${results.length} results`,
-			);
+		logger.info(
+			`Keyword search completed (${((Date.now() - startTime) / 1000).toFixed(1)}s): ${results.length} results`,
+		);
 
-			return results;
-		} catch (error) {
-			logger.error(
-				`Keyword search failed: ${error instanceof Error ? error.message : String(error)}`,
-			);
-			return [];
-		}
+		return results;
 	}
 
 	/**
@@ -241,11 +239,10 @@ export class SearchEngine {
 	}
 
 	/**
-	 * Process RAG candidates through title-based merging
+	 * Process RAG candidates by document URL
 	 */
 	private processResults(candidates: SearchResult[]): ProcessedResult[] {
-		// Step 1: Merge by title
-		return this.mergeByTitle(candidates);
+		return this.mergeByUrl(candidates);
 	}
 
 	private parseChunk(content: string, title: string | null): ParsedChunk {
@@ -257,21 +254,19 @@ export class SearchEngine {
 		};
 	}
 
-	private mergeByTitle(results: SearchResult[]): ProcessedResult[] {
-		const titleGroups = new Map<string, SearchResult[]>();
+	private mergeByUrl(results: SearchResult[]): ProcessedResult[] {
+		const urlGroups = new Map<string, SearchResult[]>();
 
-		// Group by title
 		for (const result of results) {
-			const { title } = this.parseChunk(result.content, result.title);
-			const titleKey = title || "untitled";
-			if (!titleGroups.has(titleKey)) {
-				titleGroups.set(titleKey, []);
+			if (!urlGroups.has(result.url)) {
+				urlGroups.set(result.url, []);
 			}
-			titleGroups.get(titleKey)!.push(result);
+			urlGroups.get(result.url)!.push(result);
 		}
 
-		return Array.from(titleGroups.entries()).map(([title, group]) => {
+		return Array.from(urlGroups.values()).map((group) => {
 			const primary = group[0];
+			const { title } = this.parseChunk(primary.content, primary.title);
 
 			// Sort and merge chunks by original index to maintain proper content order
 			const chunkIndices = group.map((r) => r.chunk_index).sort((a, b) => a - b);

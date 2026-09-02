@@ -5,20 +5,20 @@ import { RAGService } from "./rag.js";
 import { RateLimitService } from "./rate-limit.js";
 import { ToolCallLogger } from "./tool-call-logger.js";
 
-export async function createServices(env: Env): Promise<Services> {
-	try {
-		// Convert Worker env to app config
-		const config = createAppConfig(env);
+let sharedRag: RAGService | undefined;
 
-		// Initialize services
-		const auth = new AuthMiddleware(env.DB);
-		const rag = new RAGService(config, env);
+export async function createServices(env: Env, ctx: ExecutionContext): Promise<Services> {
+	try {
+		if (!sharedRag) {
+			sharedRag = new RAGService(createAppConfig(env), env);
+		}
+		const rag = sharedRag;
 		const rateLimit = new RateLimitService(env.DB);
-		const logger = new ToolCallLogger(env.DB);
+		const logger = new ToolCallLogger(env.DB, ctx);
 
 		return {
 			rag,
-			auth,
+			auth: new AuthMiddleware(env.DB, ctx),
 			database: rag.database,
 			embedding: rag.embedding,
 			rateLimit,

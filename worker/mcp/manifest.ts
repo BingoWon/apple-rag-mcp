@@ -3,12 +3,7 @@
  * Centralized server discovery and capability information
  */
 
-import {
-	MCP_PROTOCOL_VERSION,
-	SERVER_NAME,
-	SERVER_VERSION,
-	SUPPORTED_MCP_VERSIONS,
-} from "./constants.js";
+import { MCP_PROTOCOL_VERSION, SERVER_NAME, SERVER_VERSION } from "./constants.js";
 
 export const SERVER_MANIFEST = {
 	name: "Apple RAG MCP Server",
@@ -17,7 +12,6 @@ export const SERVER_MANIFEST = {
 	description:
 		"Ultra-modern MCP server providing AI agents with comprehensive access to Apple's complete developer documentation using advanced RAG technology.",
 	protocolVersion: MCP_PROTOCOL_VERSION,
-	supportedVersions: SUPPORTED_MCP_VERSIONS,
 	capabilities: {
 		tools: {},
 	},
@@ -50,5 +44,4 @@ export const HEALTH_STATUS = {
 	status: "healthy",
 	version: SERVER_VERSION,
 	protocol: MCP_PROTOCOL_VERSION,
-	supportedVersions: SUPPORTED_MCP_VERSIONS,
 } as const;

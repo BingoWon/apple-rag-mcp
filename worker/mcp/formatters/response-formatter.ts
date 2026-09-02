@@ -39,6 +39,7 @@ export function formatRAGResponse(ragResult: RAGResult, isAuthenticated: boolean
 			response += `This is a partial document. For the complete content, use Apple RAG MCP fetch tool: \`fetch(url: "${result.url}")\`\n\n`;
 		}
 
+		response += `Source: ${result.url}\n\n`;
 		response += `${result.content}\n`;
 
 		if (index < results.length - 1) {

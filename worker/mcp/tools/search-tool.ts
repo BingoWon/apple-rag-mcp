@@ -44,13 +44,13 @@ export class SearchTool {
 
 		const requestedQuery = query;
 		const actualQuery = cleanQuerySafely(query);
+		const { ip: clientIP, country: countryCode } = extractClientInfo(httpRequest);
 
 		if (actualQuery !== requestedQuery) {
 			logger.info(`Query cleaned: "${requestedQuery}" -> "${actualQuery}"`);
 		}
 
 		try {
-			const { ip: clientIP, country: countryCode } = extractClientInfo(httpRequest);
 			const rateLimitResult = await this.services.rateLimit.checkLimits(clientIP, authContext);
 
 			if (!rateLimitResult.allowed) {
@@ -83,7 +83,19 @@ export class SearchTool {
 
 			return createSuccessResult(formattedResponse);
 		} catch (error) {
-			logger.error(
+			this.logSearch(
+				authContext,
+				requestedQuery,
+				actualQuery,
+				{ count: 0 },
+				Date.now() - startTime,
+				clientIP,
+				countryCode,
+				500,
+				"SEARCH_FAILED",
+			);
+
+			await logger.error(
 				`RAG query failed for "${actualQuery}": ${error instanceof Error ? error.message : String(error)}`,
 			);
 

@@ -25,11 +25,5 @@ export const MESSAGES = {
 } as const;
 
 export const MCP_PROTOCOL_VERSION = "2026-07-28";
-export const SUPPORTED_MCP_VERSIONS = [
-	MCP_PROTOCOL_VERSION,
-	"2025-11-25",
-	"2025-06-18",
-	"2025-03-26",
-] as const;
 
 export const TOKEN_FORMAT = /^at_[a-f0-9]{32}$/;

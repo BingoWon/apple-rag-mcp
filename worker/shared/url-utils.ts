@@ -12,7 +12,7 @@ export function isValidAppleUrl(url: string): boolean {
 export function normalizeAppleUrl(url: string): string {
 	try {
 		const parsed = new URL(url);
-		const path = parsed.pathname === "/" ? "/" : parsed.pathname.replace(/\/+$/, "");
+		const path = parsed.pathname === "/" ? "/" : parsed.pathname.replace(/\/+$/, "").toLowerCase();
 		return `${parsed.protocol.toLowerCase()}//${parsed.hostname.toLowerCase()}${path}`;
 	} catch {
 		return url;

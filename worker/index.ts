@@ -6,7 +6,6 @@ import { handleScheduled } from "./collector/handler.js";
 import { HEALTH_STATUS, SERVER_MANIFEST } from "./mcp/manifest.js";
 import { MCPProtocolHandler } from "./mcp/protocol-handler.js";
 import { createServices } from "./mcp-services/index.js";
-import { logger } from "./mcp-utils/logger.js";
 import { configureTelegram } from "./mcp-utils/telegram-notifier.js";
 import type { Env } from "./shared/types.js";
 
@@ -38,8 +37,7 @@ async function handleMCPRequest(c: {
 	}
 
 	configureTelegram(c.env.TELEGRAM_DEFAULT_BOT_URL);
-	logger.setContext(c.executionCtx);
-	const services = await createServices(c.env);
+	const services = await createServices(c.env, c.executionCtx);
 	const authContext = await services.auth.optionalAuth(c.req.raw);
 	const handler = new MCPProtocolHandler(services);
 	return handler.handleRequest(c.req.raw, authContext);

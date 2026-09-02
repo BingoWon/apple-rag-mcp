@@ -1,20 +1,11 @@
 import { sendTelegram } from "./telegram.js";
 
 export class Logger {
-	private ctx?: ExecutionContext;
 	private alertUrl?: string;
 	private prefix: string;
 
 	constructor(prefix: string) {
 		this.prefix = prefix;
-	}
-
-	setContext(ctx: ExecutionContext): void {
-		this.ctx = ctx;
-	}
-
-	getContext(): ExecutionContext | undefined {
-		return this.ctx;
 	}
 
 	setAlertUrl(url: string | undefined): void {

@@ -1,6 +1,6 @@
 /**
  * DeepInfra Reranker Service - MCP Optimized
- * Dual-model fallback: 8B → 4B, 2 attempts each
+ * Dual-model fallback: 8B → 4B
  */
 
 import { logger } from "../mcp-utils/logger.js";
@@ -48,8 +48,6 @@ export class RerankerService extends DeepInfraService<
 		},
 	];
 
-	private static readonly MAX_ATTEMPTS = 2;
-
 	async rerank(query: string, documents: string[], topN: number): Promise<RankedDocument[]> {
 		if (!query?.trim()) throw new Error("Query cannot be empty for reranking");
 		if (!documents?.length) throw new Error("Documents cannot be empty for reranking");
@@ -61,7 +59,7 @@ export class RerankerService extends DeepInfraService<
 	}
 
 	/**
-	 * Dual-model fallback: 8B (2 attempts) → 4B (2 attempts) → fail
+	 * Dual-model fallback: 8B → 4B → fail
 	 */
 	protected override async call(
 		input: RerankerInput,
@@ -94,21 +92,14 @@ export class RerankerService extends DeepInfraService<
 		payload: RerankerPayload,
 		input: RerankerInput,
 	): Promise<{ success: boolean; data?: RankedDocument[]; error?: string }> {
-		let lastError = "";
-
-		for (let attempt = 1; attempt <= RerankerService.MAX_ATTEMPTS; attempt++) {
-			try {
-				const response = await this.singleRequest(model.endpoint, payload);
-				return { success: true, data: this.processResponse(response, input) };
-			} catch (e) {
-				lastError = e instanceof Error ? e.message : String(e);
-				logger.warn(
-					`${model.name} attempt ${attempt}/${RerankerService.MAX_ATTEMPTS} failed: ${lastError}`,
-				);
-			}
+		try {
+			const response = await this.singleRequest(model.endpoint, payload);
+			return { success: true, data: this.processResponse(response, input) };
+		} catch (error) {
+			const message = error instanceof Error ? error.message : String(error);
+			logger.warn(`${model.name} failed: ${message}`);
+			return { success: false, error: message };
 		}
-
-		return { success: false, error: lastError };
 	}
 
 	private elapsed(startTime: number): string {
