@@ -5,12 +5,12 @@ import { Link, useNavigate } from "react-router-dom";
 import { Modal, ModalTrigger } from "@/components/ui/animated-modal";
 import { Button } from "@/components/ui/Button";
 import { EvervaultCard, Icon } from "@/components/ui/evervault-card";
-import { activateFabContact } from "@/components/ui/FabButton";
 import { useAuth } from "@/hooks/useAuth";
 import { trackEvent } from "@/lib/analytics";
 import { getPricingTiers } from "@/lib/plans";
 import { cn } from "@/lib/utils";
 import { useDashboardStore } from "@/stores/dashboard";
+import { activateFabContact } from "@/utils/contact";
 import { PricingModal } from "./PricingModal";
 
 export function PricingSection() {

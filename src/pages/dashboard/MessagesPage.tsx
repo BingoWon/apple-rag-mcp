@@ -4,11 +4,11 @@ import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
-import { activateFabContact } from "@/components/ui/FabButton";
 import { Input } from "@/components/ui/Input";
 import { api } from "@/lib/api";
 import { formatDateCompact } from "@/lib/datetime";
 import { cn } from "@/lib/utils";
+import { activateFabContact } from "@/utils/contact";
 
 interface Message {
 	id: string;

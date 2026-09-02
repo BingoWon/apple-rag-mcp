@@ -1,0 +1,39 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16@sha256:1d533553fefe4f12e5d80c7b80622ba0c382abb5758856f52983d8789179f0fb
+    container_name: postgres_db
+    shm_size: 3g
+    restart: unless-stopped
+    stop_grace_period: 2m
+    pids_limit: 128
+    ports:
+      - "0.0.0.0:5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - "./data/pg_data:/var/lib/postgresql/data"
+      - "./config/postgresql/postgresql.conf:/etc/postgresql/postgresql.conf:ro"
+    command: ["-c", "config_file=/etc/postgresql/postgresql.conf"]
+    networks: [main_network]
+    secrets: [postgres_password]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"
+
+networks:
+  main_network:
+    driver: bridge
+
+secrets:
+  postgres_password:
+    file: ./secrets/postgres_password.txt

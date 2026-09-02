@@ -30,7 +30,7 @@ export async function getUserPlanType(userId: string, db: D1Database): Promise<P
 		.bind(userId)
 		.first();
 
-	if (!result || result.status !== "active") {
+	if (result?.status !== "active") {
 		return "hobby";
 	}
 

@@ -6,6 +6,7 @@ import { handleScheduled } from "./collector/handler.js";
 import { HEALTH_STATUS, SERVER_MANIFEST } from "./mcp/manifest.js";
 import { MCPProtocolHandler } from "./mcp/protocol-handler.js";
 import { createServices } from "./mcp-services/index.js";
+import type { WaitUntilContext } from "./mcp-utils/d1-utils.js";
 import { configureTelegram } from "./mcp-utils/telegram-notifier.js";
 import type { Env } from "./shared/types.js";
 
@@ -28,7 +29,7 @@ type HonoAppEnv = { Bindings: Env };
 
 async function handleMCPRequest(c: {
 	env: Env;
-	executionCtx: ExecutionContext;
+	executionCtx: WaitUntilContext;
 	req: { raw: Request };
 }) {
 	const originRejection = originValidationResponse(c.req.raw, MCP_ALLOWED_ORIGIN_HOSTNAMES);
@@ -69,7 +70,6 @@ app.get("/robots.txt", (c) => {
 		"Disallow: /mcp-tokens",
 		"Disallow: /billing",
 		"Disallow: /success",
-		"Disallow: /design-system",
 		"",
 		"Sitemap: https://apple-rag.com/sitemap.xml",
 	].join("\n");

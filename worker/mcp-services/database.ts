@@ -17,7 +17,7 @@ export class DatabaseService {
 			username: config.RAG_DB_USER,
 			password: config.RAG_DB_PASSWORD,
 			ssl: config.RAG_DB_SSLMODE === "require",
-			max: 2,
+			max: 1,
 			idle_timeout: 30,
 			connect_timeout: 10,
 			max_lifetime: 60 * 30,

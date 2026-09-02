@@ -1,0 +1,6 @@
+[Unit]
+Description=Check Apple RAG PostgreSQL backup freshness
+
+[Service]
+Type=oneshot
+ExecStart=/root/apple_rag_stack/check_backup_freshness.sh

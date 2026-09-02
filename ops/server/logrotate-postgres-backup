@@ -1,0 +1,10 @@
+/var/log/postgres_backup.log {
+	weekly
+	rotate 8
+	compress
+	delaycompress
+	missingok
+	notifempty
+	su root adm
+	create 0640 root adm
+}

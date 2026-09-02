@@ -1,5 +1,7 @@
 import { AuthMiddleware } from "../mcp-auth/auth-middleware.js";
 import type { AppConfig, Services } from "../mcp-types/index.js";
+import type { WaitUntilContext } from "../mcp-utils/d1-utils.js";
+import { logger } from "../mcp-utils/logger.js";
 import type { Env } from "../shared/types.js";
 import { RAGService } from "./rag.js";
 import { RateLimitService } from "./rate-limit.js";
@@ -7,7 +9,7 @@ import { ToolCallLogger } from "./tool-call-logger.js";
 
 let sharedRag: RAGService | undefined;
 
-export async function createServices(env: Env, ctx: ExecutionContext): Promise<Services> {
+export async function createServices(env: Env, ctx: WaitUntilContext): Promise<Services> {
 	try {
 		if (!sharedRag) {
 			sharedRag = new RAGService(createAppConfig(env), env);
@@ -25,9 +27,7 @@ export async function createServices(env: Env, ctx: ExecutionContext): Promise<S
 			logger,
 		};
 	} catch (error) {
-		// Import logger here to avoid circular dependency
-		const { logger } = await import("../mcp-utils/logger.js");
-		logger.error(
+		await logger.error(
 			`Service initialization failed: ${error instanceof Error ? error.message : String(error)}`,
 		);
 		throw error;

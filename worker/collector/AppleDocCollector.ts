@@ -189,7 +189,7 @@ class AppleDocCollector {
 		const planItems = records.map((record, index) => {
 			const collectResult = collectResults[index];
 
-			if (!collectResult || !collectResult.data) {
+			if (!collectResult?.data) {
 				return this.createErrorPlanItem(
 					record,
 					collectResult || {

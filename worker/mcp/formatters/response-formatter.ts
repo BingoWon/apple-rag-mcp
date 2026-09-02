@@ -11,7 +11,7 @@ import { MESSAGES } from "../constants.js";
  * Format RAG response with professional layout
  */
 export function formatRAGResponse(ragResult: RAGResult, isAuthenticated: boolean): string {
-	if (!ragResult || !ragResult.success || !ragResult.results || ragResult.results.length === 0) {
+	if (!ragResult?.success || !ragResult.results || ragResult.results.length === 0) {
 		return MESSAGES.NO_RESULTS;
 	}
 
@@ -80,7 +80,7 @@ export function formatFetchResponse(
 	result: { success?: boolean; title?: string; content?: string },
 	isAuthenticated: boolean,
 ): string {
-	if (!result || !result.success) {
+	if (!result?.success) {
 		return "Failed to retrieve content from the specified URL.";
 	}
 

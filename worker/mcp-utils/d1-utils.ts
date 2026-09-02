@@ -4,6 +4,10 @@
 
 const D1_TIMEOUT_MS = 3000;
 
+export interface WaitUntilContext {
+	waitUntil(promise: Promise<unknown>): void;
+}
+
 const raceWithTimeout = <T>(operation: () => Promise<T>, name: string): Promise<T> =>
 	Promise.race([
 		operation(),
@@ -22,7 +26,7 @@ export async function withD1Timeout<T>(operation: () => Promise<T>, name: string
 }
 
 export function backgroundD1Write(
-	ctx: ExecutionContext | undefined,
+	ctx: WaitUntilContext | undefined,
 	operation: () => Promise<void>,
 	name: string,
 ): void {

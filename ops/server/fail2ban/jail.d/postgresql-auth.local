@@ -1,0 +1,11 @@
+[postgresql-auth]
+enabled = true
+filter = postgresql-auth
+port = 5432
+protocol = tcp
+logpath = /root/apple_rag_stack/data/pg_data/log/postgresql.log
+backend = auto
+maxretry = 5
+findtime = 10m
+bantime = 24h
+banaction = ufw

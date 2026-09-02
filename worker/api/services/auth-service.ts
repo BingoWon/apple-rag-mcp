@@ -20,6 +20,7 @@ interface RegisterRequest {
 
 import { ResponseBuilder } from "../types/response";
 import { generateTokenPair, generateUUID, hashPassword, verifyPassword } from "../utils/security";
+import { getPlanPermissions, getUserPlanType } from "../utils/subscription";
 import { EmailService } from "./email-service";
 
 export class AuthService {
@@ -102,7 +103,6 @@ export class AuthService {
 			const sessionId = generateUUID();
 
 			// Get user's subscription plan type
-			const { getUserPlanType, getPlanPermissions } = await import("../utils/subscription");
 			const planType = await getUserPlanType(user.id!, this.db);
 			const permissions = getPlanPermissions(planType);
 
@@ -161,7 +161,7 @@ export class AuthService {
 
 			const user = userResult as unknown as User | null;
 
-			if (!user || !user.password_hash || !user.id) {
+			if (!user?.password_hash || !user.id) {
 				return ResponseBuilder.error("INVALID_CREDENTIALS", "Invalid email or password");
 			}
 
@@ -175,7 +175,6 @@ export class AuthService {
 			const sessionId = generateUUID();
 
 			// Get user's subscription plan type
-			const { getUserPlanType, getPlanPermissions } = await import("../utils/subscription");
 			const planType = await getUserPlanType(user.id!, this.db);
 			const permissions = getPlanPermissions(planType);
 

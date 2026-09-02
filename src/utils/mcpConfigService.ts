@@ -134,11 +134,6 @@ export async function copyToClipboard(
 	}
 }
 
-export function openCursorLink(token: string): void {
-	const link = generateCursorLink(token);
-	window.open(link, "_blank");
-}
-
 export function generateVSCodeInstallUrl(token: string, serverUrl?: string): string {
 	const config = {
 		name: MCP_SERVER_NAME,
@@ -155,22 +150,6 @@ export function generateVSCodeInsidersInstallUrl(token: string, serverUrl?: stri
 	return `vscode-insiders:mcp/install?${encodeURIComponent(JSON.stringify(config))}`;
 }
 
-export function generateVSCodeBadgeUrl(
-	text: string = "Install Apple RAG MCP",
-	color: string = "0098FF",
-): string {
-	const encodedText = text.replace(/ /g, "_").replace(/-/g, "--");
-	return `https://img.shields.io/badge/VS_Code-${encodeURIComponent(encodedText)}-${color}?style=flat&logo=visualstudiocode&logoColor=ffffff`;
-}
-
-export function generateVSCodeInsidersBadgeUrl(
-	text: string = "Install Apple RAG MCP",
-	color: string = "24bfa5",
-): string {
-	const encodedText = text.replace(/ /g, "_").replace(/-/g, "--");
-	return `https://img.shields.io/badge/VS_Code_Insiders-${encodeURIComponent(encodedText)}-${color}?style=flat&logo=visualstudiocode&logoColor=ffffff`;
-}
-
 export const MCPConfigService = {
 	generateServerConfig,
 	generateConfig,
@@ -179,11 +158,8 @@ export const MCPConfigService = {
 	generateClaudeCodeCommand,
 	generateCursorLink,
 	copyToClipboard,
-	openCursorLink,
 	generateVSCodeInstallUrl,
 	generateVSCodeInsidersInstallUrl,
-	generateVSCodeBadgeUrl,
-	generateVSCodeInsidersBadgeUrl,
 	generateAntigravityConfig,
 	generateAntigravityJsonString,
 };

@@ -4,11 +4,11 @@ import React, { createContext, useCallback, useContext, useRef, useState } from 
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/Button";
-import { activateFabContact } from "@/components/ui/FabButton";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth";
+import { activateFabContact } from "@/utils/contact";
 
 // 创建 Context 来传递 visible 状态
 const NavbarContext = createContext<{ visible: boolean }>({ visible: false });

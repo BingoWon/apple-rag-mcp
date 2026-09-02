@@ -6,6 +6,7 @@ import type { Env } from "../../shared/types.js";
 import type { User } from "../types";
 import { generateTokenPair } from "../utils/jwt-simple";
 import { generateUUID } from "../utils/security";
+import { getPlanPermissions, getUserPlanType } from "../utils/subscription";
 import { notifyTelegram } from "../utils/telegram-notifier.js";
 
 // OAuth provider response types
@@ -274,7 +275,6 @@ export class OAuthService {
 				.bind(normalizedEmail, userInfo.name, userInfo.avatar, now, now, existingUser.id)
 				.run();
 
-			const { getUserPlanType } = await import("../utils/subscription");
 			const planType = await getUserPlanType(existingUser.id as string, this.env.DB);
 
 			const updatedUser = await this.env.DB.prepare(
@@ -366,7 +366,6 @@ Email: ${normalizedEmail}`);
 	}> {
 		const sessionId = generateUUID();
 
-		const { getUserPlanType, getPlanPermissions } = await import("../utils/subscription");
 		const planType = await getUserPlanType(user.id, this.env.DB);
 		const permissions = getPlanPermissions(planType);
 

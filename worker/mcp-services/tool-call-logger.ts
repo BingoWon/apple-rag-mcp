@@ -2,7 +2,7 @@
  * Tool Call Logger with background D1 writes
  */
 
-import { backgroundD1Write } from "../mcp-utils/d1-utils.js";
+import { backgroundD1Write, type WaitUntilContext } from "../mcp-utils/d1-utils.js";
 
 export interface SearchLogEntry {
 	userId: string;
@@ -33,7 +33,7 @@ export interface FetchLogEntry {
 export class ToolCallLogger {
 	constructor(
 		private d1: D1Database,
-		private ctx: ExecutionContext,
+		private ctx: WaitUntilContext,
 	) {}
 
 	logSearch(entry: SearchLogEntry): void {

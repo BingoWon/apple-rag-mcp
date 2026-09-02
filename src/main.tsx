@@ -1,14 +1,21 @@
-import { StrictMode } from "react";
+import { lazy, StrictMode, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Providers } from "@/components/providers/Providers";
-import { UnreadReplyNotification } from "@/components/UnreadReplyNotification";
 import { CookieConsent } from "@/components/ui/CookieConsent";
-import { FabButton } from "@/components/ui/FabButton";
 import { AppRouter } from "./router";
 import "./i18n";
 import "./styles/globals.css";
+
+const FabButton = lazy(() =>
+	import("@/components/ui/FabButton").then(({ FabButton }) => ({ default: FabButton })),
+);
+const UnreadReplyNotification = lazy(() =>
+	import("@/components/UnreadReplyNotification").then(({ UnreadReplyNotification }) => ({
+		default: UnreadReplyNotification,
+	})),
+);
 
 const root = document.getElementById("root");
 
@@ -20,9 +27,11 @@ if (root) {
 					<Providers>
 						<AppRouter />
 					</Providers>
-					<FabButton />
+					<Suspense fallback={null}>
+						<FabButton />
+						<UnreadReplyNotification />
+					</Suspense>
 					<CookieConsent />
-					<UnreadReplyNotification />
 				</ErrorBoundary>
 			</BrowserRouter>
 		</StrictMode>,

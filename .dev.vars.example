@@ -1,4 +1,4 @@
-# Apple RAG MCP — Local Development Secrets
+# Apple RAG MCP — Local Verification Variables
 # Copy to .dev.vars and fill in your values.
 # Production secrets: set via `wrangler versions secret put <NAME>`
 
@@ -38,7 +38,7 @@ RAG_DB_PORT=5432
 RAG_DB_DATABASE=
 RAG_DB_USER=
 RAG_DB_PASSWORD=
-RAG_DB_SSLMODE=disable
+RAG_DB_SSLMODE=require
 
 # ─── DeepInfra (required for MCP search) ─────────────────
 DEEPINFRA_API_KEY=

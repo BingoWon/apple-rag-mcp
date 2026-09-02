@@ -10,6 +10,7 @@ import { authMiddleware } from "../middleware/auth";
 import type { User } from "../types";
 import { logger } from "../utils/logger";
 import { createOpenAPIApp } from "../utils/openapi";
+import { getUserPlanType } from "../utils/subscription";
 import { createMCPTokenSchema } from "../utils/validation";
 
 const app = createOpenAPIApp();
@@ -674,7 +675,6 @@ app.openapi(validateMCPTokenRoute, async (c) => {
 			.run();
 
 		// Get user's subscription plan type
-		const { getUserPlanType } = await import("../utils/subscription");
 		const planType = await getUserPlanType(String(tokenData.user_id), c.env.DB);
 
 		return c.json(

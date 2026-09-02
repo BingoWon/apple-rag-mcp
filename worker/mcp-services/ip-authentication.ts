@@ -3,7 +3,7 @@
  */
 
 import type { UserTokenData } from "../mcp-auth/token-validator.js";
-import { backgroundD1Write, withD1Timeout } from "../mcp-utils/d1-utils.js";
+import { backgroundD1Write, type WaitUntilContext, withD1Timeout } from "../mcp-utils/d1-utils.js";
 
 interface UserRecord {
 	user_id: string;
@@ -14,7 +14,7 @@ interface UserRecord {
 export class IPAuthenticationService {
 	constructor(
 		private d1: D1Database,
-		private ctx: ExecutionContext,
+		private ctx: WaitUntilContext,
 	) {}
 
 	async checkIPAuthentication(clientIP: string): Promise<UserTokenData | null> {

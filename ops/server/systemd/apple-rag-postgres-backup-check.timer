@@ -1,0 +1,11 @@
+[Unit]
+Description=Check Apple RAG PostgreSQL backup freshness daily
+
+[Timer]
+OnCalendar=*-*-* 12:00:00 UTC
+Persistent=true
+AccuracySec=5m
+Unit=apple-rag-postgres-backup-check.service
+
+[Install]
+WantedBy=timers.target

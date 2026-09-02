@@ -56,7 +56,7 @@ Click the button above and your editor will automatically configure everything f
 **Manual Configuration Parameters:**
 - **MCP Type:** `Streamable HTTP`
 - **URL:** `https://mcp.apple-rag.com`
-- **Protocol:** `2026-07-28` with automatic compatibility for 2025 clients
+- **Protocol:** `2026-07-28`
 - **Authentication:** `Optional` (MCP Token for higher limits)
 - **MCP Token:** Get yours at [apple-rag.com](https://apple-rag.com) for increased quota
 
@@ -106,7 +106,7 @@ Start immediately with no MCP Token required. Get an MCP Token for higher usage 
 - **🚀 High Performance** - Multi-instance cluster deployment for maximum throughput
 - **🔄 Always Current** - Synced with Apple's latest docs, WWDC26 sessions, and Xcode 27 beta references
 - **🛡️ Secure & Private** - Your queries stay private
-- **🌐 MCP 2026 Ready** - Stateless MCP `2026-07-28` with automatic compatibility for 2025 clients
+- **🌐 MCP 2026 Native** - Stateless MCP `2026-07-28`
 
 ## 🧠 Agent Skill
 

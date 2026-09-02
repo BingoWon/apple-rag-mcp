@@ -9,6 +9,7 @@ import type { User } from "../types";
 import { logger } from "../utils/logger";
 import { createOpenAPIApp } from "../utils/openapi";
 import { createStripeClient } from "../utils/stripe-client";
+import { getPlanQuotas, getUserPlanType } from "../utils/subscription";
 
 const app = createOpenAPIApp();
 
@@ -75,7 +76,6 @@ app.openapi(getUserQuotaRoute, async (c) => {
 
 	try {
 		// Get user's subscription plan type
-		const { getUserPlanType, getPlanQuotas } = await import("../utils/subscription");
 		const planType = await getUserPlanType(user.id, c.env.DB);
 		const quotaLimits = getPlanQuotas(planType);
 

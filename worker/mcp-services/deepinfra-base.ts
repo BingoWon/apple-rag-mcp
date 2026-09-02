@@ -3,12 +3,13 @@
  * Minimal single-key client with retry support.
  */
 
+import packageJson from "../../package.json";
 import { logger } from "../mcp-utils/logger.js";
 
 export const DEEPINFRA_CONFIG = {
 	BASE_URL: "https://api.deepinfra.com",
 	TIMEOUT_MS: 5_000,
-	USER_AGENT: "Apple-RAG-MCP/2.0.0",
+	USER_AGENT: `Apple-RAG-MCP/${packageJson.version}`,
 	EMBEDDING_MODEL: "Qwen/Qwen3-Embedding-4B",
 	RERANKER_MODEL_PRIMARY: "Qwen/Qwen3-Reranker-8B",
 	RERANKER_MODEL_FALLBACK: "Qwen/Qwen3-Reranker-4B",

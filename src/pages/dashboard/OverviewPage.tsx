@@ -1,14 +1,23 @@
-import { Suspense, useEffect, useRef } from "react";
+import { lazy, Suspense, useEffect, useRef } from "react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 import { AppleRAGMCPIntro } from "@/components/dashboard/AppleRAGMCPIntro";
-import { MCPUsageGuide } from "@/components/dashboard/MCPUsageGuide";
 import StatsCards from "@/components/dashboard/StatsCards";
-import { ToolCallsChart } from "@/components/dashboard/ToolCallsChart";
 import { XcodeBuildMCPRecommendation } from "@/components/dashboard/XcodeBuildMCPRecommendation";
 import { useAuth } from "@/hooks/useAuth";
 import { useDashboardStore } from "@/stores/dashboard";
+
+const MCPUsageGuide = lazy(() =>
+	import("@/components/dashboard/MCPUsageGuide").then(({ MCPUsageGuide }) => ({
+		default: MCPUsageGuide,
+	})),
+);
+const ToolCallsChart = lazy(() =>
+	import("@/components/dashboard/ToolCallsChart").then(({ ToolCallsChart }) => ({
+		default: ToolCallsChart,
+	})),
+);
 
 function DashboardOverviewContent() {
 	const { t } = useTranslation();

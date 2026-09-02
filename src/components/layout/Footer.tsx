@@ -2,8 +2,8 @@ import { IconBrandGithub } from "@tabler/icons-react";
 import type React from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
-import { activateFabContact } from "@/components/ui/FabButton";
 import { trackEvent } from "@/lib/analytics";
+import { activateFabContact } from "@/utils/contact";
 
 export function Footer() {
 	const { t } = useTranslation();

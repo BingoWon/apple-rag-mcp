@@ -3,8 +3,8 @@ import { motion } from "motion/react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
-import { activateFabContact } from "@/components/ui/FabButton";
 import { LampContainer } from "@/components/ui/lamp";
+import { activateFabContact } from "@/utils/contact";
 
 export default function NotFound() {
 	const { t } = useTranslation();

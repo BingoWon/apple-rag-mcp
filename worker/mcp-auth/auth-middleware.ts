@@ -1,6 +1,7 @@
 import { TOKEN_FORMAT } from "../mcp/constants.js";
 import { IPAuthenticationService } from "../mcp-services/ip-authentication.js";
 import type { AuthContext } from "../mcp-types/index.js";
+import type { WaitUntilContext } from "../mcp-utils/d1-utils.js";
 import { logger } from "../mcp-utils/logger.js";
 import { extractClientInfo } from "../mcp-utils/request-info.js";
 import { TokenValidator, type UserTokenData } from "./token-validator.js";
@@ -9,7 +10,7 @@ export class AuthMiddleware {
 	private readonly tokenValidator: TokenValidator;
 	private readonly ipAuthService: IPAuthenticationService;
 
-	constructor(d1: D1Database, ctx: ExecutionContext) {
+	constructor(d1: D1Database, ctx: WaitUntilContext) {
 		this.tokenValidator = new TokenValidator(d1, ctx);
 		this.ipAuthService = new IPAuthenticationService(d1, ctx);
 	}

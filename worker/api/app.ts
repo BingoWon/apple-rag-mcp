@@ -3,6 +3,7 @@ import { logger as honoLogger } from "hono/logger";
 import { prettyJSON } from "hono/pretty-json";
 import { requestId } from "hono/request-id";
 import { timing } from "hono/timing";
+import packageJson from "../../package.json";
 import { createCorsMiddleware, securityHeaders } from "./middleware/cors.js";
 import adminRoutes from "./routes/admin/index.js";
 import { authRoutes } from "./routes/auth.js";
@@ -58,11 +59,11 @@ apiApp.route("/admin", adminRoutes);
 apiApp.route("/stripe", stripeRoutes);
 apiApp.route("/stats", statsRoutes);
 
-apiApp.get("/", (c) => c.json({ name: "Apple RAG API", version: "2.0.0" }));
+apiApp.get("/", (c) => c.json({ name: "Apple RAG API", version: packageJson.version }));
 
 apiApp.doc("/doc", {
 	openapi: "3.0.0",
-	info: { version: "2.0.0", title: "Apple RAG API" },
+	info: { version: packageJson.version, title: "Apple RAG API" },
 });
 
 apiApp.get("/ui", swaggerUI({ url: "/api/doc" }));

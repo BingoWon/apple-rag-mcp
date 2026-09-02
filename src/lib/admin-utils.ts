@@ -55,7 +55,7 @@ export function formatAdminResponseTime(responseTimeMs: number | null | undefine
  * Uses Unicode Regional Indicator Symbols
  */
 export function getCountryFlag(countryCode: string | null | undefined): string {
-	if (!countryCode || countryCode.length !== 2) {
+	if (countryCode?.length !== 2) {
 		return "🌍";
 	}
 	if (countryCode === "T1") {

@@ -13,7 +13,7 @@ import { logger } from "../utils/logger";
 export const authMiddleware = async (c: Context<AppEnv>, next: Next) => {
 	const authHeader = c.req.header("Authorization");
 
-	if (!authHeader || !authHeader.startsWith("Bearer ")) {
+	if (!authHeader?.startsWith("Bearer ")) {
 		return c.json(
 			{
 				success: false,

@@ -1,0 +1,16 @@
+[Unit]
+Description=Apple RAG PostgreSQL backup
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=-/root/apple_rag_stack/backup.env
+ExecStart=/root/apple_rag_stack/backup_database.sh
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
+TimeoutStartSec=2h
+UMask=0077
+StandardOutput=append:/var/log/postgres_backup.log
+StandardError=append:/var/log/postgres_backup.log

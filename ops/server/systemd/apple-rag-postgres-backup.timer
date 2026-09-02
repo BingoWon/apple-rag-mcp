@@ -1,0 +1,11 @@
+[Unit]
+Description=Run Apple RAG PostgreSQL backup daily
+
+[Timer]
+OnCalendar=*-*-* 09:00:00 UTC
+Persistent=true
+AccuracySec=1m
+Unit=apple-rag-postgres-backup.service
+
+[Install]
+WantedBy=timers.target

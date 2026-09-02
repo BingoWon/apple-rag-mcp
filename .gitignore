@@ -7,6 +7,10 @@ dist/
 *.log
 .DS_Store
 references/
+ops/server/backup.env
+ops/server/backups/
+ops/server/data/
+ops/server/secrets/
 
 # TypeScript
 *.tsbuildinfo

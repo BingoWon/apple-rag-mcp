@@ -2,7 +2,6 @@ import { IconCheck, IconMessageCircle, IconX } from "@tabler/icons-react";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
-import { CardSpotlight } from "@/components/ui/card-spotlight";
 import { api } from "@/lib/api";
 import { formatDateCompact } from "@/lib/datetime";
 import { useAuthStore } from "@/stores/auth";
@@ -92,7 +91,7 @@ export function UnreadReplyNotification() {
 
 	return (
 		<div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay backdrop-blur-sm animate-in fade-in duration-300">
-			<CardSpotlight className="max-w-2xl w-full mx-4 max-h-[85vh] border border-default flex flex-col">
+			<div className="flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-lg border border-default bg-card shadow-2xl mx-4">
 				{/* Scrollable Content Area */}
 				<div className="relative z-20 p-8 pb-6 overflow-y-auto flex-1">
 					{/* Header */}
@@ -194,7 +193,7 @@ export function UnreadReplyNotification() {
 						{t("notification.unread_suffix", { count: remainingCount })}
 					</span>
 				</Link>
-			</CardSpotlight>
+			</div>
 		</div>
 	);
 }
