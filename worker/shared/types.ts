@@ -46,7 +46,6 @@ export interface Env {
 
 	// Collector Configuration
 	BATCH_SIZE?: string;
-	BATCH_COUNT?: string;
 	FORCE_UPDATE_ALL?: string;
 
 	// Telegram Notifications

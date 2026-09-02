@@ -6,7 +6,7 @@
 		"url": "https://github.com/BingoWon/apple-rag-mcp",
 		"source": "github"
 	},
-	"version": "5.0.2",
+	"version": "5.0.3",
 	"remotes": [
 		{
 			"type": "streamable-http",

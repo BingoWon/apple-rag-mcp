@@ -4,7 +4,7 @@ import type { DatabaseRecord, DatabaseStats } from "./types/index.js";
 import { logger } from "./utils/logger.js";
 
 class PostgreSQLManager {
-	private static readonly URL_INSERT_BATCH_SIZE = 100;
+	private static readonly URL_INSERT_BATCH_SIZE = 1000;
 
 	constructor(private readonly sql: postgres.Sql) {}
 
@@ -42,6 +42,7 @@ class PostgreSQLManager {
 				},
 			},
 		);
+		const newUrlCollectCount = Math.max(0, minCollectCount - 1);
 
 		let insertedCount = 0;
 		const batchCount = Math.ceil(urls.length / PostgreSQLManager.URL_INSERT_BATCH_SIZE);
@@ -54,7 +55,7 @@ class PostgreSQLManager {
 				async () => {
 					const result = await this.sql`
             INSERT INTO pages ${this.sql(
-							urlBatch.map((url) => ({ url, collect_count: minCollectCount })),
+							urlBatch.map((url) => ({ url, collect_count: newUrlCollectCount })),
 						)}
             ON CONFLICT (url) DO NOTHING
           `;

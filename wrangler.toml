@@ -8,9 +8,11 @@ compatibility_flags = ["nodejs_compat"]
 keep_vars = true
 
 [vars]
-BATCH_SIZE = "40"
-BATCH_COUNT = "20"
+BATCH_SIZE = "30"
 FORCE_UPDATE_ALL = "false"
+
+[limits]
+subrequests = 50
 
 [placement]
 mode = "smart"

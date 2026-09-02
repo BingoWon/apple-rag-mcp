@@ -40,7 +40,6 @@ class AppleDocCollector {
 	private readonly dbManager: PostgreSQLManager;
 	private readonly apiKey: string;
 	private readonly config: BatchConfig;
-	private batchCounter: number = 0;
 
 	constructor(dbManager: PostgreSQLManager, apiKey: string, config: BatchConfig) {
 		this.dbManager = dbManager;
@@ -84,15 +83,13 @@ class AppleDocCollector {
 	}
 
 	async execute(): Promise<{
-		batchNumber: number;
 		totalChunks: number;
 	}> {
 		const records = await this.dbManager.getBatchRecords(this.config.batchSize);
 
-		this.batchCounter++;
 		const startTime = Date.now();
 
-		logger.info(`\n🚀 Batch #${this.batchCounter}: Processing ${records.length} URLs`);
+		logger.info(`Processing ${records.length} URLs`);
 
 		const result = await this.processBatch(records);
 
@@ -102,14 +99,9 @@ class AppleDocCollector {
 
 		const duration = Date.now() - startTime;
 
-		logger.info(
-			`✅ Batch #${this.batchCounter} completed in ${duration}ms: ${result.totalChunks} chunks generated`,
-		);
+		logger.info(`Batch completed in ${duration}ms: ${result.totalChunks} chunks generated`);
 
-		return {
-			batchNumber: this.batchCounter,
-			totalChunks: result.totalChunks,
-		};
+		return { totalChunks: result.totalChunks };
 	}
 
 	private async processBatch(records: DatabaseRecord[]): Promise<ProcessBatchResult> {
@@ -379,9 +371,7 @@ class AppleDocCollector {
 			const temporaryUrls = temporaryErrorRecords
 				.map((r) => `${r.record.url} (${r.error})`)
 				.join("\n");
-			await logger.warn(
-				`Temporary errors: ${temporaryErrorRecords.length} URLs in batch ${this.batchCounter}\n${temporaryUrls}`,
-			);
+			await logger.warn(`Temporary errors: ${temporaryErrorRecords.length} URLs\n${temporaryUrls}`);
 		}
 
 		return this.buildProcessingResult(processingPlan, processResults, allChunks);
