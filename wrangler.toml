@@ -11,9 +11,6 @@ keep_vars = true
 BATCH_SIZE = "30"
 FORCE_UPDATE_ALL = "false"
 
-[limits]
-subrequests = 50
-
 [placement]
 mode = "smart"
 
