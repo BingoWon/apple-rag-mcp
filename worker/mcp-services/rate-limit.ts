@@ -63,7 +63,7 @@ export class RateLimitService {
 	}
 
 	private async getPlanType(userId: string): Promise<string> {
-		return withD1Timeout(() => getUserPlanType(userId, this.d1), "hobby", "get_plan_type");
+		return withD1Timeout(() => getUserPlanType(userId, this.d1), "get_plan_type");
 	}
 
 	private async getUsageCount(identifier: string, period: "weekly" | "minute"): Promise<number> {
@@ -74,21 +74,17 @@ export class RateLimitService {
 
 		const operator = period === "weekly" ? ">=" : ">";
 
-		return withD1Timeout(
-			async () => {
-				const result = await this.d1
-					.prepare(
-						`SELECT
-              (SELECT COUNT(*) FROM search_logs WHERE user_id = ? AND created_at ${operator} ? AND status_code = 200) +
-              (SELECT COUNT(*) FROM fetch_logs WHERE user_id = ? AND created_at ${operator} ? AND status_code = 200) as total`,
-					)
-					.bind(identifier, since, identifier, since)
-					.first();
-				return (result?.total as number) || 0;
-			},
-			0,
-			`get_${period}_usage`,
-		);
+		return withD1Timeout(async () => {
+			const result = await this.d1
+				.prepare(
+					`SELECT
+	              (SELECT COUNT(*) FROM search_logs WHERE user_id = ? AND created_at ${operator} ? AND status_code = 200) +
+	              (SELECT COUNT(*) FROM fetch_logs WHERE user_id = ? AND created_at ${operator} ? AND status_code = 200) as total`,
+				)
+				.bind(identifier, since, identifier, since)
+				.first();
+			return (result?.total as number) || 0;
+		}, `get_${period}_usage`);
 	}
 
 	private getWeekStartTime(): Date {

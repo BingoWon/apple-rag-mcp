@@ -18,7 +18,7 @@ export class IPAuthenticationService {
 	) {}
 
 	async checkIPAuthentication(clientIP: string): Promise<UserTokenData | null> {
-		const user = await withD1Timeout(() => this.queryIP(clientIP), null, "ip_auth");
+		const user = await withD1Timeout(() => this.queryIP(clientIP), "ip_auth");
 
 		if (!user) return null;
 

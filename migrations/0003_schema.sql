@@ -1,6 +1,6 @@
 -- Apple RAG Database Schema
 -- Cloudflare D1 (SQLite)
--- Last updated: 2026-03-17
+-- Production schema baseline: 2026-09-02
 
 -- ============================================================
 -- USERS TABLE
@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS mcp_tokens (
     id TEXT PRIMARY KEY,
     user_id TEXT NOT NULL,
     name TEXT NOT NULL,
-    mcp_token TEXT NOT NULL,
+    mcp_token TEXT NOT NULL UNIQUE,
     last_used_at TEXT,
     created_at TEXT DEFAULT (datetime('now')),
     updated_at TEXT DEFAULT (datetime('now')),
@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS mcp_tokens (
 );
 
 CREATE INDEX IF NOT EXISTS idx_mcp_tokens_user_id ON mcp_tokens(user_id);
-CREATE INDEX IF NOT EXISTS idx_mcp_tokens_token ON mcp_tokens(mcp_token);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_mcp_tokens_token ON mcp_tokens(mcp_token);
 
 -- ============================================================
 -- SEARCH LOGS TABLE
@@ -68,6 +68,9 @@ CREATE TABLE IF NOT EXISTS search_logs (
 CREATE INDEX IF NOT EXISTS idx_search_logs_user_id ON search_logs(user_id);
 CREATE INDEX IF NOT EXISTS idx_search_logs_created_at ON search_logs(created_at);
 CREATE INDEX IF NOT EXISTS idx_search_logs_country ON search_logs(country_code);
+CREATE INDEX IF NOT EXISTS idx_search_logs_rate_limit
+ON search_logs(user_id, created_at)
+WHERE status_code = 200;
 
 -- ============================================================
 -- FETCH LOGS TABLE
@@ -91,6 +94,9 @@ CREATE TABLE IF NOT EXISTS fetch_logs (
 CREATE INDEX IF NOT EXISTS idx_fetch_logs_user_id ON fetch_logs(user_id);
 CREATE INDEX IF NOT EXISTS idx_fetch_logs_created_at ON fetch_logs(created_at);
 CREATE INDEX IF NOT EXISTS idx_fetch_logs_country ON fetch_logs(country_code);
+CREATE INDEX IF NOT EXISTS idx_fetch_logs_rate_limit
+ON fetch_logs(user_id, created_at)
+WHERE status_code = 200;
 
 -- ============================================================
 -- USER SUBSCRIPTIONS TABLE
@@ -101,7 +107,7 @@ CREATE TABLE IF NOT EXISTS user_subscriptions (
     stripe_customer_id TEXT,
     stripe_subscription_id TEXT,
     plan_type TEXT DEFAULT 'hobby',
-    status TEXT DEFAULT 'active',
+    status TEXT DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'canceled', 'past_due')),
     current_period_start TEXT,
     current_period_end TEXT,
     cancel_at_period_end BOOLEAN DEFAULT FALSE,
@@ -114,6 +120,8 @@ CREATE TABLE IF NOT EXISTS user_subscriptions (
 );
 
 CREATE INDEX IF NOT EXISTS idx_user_subscriptions_stripe_price_id ON user_subscriptions(stripe_price_id);
+CREATE INDEX IF NOT EXISTS idx_user_subscriptions_customer ON user_subscriptions(stripe_customer_id);
+CREATE INDEX IF NOT EXISTS idx_user_subscriptions_subscription ON user_subscriptions(stripe_subscription_id);
 
 -- ============================================================
 -- USER AUTHORIZED IPS TABLE
@@ -133,6 +141,8 @@ CREATE TABLE IF NOT EXISTS user_authorized_ips (
 CREATE INDEX IF NOT EXISTS idx_user_authorized_ips_lookup ON user_authorized_ips(ip_address, user_id);
 CREATE INDEX IF NOT EXISTS idx_user_authorized_ips_user_id ON user_authorized_ips(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_authorized_ips_last_used ON user_authorized_ips(last_used_at);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_user_authorized_ips_unique
+ON user_authorized_ips(user_id, ip_address);
 
 -- ============================================================
 -- CONTACT MESSAGES TABLE
@@ -153,4 +163,3 @@ CREATE TABLE IF NOT EXISTS contact_messages (
 
 CREATE INDEX IF NOT EXISTS idx_contact_messages_created_at ON contact_messages(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_contact_messages_replied_at ON contact_messages(replied_at DESC);
-

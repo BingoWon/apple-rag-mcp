@@ -6,7 +6,7 @@
 import { OAUTH_SUBSCRIPTION_QUOTAS, TIER_PERMISSIONS } from "../types/permissions";
 
 export type PlanType = "hobby" | "pro" | "enterprise";
-export type SubscriptionStatus = "active" | "inactive" | "cancelled" | "past_due";
+export type SubscriptionStatus = "active" | "inactive" | "canceled" | "past_due";
 
 export interface UserSubscription {
 	plan_type: PlanType;
@@ -23,31 +23,26 @@ export interface UserSubscription {
  * @returns Plan type (hobby, pro, enterprise)
  */
 export async function getUserPlanType(userId: string, db: D1Database): Promise<PlanType> {
-	try {
-		const result = await db
-			.prepare(
-				"SELECT plan_type, status, payment_type, current_period_end FROM user_subscriptions WHERE user_id = ?",
-			)
-			.bind(userId)
-			.first();
+	const result = await db
+		.prepare(
+			"SELECT plan_type, status, payment_type, current_period_end FROM user_subscriptions WHERE user_id = ?",
+		)
+		.bind(userId)
+		.first();
 
-		if (!result || result.status !== "active") {
-			return "hobby";
-		}
-
-		if (
-			result.payment_type === "one_time" &&
-			result.current_period_end &&
-			new Date(result.current_period_end as string) < new Date()
-		) {
-			return "hobby";
-		}
-
-		return (result.plan_type as PlanType) || "hobby";
-	} catch (error) {
-		console.error("Error fetching user plan type:", error);
+	if (!result || result.status !== "active") {
 		return "hobby";
 	}
+
+	if (
+		result.payment_type === "one_time" &&
+		result.current_period_end &&
+		new Date(result.current_period_end as string) < new Date()
+	) {
+		return "hobby";
+	}
+
+	return (result.plan_type as PlanType) || "hobby";
 }
 
 /**
@@ -60,40 +55,31 @@ export async function getUserSubscription(
 	userId: string,
 	db: D1Database,
 ): Promise<UserSubscription> {
-	try {
-		const result = await db
-			.prepare(`
-        SELECT plan_type, status, current_period_start, 
-               current_period_end, cancel_at_period_end
-        FROM user_subscriptions 
-        WHERE user_id = ?
-      `)
-			.bind(userId)
-			.first();
+	const result = await db
+		.prepare(`
+	        SELECT plan_type, status, current_period_start,
+	               current_period_end, cancel_at_period_end
+	        FROM user_subscriptions
+	        WHERE user_id = ?
+	      `)
+		.bind(userId)
+		.first();
 
-		if (!result) {
-			return {
-				plan_type: "hobby",
-				status: "active",
-				cancel_at_period_end: false,
-			};
-		}
-
-		return {
-			plan_type: (result.plan_type as PlanType) || "hobby",
-			status: (result.status as SubscriptionStatus) || "active",
-			current_period_start: result.current_period_start as string,
-			current_period_end: result.current_period_end as string,
-			cancel_at_period_end: Boolean(result.cancel_at_period_end),
-		};
-	} catch (error) {
-		console.error("Error fetching user subscription:", error);
+	if (!result) {
 		return {
 			plan_type: "hobby",
 			status: "active",
 			cancel_at_period_end: false,
 		};
 	}
+
+	return {
+		plan_type: (result.plan_type as PlanType) || "hobby",
+		status: (result.status as SubscriptionStatus) || "active",
+		current_period_start: result.current_period_start as string,
+		current_period_end: result.current_period_end as string,
+		cancel_at_period_end: Boolean(result.cancel_at_period_end),
+	};
 }
 
 /**

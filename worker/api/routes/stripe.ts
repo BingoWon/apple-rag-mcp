@@ -1,5 +1,5 @@
 import type { Context } from "hono";
-import Stripe from "stripe";
+import type Stripe from "stripe";
 import { z } from "zod";
 import { ApiErrorCode } from "../constants/error-codes";
 import { authMiddleware } from "../middleware/auth";
@@ -7,6 +7,7 @@ import type { AppEnv } from "../types/hono";
 import { OAUTH_SUBSCRIPTION_QUOTAS } from "../types/permissions";
 import { logger } from "../utils/logger.js";
 import { createOpenAPIApp } from "../utils/openapi";
+import { createStripeClient } from "../utils/stripe-client";
 import { notifyTelegram } from "../utils/telegram-notifier";
 
 const stripe = createOpenAPIApp();
@@ -253,9 +254,7 @@ stripe.openapi(
 			const origin = new URL(c.req.url).origin;
 			const finalCancelUrl = cancelUrl || `${origin}/#pricing`;
 
-			const stripeClient = new Stripe(c.env.STRIPE_SECRET_KEY, {
-				apiVersion: "2025-08-27.basil",
-			});
+			const stripeClient = createStripeClient(c.env.STRIPE_SECRET_KEY);
 
 			const sessionParams: Stripe.Checkout.SessionCreateParams = {
 				line_items: [{ price: priceIdValue, quantity: 1 }],
@@ -392,9 +391,7 @@ stripe.openapi(
 			}
 
 			// Create Stripe client
-			const stripeClient = new Stripe(c.env.STRIPE_SECRET_KEY, {
-				apiVersion: "2025-08-27.basil",
-			});
+			const stripeClient = createStripeClient(c.env.STRIPE_SECRET_KEY);
 
 			// Create billing portal session with return URL that triggers refresh
 			const session = await stripeClient.billingPortal.sessions.create({
@@ -525,48 +522,93 @@ stripe.openapi(
 	},
 );
 
-/**
- * Modern idempotent webhook handler with graceful error handling
- * Always returns 2xx status codes as required by Stripe
- */
 stripe.post("/webhook", async (c) => {
 	const eventId = c.req.header("stripe-signature")?.split(",")[0]?.split("=")[1] || "unknown";
 
 	try {
-		// Validate and parse webhook
 		const { event, stripeClient } = await validateWebhook(c);
+		const objectId = getEventObjectId(event);
+
+		if (await hasProcessedEvent(c.env.DB, event, objectId)) {
+			return c.json({
+				received: true,
+				eventId: event.id,
+				processed: true,
+				message: "Duplicate event ignored",
+			});
+		}
 
 		logger.info(`🔔 [STRIPE WEBHOOK] Processing event ${event.type} (${event.id})`);
-
-		// Process event with graceful error handling
 		const result = await processWebhookEvent(event, stripeClient, c.env.DB);
 
+		if (!result.success) {
+			throw new Error(result.message);
+		}
+
+		await recordProcessedEvent(c.env.DB, event, objectId);
 		logger.info(
-			`🔔 [STRIPE WEBHOOK] Event ${event.type} (${event.id}) processed: ${result.success ? "success" : "handled_gracefully"} - ${result.message}`,
+			`🔔 [STRIPE WEBHOOK] Event ${event.type} (${event.id}) processed: ${result.message}`,
 		);
 
-		// Always return 200 for Stripe
 		return c.json({
 			received: true,
 			eventId: event.id,
-			processed: result.success,
+			processed: true,
 			message: result.message,
 		});
 	} catch (error) {
-		// Log error but still return 200 to prevent Stripe retries
 		await logger.error(
 			`🔔 [STRIPE WEBHOOK] Critical error for event ${eventId}: ${error instanceof Error ? error.message : String(error)}`,
 		);
 
-		// Return 200 with error details for monitoring
-		return c.json({
-			received: true,
-			eventId,
-			processed: false,
-			error: "Critical processing error - logged for investigation",
-		});
+		return c.json(
+			{
+				received: true,
+				eventId,
+				processed: false,
+				error: "Webhook processing failed",
+			},
+			500,
+		);
 	}
 });
+
+function getEventObjectId(event: Stripe.Event): string {
+	const object = event.data.object as { id?: string };
+	return object.id || event.id;
+}
+
+async function hasProcessedEvent(
+	db: D1Database,
+	event: Stripe.Event,
+	objectId: string,
+): Promise<boolean> {
+	const existing = await db
+		.prepare(
+			`SELECT 1 FROM stripe_events
+			 WHERE event_id = ?
+			    OR (event_type = 'checkout.session.completed' AND event_type = ? AND object_id = ?)
+			 LIMIT 1`,
+		)
+		.bind(event.id, event.type, objectId)
+		.first();
+
+	return Boolean(existing);
+}
+
+async function recordProcessedEvent(
+	db: D1Database,
+	event: Stripe.Event,
+	objectId: string,
+): Promise<void> {
+	await db
+		.prepare(
+			`INSERT INTO stripe_events (event_id, event_type, object_id, created_at, processed_at)
+			 VALUES (?, ?, ?, ?, ?)`,
+		)
+		.bind(event.id, event.type, objectId, event.created, new Date().toISOString())
+		.run();
+}
 
 /**
  * Validate webhook signature and parse event
@@ -583,9 +625,7 @@ async function validateWebhook(c: Context<AppEnv>) {
 		throw new Error("Webhook secret not configured");
 	}
 
-	const stripeClient = new Stripe(c.env.STRIPE_SECRET_KEY, {
-		apiVersion: "2025-08-27.basil",
-	});
+	const stripeClient = createStripeClient(c.env.STRIPE_SECRET_KEY);
 
 	const event = await stripeClient.webhooks.constructEventAsync(
 		body,
@@ -644,28 +684,24 @@ async function handleSubscriptionEvent(
 			};
 		}
 
-		// Check for idempotency (prevent duplicate processing)
 		const existing = await db
 			.prepare(
-				"SELECT stripe_subscription_id, updated_at FROM user_subscriptions WHERE user_id = ?",
+				"SELECT stripe_subscription_id, stripe_event_created FROM user_subscriptions WHERE user_id = ?",
 			)
 			.bind(userId)
 			.first();
 
-		if (existing?.stripe_subscription_id === subscription.id) {
-			const lastUpdate = new Date(existing.updated_at as string);
-			const eventTime = new Date(event.created * 1000);
-
-			if (eventTime <= lastUpdate) {
-				return {
-					success: true,
-					message: `Duplicate event for subscription ${subscription.id} - ignored`,
-				};
-			}
+		if (
+			existing?.stripe_subscription_id === subscription.id &&
+			event.created <= Number(existing.stripe_event_created || 0)
+		) {
+			return {
+				success: true,
+				message: `Stale event for subscription ${subscription.id} ignored`,
+			};
 		}
 
-		// Save subscription with error recovery
-		await saveSubscriptionSafely(db, userId, subscription, stripeClient, event.type);
+		await saveSubscription(db, userId, subscription, stripeClient, event.type, event.created);
 
 		return {
 			success: true,
@@ -693,19 +729,39 @@ async function handleSubscriptionDeletion(
 
 		if (!userId) {
 			return {
-				success: false,
-				message: `No user found for deleted subscription ${subscription.id} - event acknowledged`,
+				success: true,
+				message: `Deleted subscription ${subscription.id} has no local user`,
 			};
 		}
 
-		// Downgrade to hobby plan
+		const existing = await db
+			.prepare("SELECT stripe_event_created FROM user_subscriptions WHERE user_id = ?")
+			.bind(userId)
+			.first();
+
+		if (event.created <= Number(existing?.stripe_event_created || 0)) {
+			return {
+				success: true,
+				message: `Stale deletion for subscription ${subscription.id} ignored`,
+			};
+		}
+
 		await db
 			.prepare(`
-      INSERT OR REPLACE INTO user_subscriptions
-      (user_id, plan_type, status, stripe_subscription_id, updated_at)
-      VALUES (?, 'hobby', 'active', NULL, ?)
-    `)
-			.bind(userId, new Date().toISOString())
+	      INSERT INTO user_subscriptions
+	      (user_id, plan_type, status, stripe_subscription_id, stripe_event_created, updated_at)
+	      VALUES (?, 'hobby', 'active', NULL, ?, ?)
+	      ON CONFLICT(user_id) DO UPDATE SET
+	        plan_type = excluded.plan_type,
+	        status = excluded.status,
+	        stripe_subscription_id = NULL,
+	        cancel_at_period_end = FALSE,
+	        price = 0,
+	        stripe_price_id = NULL,
+	        stripe_event_created = excluded.stripe_event_created,
+	        updated_at = excluded.updated_at
+	    `)
+			.bind(userId, event.created, new Date().toISOString())
 			.run();
 
 		return {
@@ -744,85 +800,78 @@ async function findUserForSubscription(
 /**
  * Save subscription with error recovery and fallback
  */
-async function saveSubscriptionSafely(
+async function saveSubscription(
 	db: D1Database,
 	userId: string,
 	subscription: Stripe.Subscription,
 	stripeClient: Stripe,
 	eventType: string,
+	eventCreated: number,
 ): Promise<void> {
-	try {
-		// Extract data with fallbacks
-		const { start: periodStart, end: periodEnd } = extractSubscriptionPeriod(subscription);
-		const { price, billingInterval, priceId } = await extractSubscriptionPricing(
-			subscription,
-			stripeClient,
-		);
+	const { start: periodStart, end: periodEnd } = extractSubscriptionPeriod(subscription);
+	const { price, billingInterval, priceId } = await extractSubscriptionPricing(
+		subscription,
+		stripeClient,
+	);
+	const status = mapStripeStatus(subscription.status);
 
-		// Map status with fallback
-		const status = mapStripeStatus(subscription.status);
+	await db
+		.prepare(`
+	      INSERT INTO user_subscriptions
+	      (user_id, stripe_customer_id, stripe_subscription_id, plan_type, status,
+	       current_period_start, current_period_end, cancel_at_period_end,
+	       price, billing_interval, stripe_price_id, payment_type, stripe_event_created, updated_at)
+	      VALUES (?, ?, ?, 'pro', ?, ?, ?, ?, ?, ?, ?, 'subscription', ?, ?)
+	      ON CONFLICT(user_id) DO UPDATE SET
+	        stripe_customer_id = excluded.stripe_customer_id,
+	        stripe_subscription_id = excluded.stripe_subscription_id,
+	        plan_type = excluded.plan_type,
+	        status = excluded.status,
+	        current_period_start = excluded.current_period_start,
+	        current_period_end = excluded.current_period_end,
+	        cancel_at_period_end = excluded.cancel_at_period_end,
+	        price = excluded.price,
+	        billing_interval = excluded.billing_interval,
+	        stripe_price_id = excluded.stripe_price_id,
+	        payment_type = excluded.payment_type,
+	        stripe_event_created = excluded.stripe_event_created,
+	        updated_at = excluded.updated_at
+	    `)
+		.bind(
+			userId,
+			subscription.customer,
+			subscription.id,
+			status,
+			periodStart,
+			periodEnd,
+			subscription.cancel_at_period_end || false,
+			price,
+			billingInterval,
+			priceId,
+			eventCreated,
+			new Date().toISOString(),
+		)
+		.run();
 
-		// Atomic database operation
-		await db
-			.prepare(`
-      INSERT OR REPLACE INTO user_subscriptions
-      (user_id, stripe_customer_id, stripe_subscription_id, plan_type, status,
-       current_period_start, current_period_end, cancel_at_period_end,
-       price, billing_interval, stripe_price_id, payment_type, updated_at)
-      VALUES (?, ?, ?, 'pro', ?, ?, ?, ?, ?, ?, ?, 'subscription', ?)
-    `)
-			.bind(
-				userId,
-				subscription.customer,
-				subscription.id,
-				status,
-				periodStart,
-				periodEnd,
-				subscription.cancel_at_period_end || false,
-				price,
-				billingInterval,
-				priceId,
-				new Date().toISOString(),
-			)
-			.run();
+	if (eventType === "customer.subscription.created") {
+		try {
+			const userResult = await db
+				.prepare("SELECT email FROM users WHERE id = ?")
+				.bind(userId)
+				.first();
 
-		// Send Telegram notification only for new subscription creation
-		if (eventType === "customer.subscription.created") {
-			try {
-				// Get user email for notification
-				const userResult = await db
-					.prepare("SELECT email FROM users WHERE id = ?")
-					.bind(userId)
-					.first();
-
-				if (userResult?.email) {
-					const telegramMessage = `💳 New Subscription Payment
+			if (userResult?.email) {
+				const telegramMessage = `💳 New Subscription Payment
 Email: ${userResult.email}
 Plan: Pro Plan
 Amount: $${price}
 Billing: ${billingInterval}`;
 
-					await notifyTelegram(telegramMessage, "alerts");
-				}
-			} catch (notificationError) {
-				// Don't fail the subscription save if notification fails
-				console.warn("Failed to send subscription Telegram notification:", notificationError);
+				await notifyTelegram(telegramMessage, "alerts");
 			}
+		} catch (notificationError) {
+			console.warn("Failed to send subscription Telegram notification:", notificationError);
 		}
-	} catch (error) {
-		// If detailed save fails, save minimal data to prevent total loss
-		await db
-			.prepare(`
-      INSERT OR REPLACE INTO user_subscriptions
-      (user_id, stripe_customer_id, stripe_subscription_id, plan_type, status, payment_type, updated_at)
-      VALUES (?, ?, ?, 'pro', 'active', 'subscription', ?)
-    `)
-			.bind(userId, subscription.customer, subscription.id, new Date().toISOString())
-			.run();
-
-		throw new Error(
-			`Partial save completed due to: ${error instanceof Error ? error.message : "Unknown error"}`,
-		);
 	}
 }
 
@@ -897,12 +946,26 @@ async function handleOneTimePayment(
 
 		await db
 			.prepare(`
-				INSERT OR REPLACE INTO user_subscriptions
-				(user_id, stripe_customer_id, stripe_subscription_id, plan_type, status,
-				 current_period_start, current_period_end, cancel_at_period_end,
-				 price, billing_interval, stripe_price_id, payment_type, updated_at)
-				VALUES (?, ?, NULL, 'pro', 'active', ?, ?, FALSE, ?, ?, ?, 'one_time', ?)
-			`)
+					INSERT INTO user_subscriptions
+					(user_id, stripe_customer_id, stripe_subscription_id, plan_type, status,
+					 current_period_start, current_period_end, cancel_at_period_end,
+					 price, billing_interval, stripe_price_id, payment_type, stripe_event_created, updated_at)
+					VALUES (?, ?, NULL, 'pro', 'active', ?, ?, FALSE, ?, ?, ?, 'one_time', 0, ?)
+					ON CONFLICT(user_id) DO UPDATE SET
+					  stripe_customer_id = excluded.stripe_customer_id,
+					  stripe_subscription_id = NULL,
+					  plan_type = excluded.plan_type,
+					  status = excluded.status,
+					  current_period_start = excluded.current_period_start,
+					  current_period_end = excluded.current_period_end,
+					  cancel_at_period_end = excluded.cancel_at_period_end,
+					  price = excluded.price,
+					  billing_interval = excluded.billing_interval,
+					  stripe_price_id = excluded.stripe_price_id,
+					  payment_type = excluded.payment_type,
+					  stripe_event_created = 0,
+					  updated_at = excluded.updated_at
+				`)
 			.bind(
 				userId,
 				session.customer || null,
@@ -910,7 +973,7 @@ async function handleOneTimePayment(
 				periodEnd.toISOString(),
 				price,
 				billingInterval,
-				null,
+				priceId,
 				new Date().toISOString(),
 			)
 			.run();
@@ -945,7 +1008,7 @@ async function handleOneTimePayment(
 /**
  * Map Stripe status to internal status with fallback
  */
-function mapStripeStatus(stripeStatus: string): string {
+export function mapStripeStatus(stripeStatus: string): string {
 	const statusMap: Record<string, string> = {
 		active: "active",
 		canceled: "canceled",

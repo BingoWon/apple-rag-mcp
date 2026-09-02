@@ -8,6 +8,7 @@ import { authMiddleware } from "../middleware/auth";
 import type { User } from "../types";
 import { logger } from "../utils/logger";
 import { createOpenAPIApp } from "../utils/openapi";
+import { createStripeClient } from "../utils/stripe-client";
 
 const app = createOpenAPIApp();
 
@@ -439,7 +440,24 @@ app.openapi(deleteAccountRoute, async (c) => {
 	const user = c.get("user") as User;
 
 	try {
-		// Hard delete user - CASCADE DELETE will automatically remove all associated data
+		const subscription = await c.env.DB.prepare(
+			`SELECT payment_type, status, stripe_subscription_id
+			 FROM user_subscriptions
+			 WHERE user_id = ?`,
+		)
+			.bind(user.id)
+			.first();
+
+		if (
+			subscription?.payment_type === "subscription" &&
+			subscription.stripe_subscription_id &&
+			subscription.status !== "canceled"
+		) {
+			await createStripeClient(c.env.STRIPE_SECRET_KEY).subscriptions.cancel(
+				String(subscription.stripe_subscription_id),
+			);
+		}
+
 		await c.env.DB.prepare("DELETE FROM users WHERE id = ?").bind(user.id).run();
 
 		logger.info(

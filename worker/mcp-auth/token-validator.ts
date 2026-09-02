@@ -24,7 +24,7 @@ export class TokenValidator {
 			return { valid: false, error: "Invalid token format" };
 		}
 
-		const userData = await withD1Timeout(() => this.queryUserByToken(token), null, "token_lookup");
+		const userData = await withD1Timeout(() => this.queryUserByToken(token), "token_lookup");
 
 		if (!userData) {
 			return { valid: false, error: "Token not found" };
@@ -63,23 +63,19 @@ export class TokenValidator {
 	}
 
 	async getUserDataById(userId: string): Promise<UserTokenData> {
-		const result = await withD1Timeout(
-			async () => {
-				const res = await this.d1
-					.prepare("SELECT id, email, name FROM users WHERE id = ?")
-					.bind(userId)
-					.all();
-				if (!res.success || !res.results?.length) throw new Error("User not found");
-				const user = res.results[0] as Record<string, unknown>;
-				return {
-					userId: user.id as string,
-					email: user.email as string,
-					name: (user.name as string) || (user.email as string).split("@")[0],
-				};
-			},
-			null,
-			"user_lookup",
-		);
+		const result = await withD1Timeout(async () => {
+			const res = await this.d1
+				.prepare("SELECT id, email, name FROM users WHERE id = ?")
+				.bind(userId)
+				.all();
+			if (!res.success || !res.results?.length) throw new Error("User not found");
+			const user = res.results[0] as Record<string, unknown>;
+			return {
+				userId: user.id as string,
+				email: user.email as string,
+				name: (user.name as string) || (user.email as string).split("@")[0],
+			};
+		}, "user_lookup");
 
 		if (!result) throw new Error("User not found");
 		return result;
