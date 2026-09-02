@@ -1,5 +1,6 @@
 import { IconCheck, IconCopy } from "@tabler/icons-react";
 import { useState } from "react";
+import { copyText } from "@/utils/clipboard";
 
 interface CodeBlockProps {
 	filename: string;
@@ -10,7 +11,7 @@ export function CodeBlock({ filename, code }: CodeBlockProps) {
 	const [copied, setCopied] = useState(false);
 
 	const copyToClipboard = async () => {
-		await navigator.clipboard.writeText(code);
+		await copyText(code);
 		setCopied(true);
 		setTimeout(() => setCopied(false), 2000);
 	};

@@ -9,6 +9,7 @@ import { PaginationControls } from "@/components/ui/PaginationControls";
 import { Tabs } from "@/components/ui/usage-tabs";
 import { type PaginatedApiResponse, usePagination } from "@/hooks/usePagination";
 import { api } from "@/lib/api";
+import { copyText } from "@/utils/clipboard";
 
 interface UsageLog {
 	id: string;
@@ -118,7 +119,7 @@ export default function UsagePage() {
 								variant="ghost"
 								onClick={async () => {
 									try {
-										await navigator.clipboard.writeText(String(value));
+										await copyText(String(value));
 										toast.success(t("common.url_copied"));
 									} catch (_error) {
 										toast.error(t("common.copy_failed"));

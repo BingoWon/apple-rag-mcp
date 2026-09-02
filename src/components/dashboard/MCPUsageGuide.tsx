@@ -19,6 +19,7 @@ import { LoaderFive } from "@/components/ui/loader";
 import { MCPInstallButtons } from "@/components/ui/MCPInstallButtons";
 import { MCP_SERVER_NAME, MCP_SERVER_URL } from "@/constants/mcp";
 import { useDashboardStore } from "@/stores/dashboard";
+import { copyText } from "@/utils/clipboard";
 import { MCPConfigService } from "@/utils/mcpConfigService";
 
 export function MCPUsageGuide() {
@@ -91,7 +92,7 @@ export function MCPUsageGuide() {
 	// 通用复制函数
 	const copyToClipboard = async (text: string, successMessage: string) => {
 		try {
-			await navigator.clipboard.writeText(text);
+			await copyText(text);
 			toast.success(successMessage);
 		} catch (_error) {
 			toast.error(t("guide.copy_clipboard_failed"));

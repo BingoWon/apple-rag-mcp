@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { SUPPORTED_CLIENTS } from "@/constants/clients";
 import { MCP_SERVER_NAME, MCP_SERVER_URL } from "@/constants/mcp";
+import { copyText } from "@/utils/clipboard";
 
 const CONFIG_CODE = JSON.stringify(
 	{ mcpServers: { [MCP_SERVER_NAME]: { url: MCP_SERVER_URL } } },
@@ -15,7 +16,7 @@ export function QuickStartSection() {
 	const [copied, setCopied] = useState(false);
 
 	const handleCopy = async () => {
-		await navigator.clipboard.writeText(CONFIG_CODE);
+		await copyText(CONFIG_CODE);
 		setCopied(true);
 		setTimeout(() => setCopied(false), 2000);
 	};

@@ -1,4 +1,5 @@
 import type { User } from "@/types";
+import { copyText } from "@/utils/clipboard";
 
 export const MCP_TOKEN_DISPLAY_CONFIG = {
 	visibleLength: 16, // Show first 16 characters for better identification
@@ -28,7 +29,7 @@ export const copyMcpTokenToClipboard = async (
 	onError?: (message: string) => void,
 ): Promise<void> => {
 	try {
-		await navigator.clipboard.writeText(mcpToken);
+		await copyText(mcpToken);
 		onSuccess?.("MCP Token copied to clipboard");
 	} catch (_error) {
 		onError?.("Failed to copy MCP Token to clipboard");

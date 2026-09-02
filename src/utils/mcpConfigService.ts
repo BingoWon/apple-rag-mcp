@@ -1,4 +1,5 @@
 import { MCP_SERVER_NAME, MCP_SERVER_URL } from "@/constants/mcp";
+import { copyText } from "@/utils/clipboard";
 
 export type MCPClientType =
 	| "cursor"
@@ -126,7 +127,7 @@ export async function copyToClipboard(
 ): Promise<void> {
 	try {
 		const configJson = generateJsonString(options);
-		await navigator.clipboard.writeText(configJson);
+		await copyText(configJson);
 		onSuccess?.("MCP configuration copied to clipboard!");
 	} catch (error) {
 		console.error("Failed to copy to clipboard:", error);

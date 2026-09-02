@@ -6,6 +6,7 @@
  */
 
 import { showAugmentCodeWarning } from "@/utils/augmentCodeWarning";
+import { copyText } from "@/utils/clipboard";
 import { MCPConfigService } from "@/utils/mcpConfigService";
 
 export interface MCPClientConfig {
@@ -71,7 +72,7 @@ export const MCP_CLIENTS: MCPClientConfig[] = [
 		category: "copy",
 		action: async (token, serverUrl) => {
 			const toml = MCPConfigService.generateCodexTomlString(token, serverUrl);
-			await navigator.clipboard.writeText(toml);
+			await copyText(toml);
 			return "tokens.config_copied";
 		},
 	},
@@ -83,7 +84,7 @@ export const MCP_CLIENTS: MCPClientConfig[] = [
 		category: "copy",
 		action: async (token, serverUrl) => {
 			const command = MCPConfigService.generateClaudeCodeCommand(token, serverUrl);
-			await navigator.clipboard.writeText(command);
+			await copyText(command);
 			return "tokens.config_copied";
 		},
 	},
@@ -95,7 +96,7 @@ export const MCP_CLIENTS: MCPClientConfig[] = [
 		category: "copy",
 		action: async (token, serverUrl) => {
 			const json = MCPConfigService.generateAntigravityJsonString(token, serverUrl);
-			await navigator.clipboard.writeText(json);
+			await copyText(json);
 			return "tokens.config_copied";
 		},
 	},
@@ -111,7 +112,7 @@ export const MCP_CLIENTS: MCPClientConfig[] = [
 				serverUrl,
 				clientType: "augmentcode",
 			});
-			await navigator.clipboard.writeText(json);
+			await copyText(json);
 			showAugmentCodeWarning();
 			return "tokens.config_copied";
 		},
@@ -128,7 +129,7 @@ export const MCP_CLIENTS: MCPClientConfig[] = [
 				serverUrl,
 				clientType: "cline",
 			});
-			await navigator.clipboard.writeText(json);
+			await copyText(json);
 			return "tokens.config_copied";
 		},
 	},

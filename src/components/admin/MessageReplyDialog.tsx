@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/Button";
 import { api } from "@/lib/api";
 import { formatDateCompact } from "@/lib/datetime";
+import { copyText } from "@/utils/clipboard";
 
 interface ContactMessage {
 	id: string;
@@ -33,9 +34,13 @@ export function MessageReplyDialog({ message, onClose, onSuccess }: MessageReply
 	// Check if message has already been replied to
 	const isAlreadyReplied = !!message.admin_reply;
 
-	const handleCopyMessage = () => {
-		navigator.clipboard.writeText(message.message);
-		toast.success(t("admin.message_copied"));
+	const handleCopyMessage = async () => {
+		try {
+			await copyText(message.message);
+			toast.success(t("admin.message_copied"));
+		} catch {
+			toast.error(t("common.copy_failed"));
+		}
 	};
 
 	const handleSubmit = async (e: React.FormEvent) => {

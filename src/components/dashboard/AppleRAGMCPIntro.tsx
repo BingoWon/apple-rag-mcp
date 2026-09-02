@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { copyText } from "@/utils/clipboard";
 
 const REPO_URL = "https://github.com/BingoWon/apple-rag-mcp";
 const SKILL_DIR = "skills/apple-dev-docs/";
@@ -16,8 +17,8 @@ export function AppleRAGMCPIntro() {
 	const { t } = useTranslation();
 	const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
 
-	const handleCopy = (path: string, idx: number) => {
-		navigator.clipboard.writeText(path);
+	const handleCopy = async (path: string, idx: number) => {
+		await copyText(path);
 		setCopiedIdx(idx);
 		setTimeout(() => setCopiedIdx(null), 2000);
 	};
