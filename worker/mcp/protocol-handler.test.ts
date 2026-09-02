@@ -53,6 +53,7 @@ function createServices(): Services {
 				planType: "test",
 				limitType: "weekly",
 			}),
+			refund: async () => {},
 		},
 		logger: {
 			logSearch: () => {},

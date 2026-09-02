@@ -13,6 +13,13 @@ export async function handleScheduled(env: Env): Promise<void> {
 	logger.setAlertUrl(env.TELEGRAM_ALERT_BOT_URL);
 
 	try {
+		if (new Date().getUTCMinutes() < 5) {
+			await env.DB.prepare(
+				`DELETE FROM usage_counters
+				 WHERE (period = 'minute' AND window_start < datetime('now', '-2 days'))
+				    OR (period = 'weekly' AND window_start < datetime('now', '-14 days'))`,
+			).run();
+		}
 		await processAppleContent(env);
 	} catch (error) {
 		await logger.error(

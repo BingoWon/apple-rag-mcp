@@ -55,6 +55,7 @@ export class FetchTool {
 			const urlResult = validateAndNormalizeUrl(url);
 			if (!urlResult.isValid) {
 				logger.warn(`Invalid URL provided: ${url} - ${urlResult.error}`);
+				await this.services.rateLimit.refund(rateLimitResult);
 
 				return createToolErrorResult(`Invalid URL: ${urlResult.error}`);
 			}
@@ -65,6 +66,7 @@ export class FetchTool {
 			const responseTime = Date.now() - startTime;
 
 			if (!page) {
+				await this.services.rateLimit.refund(rateLimitResult);
 				this.logFetch(
 					authContext,
 					url,
@@ -94,6 +96,7 @@ export class FetchTool {
 
 			return createSuccessResult(formattedContent);
 		} catch (error) {
+			await this.services.rateLimit.refund(rateLimitResult);
 			this.logFetch(
 				authContext,
 				url,

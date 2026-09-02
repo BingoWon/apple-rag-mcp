@@ -79,43 +79,26 @@ app.openapi(getUserQuotaRoute, async (c) => {
 		const planType = await getUserPlanType(user.id, c.env.DB);
 		const quotaLimits = getPlanQuotas(planType);
 
-		// Get current week usage (successful RAG queries only)
 		const now = new Date();
 		const startOfWeek = new Date(now);
-		startOfWeek.setDate(now.getDate() - now.getDay());
-		startOfWeek.setHours(0, 0, 0, 0);
+		startOfWeek.setUTCDate(now.getUTCDate() - now.getUTCDay());
+		startOfWeek.setUTCHours(0, 0, 0, 0);
 
-		// Get usage from both search_logs and fetch_logs tables
-		const searchUsage = await c.env.DB.prepare(
-			`SELECT COUNT(*) as count
-       FROM search_logs
-       WHERE user_id = ?
-         AND created_at >= ?
-         AND status_code = 200`,
+		const usage = await c.env.DB.prepare(
+			`SELECT count
+			 FROM usage_counters
+			 WHERE identifier = ? AND period = 'weekly' AND window_start = ?`,
 		)
 			.bind(user.id, startOfWeek.toISOString())
 			.first();
 
-		const fetchUsage = await c.env.DB.prepare(
-			`SELECT COUNT(*) as count
-       FROM fetch_logs
-       WHERE user_id = ?
-         AND created_at >= ?
-         AND status_code = 200`,
-		)
-			.bind(user.id, startOfWeek.toISOString())
-			.first();
+		const currentUsage = Number(usage?.count) || 0;
+		const remaining = quotaLimits.week === -1 ? -1 : Math.max(0, quotaLimits.week - currentUsage);
+		const usagePercentage =
+			quotaLimits.week === -1 ? 0 : Math.round((currentUsage / quotaLimits.week) * 100);
 
-		const searchCount = Number(searchUsage?.count) || 0;
-		const fetchCount = Number(fetchUsage?.count) || 0;
-
-		const currentUsage = searchCount + fetchCount;
-		const remaining = Math.max(0, quotaLimits.week - currentUsage);
-		const usagePercentage = Math.round((currentUsage / quotaLimits.week) * 100);
-
-		// Calculate reset time (next Sunday)
 		const resetAt = new Date(startOfWeek);
-		resetAt.setDate(startOfWeek.getDate() + 7);
+		resetAt.setUTCDate(startOfWeek.getUTCDate() + 7);
 
 		const quotaResponse = {
 			current_usage: currentUsage,

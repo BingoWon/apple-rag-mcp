@@ -1,6 +1,6 @@
 import type { CallToolResult } from "@modelcontextprotocol/server";
 import { z } from "zod";
-import type { AuthContext, Services } from "../../mcp-types/index.js";
+import type { AuthContext, RateLimitResult, Services } from "../../mcp-types/index.js";
 import { logger } from "../../mcp-utils/logger.js";
 import { cleanQuerySafely } from "../../mcp-utils/query-cleaner.js";
 import { buildRateLimitMessage, extractClientInfo } from "../../mcp-utils/request-info.js";
@@ -45,13 +45,14 @@ export class SearchTool {
 		const requestedQuery = query;
 		const actualQuery = cleanQuerySafely(query);
 		const { ip: clientIP, country: countryCode } = extractClientInfo(httpRequest);
+		let rateLimitResult: RateLimitResult | undefined;
 
 		if (actualQuery !== requestedQuery) {
 			logger.info(`Query cleaned: "${requestedQuery}" -> "${actualQuery}"`);
 		}
 
 		try {
-			const rateLimitResult = await this.services.rateLimit.checkLimits(clientIP, authContext);
+			rateLimitResult = await this.services.rateLimit.checkLimits(clientIP, authContext);
 
 			if (!rateLimitResult.allowed) {
 				this.logSearch(
@@ -83,6 +84,9 @@ export class SearchTool {
 
 			return createSuccessResult(formattedResponse);
 		} catch (error) {
+			if (rateLimitResult?.allowed) {
+				await this.services.rateLimit.refund(rateLimitResult);
+			}
 			this.logSearch(
 				authContext,
 				requestedQuery,

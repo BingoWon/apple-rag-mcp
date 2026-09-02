@@ -92,10 +92,15 @@ export interface RateLimitResult {
 	minuteLimit?: number;
 	minuteRemaining?: number;
 	minuteResetAt?: string;
+	reservation?: {
+		identifier: string;
+		windows: Array<{ period: "weekly" | "minute"; windowStart: string }>;
+	};
 }
 
 export interface RateLimitService {
 	checkLimits(clientIP: string, authContext: AuthContext): Promise<RateLimitResult>;
+	refund(result: RateLimitResult): Promise<void>;
 }
 
 export type { D1Database, D1Result, ExecutionContext } from "@cloudflare/workers-types";
