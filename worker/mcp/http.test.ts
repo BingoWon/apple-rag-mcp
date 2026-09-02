@@ -57,3 +57,36 @@ test("rejects an untrusted Origin before service initialization", async () => {
 	};
 	assert.match(payload.error.message, /Invalid Origin/);
 });
+
+test("rejects legacy MCP protocol versions before service initialization", async () => {
+	const response = await worker.fetch(
+		new Request("https://mcp.apple-rag.com/", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				"MCP-Protocol-Version": "2025-11-25",
+			},
+			body: JSON.stringify({ jsonrpc: "2.0", id: "legacy", method: "ping" }),
+		}),
+		{} as never,
+		executionContext,
+	);
+
+	assert.equal(response.status, 400);
+	const payload = (await response.json()) as { error: { message: string } };
+	assert.match(payload.error.message, /2026-07-28/);
+});
+
+test("requires an explicit MCP protocol version", async () => {
+	const response = await worker.fetch(
+		new Request("https://mcp.apple-rag.com/", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ jsonrpc: "2.0", id: "missing", method: "ping" }),
+		}),
+		{} as never,
+		executionContext,
+	);
+
+	assert.equal(response.status, 400);
+});

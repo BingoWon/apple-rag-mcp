@@ -6,6 +6,7 @@ services:
     restart: unless-stopped
     stop_grace_period: 2m
     pids_limit: 128
+    mem_limit: 3g
     ports:
       - "0.0.0.0:5432:5432"
     environment:

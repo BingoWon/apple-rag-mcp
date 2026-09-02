@@ -3,6 +3,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { apiApp } from "./api/app.js";
 import { handleScheduled } from "./collector/handler.js";
+import { MCP_PROTOCOL_VERSION } from "./mcp/constants.js";
 import { HEALTH_STATUS, SERVER_MANIFEST } from "./mcp/manifest.js";
 import { MCPProtocolHandler } from "./mcp/protocol-handler.js";
 import { createServices } from "./mcp-services/index.js";
@@ -35,6 +36,21 @@ async function handleMCPRequest(c: {
 	const originRejection = originValidationResponse(c.req.raw, MCP_ALLOWED_ORIGIN_HOSTNAMES);
 	if (originRejection) {
 		return originRejection;
+	}
+
+	const protocolVersion = c.req.raw.headers.get("MCP-Protocol-Version");
+	if (protocolVersion !== MCP_PROTOCOL_VERSION) {
+		return Response.json(
+			{
+				jsonrpc: "2.0",
+				id: null,
+				error: {
+					code: -32600,
+					message: `MCP-Protocol-Version must be ${MCP_PROTOCOL_VERSION}`,
+				},
+			},
+			{ status: 400 },
+		);
 	}
 
 	configureTelegram(c.env.TELEGRAM_DEFAULT_BOT_URL);
