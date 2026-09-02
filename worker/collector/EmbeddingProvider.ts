@@ -10,7 +10,18 @@ const DEEPINFRA_CONFIG = {
 	MODEL: "Qwen/Qwen3-Embedding-4B",
 	DIMENSION: 2560,
 	TIMEOUT_MS: 30_000,
+	BATCH_SIZE: 32,
+	CONCURRENCY: 2,
 } as const;
+
+class EmbeddingRequestError extends Error {
+	constructor(
+		message: string,
+		readonly retryable: boolean,
+	) {
+		super(message);
+	}
+}
 
 export class BatchEmbeddingProvider {
 	constructor(private readonly apiKey: string) {
@@ -22,7 +33,7 @@ export class BatchEmbeddingProvider {
 
 		let lastError!: Error;
 
-		for (let i = 0; i < 3; i++) {
+		for (let attempt = 1; attempt <= 2; attempt++) {
 			try {
 				const res = await fetch(DEEPINFRA_CONFIG.API_URL, {
 					method: "POST",
@@ -39,11 +50,14 @@ export class BatchEmbeddingProvider {
 				});
 
 				if (!res.ok) {
-					throw new Error(`API error ${res.status}: ${await res.text().catch(() => "")}`);
+					throw new EmbeddingRequestError(
+						`API error ${res.status}: ${await res.text().catch(() => "")}`,
+						res.status === 429 || res.status >= 500,
+					);
 				}
 
 				const json = (await res.json()) as {
-					data: Array<{ embedding: number[] }>;
+					data: Array<{ embedding: number[]; index: number }>;
 				};
 
 				if (json.data?.length !== texts.length) {
@@ -52,15 +66,27 @@ export class BatchEmbeddingProvider {
 					);
 				}
 
-				return json.data.map((item) => this.l2Normalize(item.embedding));
+				const ordered = [...json.data].sort((a, b) => a.index - b.index);
+				if (
+					ordered.some(
+						(item, index) =>
+							item.index !== index || item.embedding.length !== DEEPINFRA_CONFIG.DIMENSION,
+					)
+				) {
+					throw new Error("Invalid embedding indices or dimensions");
+				}
+
+				return ordered.map((item) => this.l2Normalize(item.embedding));
 			} catch (e) {
 				lastError = e instanceof Error ? e : new Error(String(e));
+				if (attempt === 2 || (e instanceof EmbeddingRequestError && !e.retryable)) {
+					break;
+				}
+				await new Promise((resolve) => setTimeout(resolve, 250));
 			}
 		}
 
-		await logger.error(
-			`Embedding failed after 3 attempts (batch ${texts.length}): ${lastError.message}`,
-		);
+		await logger.error(`Embedding failed (batch ${texts.length}): ${lastError.message}`);
 		throw lastError;
 	}
 
@@ -72,5 +98,31 @@ export class BatchEmbeddingProvider {
 
 export async function createEmbeddings(texts: string[], apiKey: string): Promise<number[][]> {
 	if (!texts.length) return [];
-	return new BatchEmbeddingProvider(apiKey).encodeBatch(texts);
+
+	const provider = new BatchEmbeddingProvider(apiKey);
+	const batches = Array.from(
+		{ length: Math.ceil(texts.length / DEEPINFRA_CONFIG.BATCH_SIZE) },
+		(_, index) => {
+			const start = index * DEEPINFRA_CONFIG.BATCH_SIZE;
+			return { start, texts: texts.slice(start, start + DEEPINFRA_CONFIG.BATCH_SIZE) };
+		},
+	);
+	const embeddings = new Array<number[]>(texts.length);
+	let nextBatch = 0;
+
+	async function worker(): Promise<void> {
+		while (nextBatch < batches.length) {
+			const batch = batches[nextBatch++];
+			const encoded = await provider.encodeBatch(batch.texts);
+			encoded.forEach((embedding, index) => {
+				embeddings[batch.start + index] = embedding;
+			});
+		}
+	}
+
+	await Promise.all(
+		Array.from({ length: Math.min(DEEPINFRA_CONFIG.CONCURRENCY, batches.length) }, () => worker()),
+	);
+
+	return embeddings;
 }
