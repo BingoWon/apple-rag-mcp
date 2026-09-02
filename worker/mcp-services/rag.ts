@@ -62,8 +62,4 @@ export class RAGService {
 			mergedChunkIndices: result.mergedChunkIndices,
 		}));
 	}
-
-	async close(): Promise<void> {
-		await this.database?.close();
-	}
 }

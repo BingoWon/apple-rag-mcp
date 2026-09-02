@@ -6,7 +6,8 @@
 
 - `docker-compose.yml` runs PostgreSQL 16 with pgvector.
 - `postgresql.conf` contains the production tuning and observability settings.
-- `pg_hba.conf` requires TLS for remote connections.
+- `pg_hba.conf` requires SCRAM authentication for remote connections.
+- `configure_firewall.sh` exposes PostgreSQL through UFW and removes conflicting Docker reset rules.
 - `postgresql_canonicalize_urls.sql` is the one-time Apple URL deduplication migration.
 - `postgresql_indexes.sql` and `postgresql_runtime_maintenance.sql` contain online maintenance changes.
 

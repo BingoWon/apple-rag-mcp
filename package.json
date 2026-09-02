@@ -1,6 +1,6 @@
 {
 	"name": "apple-rag-mcp",
-	"version": "5.0.1",
+	"version": "5.0.2",
 	"private": true,
 	"license": "MIT",
 	"type": "module",
@@ -13,7 +13,7 @@
 		"dev": "vite",
 		"prebuild": "pnpm verify",
 		"build": "vite build",
-		"test": "tsx --test worker/api/routes/*.test.ts worker/collector/*.test.ts worker/collector/utils/*.test.ts worker/mcp/*.test.ts worker/mcp-services/*.test.ts worker/shared/*.test.ts",
+		"test": "tsx --test worker/api/routes/*.test.ts worker/collector/*.test.ts worker/mcp/*.test.ts worker/mcp-services/*.test.ts worker/shared/*.test.ts",
 		"lint": "biome check .",
 		"lint:fix": "biome check --write .",
 		"typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p worker/tsconfig.json",

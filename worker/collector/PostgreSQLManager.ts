@@ -1,7 +1,7 @@
 import type postgres from "postgres";
+import { retryTransientPostgres } from "../shared/postgres-retry.js";
 import type { DatabaseRecord, DatabaseStats } from "./types/index.js";
 import { logger } from "./utils/logger.js";
-import { retryTransientPostgres } from "./utils/postgres-retry.js";
 
 class PostgreSQLManager {
 	private static readonly URL_INSERT_BATCH_SIZE = 100;

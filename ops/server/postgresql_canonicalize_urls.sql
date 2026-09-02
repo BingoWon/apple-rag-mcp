@@ -24,17 +24,17 @@ ranked AS (
 			PARTITION BY canonical_url
 			ORDER BY chunk_count DESC, updated_at DESC NULLS LAST, content_length DESC, id
 		) AS rank,
-		MAX(id) FILTER (WHERE url = canonical_url) OVER (PARTITION BY canonical_url) AS lowercase_id
+		MAX(id::text) FILTER (WHERE url = canonical_url) OVER (PARTITION BY canonical_url) AS lowercase_id
 	FROM page_stats
 )
 SELECT
 	canonical_url,
-	MAX(id) FILTER (WHERE rank = 1) AS winner_id,
+	(MAX(id::text) FILTER (WHERE rank = 1))::uuid AS winner_id,
 	MAX(url) FILTER (WHERE rank = 1) AS winner_url,
 	COALESCE(
 		MAX(lowercase_id),
-		MAX(id) FILTER (WHERE rank = 1)
-	) AS target_id
+		MAX(id::text) FILTER (WHERE rank = 1)
+	)::uuid AS target_id
 FROM ranked
 WHERE alias_count > 1
 GROUP BY canonical_url;
@@ -97,9 +97,6 @@ END
 $$;
 
 COMMIT;
-
-CREATE UNIQUE INDEX CONCURRENTLY IF NOT EXISTS idx_pages_url_casefold
-ON public.pages (lower(url));
 
 ANALYZE public.pages;
 ANALYZE public.chunks;

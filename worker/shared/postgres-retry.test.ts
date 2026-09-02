@@ -9,6 +9,12 @@ test("recognizes transient PostgreSQL connection errors", () => {
 		isTransientPostgresConnectionError(new Error("write CONNECTION_CLOSED 75.127.7.212:5432")),
 		true,
 	);
+	assert.equal(
+		isTransientPostgresConnectionError(
+			new Error("proxy request failed, cannot connect to the specified address"),
+		),
+		true,
+	);
 	assert.equal(isTransientPostgresConnectionError({ code: "23505" }), false);
 });
 

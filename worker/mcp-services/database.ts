@@ -5,18 +5,22 @@
 import postgres from "postgres";
 import type { AppConfig, SearchOptions, SearchResult } from "../mcp-types/index.js";
 import { logger } from "../mcp-utils/logger.js";
+import { isTransientPostgresConnectionError } from "../shared/postgres-retry.js";
 
 export class DatabaseService {
 	private sql: ReturnType<typeof postgres>;
-	constructor(config: AppConfig) {
-		// Direct PostgreSQL connection - no checks, no logs
-		this.sql = postgres({
-			host: config.RAG_DB_HOST,
-			port: config.RAG_DB_PORT,
-			database: config.RAG_DB_DATABASE,
-			username: config.RAG_DB_USER,
-			password: config.RAG_DB_PASSWORD,
-			ssl: config.RAG_DB_SSLMODE === "require",
+	constructor(private config: AppConfig) {
+		this.sql = this.createClient();
+	}
+
+	private createClient(): ReturnType<typeof postgres> {
+		return postgres({
+			host: this.config.RAG_DB_HOST,
+			port: this.config.RAG_DB_PORT,
+			database: this.config.RAG_DB_DATABASE,
+			username: this.config.RAG_DB_USER,
+			password: this.config.RAG_DB_PASSWORD,
+			ssl: this.config.RAG_DB_SSLMODE === "require",
 			max: 1,
 			idle_timeout: 30,
 			connect_timeout: 10,
@@ -31,11 +35,19 @@ export class DatabaseService {
 		});
 	}
 
-	/**
-	 * Initialize database - no checks, trust ready state
-	 */
-	async initialize(): Promise<void> {
-		// Database assumed ready - no checks, no logs, instant return
+	private async withReconnect<T>(
+		operation: (sql: ReturnType<typeof postgres>) => Promise<T>,
+	): Promise<T> {
+		try {
+			return await operation(this.sql);
+		} catch (error) {
+			if (!isTransientPostgresConnectionError(error)) throw error;
+
+			logger.warn(`PostgreSQL connection reset, rebuilding pool: ${String(error)}`);
+			await this.sql.end({ timeout: 0 }).catch(() => {});
+			this.sql = this.createClient();
+			return operation(this.sql);
+		}
 	}
 
 	/**
@@ -48,13 +60,15 @@ export class DatabaseService {
 		const { resultCount = 5 } = options;
 
 		try {
-			const results = await this.sql`
-        SELECT id, url, title, content, chunk_index, total_chunks
-        FROM chunks
-        WHERE embedding IS NOT NULL
-        ORDER BY embedding <=> ${JSON.stringify(queryEmbedding)}::halfvec
-        LIMIT ${resultCount}
-      `;
+			const results = await this.withReconnect(
+				(sql) => sql`
+	        SELECT id, url, title, content, chunk_index, total_chunks
+	        FROM chunks
+	        WHERE embedding IS NOT NULL
+	        ORDER BY embedding <=> ${JSON.stringify(queryEmbedding)}::halfvec
+	        LIMIT ${resultCount}
+	      `,
+			);
 
 			return results.map((row) => ({
 				id: row.id as string,
@@ -82,13 +96,15 @@ export class DatabaseService {
 		const { resultCount = 5 } = options;
 
 		try {
-			const results = await this.sql`
-        SELECT id, url, title, content, chunk_index, total_chunks
-        FROM chunks
-        WHERE to_tsvector('simple', COALESCE(title, '') || ' ' || content)
-              @@ plainto_tsquery('simple', ${query})
-        LIMIT ${resultCount}
-      `;
+			const results = await this.withReconnect(
+				(sql) => sql`
+	        SELECT id, url, title, content, chunk_index, total_chunks
+	        FROM chunks
+	        WHERE to_tsvector('simple', COALESCE(title, '') || ' ' || content)
+	              @@ plainto_tsquery('simple', ${query})
+	        LIMIT ${resultCount}
+	      `,
+			);
 
 			return results.map((row) => ({
 				id: row.id as string,
@@ -140,12 +156,14 @@ export class DatabaseService {
 
 		try {
 			// Try exact match first
-			let results = await this.sql`
-        SELECT id, url, title, content
-        FROM pages
-        WHERE url = ${normalizedUrl}
-        LIMIT 1
-      `;
+			let results = await this.withReconnect(
+				(sql) => sql`
+	        SELECT id, url, title, content
+	        FROM pages
+	        WHERE url = ${normalizedUrl}
+	        LIMIT 1
+	      `,
+			);
 
 			// If no exact match, try flexible matching
 			if (results.length === 0) {
@@ -154,12 +172,14 @@ export class DatabaseService {
 					? normalizedUrl.slice(0, -1)
 					: `${normalizedUrl}/`;
 
-				results = await this.sql`
-          SELECT id, url, title, content
-          FROM pages
-          WHERE url = ${alternativeUrl}
-          LIMIT 1
-        `;
+				results = await this.withReconnect(
+					(sql) => sql`
+	          SELECT id, url, title, content
+	          FROM pages
+	          WHERE url = ${alternativeUrl}
+	          LIMIT 1
+	        `,
+				);
 			}
 
 			if (results.length === 0) {
@@ -178,18 +198,6 @@ export class DatabaseService {
 				`Database page lookup failed (operation: page_lookup, url: ${url.substring(0, 100)}, normalizedUrl: ${this.normalizeUrl(url).substring(0, 100)}): ${String(error)}`,
 			);
 			throw new Error(`Page lookup failed: ${error}`);
-		}
-	}
-
-	/**
-	 * Close database connection
-	 */
-	async close(): Promise<void> {
-		try {
-			await this.sql.end();
-		} catch (error) {
-			logger.error(`Database close failed (operation: database_close): ${String(error)}`);
-			// Don't re-throw - closing errors are not critical
 		}
 	}
 }

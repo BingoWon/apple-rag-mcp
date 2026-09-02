@@ -69,7 +69,7 @@ export function isTransientPostgresConnectionError(error: unknown): boolean {
 	}
 
 	const message = error instanceof Error ? error.message : String(error);
-	return /CONNECTION_(?:CLOSED|DESTROYED|ENDED)|CONNECT_TIMEOUT|ECONNRESET|EPIPE|ETIMEDOUT|connection reset|socket (?:closed|ended)|broken pipe/i.test(
+	return /CONNECTION_(?:CLOSED|DESTROYED|ENDED)|CONNECT_TIMEOUT|ECONNRESET|EPIPE|ETIMEDOUT|connection reset|socket (?:closed|ended)|broken pipe|proxy request failed|cannot connect to the specified address/i.test(
 		message,
 	);
 }
