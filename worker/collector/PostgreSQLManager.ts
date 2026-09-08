@@ -53,11 +53,12 @@ class PostgreSQLManager {
 
 			insertedCount += await retryTransientPostgres(
 				async () => {
+					// Skip duplicates from both url and lower(url) unique indexes.
 					const result = await this.sql`
             INSERT INTO pages ${this.sql(
 							urlBatch.map((url) => ({ url, collect_count: newUrlCollectCount })),
 						)}
-            ON CONFLICT (url) DO NOTHING
+            ON CONFLICT DO NOTHING
           `;
 					return result.count;
 				},
