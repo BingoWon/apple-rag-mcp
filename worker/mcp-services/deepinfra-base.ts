@@ -68,7 +68,7 @@ export abstract class DeepInfraService<TRequest, TResponse, TResult> {
 				"Content-Type": "application/json",
 				"User-Agent": DEEPINFRA_CONFIG.USER_AGENT,
 			},
-			body: JSON.stringify(payload),
+			body: JSON.stringify({ ...(payload as Record<string, unknown>), fail_fast: true }),
 			signal: AbortSignal.timeout(DEEPINFRA_CONFIG.TIMEOUT_MS),
 		});
 
