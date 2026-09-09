@@ -96,15 +96,35 @@ export class DatabaseService {
 		const { resultCount = 5 } = options;
 
 		try {
-			const results = await this.withReconnect(
+			let results = await this.withReconnect(
 				(sql) => sql`
 	        SELECT id, url, title, content, chunk_index, total_chunks
 	        FROM chunks
 	        WHERE to_tsvector('simple', COALESCE(title, '') || ' ' || content)
 	              @@ plainto_tsquery('simple', ${query})
-	        LIMIT ${resultCount}
-	      `,
+						LIMIT ${resultCount}
+			      `,
 			);
+
+			// Relax to distinctive technical terms when no chunk contains the entire query.
+			if (results.length === 0) {
+				const terms = extractKeywordTerms(query);
+				const fallbackQuery = terms.map((term) => `"${term}"`).join(" OR ");
+
+				results = await this.withReconnect(
+					(sql) => sql`
+						SELECT id, url, title, content, chunk_index, total_chunks
+						FROM chunks
+						WHERE to_tsvector('simple', COALESCE(title, '') || ' ' || content)
+							@@ websearch_to_tsquery('simple', ${fallbackQuery})
+						ORDER BY ts_rank(
+							to_tsvector('simple', COALESCE(title, '') || ' ' || content),
+							websearch_to_tsquery('simple', ${fallbackQuery})
+						) DESC
+						LIMIT ${resultCount}
+					`,
+				);
+			}
 
 			return results.map((row) => ({
 				id: row.id as string,
@@ -204,4 +224,12 @@ export class DatabaseService {
 	async close(): Promise<void> {
 		await this.sql.end({ timeout: 0 }).catch(() => {});
 	}
+}
+
+function extractKeywordTerms(query: string): string[] {
+	const terms = query.match(/[\p{L}\p{N}_]+/gu) ?? [];
+	const technicalTerms = terms.filter((term) => /^[a-z].*[A-Z]|^[A-Z].*[A-Z]/.test(term));
+	const fallbackTerms =
+		technicalTerms.length > 0 ? technicalTerms : [...terms].sort((a, b) => b.length - a.length);
+	return [...new Set(fallbackTerms)].slice(0, 4);
 }
