@@ -1,6 +1,6 @@
 /**
  * Embedding Provider - DeepInfra API
- * Batched input requests against the standard embedding model with 3x retry.
+ * Batched input requests against the standard embedding model with retry support.
  */
 
 import { logger } from "./utils/logger.js";
@@ -11,13 +11,17 @@ const DEEPINFRA_CONFIG = {
 	DIMENSION: 2560,
 	TIMEOUT_MS: 30_000,
 	BATCH_SIZE: 32,
-	CONCURRENCY: 2,
+	CONCURRENCY: 1,
+	MAX_ATTEMPTS: 5,
+	RETRY_BASE_DELAY_MS: 1_000,
+	RETRY_MAX_DELAY_MS: 30_000,
 } as const;
 
 class EmbeddingRequestError extends Error {
 	constructor(
 		message: string,
 		readonly retryable: boolean,
+		readonly retryAfterMs?: number,
 	) {
 		super(message);
 	}
@@ -33,7 +37,7 @@ export class BatchEmbeddingProvider {
 
 		let lastError!: Error;
 
-		for (let attempt = 1; attempt <= 2; attempt++) {
+		for (let attempt = 1; attempt <= DEEPINFRA_CONFIG.MAX_ATTEMPTS; attempt++) {
 			try {
 				const res = await fetch(DEEPINFRA_CONFIG.API_URL, {
 					method: "POST",
@@ -53,6 +57,7 @@ export class BatchEmbeddingProvider {
 					throw new EmbeddingRequestError(
 						`API error ${res.status}: ${await res.text().catch(() => "")}`,
 						res.status === 429 || res.status >= 500,
+						parseRetryAfter(res.headers.get("retry-after")),
 					);
 				}
 
@@ -79,14 +84,25 @@ export class BatchEmbeddingProvider {
 				return ordered.map((item) => this.l2Normalize(item.embedding));
 			} catch (e) {
 				lastError = e instanceof Error ? e : new Error(String(e));
-				if (attempt === 2 || (e instanceof EmbeddingRequestError && !e.retryable)) {
+				if (
+					attempt === DEEPINFRA_CONFIG.MAX_ATTEMPTS ||
+					(e instanceof EmbeddingRequestError && !e.retryable)
+				) {
 					break;
 				}
-				await new Promise((resolve) => setTimeout(resolve, 250));
+
+				const retryAfterMs = e instanceof EmbeddingRequestError ? e.retryAfterMs : undefined;
+				const delayMs =
+					retryAfterMs ??
+					Math.min(
+						DEEPINFRA_CONFIG.RETRY_MAX_DELAY_MS,
+						DEEPINFRA_CONFIG.RETRY_BASE_DELAY_MS * 2 ** (attempt - 1),
+					);
+				await new Promise((resolve) => setTimeout(resolve, delayMs));
 			}
 		}
 
-		await logger.error(`Embedding failed (batch ${texts.length}): ${lastError.message}`);
+		logger.warn(`Embedding failed (batch ${texts.length}): ${lastError.message}`);
 		throw lastError;
 	}
 
@@ -94,6 +110,12 @@ export class BatchEmbeddingProvider {
 		const norm = Math.sqrt(vector.reduce((sum, val) => sum + val * val, 0));
 		return norm === 0 ? vector : vector.map((val) => val / norm);
 	}
+}
+
+function parseRetryAfter(value: string | null): number | undefined {
+	if (!value) return undefined;
+	const seconds = Number(value);
+	return Number.isFinite(seconds) && seconds >= 0 ? seconds * 1_000 : undefined;
 }
 
 export async function createEmbeddings(texts: string[], apiKey: string): Promise<number[][]> {

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { createEmbeddings } from "./EmbeddingProvider.js";
+import { BatchEmbeddingProvider, createEmbeddings } from "./EmbeddingProvider.js";
 
 test("embeds large inputs in bounded batches while preserving order", async () => {
 	const originalFetch = globalThis.fetch;
@@ -32,6 +32,42 @@ test("embeds large inputs in bounded batches while preserving order", async () =
 			[6, 32, 32],
 		);
 		assert.ok(output.every((embedding) => embedding[0] === 1));
+	} finally {
+		globalThis.fetch = originalFetch;
+	}
+});
+
+test("retries an overloaded model and succeeds", async () => {
+	const originalFetch = globalThis.fetch;
+	let calls = 0;
+
+	globalThis.fetch = (async (_input, init) => {
+		calls++;
+		const body = JSON.parse(String(init?.body)) as { input: string[] };
+		if (calls < 3) {
+			return new Response(
+				JSON.stringify({
+					error: {
+						message: "Model busy, retry later",
+						code: "engine_overloaded",
+					},
+				}),
+				{ status: 429, headers: { "Retry-After": "0" } },
+			);
+		}
+
+		return Response.json({
+			data: body.input.map((_, index) => ({
+				index,
+				embedding: Array.from({ length: 2560 }, (_, dimension) => (dimension === 0 ? 1 : 0)),
+			})),
+		});
+	}) as typeof fetch;
+
+	try {
+		const result = await new BatchEmbeddingProvider("test-key").encodeBatch(["retry me"]);
+		assert.equal(calls, 3);
+		assert.equal(result.length, 1);
 	} finally {
 		globalThis.fetch = originalFetch;
 	}
