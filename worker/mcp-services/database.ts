@@ -7,6 +7,8 @@ import type { AppConfig, SearchOptions, SearchResult } from "../mcp-types/index.
 import { logger } from "../mcp-utils/logger.js";
 import { isTransientPostgresConnectionError } from "../shared/postgres-retry.js";
 
+const KEYWORD_CANDIDATES_PER_TERM = 64;
+
 export class DatabaseService {
 	private sql: ReturnType<typeof postgres>;
 	constructor(private config: AppConfig) {
@@ -28,6 +30,8 @@ export class DatabaseService {
 			prepare: true,
 			connection: {
 				application_name: "apple-rag-mcp",
+				statement_timeout: 2_000,
+				lock_timeout: 500,
 			},
 			transform: {
 				undefined: null,
@@ -94,6 +98,9 @@ export class DatabaseService {
 	 */
 	async keywordSearch(query: string, options: SearchOptions = {}): Promise<SearchResult[]> {
 		const { resultCount = 5 } = options;
+		const startedAt = Date.now();
+		let exactMs = 0;
+		let terms: string[] = [];
 
 		try {
 			let results = await this.withReconnect(
@@ -102,29 +109,51 @@ export class DatabaseService {
 	        FROM chunks
 	        WHERE to_tsvector('simple', COALESCE(title, '') || ' ' || content)
 	              @@ plainto_tsquery('simple', ${query})
-						LIMIT ${resultCount}
-			      `,
+	        LIMIT ${resultCount}
+	      `,
 			);
+			exactMs = Date.now() - startedAt;
 
-			// Relax to distinctive technical terms when no chunk contains the entire query.
 			if (results.length === 0) {
-				const terms = extractKeywordTerms(query);
-				const fallbackQuery = terms.map((term) => `"${term}"`).join(" OR ");
+				terms = extractKeywordTerms(query);
+				if (terms.length > 0) {
+					const fallbackQuery = terms.map((term) => `"${term}"`).join(" OR ");
+					results = await this.withReconnect((sql) => {
+						// Include focused multi-term matches before broad single-term candidates.
+						const queries = terms.length > 1 ? [terms.join(" "), ...terms] : terms;
+						// ponytail: at most 256 candidates before ranking; expand only with recall evidence.
+						const limit = Math.min(KEYWORD_CANDIDATES_PER_TERM, Math.floor(256 / queries.length));
+						const candidates = queries
+							.map(
+								(term) => sql`(
+									SELECT id FROM chunks
+									WHERE to_tsvector('simple', COALESCE(title, '') || ' ' || content)
+										@@ plainto_tsquery('simple', ${term})
+									LIMIT ${limit}
+								)`,
+							)
+							.reduce((left, right) => sql`${left} UNION ${right}`);
 
-				results = await this.withReconnect(
-					(sql) => sql`
-						SELECT id, url, title, content, chunk_index, total_chunks
-						FROM chunks
-						WHERE to_tsvector('simple', COALESCE(title, '') || ' ' || content)
-							@@ websearch_to_tsquery('simple', ${fallbackQuery})
-						ORDER BY ts_rank(
-							to_tsvector('simple', COALESCE(title, '') || ' ' || content),
-							websearch_to_tsquery('simple', ${fallbackQuery})
-						) DESC
-						LIMIT ${resultCount}
-					`,
-				);
+						return sql`
+							WITH candidate_ids AS MATERIALIZED (${candidates})
+							SELECT id, url, title, content, chunk_index, total_chunks
+							FROM chunks JOIN candidate_ids USING (id)
+							ORDER BY (
+								to_tsvector('simple', COALESCE(title, '') || ' ' || content)
+									@@ plainto_tsquery('simple', ${terms.join(" ")})
+							) DESC, ts_rank(
+								to_tsvector('simple', COALESCE(title, '') || ' ' || content),
+								websearch_to_tsquery('simple', ${fallbackQuery})
+							) DESC, id
+							LIMIT ${resultCount}
+						`;
+					});
+				}
 			}
+
+			logger.info(
+				`Keyword retrieval: ${JSON.stringify({ exactMs, fallbackMs: Date.now() - startedAt - exactMs, terms, results: results.length })}`,
+			);
 
 			return results.map((row) => ({
 				id: row.id as string,
@@ -137,7 +166,7 @@ export class DatabaseService {
 			}));
 		} catch (error) {
 			logger.error(
-				`Database keyword search failed (operation: keyword_search, query: ${query.substring(0, 50)}, resultCount: ${resultCount}): ${String(error)}`,
+				`Database keyword search failed (operation: keyword_search, elapsedMs: ${Date.now() - startedAt}, query: ${query.substring(0, 50)}, resultCount: ${resultCount}): ${String(error)}`,
 			);
 			throw new Error(`Keyword search failed: ${error}`);
 		}
@@ -227,9 +256,21 @@ export class DatabaseService {
 }
 
 function extractKeywordTerms(query: string): string[] {
-	const terms = query.match(/[\p{L}\p{N}_]+/gu) ?? [];
+	const terms = (query.match(/[\p{L}\p{N}_]+/gu) ?? []).filter(
+		(term) =>
+			term.length > 1 &&
+			/[\p{L}]/u.test(term) &&
+			!KEYWORD_CONTEXT_TERMS.has(term.toLowerCase()) &&
+			!/^wwdc\d*$/i.test(term),
+	);
 	const technicalTerms = terms.filter((term) => /^[a-z].*[A-Z]|^[A-Z].*[A-Z]/.test(term));
-	const fallbackTerms =
-		technicalTerms.length > 0 ? technicalTerms : [...terms].sort((a, b) => b.length - a.length);
-	return [...new Set(fallbackTerms)].slice(0, 4);
+	const fallbackTerms = technicalTerms.length > 0 ? technicalTerms : terms;
+	return [...new Set(fallbackTerms.map((term) => term.toLowerCase()))].slice(0, 8);
 }
+
+// Platform labels occur on most document titles; they are context, not independent topics.
+const KEYWORD_CONTEXT_TERMS = new Set(
+	"apple ios ipados macos tvos watchos visionos iphone ipad mac api sdk the and or for with from into how what when where which this that these those does using new".split(
+		" ",
+	),
+);

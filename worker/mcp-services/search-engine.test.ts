@@ -93,3 +93,24 @@ test("throws when both retrieval modes fail", async () => {
 
 	await assert.rejects(() => engine.search("A"), /both failed/);
 });
+
+test("preserves semantic results when keyword retrieval is canceled", async () => {
+	const engine = createEngine({
+		semantic: [result("a", "https://developer.apple.com/documentation/a", "A")],
+		keyword: new Error("canceling statement due to statement timeout"),
+	});
+	assert.equal((await engine.search("A")).results[0].id, "a");
+});
+
+test("does not report an empty successful search when one retrieval mode is unavailable", async () => {
+	for (const options of [
+		{ semantic: new Error("embedding unavailable"), keyword: [] },
+		{ semantic: [], keyword: new Error("statement timeout") },
+	]) {
+		await assert.rejects(createEngine(options).search("A"), /Search incomplete/);
+	}
+});
+
+test("returns an empty result when both retrieval modes successfully find no matches", async () => {
+	assert.deepEqual(await createEngine().search("unknown"), { results: [], additionalUrls: [] });
+});
