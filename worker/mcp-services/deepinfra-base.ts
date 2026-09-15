@@ -9,8 +9,6 @@ import { logger } from "../mcp-utils/logger.js";
 export const DEEPINFRA_CONFIG = {
 	BASE_URL: "https://api.deepinfra.com",
 	TIMEOUT_MS: 5_000,
-	RERANK_MODEL_TIMEOUT_MS: 2_000,
-	RERANK_TOTAL_TIMEOUT_MS: 4_000,
 	USER_AGENT: `Apple-RAG-MCP/${packageJson.version}`,
 	EMBEDDING_MODEL: "Qwen/Qwen3-Embedding-4B",
 	RERANKER_MODEL_PRIMARY: "Qwen/Qwen3-Reranker-8B",
@@ -38,30 +36,21 @@ export abstract class DeepInfraService<TRequest, TResponse, TResult> {
 	protected async call(input: TRequest, operationName: string): Promise<TResult> {
 		const startTime = Date.now();
 		const payload = this.buildPayload(input);
-		const signal = AbortSignal.timeout(DEEPINFRA_CONFIG.TIMEOUT_MS);
 		let lastError!: Error;
 
 		for (let attempt = 1; attempt <= 2; attempt++) {
 			try {
-				signal.throwIfAborted();
-				const json = await this.singleRequest(this.endpoint, payload, signal);
+				const json = await this.singleRequest(this.endpoint, payload);
 				logger.info(
 					`${operationName} completed (${((Date.now() - startTime) / 1000).toFixed(1)}s)`,
 				);
 				return this.processResponse(json, input);
 			} catch (e) {
 				lastError = e instanceof Error ? e : new Error(String(e));
-				if (
-					signal.aborted ||
-					attempt === 2 ||
-					(e instanceof DeepInfraRequestError && !e.retryable)
-				) {
+				if (attempt === 2 || (e instanceof DeepInfraRequestError && !e.retryable)) {
 					break;
 				}
-				const remainingMs = DEEPINFRA_CONFIG.TIMEOUT_MS - (Date.now() - startTime);
-				await new Promise((resolve) =>
-					setTimeout(resolve, Math.max(0, Math.min(150, remainingMs))),
-				);
+				await new Promise((resolve) => setTimeout(resolve, 150));
 			}
 		}
 
@@ -71,11 +60,7 @@ export abstract class DeepInfraService<TRequest, TResponse, TResult> {
 		throw lastError;
 	}
 
-	protected async singleRequest(
-		endpoint: string,
-		payload: unknown,
-		signal = AbortSignal.timeout(DEEPINFRA_CONFIG.TIMEOUT_MS),
-	): Promise<TResponse> {
+	protected async singleRequest(endpoint: string, payload: unknown): Promise<TResponse> {
 		const res = await fetch(`${DEEPINFRA_CONFIG.BASE_URL}${endpoint}`, {
 			method: "POST",
 			headers: {
@@ -83,8 +68,8 @@ export abstract class DeepInfraService<TRequest, TResponse, TResult> {
 				"Content-Type": "application/json",
 				"User-Agent": DEEPINFRA_CONFIG.USER_AGENT,
 			},
-			body: JSON.stringify({ ...(payload as Record<string, unknown>), fail_fast: true }),
-			signal,
+			body: JSON.stringify(payload),
+			signal: AbortSignal.timeout(DEEPINFRA_CONFIG.TIMEOUT_MS),
 		});
 
 		if (!res.ok) {

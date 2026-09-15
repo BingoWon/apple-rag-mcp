@@ -107,15 +107,6 @@ export class SearchEngine {
 		const processedResults = this.processResults(mergedCandidates);
 
 		if (processedResults.length === 0) {
-			const failures = [semanticOutcome, keywordOutcome]
-				.filter((outcome) => outcome.status === "rejected")
-				.map((outcome) => outcome.reason);
-			if (failures.length > 0) {
-				throw new AggregateError(
-					failures,
-					"Search incomplete: retrieval unavailable and no fallback results",
-				);
-			}
 			return { results: [], additionalUrls: [] };
 		}
 
@@ -175,11 +166,10 @@ export class SearchEngine {
 		const startTime = Date.now();
 
 		const queryEmbedding = await this.embedding.createEmbedding(query);
-		const embeddingMs = Date.now() - startTime;
 		const results = await this.database.semanticSearch(queryEmbedding, { resultCount });
 
 		logger.info(
-			`Semantic search completed (${((Date.now() - startTime) / 1000).toFixed(1)}s): ${results.length} results (embeddingMs: ${embeddingMs}, vectorMs: ${Date.now() - startTime - embeddingMs})`,
+			`Semantic search completed (${((Date.now() - startTime) / 1000).toFixed(1)}s): ${results.length} results`,
 		);
 
 		return results;
