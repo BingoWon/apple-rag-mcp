@@ -68,9 +68,11 @@ export class RerankerService extends DeepInfraService<
 		const startTime = Date.now();
 		const payload = this.buildPayload(input);
 		const errors: string[] = [];
+		const signal = AbortSignal.timeout(DEEPINFRA_CONFIG.RERANK_TOTAL_TIMEOUT_MS);
 
 		for (const model of RerankerService.MODELS) {
-			const result = await this.tryModel(model, payload, input);
+			if (signal.aborted) break;
+			const result = await this.tryModel(model, payload, input, signal);
 			if (result.success) {
 				logger.info(`${operationName} completed with ${model.name} (${this.elapsed(startTime)})`);
 				return result.data!;
@@ -91,9 +93,14 @@ export class RerankerService extends DeepInfraService<
 		model: ModelConfig,
 		payload: RerankerPayload,
 		input: RerankerInput,
+		signal: AbortSignal,
 	): Promise<{ success: boolean; data?: RankedDocument[]; error?: string }> {
 		try {
-			const response = await this.singleRequest(model.endpoint, payload);
+			const response = await this.singleRequest(
+				model.endpoint,
+				payload,
+				AbortSignal.any([signal, AbortSignal.timeout(DEEPINFRA_CONFIG.RERANK_MODEL_TIMEOUT_MS)]),
+			);
 			return { success: true, data: this.processResponse(response, input) };
 		} catch (error) {
 			const message = error instanceof Error ? error.message : String(error);
