@@ -122,7 +122,6 @@ export const Lid = ({
 					scaleY: scaleY,
 					rotateX: rotate,
 					translateY: translate,
-					transformStyle: "preserve-3d",
 					transformOrigin: "top",
 				}}
 				className="absolute inset-0 h-96 w-[32rem] rounded-2xl bg-[#010101] p-2 [will-change:transform]"
