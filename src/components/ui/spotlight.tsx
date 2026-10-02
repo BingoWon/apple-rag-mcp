@@ -17,11 +17,6 @@ const DIMENSIONS = {
 	smallWidth: 240,
 };
 
-const ANIMATION = {
-	duration: 7,
-	xOffset: 100,
-};
-
 export const Spotlight = () => {
 	return (
 		<motion.div
@@ -36,18 +31,7 @@ export const Spotlight = () => {
 			}}
 			className="pointer-events-none absolute inset-0 h-full w-full"
 		>
-			<motion.div
-				animate={{
-					x: [0, ANIMATION.xOffset, 0],
-				}}
-				transition={{
-					duration: ANIMATION.duration,
-					repeat: Infinity,
-					repeatType: "reverse",
-					ease: "easeInOut",
-				}}
-				className="absolute top-0 left-0 w-screen h-screen z-40 pointer-events-none"
-			>
+			<div className="spotlight-sweep-left absolute top-0 left-0 w-screen h-screen z-40 pointer-events-none">
 				<div
 					style={{
 						transform: `translateY(${DIMENSIONS.translateY}px) rotate(-45deg)`,
@@ -77,20 +61,9 @@ export const Spotlight = () => {
 					}}
 					className="absolute top-0 left-0 origin-top-left"
 				/>
-			</motion.div>
+			</div>
 
-			<motion.div
-				animate={{
-					x: [0, -ANIMATION.xOffset, 0],
-				}}
-				transition={{
-					duration: ANIMATION.duration,
-					repeat: Infinity,
-					repeatType: "reverse",
-					ease: "easeInOut",
-				}}
-				className="absolute top-0 right-0 w-screen h-screen z-40 pointer-events-none"
-			>
+			<div className="spotlight-sweep-right absolute top-0 right-0 w-screen h-screen z-40 pointer-events-none">
 				<div
 					style={{
 						transform: `translateY(${DIMENSIONS.translateY}px) rotate(45deg)`,
@@ -120,7 +93,7 @@ export const Spotlight = () => {
 					}}
 					className="absolute top-0 right-0 origin-top-right"
 				/>
-			</motion.div>
+			</div>
 
 			{/* Additional light mode enhancement */}
 			<div className="absolute inset-0 bg-gradient-to-br from-blue-50/10 via-transparent to-purple-50/10 dark:from-transparent dark:to-transparent pointer-events-none z-30" />

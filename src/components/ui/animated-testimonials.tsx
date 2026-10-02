@@ -129,6 +129,8 @@ export const AnimatedTestimonials = ({
 										alt={testimonial.name}
 										width={500}
 										height={500}
+										loading="lazy"
+										decoding="async"
 										draggable={false}
 										className="h-full w-full rounded-2xl object-cover object-center shadow-complex border border-default"
 									/>

@@ -5,7 +5,9 @@ function ColourfulText({ text }: { text: string }) {
 	const spansRef = useRef<Array<HTMLSpanElement | null>>([]);
 
 	useLayoutEffect(() => {
-		if (!import.meta.env.DEV) return;
+		const heroDebugEnabled =
+			import.meta.env.DEV && new URLSearchParams(window.location.search).get("heroDebug") === "1";
+		if (!heroDebugEnabled) return;
 
 		const reportLayout = (phase: string) => {
 			const spans = spansRef.current.filter((span): span is HTMLSpanElement => span !== null);
@@ -95,7 +97,11 @@ function ColourfulText({ text }: { text: string }) {
 					spansRef.current[index] = span;
 				}}
 				initial={{
+					color: getColor(),
 					y: 0,
+					scale: 1,
+					filter: "blur(0px)",
+					opacity: 1,
 				}}
 				animate={{
 					color: getColor(),
