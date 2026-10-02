@@ -8,9 +8,6 @@ import { AppRouter } from "./router";
 import "./i18n";
 import "./styles/globals.css";
 
-const FabButton = lazy(() =>
-	import("@/components/ui/FabButton").then(({ FabButton }) => ({ default: FabButton })),
-);
 const UnreadReplyNotification = lazy(() =>
 	import("@/components/UnreadReplyNotification").then(({ UnreadReplyNotification }) => ({
 		default: UnreadReplyNotification,
@@ -28,7 +25,6 @@ if (root) {
 						<AppRouter />
 					</Providers>
 					<Suspense fallback={null}>
-						<FabButton />
 						<UnreadReplyNotification />
 					</Suspense>
 					<CookieConsent />
