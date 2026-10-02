@@ -28,7 +28,7 @@ export const MCP_CLIENTS: MCPClientConfig[] = [
 	// --- One-click Install ---
 	{
 		key: "cursor",
-		logo: "https://api.iconify.design/logos:cursor.svg",
+		logo: "/mcp-clients/cursor.png",
 		alt: "Cursor",
 		label: "Cursor",
 		category: "install",
@@ -40,7 +40,7 @@ export const MCP_CLIENTS: MCPClientConfig[] = [
 	},
 	{
 		key: "vscode",
-		logo: "https://api.iconify.design/vscode-icons:file-type-vscode.svg",
+		logo: "/mcp-clients/vscode.svg",
 		alt: "VS Code",
 		label: "VS Code",
 		category: "install",
@@ -52,7 +52,7 @@ export const MCP_CLIENTS: MCPClientConfig[] = [
 	},
 	{
 		key: "vscode-insiders",
-		logo: "https://api.iconify.design/vscode-icons:file-type-vscode-insiders.svg",
+		logo: "/mcp-clients/vscode-insiders.svg",
 		alt: "VS Code Insiders",
 		label: "VS Code Insiders",
 		category: "install",
@@ -66,7 +66,7 @@ export const MCP_CLIENTS: MCPClientConfig[] = [
 	// --- Copy Configuration ---
 	{
 		key: "codex",
-		logo: "https://api.iconify.design/logos:openai-icon.svg",
+		logo: "/mcp-clients/codex.svg",
 		alt: "OpenAI Codex",
 		label: "Codex",
 		category: "copy",
@@ -78,7 +78,7 @@ export const MCP_CLIENTS: MCPClientConfig[] = [
 	},
 	{
 		key: "claudecode",
-		logo: "https://api.iconify.design/logos:claude-icon.svg",
+		logo: "/mcp-clients/claude.svg",
 		alt: "Claude Code",
 		label: "Claude Code",
 		category: "copy",
@@ -90,7 +90,7 @@ export const MCP_CLIENTS: MCPClientConfig[] = [
 	},
 	{
 		key: "antigravity",
-		logo: "https://antigravity.google/favicon.ico",
+		logo: "/mcp-clients/antigravity.png",
 		alt: "Antigravity",
 		label: "Antigravity",
 		category: "copy",
@@ -102,7 +102,7 @@ export const MCP_CLIENTS: MCPClientConfig[] = [
 	},
 	{
 		key: "augmentcode",
-		logo: "https://www.augmentcode.com/favicon.ico",
+		logo: "/mcp-clients/augmentcode.png",
 		alt: "Augment Code",
 		label: "Augment Code",
 		category: "copy",
@@ -119,7 +119,7 @@ export const MCP_CLIENTS: MCPClientConfig[] = [
 	},
 	{
 		key: "cline",
-		logo: "https://cline.bot/assets/branding/favicons/favicon-32x32.png",
+		logo: "/mcp-clients/cline.png",
 		alt: "Cline",
 		label: "Cline",
 		category: "copy",

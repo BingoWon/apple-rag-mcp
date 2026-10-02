@@ -279,11 +279,7 @@ export function MCPUsageGuide() {
 										<div className="flex items-center gap-3">
 											<div className="flex items-center gap-1.5">
 												{/* eslint-disable-next-line @next/next/no-img-element */}
-												<img
-													src="https://api.iconify.design/logos:openai-icon.svg"
-													alt="OpenAI"
-													className="h-5 w-5"
-												/>
+												<img src="/mcp-clients/codex.svg" alt="OpenAI" className="h-5 w-5" />
 												<span className="text-sm font-semibold text-light">OpenAI</span>
 											</div>
 											<div className="flex items-center gap-1.5">
@@ -337,11 +333,7 @@ export function MCPUsageGuide() {
 										<div className="flex items-center gap-3">
 											<div className="flex items-center gap-1.5">
 												{/* eslint-disable-next-line @next/next/no-img-element */}
-												<img
-													src="https://api.iconify.design/logos:claude-icon.svg"
-													alt="Claude Code"
-													className="h-5 w-5"
-												/>
+												<img src="/mcp-clients/claude.svg" alt="Claude Code" className="h-5 w-5" />
 												<span className="text-sm font-semibold text-light">Claude Code</span>
 											</div>
 											<span className="text-sm text-muted">{t("guide.claude_command")}</span>
