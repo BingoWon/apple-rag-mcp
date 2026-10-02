@@ -1,4 +1,3 @@
-import { motion } from "motion/react";
 import { useLayoutEffect, useRef } from "react";
 
 function ColourfulText({ text }: { text: string }) {
@@ -96,28 +95,7 @@ function ColourfulText({ text }: { text: string }) {
 				}}
 				className="inline-block whitespace-pre font-sans [letter-spacing:0]"
 			>
-				<motion.span
-					initial={{
-						color: getColor(),
-						y: 0,
-						scale: 1,
-						opacity: 1,
-					}}
-					style={{ color: getColor() }}
-					animate={{
-						color: getColor(),
-						y: [0, -3, 0],
-						scale: [1, 1.01, 1],
-						opacity: [1, 0.8, 1],
-					}}
-					transition={{
-						duration: 0.5,
-						delay: index * 0.05,
-					}}
-					className="inline-block"
-				>
-					{char}
-				</motion.span>
+				<span style={{ color: getColor() }}>{char}</span>
 			</span>
 		);
 	});
