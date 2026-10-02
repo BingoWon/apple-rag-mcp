@@ -50,7 +50,7 @@ export const MacbookScroll = () => {
 	return (
 		<div
 			ref={ref}
-			className="flex min-h-[150vh] shrink-0 transform flex-col items-center justify-start py-8 md:min-h-[200vh] md:py-12"
+			className="relative flex min-h-[150vh] shrink-0 transform flex-col items-center justify-start py-8 md:min-h-[200vh] md:py-12"
 		>
 			<motion.div
 				style={{
@@ -128,7 +128,7 @@ export const Lid = ({
 				className="absolute inset-0 h-96 w-[32rem] rounded-2xl bg-[#010101] p-2 [will-change:transform]"
 			>
 				<div className="absolute inset-0 rounded-lg bg-[#272729]" />
-				<picture>
+				<picture className="absolute inset-0 block">
 					<source srcSet="/wwdc26-macbook-screen.avif" type="image/avif" />
 					<img
 						src="/wwdc26-macbook-screen.jpg"
@@ -138,7 +138,7 @@ export const Lid = ({
 						decoding="async"
 						fetchPriority="high"
 						loading="eager"
-						className="absolute inset-0 h-full w-full rounded-lg object-cover object-center"
+						className="absolute inset-0 block h-full w-full rounded-lg object-cover object-center"
 					/>
 				</picture>
 			</motion.div>
