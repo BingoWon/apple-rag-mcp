@@ -260,6 +260,7 @@ export function MCPUsageGuide() {
 
 							{/* 配置代码块 */}
 							<CodeBlock
+								language="json"
 								filename="mcp-config.json"
 								code={MCPConfigService.generateJsonString({
 									token: selectedToken?.mcp_token || "your-mcp-token-here",
@@ -312,6 +313,7 @@ export function MCPUsageGuide() {
 													.
 												</p>
 												<CodeBlock
+													language="toml"
 													filename="~/.codex/config.toml"
 													code={MCPConfigService.generateCodexTomlString(
 														selectedToken.mcp_token,
@@ -354,6 +356,7 @@ export function MCPUsageGuide() {
 											<div>
 												<p className="text-sm text-muted mb-3">{t("guide.claude_desc")}</p>
 												<CodeBlock
+													language="bash"
 													filename="terminal"
 													code={MCPConfigService.generateClaudeCodeCommand(
 														selectedToken.mcp_token,
