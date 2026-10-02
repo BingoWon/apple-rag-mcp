@@ -15,7 +15,7 @@ export interface MCPServerConfig {
 	url: string;
 	headers: Record<string, string>;
 	type?: string;
-	alwaysAllow?: string[];
+	autoApprove?: string[];
 	disabled?: boolean;
 }
 
@@ -34,26 +34,30 @@ function tomlString(value: string): string {
 		.replace(/\t/g, "\\t")}"`;
 }
 
+function shellArgument(value: string): string {
+	return `'${value.replace(/'/g, "'\\''")}'`;
+}
+
 export function generateServerConfig(options: MCPConfigOptions): MCPServerConfig {
 	const { token, serverUrl = MCP_SERVER_URL, clientType = "generic" } = options;
 
 	switch (clientType) {
-		case "augmentcode":
-			return {
-				url: serverUrl,
-				type: "http",
-				headers: { Authorization: `Bearer ${token}` },
-			};
 		case "cline":
 			return {
-				type: "streamable-http",
+				type: "streamableHttp",
 				url: serverUrl,
 				headers: { Authorization: `Bearer ${token}` },
-				alwaysAllow: ["search", "fetch"],
+				autoApprove: ["search", "fetch"],
 				disabled: false,
+			};
+		case "cursor":
+			return {
+				url: serverUrl,
+				headers: { Authorization: `Bearer ${token}` },
 			};
 		default:
 			return {
+				type: "http",
 				url: serverUrl,
 				headers: { Authorization: `Bearer ${token}` },
 			};
@@ -107,15 +111,15 @@ export function generateCodexTomlString(token: string, serverUrl: string = MCP_S
 
 export function generateClaudeCodeCommand(token: string, serverUrl?: string): string {
 	const url = serverUrl || MCP_SERVER_URL;
-	return `claude mcp add --transport http --scope user ${MCP_SERVER_NAME} ${url} --header "Authorization: Bearer ${token}"`;
+	return `claude mcp add --transport http --scope user ${MCP_SERVER_NAME} ${shellArgument(url)} --header ${shellArgument(`Authorization: Bearer ${token}`)}`;
 }
 
-export function generateCursorLink(token: string): string {
-	const config = generateServerConfig({ token });
+export function generateCursorLink(token: string, serverUrl?: string): string {
+	const config = generateServerConfig({ token, serverUrl, clientType: "cursor" });
 	const jsonConfig = JSON.stringify(config);
-	const base64Config = btoa(jsonConfig);
+	const base64Config = btoa(String.fromCharCode(...new TextEncoder().encode(jsonConfig)));
 
-	return `https://cursor.com/en/install-mcp?name=${encodeURIComponent(
+	return `cursor://anysphere.cursor-deeplink/mcp/install?name=${encodeURIComponent(
 		MCP_SERVER_NAME,
 	)}&config=${encodeURIComponent(base64Config)}`;
 }
@@ -138,7 +142,7 @@ export async function copyToClipboard(
 export function generateVSCodeInstallUrl(token: string, serverUrl?: string): string {
 	const config = {
 		name: MCP_SERVER_NAME,
-		...generateServerConfig({ token, serverUrl }),
+		...generateServerConfig({ token, serverUrl, clientType: "vscode" }),
 	};
 	return `vscode:mcp/install?${encodeURIComponent(JSON.stringify(config))}`;
 }
@@ -146,7 +150,7 @@ export function generateVSCodeInstallUrl(token: string, serverUrl?: string): str
 export function generateVSCodeInsidersInstallUrl(token: string, serverUrl?: string): string {
 	const config = {
 		name: MCP_SERVER_NAME,
-		...generateServerConfig({ token, serverUrl }),
+		...generateServerConfig({ token, serverUrl, clientType: "vscode-insiders" }),
 	};
 	return `vscode-insiders:mcp/install?${encodeURIComponent(JSON.stringify(config))}`;
 }

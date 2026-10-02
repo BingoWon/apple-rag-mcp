@@ -87,6 +87,7 @@ After registering, the user creates an MCP Token on the dashboard page and adds 
 {
   "mcpServers": {
     "apple-rag-mcp": {
+      "type": "http",
       "url": "https://mcp.apple-rag.com",
       "headers": {
         "Authorization": "Bearer at_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
@@ -123,7 +124,7 @@ Install the MCP server with the appropriate command for your client:
 
 **Claude Code**:
 ```bash
-claude mcp add --transport http --scope user apple-rag-mcp https://mcp.apple-rag.com --header "Authorization: Bearer at_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+claude mcp add --transport http --scope user apple-rag-mcp 'https://mcp.apple-rag.com' --header 'Authorization: Bearer at_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
 ```
 
 **Codex**:

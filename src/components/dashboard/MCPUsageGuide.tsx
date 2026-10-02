@@ -278,7 +278,6 @@ export function MCPUsageGuide() {
 									>
 										<div className="flex items-center gap-3">
 											<div className="flex items-center gap-1.5">
-												{/* eslint-disable-next-line @next/next/no-img-element */}
 												<img src="/mcp-clients/codex.svg" alt="OpenAI" className="h-5 w-5" />
 												<span className="text-sm font-semibold text-light">OpenAI</span>
 											</div>
@@ -299,7 +298,7 @@ export function MCPUsageGuide() {
 												<p className="text-sm text-muted mb-3">
 													{t("guide.codex_desc")}{" "}
 													<a
-														href="https://github.com/openai/codex/blob/main/docs/config.md#mcp_servers"
+														href="https://developers.openai.com/codex/mcp"
 														target="_blank"
 														rel="noopener noreferrer"
 														className="text-brand hover:text-brand-secondary underline"
@@ -332,7 +331,6 @@ export function MCPUsageGuide() {
 									>
 										<div className="flex items-center gap-3">
 											<div className="flex items-center gap-1.5">
-												{/* eslint-disable-next-line @next/next/no-img-element */}
 												<img src="/mcp-clients/claude.svg" alt="Claude Code" className="h-5 w-5" />
 												<span className="text-sm font-semibold text-light">Claude Code</span>
 											</div>
@@ -346,7 +344,17 @@ export function MCPUsageGuide() {
 									{showClaudeGuide && (
 										<div className="p-4 space-y-4">
 											<div>
-												<p className="text-sm text-muted mb-3">{t("guide.claude_desc")}</p>
+												<p className="text-sm text-muted mb-3">
+													{t("guide.claude_desc")}{" "}
+													<a
+														href="https://code.claude.com/docs/en/mcp"
+														target="_blank"
+														rel="noopener noreferrer"
+														className="text-brand hover:text-brand-secondary underline"
+													>
+														{t("guide.official_docs")}
+													</a>
+												</p>
 												<CodeBlock
 													language="bash"
 													filename="terminal"

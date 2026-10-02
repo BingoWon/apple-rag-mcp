@@ -5,7 +5,6 @@
  * Used by MCPInstallButtons (Overview page) and MCPTokensList (Tokens page dropdown).
  */
 
-import { showAugmentCodeWarning } from "@/utils/augmentCodeWarning";
 import { copyText } from "@/utils/clipboard";
 import { MCPConfigService } from "@/utils/mcpConfigService";
 
@@ -32,8 +31,8 @@ export const MCP_CLIENTS: MCPClientConfig[] = [
 		alt: "Cursor",
 		label: "Cursor",
 		category: "install",
-		action: async (token) => {
-			const url = MCPConfigService.generateCursorLink(token);
+		action: async (token, serverUrl) => {
+			const url = MCPConfigService.generateCursorLink(token, serverUrl);
 			window.open(url, "_blank");
 			return "tokens.install_hint";
 		},
@@ -113,7 +112,6 @@ export const MCP_CLIENTS: MCPClientConfig[] = [
 				clientType: "augmentcode",
 			});
 			await copyText(json);
-			showAugmentCodeWarning();
 			return "tokens.config_copied";
 		},
 	},
