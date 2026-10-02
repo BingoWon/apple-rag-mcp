@@ -28,7 +28,7 @@ export const MCP_CLIENTS: MCPClientConfig[] = [
 	// --- One-click Install ---
 	{
 		key: "cursor",
-		logo: "https://cursor.com/_next/static/media/placeholder-logo.da8a9d2b.webp",
+		logo: "https://api.iconify.design/logos:cursor.svg",
 		alt: "Cursor",
 		label: "Cursor",
 		category: "install",
