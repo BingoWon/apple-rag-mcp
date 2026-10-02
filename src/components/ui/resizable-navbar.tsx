@@ -1,6 +1,6 @@
 import { IconMenu2, IconX } from "@tabler/icons-react";
 import { AnimatePresence, motion, useMotionValueEvent, useScroll } from "motion/react";
-import React, { createContext, useCallback, useContext, useRef, useState } from "react";
+import React, { createContext, useCallback, useContext, useState } from "react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/Button";
@@ -78,11 +78,7 @@ export const Navbar = ({
 	className,
 	scrollThreshold = ANIMATION_CONFIG.scrollThreshold,
 }: NavbarProps) => {
-	const ref = useRef<HTMLDivElement>(null);
-	const { scrollY } = useScroll({
-		target: ref,
-		offset: ["start start", "end start"],
-	});
+	const { scrollY } = useScroll();
 	const [visible, setVisible] = useState(false);
 
 	useMotionValueEvent(scrollY, "change", (latest) => {
@@ -90,7 +86,7 @@ export const Navbar = ({
 	});
 
 	return (
-		<motion.div ref={ref} className={cn("sticky inset-x-0 top-1 z-40 w-full", className)}>
+		<motion.div className={cn("sticky inset-x-0 top-1 z-40 w-full", className)}>
 			{React.Children.map(children, (child) =>
 				React.isValidElement(child)
 					? React.cloneElement(child as React.ReactElement<{ visible?: boolean }>, { visible })
