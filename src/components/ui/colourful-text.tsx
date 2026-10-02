@@ -1,4 +1,3 @@
-import { motion } from "motion/react";
 import { useLayoutEffect, useRef } from "react";
 
 function ColourfulText({ text }: { text: string }) {
@@ -76,34 +75,30 @@ function ColourfulText({ text }: { text: string }) {
 		"rgb(59, 130, 246)", // 14. 天空蓝 - 清澈天空蓝，纯净明亮
 	];
 
-	return (
-		<motion.span
-			initial={{ y: 0, scale: 1, opacity: 1 }}
-			animate={{ y: [0, -3, 0], scale: [1, 1.01, 1], opacity: [1, 0.95, 1] }}
-			transition={{ duration: 0.5, ease: "easeInOut" }}
-			className="inline-block whitespace-nowrap"
-		>
-			{text.split("").map((char, index) => {
-				// 计算当前字符在可见字符中的位置（跳过空格）
-				const charPosition = text.substring(0, index).replace(/\s/g, "").length;
-				const color =
-					char === " " ? "transparent" : premiumColors[charPosition % premiumColors.length];
+	return text.split("").map((char, index) => {
+		// 计算当前字符在可见字符中的位置（跳过空格）
+		const charPosition = text.substring(0, index).replace(/\s/g, "").length;
 
-				return (
-					<span
-						key={`${char}-${index}`}
-						ref={(span) => {
-							spansRef.current[index] = span;
-						}}
-						className="inline-block whitespace-pre font-sans [letter-spacing:0]"
-						style={{ color }}
-					>
-						{char}
-					</span>
-				);
-			})}
-		</motion.span>
-	);
+		// 获取颜色
+		const getColor = () => {
+			if (char === " ") {
+				return "transparent"; // 空格使用透明色
+			}
+			return premiumColors[charPosition % premiumColors.length];
+		};
+
+		return (
+			<span
+				key={`${char}-${index}`}
+				ref={(span) => {
+					spansRef.current[index] = span;
+				}}
+				className="inline-block whitespace-pre font-sans [letter-spacing:0]"
+			>
+				<span style={{ color: getColor() }}>{char}</span>
+			</span>
+		);
+	});
 }
 
 export default ColourfulText;
