@@ -5,9 +5,7 @@ function ColourfulText({ text }: { text: string }) {
 	const spansRef = useRef<Array<HTMLSpanElement | null>>([]);
 
 	useLayoutEffect(() => {
-		const heroDebugEnabled =
-			import.meta.env.DEV && new URLSearchParams(window.location.search).get("heroDebug") === "1";
-		if (!heroDebugEnabled) return;
+		if (!import.meta.env.DEV) return;
 
 		const reportLayout = (phase: string) => {
 			const spans = spansRef.current.filter((span): span is HTMLSpanElement => span !== null);
@@ -31,7 +29,7 @@ function ColourfulText({ text }: { text: string }) {
 			const heading = spans[0]?.closest("h1");
 			const headingRect = heading?.getBoundingClientRect();
 
-			console.debug("[hero-debug]", {
+			console.info("[hero-debug]", {
 				phase,
 				text,
 				spanCount: rects.length,
@@ -103,6 +101,7 @@ function ColourfulText({ text }: { text: string }) {
 					filter: "blur(0px)",
 					opacity: 1,
 				}}
+				style={{ color: getColor() }}
 				animate={{
 					color: getColor(),
 					y: [0, -3, 0],

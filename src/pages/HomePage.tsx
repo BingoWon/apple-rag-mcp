@@ -12,7 +12,7 @@ import { TracingBeam } from "@/components/ui/tracing-beam";
 
 const reportSectionRender: ProfilerOnRenderCallback = (id, phase, actualDuration, baseDuration) => {
 	if (import.meta.env.DEV) {
-		console.debug("[section-perf]", {
+		console.info("[section-perf]", {
 			id,
 			phase,
 			actualDuration: Math.round(actualDuration * 100) / 100,
