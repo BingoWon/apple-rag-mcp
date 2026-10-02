@@ -89,34 +89,38 @@ function ColourfulText({ text }: { text: string }) {
 		};
 
 		return (
-			<motion.span
+			<span
 				key={`${char}-${index}`}
 				ref={(span) => {
 					spansRef.current[index] = span;
 				}}
-				initial={{
-					color: getColor(),
-					y: 0,
-					scale: 1,
-					filter: "blur(0px)",
-					opacity: 1,
-				}}
-				style={{ color: getColor() }}
-				animate={{
-					color: getColor(),
-					y: [0, -3, 0],
-					scale: [1, 1.01, 1],
-					filter: ["blur(0px)", `blur(5px)`, "blur(0px)"],
-					opacity: [1, 0.8, 1],
-				}}
-				transition={{
-					duration: 0.5,
-					delay: index * 0.05,
-				}}
 				className="inline-block whitespace-pre font-sans [letter-spacing:0]"
 			>
-				{char}
-			</motion.span>
+				<motion.span
+					initial={{
+						color: getColor(),
+						y: 0,
+						scale: 1,
+						filter: "blur(0px)",
+						opacity: 1,
+					}}
+					style={{ color: getColor() }}
+					animate={{
+						color: getColor(),
+						y: [0, -3, 0],
+						scale: [1, 1.01, 1],
+						filter: ["blur(0px)", `blur(5px)`, "blur(0px)"],
+						opacity: [1, 0.8, 1],
+					}}
+					transition={{
+						duration: 0.5,
+						delay: index * 0.05,
+					}}
+					className="inline-block"
+				>
+					{char}
+				</motion.span>
+			</span>
 		);
 	});
 }
