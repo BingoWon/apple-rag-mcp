@@ -117,19 +117,6 @@ Start immediately with no MCP Token required. Get an MCP Token for higher usage 
 - **🛡️ Secure & Private** - Your queries stay private
 - **🌐 MCP 2026 Native** - Stateless MCP `2026-07-28`
 
-## 🧠 Agent Skill
-
-We provide an [Agent Skill](skills/apple-dev-docs/SKILL.md) that teaches AI agents how to use this MCP server effectively — including query best practices, search-then-fetch workflow, result completeness handling, and rate limit guidance.
-
-**Install:** Copy the `skills/apple-dev-docs/` directory to your agent's skill location:
-
-| Platform | Destination |
-|----------|-------------|
-| Cursor | `~/.cursor/skills/apple-dev-docs/` |
-| Codex | `~/.codex/skills/apple-dev-docs/` |
-
-Once installed, your AI agent will automatically know when and how to use Apple RAG MCP for Apple development questions.
-
 ## 📄 License
 
 This project is licensed under the [MIT License](LICENSE).

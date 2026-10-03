@@ -1,7 +1,7 @@
 # MCP Client Configuration Audit
 
 Reviewed on 2026-10-02. Scope: dashboard install/copy buttons, the two expanded
-configuration guides, and the examples in the bundled skill.
+configuration guides.
 
 ## Findings
 
@@ -12,7 +12,7 @@ configuration guides, and the examples in the bundled skill.
 | [VS Code](https://github.com/microsoft/vscode) | Install URI accepts a percent-encoded JSON payload containing `name`, `type: "http"`, `url`, and `headers`. | Include the HTTP type explicitly. The official URI handler can infer it from the URL, so the previous omission was not necessarily a failure. |
 | [VS Code Insiders](https://github.com/microsoft/vscode) | Same payload, with the `vscode-insiders:` scheme. | Same explicit HTTP type. |
 | [Codex](https://github.com/openai/codex) | `~/.codex/config.toml`, `[mcp_servers.<name>]`, `url`, and `http_headers`. | Existing TOML is correct. Retain literal bearer authentication and replace the outdated documentation link. |
-| [Claude Code](https://github.com/anthropics/claude-code) | `claude mcp add --transport http`, `--scope user`, and `--header`. | Existing options are correct. Quote URL/header arguments for POSIX shells and keep the skill example aligned. |
+| [Claude Code](https://github.com/anthropics/claude-code) | `claude mcp add --transport http`, `--scope user`, and `--header`. | Existing options are correct. Quote URL/header arguments for POSIX shells. |
 | [Antigravity](https://antigravity.google) | `mcpServers`, `serverUrl`, and `headers`. | Existing JSON is correct; leave it unchanged. |
 | [Augment Code](https://www.augmentcode.com) | `mcpServers`, `type: "http"`, `url`, and `headers` in Auggie settings. | Existing JSON is correct. Remove the false blanket warning that Authorization headers are unsupported. |
 | [Cline](https://github.com/cline/cline) | `mcpServers`, `type: "streamableHttp"`, `url`, `headers`, `disabled`, and `autoApprove`. | Replace the invalid transport spelling and `alwaysAllow`; retain approval of only the two existing read tools. |

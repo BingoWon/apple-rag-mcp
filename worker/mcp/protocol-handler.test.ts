@@ -131,12 +131,14 @@ test("serves modern server discovery", async () => {
 		result: {
 			resultType: string;
 			supportedVersions: string[];
+			instructions: string;
 			ttlMs: number;
 			cacheScope: string;
 		};
 	}>(response);
 	assert.equal(payload.result.resultType, "complete");
 	assert.deepEqual(payload.result.supportedVersions, [MODERN_VERSION]);
+	assert.match(payload.result.instructions, /search.*fetch/);
 	assert.equal(payload.result.ttlMs, 3_600_000);
 	assert.equal(payload.result.cacheScope, "public");
 });

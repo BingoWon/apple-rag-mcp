@@ -114,19 +114,6 @@ MCP 认证确保你的 AI agent 获得可信的访问权限，具备企业级安
 - **🛡️ 安全私密** - 你的查询保持私密
 - **🌐 原生 MCP 2026** - 支持无状态 MCP `2026-07-28`
 
-## 🧠 Agent Skill
-
-我们提供了一个 [Agent Skill](skills/apple-dev-docs/SKILL.md)，它教会 AI agent 如何高效使用此 MCP 服务——包括查询最佳实践、搜索-获取工作流、结果完整性处理和配额限制指引。
-
-**安装：** 将 `skills/apple-dev-docs/` 目录复制到你的 agent skill 目录：
-
-| 平台 | 目标路径 |
-|------|---------|
-| Cursor | `~/.cursor/skills/apple-dev-docs/` |
-| Codex | `~/.codex/skills/apple-dev-docs/` |
-
-安装后，你的 AI agent 会自动知道何时以及如何使用 Apple RAG MCP 来回答 Apple 开发问题。
-
 ## 📄 开源协议
 
 本项目基于 [MIT 协议](LICENSE) 开源。

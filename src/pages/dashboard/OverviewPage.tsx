@@ -2,7 +2,6 @@ import { lazy, Suspense, useEffect, useRef } from "react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
-import { AppleRAGMCPIntro } from "@/components/dashboard/AppleRAGMCPIntro";
 import StatsCards from "@/components/dashboard/StatsCards";
 import { useAuth } from "@/hooks/useAuth";
 import { useDashboardStore } from "@/stores/dashboard";
@@ -86,7 +85,6 @@ function DashboardOverviewContent() {
 						totalToolCalls={toolCallsStats?.total_tool_calls || 0}
 						totalResults={toolCallsStats?.total_results || 0}
 					/>
-					<AppleRAGMCPIntro />
 				</div>
 			</div>
 		</div>
