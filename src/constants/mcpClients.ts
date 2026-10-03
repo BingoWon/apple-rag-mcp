@@ -55,8 +55,8 @@ export const INSTALL_CLIENTS: MCPInstallClient[] = [
 export const PROMPT_CLIENTS = [
 	{ label: "Codex", logo: "/mcp-clients/codex.svg" },
 	{ label: "Claude Code", logo: "/mcp-clients/claude.svg" },
-	{ label: "OpenCode", logo: "/mcp-clients/opencode.png" },
-	{ label: "Pi", logo: "/mcp-clients/pi.svg" },
+	{ label: "OpenCode", logo: "/mcp-clients/opencode.png", logoSize: 16 },
+	{ label: "Pi", logo: "/mcp-clients/pi.svg", logoSize: 16 },
 	{ label: "Antigravity", logo: "/mcp-clients/antigravity.png" },
 	{ label: "Augment Code", logo: "/mcp-clients/augmentcode.png" },
 	{ label: "Cline", logo: "/mcp-clients/cline.png" },

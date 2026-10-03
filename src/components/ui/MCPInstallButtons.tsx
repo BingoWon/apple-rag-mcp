@@ -54,9 +54,9 @@ function ClientButton({
 			<img
 				src={client.logo}
 				alt={client.alt}
-				width={24}
-				height={24}
-				className="h-6 w-6 rounded-lg bg-white p-1 object-contain shrink-0"
+				width={16}
+				height={16}
+				className="h-4 w-4 rounded-lg bg-white object-contain shrink-0"
 			/>
 			<span className="whitespace-nowrap">{client.label}</span>
 		</button>
@@ -98,7 +98,13 @@ export function MCPInstallButtons({
 							key={client.label}
 							className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-brand bg-white"
 						>
-							<img src={client.logo} alt="" width={20} height={20} className="h-5 w-5" />
+							<img
+								src={client.logo}
+								alt=""
+								width={client.logoSize ?? 20}
+								height={client.logoSize ?? 20}
+								className="object-contain"
+							/>
 						</span>
 					))}
 				</span>

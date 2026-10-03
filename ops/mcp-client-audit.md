@@ -52,6 +52,8 @@ or unrelated dependencies are changed by this audit.
 - Replace per-client copy buttons and the token menu's JSON action with one
   localized agent installation prompt, using the selected token and endpoint.
 - Preserve the three native deep links with larger rounded logo badges.
+  Keep their original 16px size without added image padding. In the stacked
+  prompt logos, reduce only the two square marks to 16px; other marks stay 20px.
   Keep the JSON code block directly visible; group the
   [Codex](https://github.com/openai/codex) TOML and
   [Claude Code](https://github.com/anthropics/claude-code) command under an
@@ -66,6 +68,14 @@ or unrelated dependencies are changed by this audit.
   (`https://pi.dev/favicon.svg`).
 - Keep the downloaded Pi mark dark on its white badge instead of following the
   operating system color scheme; add its SVG accessibility title.
+- The visible JSON example is a client connection configuration, not an MCP
+  protocol schema. Its `mcpServers`, `type: "http"`, `url`, and `headers` follow
+  [Claude Code](https://github.com/anthropics/claude-code)
+  ([official configuration](https://code.claude.com/docs/en/mcp)) and
+  [VS Code](https://github.com/microsoft/vscode)
+  ([portable configuration](https://code.visualstudio.com/docs/copilot/customization/mcp-servers)).
+  Other clients may need different native formats. Protocol compatibility must
+  still be checked separately.
 - Check prompt localization, selected credentials, local assets, decoded deep
   links, rendered button counts/disabled states, and visible JSON placement.
   Agent configuration remains a workflow, not a guarantee that every client
