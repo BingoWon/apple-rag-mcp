@@ -32,7 +32,7 @@ Others give you keyword search. We give you that, plus semantic understanding, p
 
 ## Start in Seconds
 
-**Configure with your agent:** In the [dashboard](https://apple-rag.com/dashboard),
+**Configure with your agent:** In the [dashboard](https://apple-rag.com/overview),
 select a token and click **Copy Install Prompt**. Paste it into your current
 agent to configure the connection and verify the tools.
 
