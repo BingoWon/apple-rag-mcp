@@ -56,7 +56,7 @@ function ClientButton({
 				alt={client.alt}
 				width={16}
 				height={16}
-				className="h-4 w-4 rounded-lg bg-white object-contain shrink-0"
+				className="h-4 w-4 rounded-sm bg-white object-contain shrink-0"
 			/>
 			<span className="whitespace-nowrap">{client.label}</span>
 		</button>

@@ -51,8 +51,8 @@ or unrelated dependencies are changed by this audit.
 
 - Replace per-client copy buttons and the token menu's JSON action with one
   localized agent installation prompt, using the selected token and endpoint.
-- Preserve the three native deep links with larger rounded logo badges.
-  Keep their original 16px size without added image padding. In the stacked
+- Preserve the three native deep links with their original small logo corner
+  radius and 16px size, without added image padding. In the stacked
   prompt logos, reduce only the two square marks to 16px; other marks stay 20px.
   Keep the JSON code block directly visible; group the
   [Codex](https://github.com/openai/codex) TOML and

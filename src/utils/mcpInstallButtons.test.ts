@@ -63,7 +63,7 @@ test("renders one copy-prompt button and three native install buttons in both la
 			html,
 			/title="Codex, Claude Code, OpenCode, Pi, Antigravity, Augment Code, Cline"/,
 		);
-		assert.equal(html.match(/rounded-lg bg-white object-contain/g)?.length, 3);
+		assert.equal(html.match(/rounded-sm bg-white object-contain/g)?.length, 3);
 		assert.doesNotMatch(html, /test-token/);
 		assert.doesNotMatch(html, /Copy JSON|复制 JSON|Copy Configuration|复制配置/);
 	}
@@ -79,6 +79,7 @@ test("shrinks only OpenCode and Pi logos and removes added padding from native i
 		assert.ok(image.includes(`width="${size}"`));
 		assert.ok(image.includes(`height="${size}"`));
 		if (index >= 7) {
+			assert.match(image, /\brounded-sm\b/);
 			assert.doesNotMatch(image, /\bp-\d/);
 		}
 	}
