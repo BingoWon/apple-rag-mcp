@@ -61,7 +61,7 @@ test("renders one copy-prompt button and three native install buttons in both la
 		assert.equal(html.match(/<img /g)?.length, 10);
 		assert.match(
 			html,
-			/title="Codex, Claude Code, Antigravity, Augment Code, Cline, OpenCode, Pi"/,
+			/title="Codex, Claude Code, OpenCode, Pi, Antigravity, Augment Code, Cline"/,
 		);
 		assert.equal(html.match(/rounded-lg bg-white p-1 object-contain/g)?.length, 3);
 		assert.doesNotMatch(html, /test-token/);
