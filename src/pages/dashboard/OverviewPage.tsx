@@ -4,7 +4,6 @@ import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 import { AppleRAGMCPIntro } from "@/components/dashboard/AppleRAGMCPIntro";
 import StatsCards from "@/components/dashboard/StatsCards";
-import { XcodeBuildMCPRecommendation } from "@/components/dashboard/XcodeBuildMCPRecommendation";
 import { useAuth } from "@/hooks/useAuth";
 import { useDashboardStore } from "@/stores/dashboard";
 
@@ -88,7 +87,6 @@ function DashboardOverviewContent() {
 						totalResults={toolCallsStats?.total_results || 0}
 					/>
 					<AppleRAGMCPIntro />
-					<XcodeBuildMCPRecommendation />
 				</div>
 			</div>
 		</div>

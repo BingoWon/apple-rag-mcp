@@ -51,13 +51,15 @@ or unrelated dependencies are changed by this audit.
 
 - Replace per-client copy buttons and the token menu's JSON action with one
   localized agent installation prompt, using the selected token and endpoint.
-- Preserve the three native deep links. Group the existing JSON example,
-  [Codex](https://github.com/openai/codex) TOML, and
+- Preserve the three native deep links with larger rounded logo badges.
+  Keep the JSON code block directly visible; group the
+  [Codex](https://github.com/openai/codex) TOML and
   [Claude Code](https://github.com/anthropics/claude-code) command under an
-  expandable manual configuration section; no configuration download is added.
+  expandable manual configuration section. No configuration download is added.
 - Reuse the raw-text clipboard helper. Remove unused client-specific generators,
   copy callbacks, registry entries, and translation keys.
-- Use static overlapping local logos. New assets come from the official
+- Use static overlapping local logos for all five original copy clients plus
+  the two added clients. New assets come from the official
   [OpenCode](https://github.com/anomalyco/opencode) website favicon
   (`https://opencode.ai/favicon-96x96-v3.png`) and
   [Pi](https://github.com/earendil-works/pi) website favicon
@@ -65,5 +67,9 @@ or unrelated dependencies are changed by this audit.
 - Keep the downloaded Pi mark dark on its white badge instead of following the
   operating system color scheme; add its SVG accessibility title.
 - Check prompt localization, selected credentials, local assets, decoded deep
-  links, and rendered button counts/disabled states. Agent configuration remains
-  a workflow, not a guarantee that every client supports the server protocol.
+  links, rendered button counts/disabled states, and visible JSON placement.
+  Agent configuration remains a workflow, not a guarantee that every client
+  supports the server protocol.
+- Remove the dashboard-only
+  [XcodeBuildMCP](https://github.com/cameroncooke/XcodeBuildMCP) recommendation,
+  its component, and its dedicated translations at the user's request.

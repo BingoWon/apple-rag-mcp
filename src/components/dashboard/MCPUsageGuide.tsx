@@ -258,6 +258,15 @@ export function MCPUsageGuide() {
 								/>
 							)}
 
+							<CodeBlock
+								language="json"
+								filename={t("guide.json_example")}
+								code={MCPConfigService.generateJsonString({
+									token: selectedToken?.mcp_token || "your-mcp-token-here",
+									serverUrl: mcpServerUrl,
+								})}
+							/>
+
 							<details className="group/manual border-t border-default/50 pt-3">
 								<summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-medium text-muted hover:text-light [&::-webkit-details-marker]:hidden">
 									<IconSettings className="h-4 w-4 shrink-0" />
@@ -265,16 +274,7 @@ export function MCPUsageGuide() {
 									<IconChevronDown className="ml-auto h-4 w-4 shrink-0 group-open/manual:rotate-180" />
 								</summary>
 								<div className="space-y-3 pt-3">
-									<CodeBlock
-										language="json"
-										filename={t("guide.json_example")}
-										code={MCPConfigService.generateJsonString({
-											token: selectedToken?.mcp_token || "your-mcp-token-here",
-											serverUrl: mcpServerUrl,
-										})}
-									/>
-
-									{/* Codex CLI Configuration - 紧跟 JSON 配置 */}
+									{/* Codex CLI Configuration */}
 									{selectedToken && (
 										<div className="border border-info/30 rounded-lg overflow-hidden">
 											<button

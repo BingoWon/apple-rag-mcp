@@ -54,7 +54,9 @@ function ClientButton({
 			<img
 				src={client.logo}
 				alt={client.alt}
-				className="w-4 h-4 bg-white rounded-sm flex-shrink-0"
+				width={24}
+				height={24}
+				className="h-6 w-6 rounded-lg bg-white p-1 object-contain shrink-0"
 			/>
 			<span className="whitespace-nowrap">{client.label}</span>
 		</button>
