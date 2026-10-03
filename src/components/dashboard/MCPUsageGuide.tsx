@@ -258,132 +258,144 @@ export function MCPUsageGuide() {
 								/>
 							)}
 
-							{/* 配置代码块 */}
-							<CodeBlock
-								language="json"
-								filename="mcp-config.json"
-								code={MCPConfigService.generateJsonString({
-									token: selectedToken?.mcp_token || "your-mcp-token-here",
-									serverUrl: mcpServerUrl,
-								})}
-							/>
+							<details className="group/manual border-t border-default/50 pt-3">
+								<summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-medium text-muted hover:text-light [&::-webkit-details-marker]:hidden">
+									<IconSettings className="h-4 w-4 shrink-0" />
+									{t("guide.manual_config")}
+									<IconChevronDown className="ml-auto h-4 w-4 shrink-0 group-open/manual:rotate-180" />
+								</summary>
+								<div className="space-y-3 pt-3">
+									<CodeBlock
+										language="json"
+										filename={t("guide.json_example")}
+										code={MCPConfigService.generateJsonString({
+											token: selectedToken?.mcp_token || "your-mcp-token-here",
+											serverUrl: mcpServerUrl,
+										})}
+									/>
 
-							{/* Codex CLI Configuration - 紧跟 JSON 配置 */}
-							{selectedToken && (
-								<div className="border border-info/30 rounded-lg overflow-hidden">
-									<button
-										type="button"
-										onClick={() => setShowCodexGuide(!showCodexGuide)}
-										className="w-full flex items-center justify-between p-4 bg-info/5 hover:bg-info/10 transition-colors"
-									>
-										<div className="flex items-center gap-3">
-											<div className="flex items-center gap-1.5">
-												<img src="/mcp-clients/codex.svg" alt="OpenAI" className="h-5 w-5" />
-												<span className="text-sm font-semibold text-light">OpenAI</span>
-											</div>
-											<div className="flex items-center gap-1.5">
-												<IconTerminal className="h-5 w-5 text-light" />
-												<span className="text-sm font-semibold text-light">Codex CLI</span>
-											</div>
-											<span className="text-sm text-muted">{t("guide.codex_config")}</span>
-										</div>
-										<IconChevronDown
-											className={`h-4 w-4 text-muted transition-transform ${showCodexGuide ? "rotate-180" : ""}`}
-										/>
-									</button>
-
-									{showCodexGuide && (
-										<div className="p-4 space-y-4">
-											<div>
-												<p className="text-sm text-muted mb-3">
-													{t("guide.codex_desc")}{" "}
-													<a
-														href="https://developers.openai.com/codex/mcp"
-														target="_blank"
-														rel="noopener noreferrer"
-														className="text-brand hover:text-brand-secondary underline"
-													>
-														{t("guide.official_docs")}
-													</a>
-													.
-												</p>
-												<CodeBlock
-													language="toml"
-													filename="~/.codex/config.toml"
-													code={MCPConfigService.generateCodexTomlString(
-														selectedToken.mcp_token,
-														mcpServerUrl,
-													)}
+									{/* Codex CLI Configuration - 紧跟 JSON 配置 */}
+									{selectedToken && (
+										<div className="border border-info/30 rounded-lg overflow-hidden">
+											<button
+												type="button"
+												onClick={() => setShowCodexGuide(!showCodexGuide)}
+												className="w-full flex items-center justify-between p-4 bg-info/5 hover:bg-info/10 transition-colors"
+											>
+												<div className="flex items-center gap-3">
+													<div className="flex items-center gap-1.5">
+														<img src="/mcp-clients/codex.svg" alt="OpenAI" className="h-5 w-5" />
+														<span className="text-sm font-semibold text-light">OpenAI</span>
+													</div>
+													<div className="flex items-center gap-1.5">
+														<IconTerminal className="h-5 w-5 text-light" />
+														<span className="text-sm font-semibold text-light">Codex CLI</span>
+													</div>
+													<span className="text-sm text-muted">{t("guide.codex_config")}</span>
+												</div>
+												<IconChevronDown
+													className={`h-4 w-4 text-muted transition-transform ${showCodexGuide ? "rotate-180" : ""}`}
 												/>
+											</button>
+
+											{showCodexGuide && (
+												<div className="p-4 space-y-4">
+													<div>
+														<p className="text-sm text-muted mb-3">
+															{t("guide.codex_desc")}{" "}
+															<a
+																href="https://developers.openai.com/codex/mcp"
+																target="_blank"
+																rel="noopener noreferrer"
+																className="text-brand hover:text-brand-secondary underline"
+															>
+																{t("guide.official_docs")}
+															</a>
+															.
+														</p>
+														<CodeBlock
+															language="toml"
+															filename="~/.codex/config.toml"
+															code={MCPConfigService.generateCodexTomlString(
+																selectedToken.mcp_token,
+																mcpServerUrl,
+															)}
+														/>
+													</div>
+												</div>
+											)}
+										</div>
+									)}
+
+									{/* Claude Code Configuration */}
+									{selectedToken && (
+										<div className="border border-info/30 rounded-lg overflow-hidden mt-3">
+											<button
+												type="button"
+												onClick={() => setShowClaudeGuide(!showClaudeGuide)}
+												className="w-full flex items-center justify-between p-4 bg-info/5 hover:bg-info/10 transition-colors"
+											>
+												<div className="flex items-center gap-3">
+													<div className="flex items-center gap-1.5">
+														<img
+															src="/mcp-clients/claude.svg"
+															alt="Claude Code"
+															className="h-5 w-5"
+														/>
+														<span className="text-sm font-semibold text-light">Claude Code</span>
+													</div>
+													<span className="text-sm text-muted">{t("guide.claude_command")}</span>
+												</div>
+												<IconChevronDown
+													className={`h-4 w-4 text-muted transition-transform ${showClaudeGuide ? "rotate-180" : ""}`}
+												/>
+											</button>
+
+											{showClaudeGuide && (
+												<div className="p-4 space-y-4">
+													<div>
+														<p className="text-sm text-muted mb-3">
+															{t("guide.claude_desc")}{" "}
+															<a
+																href="https://code.claude.com/docs/en/mcp"
+																target="_blank"
+																rel="noopener noreferrer"
+																className="text-brand hover:text-brand-secondary underline"
+															>
+																{t("guide.official_docs")}
+															</a>
+														</p>
+														<CodeBlock
+															language="bash"
+															filename="terminal"
+															code={MCPConfigService.generateClaudeCodeCommand(
+																selectedToken.mcp_token,
+																mcpServerUrl,
+															)}
+														/>
+													</div>
+												</div>
+											)}
+										</div>
+									)}
+
+									{/* 参数配置指南 */}
+									{selectedToken && (
+										<div className="mt-6">
+											<h4 className="text-sm font-medium text-light mb-4 flex items-center gap-2">
+												<IconSettings className="h-4 w-4 text-warning" />
+												{t("guide.manual_title")}
+											</h4>
+											<div className="space-y-3 text-sm">
+												<p className="text-muted mb-3">{t("guide.manual_desc")}</p>
+												{configParams.map((param, index) =>
+													renderConfigRow(param, index === configParams.length - 1),
+												)}
 											</div>
 										</div>
 									)}
 								</div>
-							)}
-
-							{/* Claude Code Configuration */}
-							{selectedToken && (
-								<div className="border border-info/30 rounded-lg overflow-hidden mt-3">
-									<button
-										type="button"
-										onClick={() => setShowClaudeGuide(!showClaudeGuide)}
-										className="w-full flex items-center justify-between p-4 bg-info/5 hover:bg-info/10 transition-colors"
-									>
-										<div className="flex items-center gap-3">
-											<div className="flex items-center gap-1.5">
-												<img src="/mcp-clients/claude.svg" alt="Claude Code" className="h-5 w-5" />
-												<span className="text-sm font-semibold text-light">Claude Code</span>
-											</div>
-											<span className="text-sm text-muted">{t("guide.claude_command")}</span>
-										</div>
-										<IconChevronDown
-											className={`h-4 w-4 text-muted transition-transform ${showClaudeGuide ? "rotate-180" : ""}`}
-										/>
-									</button>
-
-									{showClaudeGuide && (
-										<div className="p-4 space-y-4">
-											<div>
-												<p className="text-sm text-muted mb-3">
-													{t("guide.claude_desc")}{" "}
-													<a
-														href="https://code.claude.com/docs/en/mcp"
-														target="_blank"
-														rel="noopener noreferrer"
-														className="text-brand hover:text-brand-secondary underline"
-													>
-														{t("guide.official_docs")}
-													</a>
-												</p>
-												<CodeBlock
-													language="bash"
-													filename="terminal"
-													code={MCPConfigService.generateClaudeCodeCommand(
-														selectedToken.mcp_token,
-														mcpServerUrl,
-													)}
-												/>
-											</div>
-										</div>
-									)}
-								</div>
-							)}
-
-							{/* 参数配置指南 */}
-							{selectedToken && (
-								<div className="mt-6">
-									<h4 className="text-sm font-medium text-light mb-4 flex items-center gap-2">
-										<IconSettings className="h-4 w-4 text-warning" />
-										{t("guide.manual_title")}
-									</h4>
-									<div className="space-y-3 text-sm">
-										<p className="text-muted mb-3">{t("guide.manual_desc")}</p>
-										{configParams.map((param, index) =>
-											renderConfigRow(param, index === configParams.length - 1),
-										)}
-									</div>
-								</div>
-							)}
+							</details>
 						</div>
 					)}
 				</div>

@@ -287,12 +287,10 @@
 		"hide_token": "隐藏令牌",
 		"show_token": "显示令牌",
 		"copy_token": "复制令牌",
-		"copy_json": "复制 JSON",
 		"install_hint": "请在弹出的 {{client}} 窗口中点击 'Install' 添加 MCP。",
 		"loading": "正在加载令牌...",
 		"empty": "暂无 MCP 令牌",
 		"empty_desc": "创建你的第一个 MCP 令牌，开始使用吧。",
-		"config_copied": "{{client}} 配置已复制到剪贴板！",
 		"delete_title": "删除令牌",
 		"delete_error_full": "删除令牌失败"
 	},
@@ -308,7 +306,11 @@
 		"client_config": "MCP 客户端配置",
 		"select_token": "选择 MCP 令牌：",
 		"select_placeholder": "选择一个令牌...",
-		"config_updated": "配置已更新\nJSON 配置和 API Key（令牌）已刷新为所选令牌。",
+		"config_updated": "配置已更新为所选令牌。",
+		"copy_install_prompt": "复制安装提示词",
+		"install_prompt_copied": "安装提示词已复制到剪贴板！",
+		"manual_config": "手动配置",
+		"json_example": "JSON 配置示例",
 		"manual_title": "手动配置参数",
 		"manual_desc": "如果你的 MCP 客户端不支持 JSON 导入，请使用以下参数：",
 		"field_name": "名称：",
@@ -344,8 +346,7 @@
 		"token_higher_limits": "认证令牌享有更高查询配额，前往",
 		"usage_monitor": "前往",
 		"ip_auto_auth": "自动完成身份验证",
-		"section_install": "一键安装",
-		"section_copy": "复制配置"
+		"section_install": "一键安装"
 	},
 
 	"ips": {

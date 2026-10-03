@@ -32,21 +32,29 @@ Others give you keyword search. We give you that, plus semantic understanding, p
 
 ## Start in Seconds
 
+**Configure with your agent:** In the [dashboard](https://apple-rag.com/dashboard),
+select a token and click **Copy Install Prompt**. Paste it into your current
+agent to configure the connection and verify the tools.
+
 **One click:**
 
 [![Install MCP Server](https://cursor.com/deeplink/mcp-install-light.svg)](https://cursor.com/en/install-mcp?name=apple-rag-mcp&config=eyJ1cmwiOiJodHRwczovL21jcC5hcHBsZS1yYWcuY29tIn0%3D)
 
 [![Install in VS Code](https://img.shields.io/badge/VS_Code-Apple_RAG_MCP-0098FF?style=flat&logo=visualstudiocode&logoColor=ffffff)](vscode:mcp/install?%7B%22name%22%3A%22apple-rag-mcp%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fmcp.apple-rag.com%22%7D) [![Install in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-Apple_RAG_MCP-24bfa5?style=flat&logo=visualstudiocode&logoColor=ffffff)](vscode-insiders:mcp/install?%7B%22name%22%3A%22apple-rag-mcp%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fmcp.apple-rag.com%22%7D)
 
-Click the button above and your editor will automatically configure everything for you in seconds.
+Click a button to open your editor and confirm installation.
 
 ### Option 2: Manual Setup for Other MCP Clients
 
 **JSON Configuration (Copy & Paste):**
+This is a configuration example, not a universal client format. The dashboard
+also retains manual configuration examples.
+
 ```json
 {
   "mcpServers": {
     "apple-rag-mcp": {
+      "type": "http",
       "url": "https://mcp.apple-rag.com"
     }
   }
@@ -60,7 +68,8 @@ Click the button above and your editor will automatically configure everything f
 - **Authentication:** `Optional` (MCP Token for higher limits)
 - **MCP Token:** Get yours at [apple-rag.com](https://apple-rag.com) for increased quota
 
-**Supported Clients:** Cursor, Claude Desktop, Cline, and all MCP-compatible tools.
+Client compatibility requires support for protocol `2026-07-28`; saving a
+configuration alone does not verify a working connection.
 
 > **Note:** No MCP Token required to start! You get free queries without any authentication. Add an MCP Token later for higher usage limits.
 

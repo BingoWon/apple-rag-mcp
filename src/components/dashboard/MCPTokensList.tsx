@@ -14,11 +14,12 @@ import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import { DropdownMenu, type DropdownMenuItem } from "@/components/ui/DropdownMenu";
 import { LoaderFive } from "@/components/ui/loader";
 import { MCP_SERVER_URL } from "@/constants/mcp";
-import { COPY_CLIENTS, INSTALL_CLIENTS } from "@/constants/mcpClients";
+import { INSTALL_CLIENTS } from "@/constants/mcpClients";
 import { useDeleteConfirm } from "@/hooks/useDeleteConfirm";
 import { formatDate } from "@/lib/utils";
 import { useDashboardStore } from "@/stores/dashboard";
 import type { MCPToken } from "@/types";
+import { copyText } from "@/utils/clipboard";
 import { MCPConfigService } from "@/utils/mcpConfigService";
 import { copyMcpTokenToClipboard, getMcpTokenDisplayText } from "@/utils/mcpTokenUtils";
 import { EditableName } from "./EditableName";
@@ -30,7 +31,7 @@ interface MCPTokensListProps {
 }
 
 export function MCPTokensList({ tokens, onRefresh, isLoading = false }: MCPTokensListProps) {
-	const { t } = useTranslation();
+	const { t, i18n } = useTranslation();
 	const { updateMCPToken, deleteMCPToken } = useDashboardStore();
 	const [visibleTokens, setVisibleTokens] = useState<Set<string>>(new Set());
 
@@ -63,15 +64,20 @@ export function MCPTokensList({ tokens, onRefresh, isLoading = false }: MCPToken
 		);
 	};
 
-	const handleCopyMcpConfig = async (token: MCPToken) => {
-		await MCPConfigService.copyToClipboard(
-			{ token: token.mcp_token },
-			(message: string) => toast.success(message),
-			(message: string) => toast.error(message),
-		);
+	const handleCopyInstallPrompt = async (token: MCPToken) => {
+		try {
+			await copyText(
+				MCPConfigService.generateInstallPrompt(
+					{ token: token.mcp_token, serverUrl: MCP_SERVER_URL },
+					i18n.resolvedLanguage,
+				),
+			);
+			toast.success(t("guide.install_prompt_copied"));
+		} catch {
+			toast.error(t("guide.copy_clipboard_failed"));
+		}
 	};
 
-	/** Build dropdown menu items for a token, consuming the shared MCP_CLIENTS registry */
 	const buildMenuItems = (row: MCPToken): DropdownMenuItem[] => {
 		const installItems: DropdownMenuItem[] = INSTALL_CLIENTS.map((client) => ({
 			key: client.key,
@@ -87,34 +93,16 @@ export function MCPTokensList({ tokens, onRefresh, isLoading = false }: MCPToken
 			},
 		}));
 
-		const copyItems: DropdownMenuItem[] = [
-			{
-				key: "copy-json",
-				label: t("tokens.copy_json"),
-				icon: <IconClipboard className="h-4 w-4" />,
-				onClick: () => handleCopyMcpConfig(row),
-			},
-			...COPY_CLIENTS.map((client) => ({
-				key: client.key,
-				label: client.label,
-				icon: <img src={client.logo} alt={client.alt} width={16} height={16} className="w-4 h-4" />,
-				onClick: async () => {
-					try {
-						const messageKey = await client.action(row.mcp_token, MCP_SERVER_URL);
-						toast.success(t(messageKey, { client: client.label }));
-					} catch {
-						toast.error(t("common.copy_failed"));
-					}
-				},
-			})),
-		];
-
 		return [
+			{
+				key: "copy-install-prompt",
+				label: t("guide.copy_install_prompt"),
+				icon: <IconClipboard className="h-4 w-4" />,
+				onClick: () => handleCopyInstallPrompt(row),
+			},
+			{ key: "sep-1", label: "", type: "separator" as const },
 			{ key: "label-install", label: t("guide.section_install"), type: "label" as const },
 			...installItems,
-			{ key: "sep-1", label: "", type: "separator" as const },
-			{ key: "label-copy", label: t("guide.section_copy"), type: "label" as const },
-			...copyItems,
 			{ key: "sep-2", label: "", type: "separator" as const },
 			{
 				key: "delete",

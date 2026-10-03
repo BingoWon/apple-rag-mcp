@@ -32,21 +32,27 @@
 
 ## 秒速开始
 
+**交给智能体配置：** 在[仪表盘](https://apple-rag.com/dashboard)选择令牌，
+点击 **复制安装提示词**，粘贴给你当前使用的智能体，由它配置连接并验证工具。
+
 **一键安装：**
 
 [![Install MCP Server](https://cursor.com/deeplink/mcp-install-light.svg)](https://cursor.com/en/install-mcp?name=apple-rag-mcp&config=eyJ1cmwiOiJodHRwczovL21jcC5hcHBsZS1yYWcuY29tIn0%3D)
 
 [![Install in VS Code](https://img.shields.io/badge/VS_Code-Apple_RAG_MCP-0098FF?style=flat&logo=visualstudiocode&logoColor=ffffff)](vscode:mcp/install?%7B%22name%22%3A%22apple-rag-mcp%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fmcp.apple-rag.com%22%7D) [![Install in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-Apple_RAG_MCP-24bfa5?style=flat&logo=visualstudiocode&logoColor=ffffff)](vscode-insiders:mcp/install?%7B%22name%22%3A%22apple-rag-mcp%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fmcp.apple-rag.com%22%7D)
 
-点击上面的按钮，你的编辑器将在几秒内自动完成所有配置。
+点击按钮唤起编辑器，并在编辑器中确认安装。
 
 ### 方式二：其他 MCP 客户端手动配置
 
 **JSON 配置（复制粘贴）：**
+这是配置示例，并非所有客户端通用的格式。仪表盘也保留了手动配置示例。
+
 ```json
 {
   "mcpServers": {
     "apple-rag-mcp": {
+      "type": "http",
       "url": "https://mcp.apple-rag.com"
     }
   }
@@ -60,7 +66,7 @@
 - **认证：** `可选`（MCP Token 可获得更高限额）
 - **MCP Token：** 在 [apple-rag.com](https://apple-rag.com) 获取以增加配额
 
-**支持的客户端：** Cursor、Claude Desktop、Cline 以及所有兼容 MCP 的工具。
+客户端需要支持 `2026-07-28` 协议；仅保存配置不代表已验证连接成功。
 
 > **注意：** 无需 MCP Token 即可开始使用！你可以免费查询，无需任何认证。之后可添加 MCP Token 以获得更高的使用限额。
 

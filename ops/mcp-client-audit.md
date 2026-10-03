@@ -46,3 +46,24 @@ has connected successfully. External-protocol approval, an installed client,
 and support for the production server's protocol revision are separate checks.
 No personal client configuration, real credentials, billing, database behavior,
 or unrelated dependencies are changed by this audit.
+
+## Unified Install Entry, 2026-10-03
+
+- Replace per-client copy buttons and the token menu's JSON action with one
+  localized agent installation prompt, using the selected token and endpoint.
+- Preserve the three native deep links. Group the existing JSON example,
+  [Codex](https://github.com/openai/codex) TOML, and
+  [Claude Code](https://github.com/anthropics/claude-code) command under an
+  expandable manual configuration section; no configuration download is added.
+- Reuse the raw-text clipboard helper. Remove unused client-specific generators,
+  copy callbacks, registry entries, and translation keys.
+- Use static overlapping local logos. New assets come from the official
+  [OpenCode](https://github.com/anomalyco/opencode) website favicon
+  (`https://opencode.ai/favicon-96x96-v3.png`) and
+  [Pi](https://github.com/earendil-works/pi) website favicon
+  (`https://pi.dev/favicon.svg`).
+- Keep the downloaded Pi mark dark on its white badge instead of following the
+  operating system color scheme; add its SVG accessibility title.
+- Check prompt localization, selected credentials, local assets, decoded deep
+  links, and rendered button counts/disabled states. Agent configuration remains
+  a workflow, not a guarantee that every client supports the server protocol.

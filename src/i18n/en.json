@@ -299,12 +299,10 @@
 		"hide_token": "Hide token",
 		"show_token": "Show token",
 		"copy_token": "Copy token",
-		"copy_json": "Copy JSON",
 		"install_hint": "Look for the {{client}} window and click 'Install' to add MCP.",
 		"loading": "Loading MCP tokens...",
 		"empty": "No MCP tokens",
 		"empty_desc": "Get started by creating a new MCP token.",
-		"config_copied": "{{client}} configuration copied to clipboard!",
 		"delete_title": "Delete MCP Token",
 		"delete_error_full": "Failed to delete MCP token"
 	},
@@ -320,7 +318,11 @@
 		"client_config": "MCP Client Configuration",
 		"select_token": "Select MCP Token:",
 		"select_placeholder": "Select a token...",
-		"config_updated": "Configuration Updated\nJSON config and API key (token) have been refreshed with the selected token.",
+		"config_updated": "Configuration updated for the selected token.",
+		"copy_install_prompt": "Copy Install Prompt",
+		"install_prompt_copied": "Install prompt copied to clipboard!",
+		"manual_config": "Manual Configuration",
+		"json_example": "JSON Configuration Example",
 		"manual_title": "Manual Configuration Parameters",
 		"manual_desc": "For MCP clients that don't support JSON import, use these parameters:",
 		"field_name": "Name:",
@@ -356,8 +358,7 @@
 		"token_higher_limits": "Authenticated tokens provide higher query limits in",
 		"usage_monitor": "Monitor your usage in",
 		"ip_auto_auth": "for automatic authentication",
-		"section_install": "One-click Install",
-		"section_copy": "Copy Configuration"
+		"section_install": "One-click Install"
 	},
 
 	"ips": {
