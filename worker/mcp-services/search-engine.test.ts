@@ -22,6 +22,7 @@ const result = (
 function createEngine(options?: {
 	semantic?: SearchResult[] | Error;
 	keyword?: SearchResult[] | Error;
+	rerankError?: Error;
 }) {
 	const semantic = options?.semantic ?? [];
 	const keyword = options?.keyword ?? [];
@@ -39,12 +40,14 @@ function createEngine(options?: {
 		} as never,
 		{ createEmbedding: async () => [1] } as never,
 		{
-			rerank: async (_query: string, documents: string[], topN: number) =>
-				documents.slice(0, topN).map((content, originalIndex) => ({
-					content,
+			rerank: async (_query: string, documents: Array<{ content: string }>, topN: number) => {
+				if (options?.rerankError) throw options.rerankError;
+				return documents.slice(0, topN).map((document, originalIndex) => ({
+					content: document.content,
 					originalIndex,
 					relevanceScore: 1,
-				})),
+				}));
+			},
 		} as never,
 	);
 }
@@ -92,4 +95,21 @@ test("throws when both retrieval modes fail", async () => {
 	});
 
 	await assert.rejects(() => engine.search("A"), /both failed/);
+});
+
+test("keeps original candidate order and full content when both rerankers fail", async () => {
+	const engine = createEngine({
+		semantic: [result("a", "https://developer.apple.com/a", "A")],
+		keyword: [result("b", "https://developer.apple.com/b", "B")],
+		rerankError: new Error("Both rerankers failed"),
+	});
+	const output = await engine.search("query", { resultCount: 2 });
+	assert.deepEqual(
+		output.results.map((row) => row.id),
+		["a", "b"],
+	);
+	assert.deepEqual(
+		output.results.map((row) => row.content),
+		["content-a", "content-b"],
+	);
 });

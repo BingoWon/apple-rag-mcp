@@ -43,6 +43,9 @@ RAG_DB_SSLMODE=disable
 # ─── DeepInfra (required for MCP search) ─────────────────
 DEEPINFRA_API_KEY=
 
+# Jev primary reranker (DeepInfra 8B remains the fallback)
+TYPESAFE_API_KEY=
+
 # ─── Telegram (optional) ─────────────────────────────────
 TELEGRAM_ALERT_BOT_URL=
 TELEGRAM_STATS_BOT_URL=

@@ -5,20 +5,21 @@
 
 import packageJson from "../../package.json";
 import { logger } from "../mcp-utils/logger.js";
+import type { ModelAlertReporter } from "../mcp-utils/model-alerts.js";
 
 export const DEEPINFRA_CONFIG = {
 	BASE_URL: "https://api.deepinfra.com",
 	TIMEOUT_MS: 5_000,
 	USER_AGENT: `Apple-RAG-MCP/${packageJson.version}`,
 	EMBEDDING_MODEL: "Qwen/Qwen3-Embedding-4B",
-	RERANKER_MODEL_PRIMARY: "Qwen/Qwen3-Reranker-8B",
-	RERANKER_MODEL_FALLBACK: "Qwen/Qwen3-Reranker-4B",
+	RERANKER_MODEL: "Qwen/Qwen3-Reranker-8B",
 } as const;
 
-class DeepInfraRequestError extends Error {
+export class ModelRequestError extends Error {
 	constructor(
 		message: string,
 		readonly retryable: boolean,
+		readonly status?: number,
 	) {
 		super(message);
 	}
@@ -28,8 +29,10 @@ export abstract class DeepInfraService<TRequest, TResponse, TResult> {
 	protected abstract readonly endpoint: string;
 	private readonly apiKey: string;
 
-	constructor(apiKey: string) {
-		if (!apiKey) throw new Error("DEEPINFRA_API_KEY is required");
+	constructor(
+		apiKey: string,
+		protected readonly reportFailure: ModelAlertReporter,
+	) {
 		this.apiKey = apiKey;
 	}
 
@@ -47,20 +50,22 @@ export abstract class DeepInfraService<TRequest, TResponse, TResult> {
 				return this.processResponse(json, input);
 			} catch (e) {
 				lastError = e instanceof Error ? e : new Error(String(e));
-				if (attempt === 2 || (e instanceof DeepInfraRequestError && !e.retryable)) {
+				if (attempt === 2 || (e instanceof ModelRequestError && !e.retryable)) {
 					break;
 				}
 				await new Promise((resolve) => setTimeout(resolve, 150));
 			}
 		}
 
-		logger.error(
-			`${operationName} failed (${((Date.now() - startTime) / 1000).toFixed(1)}s): ${lastError.message}`,
+		this.reportFailure(
+			`deepinfra:${this.endpoint}:${lastError instanceof ModelRequestError ? lastError.status : lastError.name}`,
+			`DeepInfra ${operationName} failed: ${lastError.message}. Semantic retrieval may fall back to keyword results.`,
 		);
 		throw lastError;
 	}
 
 	protected async singleRequest(endpoint: string, payload: unknown): Promise<TResponse> {
+		if (!this.apiKey) throw new ModelRequestError("DEEPINFRA_API_KEY is not configured", false);
 		const res = await fetch(`${DEEPINFRA_CONFIG.BASE_URL}${endpoint}`, {
 			method: "POST",
 			headers: {
@@ -73,9 +78,13 @@ export abstract class DeepInfraService<TRequest, TResponse, TResult> {
 		});
 
 		if (!res.ok) {
-			throw new DeepInfraRequestError(
-				`API error ${res.status}: ${await res.text().catch(() => "")}`,
+			const reason = (await res.text().catch(() => ""))
+				.replaceAll(this.apiKey, "[REDACTED]")
+				.slice(0, 500);
+			throw new ModelRequestError(
+				`HTTP ${res.status}: ${reason}`,
 				res.status === 429 || res.status >= 500,
+				res.status,
 			);
 		}
 

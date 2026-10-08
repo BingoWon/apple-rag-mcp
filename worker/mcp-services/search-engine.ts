@@ -115,7 +115,7 @@ export class SearchEngine {
 		try {
 			const rankedDocuments = await this.reranker.rerank(
 				query,
-				processedResults.map((r) => r.content),
+				processedResults.map(({ content, title, url }) => ({ content, title, url })),
 				Math.min(resultCount, processedResults.length),
 			);
 

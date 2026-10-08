@@ -43,6 +43,7 @@ export interface Env {
 
 	// DeepInfra (shared by MCP + Collector)
 	DEEPINFRA_API_KEY: string;
+	TYPESAFE_API_KEY?: string;
 
 	// Collector Configuration
 	BATCH_SIZE?: string;

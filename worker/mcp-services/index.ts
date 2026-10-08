@@ -9,7 +9,7 @@ import { ToolCallLogger } from "./tool-call-logger.js";
 
 export async function createServices(env: Env, ctx: WaitUntilContext): Promise<Services> {
 	try {
-		const rag = new RAGService(createAppConfig(env), env);
+		const rag = new RAGService(createAppConfig(env), env, ctx);
 		const rateLimit = new RateLimitService(env.DB);
 		const logger = new ToolCallLogger(env.DB, ctx);
 

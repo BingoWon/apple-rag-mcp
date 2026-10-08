@@ -1,5 +1,7 @@
 import type { AppConfig, RAGQuery, RAGResult, SearchResult } from "../mcp-types/index.js";
+import type { WaitUntilContext } from "../mcp-utils/d1-utils.js";
 import { logger } from "../mcp-utils/logger.js";
+import { createModelAlertReporter } from "../mcp-utils/model-alerts.js";
 import type { Env } from "../shared/types.js";
 import { DatabaseService } from "./database.js";
 import { EmbeddingService } from "./embedding.js";
@@ -11,10 +13,11 @@ export class RAGService {
 	readonly embedding: EmbeddingService;
 	private readonly searchEngine: SearchEngine;
 
-	constructor(config: AppConfig, env: Env) {
+	constructor(config: AppConfig, env: Env, ctx: WaitUntilContext) {
+		const reportFailure = createModelAlertReporter(env, ctx);
 		this.database = new DatabaseService(config);
-		this.embedding = new EmbeddingService(env.DEEPINFRA_API_KEY);
-		const reranker = new RerankerService(env.DEEPINFRA_API_KEY);
+		this.embedding = new EmbeddingService(env.DEEPINFRA_API_KEY, reportFailure);
+		const reranker = new RerankerService(env, reportFailure);
 		this.searchEngine = new SearchEngine(this.database, this.embedding, reranker);
 	}
 
