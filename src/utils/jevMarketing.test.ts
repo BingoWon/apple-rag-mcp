@@ -143,12 +143,15 @@ test("sidebar promotion sits below logout and collapses to its logo in both lang
 				const panel = html.indexOf("rounded-tl-2xl");
 				assert.ok(logout >= 0 && promotion > logout && panel > promotion);
 				assert.ok(!html.includes("dashboard-integration"));
-				assert.ok(html.includes('href="/#jev"'));
+				assert.ok(!html.includes('href="/#jev"'));
 				assert.ok(html.includes('src="/typesafe-logo.webp"'));
-				assert.equal(html.split('class="jev-brand ').length - 1, open ? 2 : 0);
+				assert.equal(html.split('class="jev-brand ').length - 1, 0);
+				assert.equal(html.split('class="jev-brand-name font-bold"').length - 1, open ? 2 : 0);
 				if (open) {
 					assert.ok(html.includes(i18n.t("dashboard.jev_integration")));
-					assert.ok(html.includes(i18n.t("dashboard.jev_learn_more")));
+					assert.ok(html.includes("border-t border-default/60"));
+					assert.ok(!html.includes("border-l-typesafe"));
+					assert.ok(!html.includes("bg-typesafe/10"));
 					assert.ok(html.includes("jev-brand-name font-bold"));
 				} else {
 					assert.ok(!html.includes(i18n.t("dashboard.jev_integration")));
