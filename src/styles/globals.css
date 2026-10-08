@@ -234,3 +234,85 @@ main,
 .no-visible-scrollbar::-webkit-scrollbar {
 	display: none;
 }
+
+.hero-stickers {
+	position: absolute;
+	inset: 0;
+	z-index: 20;
+	pointer-events: none;
+}
+
+.hero-sticker {
+	position: absolute;
+	display: block;
+	pointer-events: auto;
+	transition: transform 180ms ease-out;
+}
+
+.hero-sticker img {
+	display: block;
+	width: 100%;
+	height: auto;
+}
+
+.hero-sticker-ceo {
+	top: -96px;
+	left: 16px;
+	width: 80px;
+	transform: rotate(-9deg);
+}
+
+.hero-sticker-ceo img {
+	filter: drop-shadow(2px 0 0 #fff)
+		drop-shadow(-2px 0 0 #fff)
+		drop-shadow(0 2px 0 #fff)
+		drop-shadow(0 -2px 0 #fff)
+		drop-shadow(0 6px 8px rgba(0, 0, 0, 0.25));
+}
+
+.hero-sticker-logo {
+	top: -76px;
+	right: 20px;
+	width: 64px;
+	padding: 4px;
+	border-radius: 12px;
+	background: #fff;
+	box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+	transform: rotate(11deg);
+}
+
+.hero-sticker-logo img {
+	border-radius: 8px;
+}
+
+.hero-sticker:focus-visible {
+	outline: 2px solid #E650BB;
+	outline-offset: 6px;
+}
+
+@media (min-width: 1280px) {
+	.hero-sticker-ceo {
+		top: 112px;
+		left: -216px;
+		width: 176px;
+	}
+
+	.hero-sticker-logo {
+		top: 24px;
+		right: -184px;
+		width: 112px;
+	}
+}
+
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+	.hero-sticker:hover,
+	.hero-sticker:focus-visible {
+		transform: translateY(-6px) rotate(0deg) scale(1.06);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.hero-sticker {
+		transition: none;
+	}
+}

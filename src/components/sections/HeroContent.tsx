@@ -36,7 +36,10 @@ export const HeroContent: React.FC = () => {
 		"dark:bg-[linear-gradient(#121213,#121213),linear-gradient(#121213_50%,rgba(18,18,19,0.6)_80%,rgba(18,18,19,0)),linear-gradient(90deg,rgb(16,185,129),rgb(132,204,22),rgb(245,158,11),rgb(249,115,22),rgb(239,68,68),rgb(220,38,127),rgb(168,85,247),rgb(147,51,234),rgb(79,70,229),rgb(59,130,246))]",
 	);
 	return (
-		<div className="mb-0 px-4 text-center text-3xl font-bold text-light md:mb-36 md:px-0" id="hero">
+		<div
+			className="relative mb-0 px-4 text-center text-3xl font-bold text-light md:mb-36 md:px-0"
+			id="hero"
+		>
 			<div className="text-center md:mb-20">
 				<h1 className="text-4xl md:text-7xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-light to-muted mb-8 max-w-5xl mx-auto leading-tight">
 					{t("hero.title_inject")} <ColourfulText text={t("hero.title_apple")} />
@@ -71,6 +74,38 @@ export const HeroContent: React.FC = () => {
 					{/* Get Started Button */}
 					<ArrowButton />
 				</div>
+			</div>
+			<div className="hero-stickers">
+				<a
+					href="https://typesafe.ai/"
+					target="_blank"
+					rel="noopener noreferrer"
+					title={t("hero.typesafe_ceo")}
+					className="hero-sticker hero-sticker-ceo"
+				>
+					<img
+						src="/typesafe-ceo.webp"
+						alt={t("hero.typesafe_ceo")}
+						width={512}
+						height={499}
+						decoding="async"
+					/>
+				</a>
+				<a
+					href="https://typesafe.ai/"
+					target="_blank"
+					rel="noopener noreferrer"
+					title={t("hero.typesafe_logo")}
+					className="hero-sticker hero-sticker-logo"
+				>
+					<img
+						src="/typesafe-logo.webp"
+						alt={t("hero.typesafe_logo")}
+						width={400}
+						height={400}
+						decoding="async"
+					/>
+				</a>
 			</div>
 		</div>
 	);

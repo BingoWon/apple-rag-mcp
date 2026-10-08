@@ -65,6 +65,8 @@
 	},
 
 	"hero": {
+		"typesafe_ceo": "TypeSafe CEO",
+		"typesafe_logo": "TypeSafe logo",
 		"title_inject": "Inject",
 		"title_apple": "Apple Expertise",
 		"title_into": "into AI Agents via MCP",

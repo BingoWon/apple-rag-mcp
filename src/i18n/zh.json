@@ -65,6 +65,8 @@
 	},
 
 	"hero": {
+		"typesafe_ceo": "TypeSafe 首席执行官",
+		"typesafe_logo": "TypeSafe 标志",
 		"title_inject": "将",
 		"title_apple": "Apple 开发者文档",
 		"title_into": "通过 MCP 注入 AI Agent",
