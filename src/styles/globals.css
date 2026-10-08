@@ -45,6 +45,13 @@
   --color-brand-secondary: #3b82f6;
   --color-brand-tertiary: #2563eb;
 
+  /* TypeSafe logo hue, with lightness variants for its search section. */
+  --color-typesafe-lightest: #F5B8E3;
+  --color-typesafe-light: #ED82CE;
+  --color-typesafe: #E650BB;
+  --color-typesafe-dark: #DB1FA5;
+  --color-typesafe-deep: #AA1880;
+
   /* Status Colors - generates bg-success, text-success, etc. */
   --color-success: #22c55e;
   --color-warning: #fbbf24;
@@ -286,7 +293,7 @@ main,
 }
 
 .hero-sticker:focus-visible {
-	outline: 2px solid #E650BB;
+	outline: 2px solid var(--color-typesafe);
 	outline-offset: 6px;
 }
 
