@@ -52,17 +52,18 @@ for (const plan of ["anonymous", "hobby", "pro"]) {
 			if (plan === "anonymous") {
 				assert.ok(message.includes(FREE_ACCESS_GUIDANCE));
 				assert.match(message, /50 tool calls\/week and 5 tool calls\/minute/);
-				assert.match(message, /https:\/\/apple-rag\.com\/register/);
+				assert.match(message, /Register for a free account at https:\/\/apple-rag\.com\/ and/);
 				assert.match(message, /configure your MCP Token/);
 				assert.doesNotMatch(message, /upgrade|subscribe|billing/i);
 			} else if (plan === "hobby") {
 				assert.ok(message.includes(PRO_UPGRADE_GUIDANCE));
 				assert.match(message, /50,000 tool calls\/week and 50 tool calls\/minute/);
-				assert.match(message, /https:\/\/apple-rag\.com\/billing/);
+				assert.match(message, /Upgrade to Pro at https:\/\/apple-rag\.com\/#pricing to get/);
 				assert.doesNotMatch(message, /hobby/);
 			} else {
 				assert.doesNotMatch(message, /upgrade|enterprise|register|billing/i);
 			}
+			assert.doesNotMatch(message, /https:\/\/apple-rag\.com\/(?:register|billing)\b/);
 
 			const services = { rateLimit: { checkLimits: async () => limited } } as unknown as Services;
 			const request = new Request("https://mcp.apple-rag.com", {
@@ -118,7 +119,9 @@ test("anonymous successful results recommend free registration with concrete sha
 		assert.ok(message.includes(MESSAGES.ANONYMOUS_ACCESS));
 		assert.ok(message.includes(FREE_ACCESS_GUIDANCE));
 		assert.match(message, /50 tool calls\/week and 5 tool calls\/minute/);
+		assert.match(message, /Register for a free account at https:\/\/apple-rag\.com\/ and/);
 		assert.match(message, /shared by search and fetch/);
+		assert.doesNotMatch(message, /https:\/\/apple-rag\.com\/(?:register|billing)\b/);
 		assert.doesNotMatch(message, /higher limit|upgrade|subscribe|enterprise/i);
 	}
 	assert.ok(!formatFetchResponse(fetched, true).includes(FREE_ACCESS_GUIDANCE));
