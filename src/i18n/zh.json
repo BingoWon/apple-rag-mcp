@@ -74,7 +74,7 @@
 	},
 
 	"jev": {
-		"title": "Jev 文档重排序",
+		"title": "<jev>Jev</jev> 文档重排序",
 		"description": "语义与关键词搜索找到候选文档，再由 Jev 的 System One 决策模型评分排序。"
 	},
 
