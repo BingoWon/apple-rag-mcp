@@ -101,13 +101,36 @@ export function QuickStartSection() {
 					</a>
 				</div>
 
-				<div className="mt-10 text-center">
+				<div className="mx-auto mt-10 max-w-3xl text-center">
 					<h3 className="text-sm font-semibold text-light mb-2">
 						{t("quickstart.supported_clients")}
 					</h3>
-					<p className="text-sm text-muted leading-relaxed">
-						{SUPPORTED_CLIENTS.join(" · ")} · {t("quickstart.and_more")}
-					</p>
+					<ul className="flex flex-wrap justify-center gap-x-5 gap-y-3">
+						{SUPPORTED_CLIENTS.map((client) => (
+							<li key={client.label}>
+								<a
+									href={client.href}
+									target="_blank"
+									rel="noopener noreferrer"
+									className="inline-flex items-center gap-2 rounded-sm text-sm text-muted transition-colors hover:text-light focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+								>
+									<span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white">
+										<img
+											src={client.logo}
+											alt=""
+											width={16}
+											height={16}
+											loading="lazy"
+											decoding="async"
+											className="h-4 w-4 object-contain"
+										/>
+									</span>
+									<span className="whitespace-nowrap">{client.label}</span>
+								</a>
+							</li>
+						))}
+					</ul>
+					<p className="mt-3 text-sm text-muted">{t("quickstart.and_more")}</p>
 				</div>
 			</div>
 		</div>
