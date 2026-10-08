@@ -5,6 +5,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#60a5fa" />
 
+    <script id="asset-recovery">
+      (() => {
+        const key = "apple-rag-asset-recovery";
+        let reloading = false;
+        const recover = (event) => {
+          const entry = document.querySelector('script[type="module"][src]')?.getAttribute("src");
+          if (!entry || reloading) return;
+          const buildKey = key + ":" + entry;
+          try {
+            if (sessionStorage.getItem(buildKey)) return;
+            sessionStorage.setItem(buildKey, "1");
+          } catch {
+            return;
+          }
+          reloading = true;
+          event.preventDefault();
+          window.location.reload();
+        };
+        window.addEventListener("vite:preloadError", recover);
+        window.addEventListener("error", (event) => {
+          const target = event.target;
+          const source = target instanceof HTMLScriptElement && target.type === "module"
+            ? target.src
+            : target instanceof HTMLLinkElement && target.rel === "stylesheet" ? target.href : "";
+          if (source.startsWith(window.location.origin + "/assets/")) recover(event);
+        }, true);
+      })();
+    </script>
+
     <!-- Primary -->
     <title>Apple RAG MCP - AI-Powered Apple Developer Documentation Search</title>
     <meta name="description" content="Transform your AI agents into Apple development experts. Access official Swift docs, WWDC26 transcripts, iOS 27 platform knowledge, and Xcode 27 beta references through MCP." />
