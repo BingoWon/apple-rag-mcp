@@ -13,7 +13,7 @@
 		"dev": "vite",
 		"prebuild": "pnpm verify",
 		"build": "vite build",
-		"test": "tsx --test src/utils/*.test.ts worker/api/routes/*.test.ts worker/collector/*.test.ts worker/mcp/*.test.ts worker/mcp-services/*.test.ts worker/shared/*.test.ts",
+		"test": "tsx --test src/utils/*.test.ts worker/api/routes/*.test.ts worker/collector/*.test.ts worker/mcp/*.test.ts worker/mcp-services/*.test.ts worker/shared/*.test.ts ops/jev/*.test.mjs",
 		"lint": "biome check .",
 		"lint:fix": "biome check --write .",
 		"typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p worker/tsconfig.json",
