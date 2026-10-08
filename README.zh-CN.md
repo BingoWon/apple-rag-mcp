@@ -4,7 +4,7 @@
 
 ### 你的 AI 真正需要的 Apple 文档 MCP。
 
-*Apple 文档。WWDC26 视频字幕。语义搜索 + 关键词搜索 + 混合搜索。一个干净的工具。*
+*Apple 文档。WWDC26 视频字幕。RAG 检索 + [Jev](https://typesafe.ai/) 相关性排序。一个干净的工具。*
 
 <a href="https://apple-rag.com"><img src="https://apple-rag.com/og-image.png" alt="Apple RAG MCP — apple-rag.com" width="800"></a>
 
@@ -27,6 +27,12 @@
 其他工具只提供关键词搜索。我们不仅提供关键词搜索，还有语义理解，以及智能结合两者的 AI 驱动混合搜索。你需要的每种搜索模式，协同工作。
 
 **最小占用。最大信号。** 我们的 MCP 工具设计精简——没有臃肿的响应，没有浪费的 token，没有干扰你 AI agent 上下文的噪音。只有真正重要的信息。
+
+### [<img src="./public/typesafe-logo.webp" alt="" width="22" height="22"> Jev](https://typesafe.ai/) 相关性排序
+
+[Jev](https://typesafe.ai/) 是一个决策模型。我们用它的结构化相关性评分，
+按问题涉及的 API、平台与版本要求，对检索到的 Apple 文档和视频字幕排序。
+它负责挑选资料，不负责生成回答；主 API 失败时，备用重排序模型会接手。
 
 ---
 
@@ -105,7 +111,7 @@ MCP 认证确保你的 AI agent 获得可信的访问权限，具备企业级安
 
 - **🔍 RAG 语义搜索** - 具有语义理解能力的向量相似度检索
 - **🔎 关键词搜索** - 精确的技术术语匹配，适用于 API 名称和特定术语
-- **🎯 混合搜索** - 结合语义和关键词搜索，配合 AI 重排序以获得最佳结果
+- **🎯 混合搜索** - 结合语义和关键词检索，由 [Jev](https://typesafe.ai/) 评分排序
 - **📚 完整覆盖** - iOS 27、iPadOS 27、macOS 27、watchOS 27、tvOS 27、visionOS 27 文档
 - **🎬 WWDC26 视频** - Apple 开发者视频和 WWDC26 sessions 的完整字幕
 - **⚡ 快速响应** - 针对所有内容类型优化速度

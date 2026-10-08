@@ -4,7 +4,7 @@
 
 ### The Apple docs MCP your AI actually deserves.
 
-*Apple docs. WWDC26 transcripts. Semantic + keyword + hybrid search. One clean tool.*
+*Apple docs. WWDC26 transcripts. RAG retrieval + [Jev](https://typesafe.ai/) relevance ranking. One clean tool.*
 
 <a href="https://apple-rag.com"><img src="https://apple-rag.com/og-image.png" alt="Apple RAG MCP — apple-rag.com" width="800"></a>
 
@@ -27,6 +27,13 @@
 Others give you keyword search. We give you that, plus semantic understanding, plus AI-powered hybrid search that combines both intelligently. Every search mode you need, working together.
 
 **Minimal footprint. Maximum signal.** Our MCP tools are designed to be lean—no bloated responses, no wasted tokens, no noise cluttering your agent's context. Just the information that matters.
+
+### Ranked by [<img src="./public/typesafe-logo.webp" alt="" width="22" height="22"> Jev](https://typesafe.ai/)
+
+[Jev](https://typesafe.ai/) is a decision model. We use its structured relevance
+scores to rank retrieved Apple documentation and video transcripts against your
+query's API, platform, and version requirements. It ranks sources, not generated
+answers; a backup reranker keeps search available if the primary API fails.
 
 ---
 
@@ -108,7 +115,7 @@ Start immediately with no MCP Token required. Get an MCP Token for higher usage 
 
 - **🔍 Semantic Search for RAG** - Vector similarity with semantic understanding for intelligent retrieval
 - **🔎 Keyword Search** - Precise technical term matching for API names and specific terminology
-- **🎯 Hybrid Search** - Combined semantic and keyword search with AI reranking for optimal results
+- **🎯 Hybrid Search** - Semantic and keyword retrieval, ranked by [Jev](https://typesafe.ai/) relevance scores
 - **📚 Complete Coverage** - iOS 27, iPadOS 27, macOS 27, watchOS 27, tvOS 27, and visionOS 27 documentation
 - **🎬 WWDC26 Videos** - Full transcripts from Apple Developer videos and WWDC26 sessions
 - **⚡ Fast Response** - Optimized for speed across all content types

@@ -50,9 +50,9 @@ export function CTASection() {
 
 			{/* Content */}
 			<div className="relative px-6 py-32 sm:px-6 sm:py-40 lg:px-8">
-				<div className="mx-auto max-w-5xl text-center">
+				<div className="text-center">
 					<TypewriterEffectSmooth words={words} />
-					<p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-light/90">
+					<p className="mt-6 text-lg leading-8 text-light/90">
 						<span className="font-extrabold text-white bg-gradient-to-r from-brand to-brand-secondary px-2 py-1 rounded-lg text-xl tracking-wide transform -rotate-5 inline-block hover:rotate-0 transition-transform duration-300">
 							Vibe Coding
 						</span>{" "}

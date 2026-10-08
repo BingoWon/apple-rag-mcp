@@ -25,3 +25,10 @@ systemctl enable --now apple-rag-postgres-backup-check.timer
 
 Application deployments must run `pnpm build` before `wrangler deploy`. The build command includes
 lint, type checking, and tests. Apply D1 migrations with `pnpm db:migrate`.
+
+## Releases
+
+Update `package.json` and `server.json` to the same new version, then push to `main`.
+After CI succeeds, `.github/workflows/release.yml` creates its `vX.Y.Z` tag and release.
+An existing tag is skipped. `chore(release): vX.Y.Z` is the release commit naming convention,
+not the trigger; changing the commit message without changing the version does not publish a release.

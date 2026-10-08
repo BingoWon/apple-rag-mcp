@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import i18next from "i18next";
 import { createElement } from "react";
@@ -70,10 +71,24 @@ test("retrieval sections and footer render model logos in both languages", async
 				assert.ok(html.includes("RAG"));
 				assert.ok(!html.includes("&lt;jev&gt;"));
 				assert.ok(!html.includes("text-typesafe leading-none"));
+				if (Component === CTASection) {
+					assert.ok(!html.includes("max-w-2xl"));
+					assert.ok(!html.includes("max-w-5xl"));
+				}
 			}
 		}
 	} finally {
 		if (storage) Object.defineProperty(globalThis, "localStorage", storage);
 		else Reflect.deleteProperty(globalThis, "localStorage");
+	}
+});
+
+test("both READMEs introduce Jev scoring with a local logo and official link", () => {
+	for (const file of ["README.md", "README.zh-CN.md"]) {
+		const markdown = readFileSync(new URL(`../../${file}`, import.meta.url), "utf8");
+		assert.ok(markdown.includes("[Jev](https://typesafe.ai/)"));
+		assert.ok(markdown.includes('src="./public/typesafe-logo.webp"'));
+		assert.ok(markdown.includes("API"));
+		assert.ok(markdown.includes(file === "README.md" ? "not generated" : "不负责生成回答"));
 	}
 });
