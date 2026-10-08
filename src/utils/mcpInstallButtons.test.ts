@@ -61,8 +61,10 @@ test("renders one copy-prompt button and three native install buttons in both la
 		assert.equal(html.match(/<img /g)?.length, 10);
 		assert.match(
 			html,
-			/title="Codex, Claude Code, OpenCode, Pi, Antigravity, Augment Code, Cline"/,
+			/title="Codex, Claude Code, OpenCode, Pi, Antigravity, Cline, Augment Code"/,
 		);
+		const logos = [...html.matchAll(/<img\b[^>]*src="([^"]+)"/g)].map(([, src]) => src);
+		assert.deepEqual(logos.slice(5, 7), ["/mcp-clients/cline.png", "/mcp-clients/augmentcode.png"]);
 		assert.equal(html.match(/rounded-sm bg-white object-contain/g)?.length, 3);
 		assert.doesNotMatch(html, /test-token/);
 		assert.doesNotMatch(html, /Copy JSON|复制 JSON|Copy Configuration|复制配置/);

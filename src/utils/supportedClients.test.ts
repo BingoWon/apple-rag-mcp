@@ -20,13 +20,22 @@ test("supported clients follow the copy-button order and exclude VS Code Insider
 			"OpenCode",
 			"Pi",
 			"Antigravity",
-			"Augment Code",
-			"Cline",
 			"Cursor",
 			"VS Code",
+			"Cline",
+			"Augment Code",
 		],
 	);
-	assert.deepEqual(SUPPORTED_CLIENTS.slice(0, PROMPT_CLIENTS.length), PROMPT_CLIENTS);
+	assert.deepEqual(
+		SUPPORTED_CLIENTS.filter((client) =>
+			PROMPT_CLIENTS.some((promptClient) => promptClient.label === client.label),
+		),
+		PROMPT_CLIENTS,
+	);
+	assert.deepEqual(
+		SUPPORTED_CLIENTS.slice(-2).map((client) => client.label),
+		["Cline", "Augment Code"],
+	);
 	assert.equal(INSTALL_CLIENTS.filter((client) => client.key === "vscode-insiders").length, 1);
 	assert.equal(new Set(SUPPORTED_CLIENTS.map((client) => client.label)).size, 9);
 	for (const client of SUPPORTED_CLIENTS) {

@@ -85,13 +85,13 @@ export const PROMPT_CLIENTS = [
 		href: "https://antigravity.google",
 	},
 	{
-		label: "Augment Code",
-		logo: "/mcp-clients/augmentcode.png",
-		href: "https://www.augmentcode.com",
-	},
-	{
 		label: "Cline",
 		logo: "/mcp-clients/cline.png",
 		href: "https://github.com/cline/cline",
+	},
+	{
+		label: "Augment Code",
+		logo: "/mcp-clients/augmentcode.png",
+		href: "https://www.augmentcode.com",
 	},
 ];
