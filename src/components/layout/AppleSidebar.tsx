@@ -1,5 +1,6 @@
 import {
 	IconArrowLeft,
+	IconArrowUpRight,
 	IconChartBar,
 	IconCreditCard,
 	IconDashboard,
@@ -14,6 +15,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { JevBrand } from "@/components/ui/jev-brand";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { Avatar } from "@/components/ui/OptimizedImage";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
@@ -130,6 +132,54 @@ function SidebarFooter({
 	);
 }
 
+function SidebarJevPromotion() {
+	const { t } = useTranslation();
+	const { open } = useSidebar();
+
+	return (
+		<div className="sidebar-jev shrink-0">
+			{open ? (
+				<div className="rounded-lg border border-typesafe/25 border-l-2 border-l-typesafe bg-typesafe/10 p-3">
+					<p className="mb-2 text-xs font-medium text-muted">
+						{t("dashboard.jev_integration_label")}
+					</p>
+					<h2 className="text-xl leading-7">
+						<JevBrand />
+					</h2>
+					<p className="mt-2 text-xs leading-5 text-muted">{t("dashboard.jev_integration")}</p>
+					<a
+						href="/#jev"
+						target="_blank"
+						rel="noopener noreferrer"
+						className="mt-3 inline-flex items-center gap-1 rounded-sm text-xs font-medium text-light underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-typesafe"
+					>
+						{t("dashboard.jev_learn_more")}
+						<IconArrowUpRight className="size-3.5" aria-hidden="true" />
+					</a>
+				</div>
+			) : (
+				<a
+					href="/#jev"
+					target="_blank"
+					rel="noopener noreferrer"
+					title={`Jev: ${t("dashboard.jev_integration_label")}`}
+					aria-label={`Jev: ${t("dashboard.jev_integration_label")}`}
+					className="mx-auto flex size-10 items-center justify-center rounded-lg border border-typesafe/25 bg-typesafe/10 transition-colors hover:bg-typesafe/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-typesafe"
+				>
+					<img
+						src="/typesafe-logo.webp"
+						alt=""
+						width={32}
+						height={32}
+						decoding="async"
+						className="size-8 rounded-md"
+					/>
+				</a>
+			)}
+		</div>
+	);
+}
+
 const AppleSidebarComponent = ({ children }: { children: React.ReactNode }) => {
 	const { t } = useTranslation();
 	const { user, logout, isAuthenticated } = useAuth();
@@ -210,7 +260,7 @@ const AppleSidebarComponent = ({ children }: { children: React.ReactNode }) => {
 		>
 			<Sidebar open={open} setOpen={setOpen}>
 				<SidebarBody className="justify-between gap-10">
-					<div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto">
+					<div className="flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto">
 						<SidebarHeader />
 						<div className="mt-8 flex flex-col gap-2">
 							{links.map((link, idx) => {
@@ -221,7 +271,10 @@ const AppleSidebarComponent = ({ children }: { children: React.ReactNode }) => {
 							})}
 						</div>
 					</div>
-					<SidebarFooter user={user} />
+					<div className="shrink-0 space-y-5">
+						<SidebarJevPromotion />
+						<SidebarFooter user={user} />
+					</div>
 				</SidebarBody>
 			</Sidebar>
 			<Dashboard>{children}</Dashboard>

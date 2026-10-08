@@ -17,7 +17,7 @@ export function JevBrand() {
 				decoding="async"
 				className="absolute left-0 top-1/2 size-[0.9em] -translate-y-1/2 rounded-[0.18em]"
 			/>
-			<span className="jev-brand-name">Jev</span>
+			<span className="jev-brand-name font-bold">Jev</span>
 		</a>
 	);
 }

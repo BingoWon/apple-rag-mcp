@@ -250,9 +250,7 @@ main,
 }
 
 .jev-brand-name {
-	text-shadow:
-		-0.04em -0.04em 0 var(--color-typesafe-light),
-		0.07em 0.07em 0 var(--color-typesafe);
+	text-shadow: 0.07em 0.07em 0 var(--color-typesafe);
 }
 
 .hero-sticker {

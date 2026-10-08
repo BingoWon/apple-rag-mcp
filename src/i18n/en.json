@@ -266,6 +266,9 @@
 	"dashboard": {
 		"title": "Dashboard Overview",
 		"subtitle": "Monitor your MCP usage and manage your account",
+		"jev_integration_label": "Decision model integrated",
+		"jev_integration": "Relevance scores for RAG, putting useful Apple sources first.",
+		"jev_learn_more": "Learn more",
 		"welcome_oauth": "Welcome {{name}}! Successfully authenticated via OAuth.",
 		"auth_failed": "Authentication failed. Please try again.",
 		"stats_status": "Status",
