@@ -1,6 +1,7 @@
 import { IconBolt, IconClock, IconCode, IconSearch, IconShieldCheck } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 import { GlowingEffect } from "@/components/ui/glowing-effect";
+import { JevText } from "@/components/ui/jev-brand";
 
 export function FeaturesSection() {
 	const { t } = useTranslation();
@@ -20,7 +21,7 @@ export function FeaturesSection() {
 		},
 		{
 			name: t("features.ai_search"),
-			description: t("features.ai_search_desc"),
+			description: <JevText i18nKey="features.ai_search_desc" />,
 			icon: IconSearch,
 			area: "md:[grid-area:2/1/3/7] xl:[grid-area:1/5/3/8]",
 		},
@@ -52,7 +53,9 @@ export function FeaturesSection() {
 					<p className="mt-2 text-3xl font-bold tracking-tight text-light sm:text-4xl">
 						{t("features.title")}
 					</p>
-					<p className="mt-6 text-lg leading-8 text-muted">{t("features.subtitle")}</p>
+					<p className="mt-6 text-lg leading-8 text-muted">
+						<JevText i18nKey="features.subtitle" />
+					</p>
 				</div>
 				<div className="mx-auto mt-8 max-w-4xl sm:mt-20 lg:mt-24 lg:max-w-6xl">
 					<ul className="grid grid-cols-1 grid-rows-none gap-3 md:grid-cols-12 md:grid-rows-3 md:gap-4 lg:gap-4 xl:max-h-[34rem] xl:grid-rows-2">

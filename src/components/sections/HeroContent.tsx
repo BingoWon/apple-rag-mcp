@@ -1,9 +1,9 @@
 import { IconBrandGithub } from "@tabler/icons-react";
 import type React from "react";
-import { Trans, useTranslation } from "react-i18next";
+import { useTranslation } from "react-i18next";
 import { ArrowButton } from "@/components/ui/arrow-button";
 import ColourfulText from "@/components/ui/colourful-text";
-import { JevBrand } from "@/components/ui/jev-brand";
+import { JevText } from "@/components/ui/jev-brand";
 import { cn } from "@/lib/utils";
 
 export const HeroContent: React.FC = () => {
@@ -52,7 +52,7 @@ export const HeroContent: React.FC = () => {
 					<span className="font-extrabold text-white bg-gradient-to-r from-brand to-brand-secondary px-2 py-1 rounded-lg text-xl tracking-wide transform -rotate-2 inline-block hover:rotate-0 transition-transform duration-300">
 						{t("hero.subtitle_vibecoders")}
 					</span>
-					<Trans i18nKey="hero.subtitle_desc" components={{ jev: <JevBrand /> }} />
+					<JevText i18nKey="hero.subtitle_desc" />
 				</p>
 
 				{/* CTA Buttons */}

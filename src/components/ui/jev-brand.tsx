@@ -1,10 +1,13 @@
+import { Trans } from "react-i18next";
+
 export function JevBrand() {
 	return (
 		<a
 			href="https://typesafe.ai/"
 			target="_blank"
 			rel="noopener noreferrer"
-			className="jev-brand inline-flex items-center gap-[0.25em] align-middle whitespace-nowrap text-typesafe leading-none focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-typesafe"
+			onClick={(event) => event.stopPropagation()}
+			className="jev-brand relative inline-block pl-[1.15em] align-baseline whitespace-nowrap text-light focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-typesafe"
 		>
 			<img
 				src="/typesafe-logo.webp"
@@ -12,9 +15,22 @@ export function JevBrand() {
 				width={32}
 				height={32}
 				decoding="async"
-				className="size-[1em] shrink-0 rounded-[0.18em]"
+				className="absolute left-0 top-1/2 size-[0.9em] -translate-y-1/2 rounded-[0.18em]"
 			/>
-			<span>Jev</span>
+			<span className="jev-brand-name">Jev</span>
 		</a>
+	);
+}
+
+export function JevText({ i18nKey }: { i18nKey: string }) {
+	return (
+		<Trans
+			i18nKey={i18nKey}
+			components={{
+				jev: <JevBrand />,
+				rag: <span className="rag-name" />,
+				combo: <span className="rag-jev-pair inline-block whitespace-nowrap" />,
+			}}
+		/>
 	);
 }

@@ -29,8 +29,12 @@ test("Jev section uses logo-prefixed branding and centered natural scrolling wit
 
 			assert.equal(html.split('class="jev-brand ').length - 1, 2);
 			assert.ok(
-				html.includes(language === "en" ? "ranks them by relevance." : "决策模型按相关性排序。"),
+				html.includes(
+					language === "en" ? "A decision model built for software." : "为软件而生的决策模型。",
+				),
 			);
+			assert.ok(html.includes(language === "en" ? "Ranked by " : "文档重排序"));
+			assert.ok(html.includes("jev-drawing"));
 			assert.ok(html.includes('class="relative w-full"'));
 			assert.ok(html.includes("min-h-[65svh]"));
 			assert.ok(html.includes("items-center justify-center"));
@@ -38,7 +42,7 @@ test("Jev section uses logo-prefixed branding and centered natural scrolling wit
 			assert.ok(!html.includes("180svh"));
 			assert.ok(!html.includes("160svh"));
 			assert.ok(!html.includes("400vh"));
-			assert.ok(html.includes("text-3xl font-bold text-typesafe sm:text-4xl"));
+			assert.ok(html.includes("text-3xl font-bold text-light sm:text-4xl"));
 			assert.ok(html.includes("max-w-6xl text-lg leading-8 text-muted"));
 			assert.ok(html.includes('viewBox="0 300 1440 430"'));
 			assert.ok(html.includes('<feGaussianBlur in="SourceGraphic" stdDeviation="5"'));
@@ -59,8 +63,12 @@ test("Jev section uses logo-prefixed branding and centered natural scrolling wit
 			assert.ok(!html.includes("Aceternity"));
 			assert.ok(!html.includes("TypeSafe"));
 			assert.ok(!html.includes(">typesafe.ai<"));
-			assert.ok(!html.includes("Ranked by"));
-			assert.ok(!html.includes("文档重排序"));
+			assert.ok(!html.includes("Semantic and keyword"));
+			assert.ok(!html.includes("语义与关键词"));
+			assert.ok(!html.includes("leading-none"));
+			assert.ok(!html.includes("text-typesafe"));
+			assert.ok(html.includes("align-baseline whitespace-nowrap text-light"));
+			assert.equal(html.split('stroke-dasharray="0 1"').length - 1, 10);
 		}
 	} finally {
 		if (storage) Object.defineProperty(globalThis, "localStorage", storage);

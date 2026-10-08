@@ -72,23 +72,24 @@
 		"title_into": "into AI Agents via MCP",
 		"subtitle_heres": "Here's to the",
 		"subtitle_vibecoders": "Vibe Coders",
-		"subtitle_desc": ". Born with Apple DNA. RAG + <jev>Jev</jev> bring WWDC26, iOS 27, and official documentation insights to your agents."
+		"subtitle_desc": ". Born with Apple DNA. <combo><rag>RAG</rag> + <jev>Jev</jev></combo> bring WWDC26, iOS 27, and official documentation insights to your agents."
 	},
 
 	"jev": {
-		"description": "Semantic and keyword search find candidates. <jev>Jev</jev> ranks them by relevance."
+		"title": "Ranked by <jev>Jev</jev>",
+		"description": "A decision model built for software. <jev>Jev</jev> scores relevance so agents can pick the right Apple sources."
 	},
 
 	"features": {
 		"eyebrow": "Everything you need",
 		"title": "Powerful features for developers",
-		"subtitle": "Built specifically for Apple developers, our platform provides the tools and features you need to find answers quickly and build better apps.",
+		"subtitle": "Apple knowledge through RAG, ranked by <jev>Jev</jev>, ready for your AI agents.",
 		"lightning_fast": "Lightning Fast",
 		"lightning_fast_desc": "Get instant responses with our optimized search infrastructure.",
 		"always_secure": "MCP 2026 Native",
 		"always_secure_desc": "Built for the stateless MCP 2026-07-28 protocol.",
 		"ai_search": "AI-Powered Search",
-		"ai_search_desc": "Advanced RAG hybrid technology understands context and provides accurate, relevant answers from Apple's documentation.",
+		"ai_search_desc": "RAG retrieves candidate documents. <jev>Jev</jev> scores relevance and puts the most useful sources first.",
 		"code_examples": "Code Examples",
 		"code_examples_desc": "Get practical code examples in Swift, Objective-C, and SwiftUI alongside documentation references.",
 		"realtime_updates": "Real-time Updates",
@@ -109,19 +110,19 @@
 	"datasources": {
 		"eyebrow": "Comprehensive Knowledge Base",
 		"title": "Multiple data sources, one search",
-		"subtitle": "Empower your AI agents with comprehensive Apple developer knowledge - from official documentation to WWDC26 video transcripts - all accessible through our unified MCP interface.",
+		"subtitle": "Official Apple documentation and WWDC26 transcripts, retrieved with RAG and ranked by <jev>Jev</jev> through one MCP interface.",
 		"docs_title": "Apple Developer Documentation",
-		"docs_desc": "All of Apple's official developer docs in one place, with smart AI search to help your AI agents find exactly what they need, fast.",
+		"docs_desc": "Official Apple docs, found through RAG and ranked by <jev>Jev</jev> for your agent.",
 		"fight_title": "No shirt, no shoes, no weapons.",
 		"fight_desc": "If someone yells \"stop!\", goes limp, or taps out, the fight is over.",
 		"videos_title": "WWDC26 Videos & Sessions",
-		"videos_desc": "Full transcripts from WWDC26 and Apple Developer videos - talks, coding tutorials, and tech sessions, all easily searchable through our RAG system."
+		"videos_desc": "WWDC26 and Apple Developer video transcripts, searchable with RAG + <jev>Jev</jev>."
 	},
 
 	"testimonials": {
 		"eyebrow": "Happy Vibes",
 		"title": "Developers Are Loving This!",
-		"subtitle": "Discover why developers are making our Apple RAG MCP a core part of their stack.",
+		"subtitle": "Built for Apple developers, powered by RAG + <jev>Jev</jev>.",
 		"quote1": "I went from zero iOS knowledge to shipping apps without writing a single line of code. This MCP is pure magic for non-developers like me!",
 		"quote2": "LLMs were decent, but never quite hit the mark for serious Apple development. This MCP changes everything - finally, AI that truly gets Apple's ecosystem.",
 		"quote3": "I've been looking for this kind of solution for a while and even evaluated building something similar internally. The execution here is solid and well-architected.",
@@ -137,7 +138,7 @@
 	"pricing": {
 		"eyebrow": "Pricing",
 		"title": "Choose the right plan for you",
-		"subtitle": "Start free and scale as you grow. All plans include access to our AI-powered MCP.",
+		"subtitle": "Start free. Every plan includes RAG retrieval and <jev>Jev</jev> relevance ranking.",
 		"most_popular": "Most popular",
 		"badge_card": "Card",
 		"badge_alipay": "Alipay",
@@ -188,9 +189,9 @@
 		"requests_per_minute": "{{count}} requests per minute",
 		"unlimited_rpm": "Unlimited requests per minute",
 		"mcp_supported": "MCP fully supported",
-		"semantic_search": "Semantic Search for RAG",
+		"semantic_search": "Semantic search",
 		"keyword_search": "Keyword search",
-		"hybrid_search": "Hybrid search",
+		"hybrid_search": "Hybrid search (RAG + <jev>Jev</jev>)",
 		"community_support": "Community support",
 		"multiple_tokens": "Multiple MCP tokens",
 		"faster_response": "Faster response time",
@@ -208,7 +209,7 @@
 		"whats_next": "What's Next?",
 		"feature_queries": "Access to 50,000 queries per week",
 		"feature_rpm": "50 requests per minute",
-		"feature_rag": "Advanced RAG search features",
+		"feature_rag": "RAG search with <jev>Jev</jev> relevance ranking",
 		"feature_analytics": "Usage analytics dashboard",
 		"go_dashboard": "Go to Dashboard",
 		"back_home": "Back to Home"
@@ -220,7 +221,7 @@
 		"empower": "empower",
 		"your": "your",
 		"ai_agents": "AI agents?",
-		"subtitle": "hits walls sometimes. We keep your AI agents flowing through Apple's complex ecosystem with instant, precise knowledge."
+		"subtitle": "flows with RAG + <jev>Jev</jev>: official Apple knowledge, ranked for your agents."
 	},
 
 	"auth": {
@@ -676,7 +677,7 @@
 	},
 
 	"footer": {
-		"tagline": "Where RAG technology meets MCP, your AI agents don't just code Apple - they master it.",
+		"tagline": "RAG finds Apple knowledge. <jev>Jev</jev> ranks relevant sources. MCP brings them to your agents.",
 		"copyright": "© 2026 Apple RAG MCP • All rights reserved",
 		"privacy": "Privacy Policy",
 		"terms": "Terms of Service",

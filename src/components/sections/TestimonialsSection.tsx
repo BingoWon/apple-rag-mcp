@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { AnimatedTestimonials } from "@/components/ui/animated-testimonials";
+import { JevText } from "@/components/ui/jev-brand";
 
 export function TestimonialsSection() {
 	const { t } = useTranslation();
@@ -49,7 +50,7 @@ export function TestimonialsSection() {
 						{t("testimonials.title")}
 					</p>
 					<p className="mt-4 sm:mt-6 text-lg leading-8 text-muted max-w-2xl mx-auto">
-						{t("testimonials.subtitle")}
+						<JevText i18nKey="testimonials.subtitle" />
 					</p>
 				</div>
 

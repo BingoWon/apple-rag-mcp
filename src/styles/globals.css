@@ -249,6 +249,10 @@ main,
 	pointer-events: none;
 }
 
+.jev-brand-name {
+	text-shadow: 0 1px 8px rgba(230, 80, 187, 0.35);
+}
+
 .hero-sticker {
 	position: absolute;
 	display: block;

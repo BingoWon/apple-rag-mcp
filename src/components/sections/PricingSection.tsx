@@ -1,10 +1,11 @@
 import { IconBrandAlipay, IconCheck, IconCreditCard } from "@tabler/icons-react";
 import { useEffect } from "react";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import { Modal, ModalTrigger } from "@/components/ui/animated-modal";
 import { Button } from "@/components/ui/Button";
 import { EvervaultCard, Icon } from "@/components/ui/evervault-card";
+import { JevBrand, JevText } from "@/components/ui/jev-brand";
 import { useAuth } from "@/hooks/useAuth";
 import { trackEvent } from "@/lib/analytics";
 import { getPricingTiers } from "@/lib/plans";
@@ -67,7 +68,9 @@ export function PricingSection() {
 				<p className="mt-2 text-3xl font-bold tracking-tight text-light sm:text-4xl">
 					{t("pricing.title")}
 				</p>
-				<p className="mt-4 sm:mt-6 text-lg leading-8 text-muted">{t("pricing.subtitle")}</p>
+				<p className="mt-4 sm:mt-6 text-lg leading-8 text-muted">
+					<JevText i18nKey="pricing.subtitle" />
+				</p>
 			</div>
 			<div className="mx-auto mt-4 sm:mt-10 grid max-w-md grid-cols-1 gap-y-6 lg:mx-0 lg:max-w-none lg:grid-cols-3 lg:gap-x-8 lg:gap-y-0 lg:items-start">
 				{tiers.map((tier) => (
@@ -118,7 +121,9 @@ export function PricingSection() {
 										{tier.features.map((feature) => (
 											<li key={feature} className="flex gap-x-3">
 												<IconCheck className="h-6 w-5 flex-none text-brand" aria-hidden="true" />
-												{feature}
+												<span className="min-w-0">
+													<Trans defaults={feature} components={{ jev: <JevBrand /> }} />
+												</span>
 											</li>
 										))}
 									</ul>

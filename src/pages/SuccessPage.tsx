@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
+import { JevText } from "@/components/ui/jev-brand";
 
 function SuccessContent() {
 	const { t } = useTranslation();
@@ -29,7 +30,9 @@ function SuccessContent() {
 						</li>
 						<li className="flex items-center">
 							<IconCircleCheck className="w-4 h-4 text-success mr-2 flex-shrink-0" />
-							{t("success.feature_rag")}
+							<span>
+								<JevText i18nKey="success.feature_rag" />
+							</span>
 						</li>
 						<li className="flex items-center">
 							<IconCircleCheck className="w-4 h-4 text-success mr-2 flex-shrink-0" />

@@ -2,6 +2,7 @@ import { IconBrandGithub } from "@tabler/icons-react";
 import type React from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
+import { JevText } from "@/components/ui/jev-brand";
 import { trackEvent } from "@/lib/analytics";
 import { activateFabContact } from "@/utils/contact";
 
@@ -49,7 +50,9 @@ export function Footer() {
 						<div className="flex items-center">
 							<img src="/logo-with-text.svg" alt="Apple RAG MCP" className="h-8 w-auto" />
 						</div>
-						<p className="text-sm leading-6 text-muted">{t("footer.tagline")}</p>
+						<p className="text-sm leading-6 text-muted">
+							<JevText i18nKey="footer.tagline" />
+						</p>
 						<div className="flex space-x-6">
 							{navigation.social.map((item) => (
 								<a

@@ -45,7 +45,8 @@ test("hero stickers use local images, accessible labels and official links in bo
 					html.indexOf('class="hero-stickers"'),
 			);
 			assert.ok(html.includes(locale.hero.title_inject));
-			assert.ok(html.includes("RAG + "));
+			assert.ok(html.includes('class="rag-name">RAG</span> + '));
+			assert.ok(html.includes('class="rag-jev-pair inline-block whitespace-nowrap"'));
 			assert.ok(html.includes('class="jev-brand '));
 			assert.ok(!html.includes("TypeSafe"));
 			assert.ok(!html.includes("&lt;jev&gt;"));

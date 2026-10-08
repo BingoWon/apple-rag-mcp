@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { ArrowButton } from "@/components/ui/arrow-button";
 import { Button } from "@/components/ui/Button";
+import { JevText } from "@/components/ui/jev-brand";
 import { TypewriterEffectSmooth } from "@/components/ui/typewriter-effect";
 
 export function CTASection() {
@@ -31,7 +32,7 @@ export function CTASection() {
 	];
 
 	return (
-		<div className="relative overflow-hidden rounded-xl">
+		<div className="relative overflow-hidden rounded-xl" id="cta">
 			{/* Vertical Fade Mask - Creates transparent fade at top and bottom */}
 			<div
 				className="absolute inset-0"
@@ -55,7 +56,7 @@ export function CTASection() {
 						<span className="font-extrabold text-white bg-gradient-to-r from-brand to-brand-secondary px-2 py-1 rounded-lg text-xl tracking-wide transform -rotate-5 inline-block hover:rotate-0 transition-transform duration-300">
 							Vibe Coding
 						</span>{" "}
-						{t("cta.subtitle")}
+						<JevText i18nKey="cta.subtitle" />
 					</p>
 					<div className="mt-10 flex items-center justify-center gap-x-6">
 						<ArrowButton />

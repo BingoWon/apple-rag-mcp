@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { JevText } from "@/components/ui/jev-brand";
 import { WobbleCard } from "../ui/wobble-card";
 
 export function DataSourcesShowcase() {
@@ -13,7 +14,9 @@ export function DataSourcesShowcase() {
 					<p className="mt-2 text-3xl font-bold tracking-tight text-light sm:text-4xl">
 						{t("datasources.title")}
 					</p>
-					<p className="mt-6 text-lg leading-8 text-muted">{t("datasources.subtitle")}</p>
+					<p className="mt-6 text-lg leading-8 text-muted">
+						<JevText i18nKey="datasources.subtitle" />
+					</p>
 				</div>
 				<div className="grid grid-cols-1 lg:grid-cols-3 gap-4 w-full">
 					<WobbleCard
@@ -26,7 +29,7 @@ export function DataSourcesShowcase() {
 								{t("datasources.docs_title")}
 							</h2>
 							<p className="mt-4 text-left  text-base/6 text-neutral-200">
-								{t("datasources.docs_desc")}
+								<JevText i18nKey="datasources.docs_desc" />
 							</p>
 						</div>
 						<img
@@ -61,7 +64,7 @@ export function DataSourcesShowcase() {
 								{t("datasources.videos_title")}
 							</h2>
 							<p className="mt-4 max-w-[26rem] text-left  text-base/6 text-neutral-200">
-								{t("datasources.videos_desc")}
+								<JevText i18nKey="datasources.videos_desc" />
 							</p>
 						</div>
 						<img
