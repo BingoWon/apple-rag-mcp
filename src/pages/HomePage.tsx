@@ -3,6 +3,7 @@ import { Footer } from "@/components/layout/Footer";
 import { CTASection } from "@/components/sections/CTASection";
 import { DataSourcesShowcase } from "@/components/sections/DataSourcesSection";
 import { FeaturesSection } from "@/components/sections/FeaturesSection";
+import { JevSection } from "@/components/sections/JevSection";
 import { PricingSection } from "@/components/sections/PricingSection";
 import { QuickStartSection } from "@/components/sections/QuickStartSection";
 import { TestimonialsSection } from "@/components/sections/TestimonialsSection";
@@ -38,6 +39,9 @@ export default function HomePage() {
 			</ProfiledSection>
 			<ProfiledSection id="HeroSection">
 				<HeroSection />
+			</ProfiledSection>
+			<ProfiledSection id="JevSection">
+				<JevSection />
 			</ProfiledSection>
 			<TracingBeam>
 				<main>

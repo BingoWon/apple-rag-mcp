@@ -73,6 +73,11 @@
 		"subtitle_desc": ". Born with Apple DNA. RAG infuses your agents with WWDC26, iOS 27, and official documentation insights."
 	},
 
+	"jev": {
+		"title": "Ranked by Jev",
+		"description": "Semantic and keyword search find the documents. Jev's System One decision model scores and ranks them."
+	},
+
 	"features": {
 		"eyebrow": "Everything you need",
 		"title": "Powerful features for developers",
