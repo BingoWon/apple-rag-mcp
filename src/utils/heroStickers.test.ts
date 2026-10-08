@@ -30,21 +30,25 @@ test("hero stickers use local images, accessible labels and official links in bo
 				createElement(I18nextProvider, { i18n }, createElement(HeroContent)),
 			);
 			for (const [asset, label, className] of [
-				["typesafe-ceo.webp", locale.hero.typesafe_ceo, "hero-sticker-ceo"],
-				["typesafe-logo.webp", locale.hero.typesafe_logo, "hero-sticker-logo"],
+				["typesafe-ceo.webp", locale.hero.model_team, "hero-sticker-ceo"],
+				["typesafe-logo.webp", locale.hero.model_logo, "hero-sticker-logo"],
 			]) {
 				assert.ok(existsSync(new URL(`../../public/${asset}`, import.meta.url)));
 				assert.ok(html.includes(`src="/${asset}"`));
 				assert.ok(html.includes(`alt="${label}"`));
 				assert.ok(html.includes(`class="hero-sticker ${className}"`));
 			}
-			assert.equal(html.split('href="https://typesafe.ai/"').length - 1, 2);
+			assert.equal(html.split('href="https://typesafe.ai/"').length - 1, 3);
 			assert.ok(html.includes('href="https://github.com/BingoWon/apple-rag-mcp"'));
 			assert.ok(
 				html.indexOf('href="https://github.com/BingoWon/apple-rag-mcp"') <
-					html.indexOf('href="https://typesafe.ai/"'),
+					html.indexOf('class="hero-stickers"'),
 			);
 			assert.ok(html.includes(locale.hero.title_inject));
+			assert.ok(html.includes("RAG + "));
+			assert.ok(html.includes('class="jev-brand '));
+			assert.ok(!html.includes("TypeSafe"));
+			assert.ok(!html.includes("&lt;jev&gt;"));
 		}
 	} finally {
 		if (storage) Object.defineProperty(globalThis, "localStorage", storage);

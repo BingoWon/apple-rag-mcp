@@ -65,19 +65,18 @@
 	},
 
 	"hero": {
-		"typesafe_ceo": "TypeSafe CEO",
-		"typesafe_logo": "TypeSafe logo",
+		"model_team": "Model team",
+		"model_logo": "Model logo",
 		"title_inject": "Inject",
 		"title_apple": "Apple Expertise",
 		"title_into": "into AI Agents via MCP",
 		"subtitle_heres": "Here's to the",
 		"subtitle_vibecoders": "Vibe Coders",
-		"subtitle_desc": ". Born with Apple DNA. RAG infuses your agents with WWDC26, iOS 27, and official documentation insights."
+		"subtitle_desc": ". Born with Apple DNA. RAG + <jev>Jev</jev> bring WWDC26, iOS 27, and official documentation insights to your agents."
 	},
 
 	"jev": {
-		"title": "Ranked by Jev",
-		"description": "Semantic and keyword search find the documents. Jev's System One decision model scores and ranks them."
+		"description": "Semantic and keyword search find candidates. <jev>Jev</jev> ranks them by relevance."
 	},
 
 	"features": {

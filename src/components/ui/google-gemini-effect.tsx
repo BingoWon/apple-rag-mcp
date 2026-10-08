@@ -1,6 +1,7 @@
 "use client";
 
 import { type MotionValue, motion } from "motion/react";
+import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 const transition = {
@@ -15,47 +16,19 @@ export const GoogleGeminiEffect = ({
 	className,
 }: {
 	pathLengths: MotionValue[];
-	title?: string;
-	description?: string;
+	title: ReactNode;
+	description: ReactNode;
 	className?: string;
 }) => {
 	return (
-		<div className={cn("sticky top-24 sm:top-28", className)}>
+		<div className={cn("relative w-full", className)}>
 			<div className="relative z-10 mx-auto max-w-7xl px-6 text-center lg:px-8">
-				<a
-					href="https://typesafe.ai/"
-					target="_blank"
-					rel="noopener noreferrer"
-					className="inline-flex items-center gap-2.5 rounded-sm text-base font-semibold leading-7 text-light focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-typesafe"
-				>
-					<img
-						src="/typesafe-logo.webp"
-						alt=""
-						width={32}
-						height={32}
-						loading="lazy"
-						decoding="async"
-						className="size-8 rounded-md"
-					/>
-					TypeSafe
-				</a>
-				<h2 className="mt-2 text-3xl font-bold text-typesafe sm:text-4xl">
-					{title || "Ranked by Jev"}
+				<h2 className="flex items-center justify-center text-3xl font-bold text-typesafe sm:text-4xl">
+					{title}
 				</h2>
-				<p className="mx-auto mt-6 max-w-6xl text-lg leading-8 text-muted">
-					{description ||
-						"Semantic and keyword search find the documents. Jev's System One decision model scores and ranks them."}
-				</p>
+				<p className="mx-auto mt-4 max-w-6xl text-lg leading-8 text-muted">{description}</p>
 			</div>
-			<div className="relative mt-8 flex h-[clamp(120px,28svh,280px)] w-full items-center justify-center">
-				<a
-					href="https://typesafe.ai/"
-					target="_blank"
-					rel="noopener noreferrer"
-					className="relative z-10 rounded-full bg-light px-3 py-1.5 text-sm font-semibold text-inverse focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-typesafe"
-				>
-					typesafe.ai
-				</a>
+			<div className="pointer-events-none relative mt-6 h-[clamp(100px,20svh,180px)] w-full">
 				<svg
 					width="1440"
 					height="890"

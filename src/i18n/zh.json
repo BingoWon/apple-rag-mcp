@@ -65,19 +65,18 @@
 	},
 
 	"hero": {
-		"typesafe_ceo": "TypeSafe 首席执行官",
-		"typesafe_logo": "TypeSafe 标志",
+		"model_team": "模型团队",
+		"model_logo": "模型标志",
 		"title_inject": "将",
 		"title_apple": "Apple 开发者文档",
 		"title_into": "通过 MCP 注入 AI Agent",
 		"subtitle_heres": "致敬每一位",
 		"subtitle_vibecoders": "Vibe Coder",
-		"subtitle_desc": "，源自 Apple 基因。RAG 为你的 Agent 注入 WWDC26、iOS 27 与官方文档洞见。"
+		"subtitle_desc": "，源自 Apple 基因。RAG + <jev>Jev</jev> 为你的 Agent 注入 WWDC26、iOS 27 与官方文档洞见。"
 	},
 
 	"jev": {
-		"title": "Jev 文档重排序",
-		"description": "语义与关键词搜索找到候选文档，再由 Jev 的 System One 决策模型评分排序。"
+		"description": "语义与关键词搜索找到候选文档，<jev>Jev</jev> 决策模型按相关性排序。"
 	},
 
 	"features": {

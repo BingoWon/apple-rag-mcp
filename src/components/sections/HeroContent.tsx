@@ -1,8 +1,9 @@
 import { IconBrandGithub } from "@tabler/icons-react";
 import type React from "react";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import { ArrowButton } from "@/components/ui/arrow-button";
 import ColourfulText from "@/components/ui/colourful-text";
+import { JevBrand } from "@/components/ui/jev-brand";
 import { cn } from "@/lib/utils";
 
 export const HeroContent: React.FC = () => {
@@ -51,7 +52,7 @@ export const HeroContent: React.FC = () => {
 					<span className="font-extrabold text-white bg-gradient-to-r from-brand to-brand-secondary px-2 py-1 rounded-lg text-xl tracking-wide transform -rotate-2 inline-block hover:rotate-0 transition-transform duration-300">
 						{t("hero.subtitle_vibecoders")}
 					</span>
-					{t("hero.subtitle_desc")}
+					<Trans i18nKey="hero.subtitle_desc" components={{ jev: <JevBrand /> }} />
 				</p>
 
 				{/* CTA Buttons */}
@@ -80,12 +81,12 @@ export const HeroContent: React.FC = () => {
 					href="https://typesafe.ai/"
 					target="_blank"
 					rel="noopener noreferrer"
-					title={t("hero.typesafe_ceo")}
+					title={t("hero.model_team")}
 					className="hero-sticker hero-sticker-ceo"
 				>
 					<img
 						src="/typesafe-ceo.webp"
-						alt={t("hero.typesafe_ceo")}
+						alt={t("hero.model_team")}
 						width={512}
 						height={499}
 						decoding="async"
@@ -95,12 +96,12 @@ export const HeroContent: React.FC = () => {
 					href="https://typesafe.ai/"
 					target="_blank"
 					rel="noopener noreferrer"
-					title={t("hero.typesafe_logo")}
+					title={t("hero.model_logo")}
 					className="hero-sticker hero-sticker-logo"
 				>
 					<img
 						src="/typesafe-logo.webp"
-						alt={t("hero.typesafe_logo")}
+						alt={t("hero.model_logo")}
 						width={400}
 						height={400}
 						decoding="async"
