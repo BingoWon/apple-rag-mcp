@@ -37,6 +37,20 @@ reranker takes over if the API call fails.
 
 ---
 
+## Open Source. Ready to Use.
+
+The [hosted service](https://apple-rag.com/) connects your agent to an Apple knowledge base that is already collected, cleaned, and indexed.
+
+- **Ready-to-query sources:** Official developer documentation and video transcripts, available through one connection.
+- **Retrieval model calls included:** Embeddings, [Jev](https://typesafe.ai/) ranking, and the backup reranker run on our service.
+- **Ongoing upkeep:** We handle content collection, index updates, database backups, and protocol compatibility.
+
+The source is public for inspection and self-hosting. Running your own instance means operating a database, building and refreshing your corpus, and managing your model API credentials.
+
+[Start free](https://apple-rag.com/). [Pro](https://apple-rag.com/#pricing) includes 50,000 tool calls/week and 50/minute for $1/week, shared by `search` and `fetch`.
+
+---
+
 ## Start in Seconds
 
 **Configure with your agent:** In the [dashboard](https://apple-rag.com/overview),
@@ -104,8 +118,8 @@ Get practical code examples in Swift, Objective-C, and SwiftUI alongside documen
 ### 🔄 **Real-time Updates**
 Our documentation index is continuously updated for WWDC26, Xcode 27 beta, and the latest Apple developer resources.
 
-### 🆓 **Completely Free**
-Start immediately with no MCP Token required. Get an MCP Token for higher usage limits - all managed at [apple-rag.com](https://apple-rag.com).
+### 🆓 **Start Free**
+Try without an account: 30 tool calls/week and 3/minute. Register at [apple-rag.com](https://apple-rag.com/) for 50/week and 5/minute, shared by `search` and `fetch`.
 
 </td>
 </tr>

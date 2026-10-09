@@ -71,6 +71,7 @@ test("retrieval marketing pairs RAG with Jev across the entire website copy", ()
 			locale.hero.subtitle_desc,
 			locale.features.subtitle,
 			locale.features.ai_search_desc,
+			locale.quickstart.subtitle,
 			locale.datasources.subtitle,
 			locale.datasources.docs_desc,
 			locale.datasources.videos_desc,
@@ -96,6 +97,7 @@ test("retrieval sections and footer render model logos in both languages", async
 	});
 	try {
 		const { FeaturesSection } = await import("../components/sections/FeaturesSection.js");
+		const { QuickStartSection } = await import("../components/sections/QuickStartSection.js");
 		const { DataSourcesShowcase } = await import("../components/sections/DataSourcesSection.js");
 		const { TestimonialsSection } = await import("../components/sections/TestimonialsSection.js");
 		const { CTASection } = await import("../components/sections/CTASection.js");
@@ -110,6 +112,7 @@ test("retrieval sections and footer render model logos in both languages", async
 			});
 			for (const [Component, count] of [
 				[FeaturesSection, 2],
+				[QuickStartSection, 1],
 				[DataSourcesShowcase, 3],
 				[TestimonialsSection, 1],
 				[CTASection, 1],

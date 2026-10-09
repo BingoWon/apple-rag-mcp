@@ -175,6 +175,7 @@ export function PricingSection() {
 					</div>
 				))}
 			</div>
+			<p className="mt-6 text-center text-sm text-muted">{t("pricing.shared_quota")}</p>
 		</div>
 	);
 }

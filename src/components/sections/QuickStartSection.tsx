@@ -1,6 +1,7 @@
-import { IconBolt, IconCheck, IconCopy, IconRocket, IconSparkles } from "@tabler/icons-react";
+import { IconCalendar, IconCheck, IconCopy, IconGauge, IconRocket } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { JevText } from "@/components/ui/jev-brand";
 import { SUPPORTED_CLIENTS } from "@/constants/clients";
 import { MCP_SERVER_NAME, MCP_SERVER_URL } from "@/constants/mcp";
 import { copyText } from "@/utils/clipboard";
@@ -22,7 +23,7 @@ export function QuickStartSection() {
 	};
 
 	return (
-		<div className="relative py-24 sm:py-32">
+		<div className="relative py-24 sm:py-32" id="quickstart">
 			<div className="mx-auto max-w-7xl px-6 lg:px-8">
 				<div className="mx-auto max-w-4xl lg:text-center mb-12">
 					<h2 className="text-base font-semibold leading-7 text-brand">
@@ -31,7 +32,9 @@ export function QuickStartSection() {
 					<p className="mt-2 text-3xl font-bold tracking-tight text-light sm:text-4xl">
 						{t("quickstart.title")}
 					</p>
-					<p className="mt-6 text-lg leading-8 text-muted">{t("quickstart.subtitle")}</p>
+					<p className="mt-6 text-lg leading-8 text-muted">
+						<JevText i18nKey="quickstart.subtitle" />
+					</p>
 				</div>
 
 				<div className="mx-auto max-w-2xl">
@@ -70,6 +73,7 @@ export function QuickStartSection() {
 							<JsonHighlight code={CONFIG_CODE} />
 						</div>
 					</div>
+					<p className="mt-4 text-center text-sm text-muted">{t("quickstart.free_access")}</p>
 				</div>
 
 				{/* Pro Upgrade Banner */}
@@ -82,16 +86,16 @@ export function QuickStartSection() {
 							<div className="flex flex-wrap items-center gap-2 text-sm">
 								<span className="inline-flex items-center gap-1 text-brand font-semibold">
 									<IconRocket className="w-4 h-4" />
-									Pro
+									Pro · {t("plans.price_pro")}
 								</span>
 								<span className="inline-flex items-center gap-1 text-muted">
-									<IconBolt className="w-3.5 h-3.5 text-brand/70" />
-									{t("quickstart.pro_queries")}
+									<IconCalendar className="w-3.5 h-3.5 text-brand/70" />
+									{t("quickstart.pro_weekly_calls")}
 								</span>
 								<span className="text-muted/40">·</span>
 								<span className="inline-flex items-center gap-1 text-muted">
-									<IconSparkles className="w-3.5 h-3.5 text-brand/70" />
-									{t("quickstart.pro_speed")}
+									<IconGauge className="w-3.5 h-3.5 text-brand/70" />
+									{t("quickstart.pro_minute_calls")}
 								</span>
 							</div>
 							<span className="text-sm font-medium text-brand group-hover:underline whitespace-nowrap">

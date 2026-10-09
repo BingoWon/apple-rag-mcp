@@ -245,6 +245,32 @@ try {
 					);
 					assert.ok(!result.home.overflow);
 					if (viewport.width === 1440) assert.equal(result.home.lines, 1);
+					result.quickstart = await page.locator("#quickstart").evaluate((element) => {
+						const promotion = element.querySelector('a[href="#pricing"]');
+						return {
+							content: element.textContent,
+							overflow: element.scrollWidth > element.clientWidth,
+							promotionOverflow: promotion.scrollWidth > promotion.clientWidth,
+							logoLoaded: element.querySelector(".jev-brand img").naturalWidth > 0,
+							config: element.querySelector("pre").textContent,
+						};
+					});
+					assert.ok(
+						result.quickstart.content.includes(
+							language === "en" ? "Open source. Ready to use." : "开源透明，接入即用。",
+						),
+					);
+					assert.ok(result.quickstart.content.includes("50,000"));
+					assert.ok(result.quickstart.content.includes("$1"));
+					assert.ok(
+						result.quickstart.content.includes(
+							language === "en" ? "50 tool calls/minute" : "每分钟 50 次调用",
+						),
+					);
+					assert.ok(!result.quickstart.overflow);
+					assert.ok(!result.quickstart.promotionOverflow);
+					assert.ok(result.quickstart.logoLoaded);
+					assert.ok(result.quickstart.config.includes("https://mcp.apple-rag.com"));
 				}
 				assert.deepEqual(errors, []);
 				results.push(result);

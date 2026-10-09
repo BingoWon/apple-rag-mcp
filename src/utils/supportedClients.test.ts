@@ -5,6 +5,7 @@ import i18next from "i18next";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { I18nextProvider } from "react-i18next";
+import { OAUTH_SUBSCRIPTION_QUOTAS } from "../../worker/api/types/permissions.js";
 import { QuickStartSection } from "../components/sections/QuickStartSection.js";
 import { SUPPORTED_CLIENTS } from "../constants/clients.js";
 import { INSTALL_CLIENTS, PROMPT_CLIENTS } from "../constants/mcpClients.js";
@@ -71,5 +72,25 @@ test("quick start renders each local logo and linked name in order in both langu
 		assert.equal(list.match(/decoding="async"/g)?.length, 9);
 		assert.match(html, /mcp-config\.json/);
 		assert.match(html, /mcpServers/);
+		assert.match(html, /id="quickstart"/);
+		assert.match(html, /href="#pricing"/);
+		assert.ok(html.includes(i18n.t("quickstart.title")));
+		const quota = OAUTH_SUBSCRIPTION_QUOTAS.pro;
+		assert.ok(html.includes(quota.week.toLocaleString("en-US")));
+		assert.ok(
+			html.includes(
+				language === "en" ? `${quota.minute} tool calls/minute` : `每分钟 ${quota.minute} 次调用`,
+			),
+		);
+		assert.ok(html.includes(i18n.t("plans.price_pro")));
+		const anonymous = OAUTH_SUBSCRIPTION_QUOTAS.anonymous;
+		assert.ok(
+			html.includes(
+				language === "en"
+					? `${anonymous.week} tool calls/week, ${anonymous.minute}/minute`
+					: `每周 ${anonymous.week} 次、每分钟 ${anonymous.minute} 次调用`,
+			),
+		);
+		assert.doesNotMatch(html, /3x faster|3 倍|&lt;jev&gt;/);
 	}
 });

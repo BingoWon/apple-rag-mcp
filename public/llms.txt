@@ -16,6 +16,12 @@
 
 **Comprehensive Knowledge Base**: Multiple data sources, one search - from official documentation to WWDC26 video transcripts, all accessible through our unified MCP interface.
 
+## Open Source. Ready to Use.
+
+The [hosted service](https://apple-rag.com/) provides an Apple knowledge base that is already collected, cleaned, and indexed. Retrieval model calls, including embeddings and [Jev](https://typesafe.ai/) ranking, run on our service. We handle content collection, index updates, database backups, and protocol compatibility.
+
+The source is public for inspection and self-hosting. Self-hosting requires operating your own database, building and updating your corpus, and managing model API credentials.
+
 ## Quick Setup for AI Agents
 
 Copy the install prompt from the [dashboard](https://apple-rag.com/overview) and paste it into your current agent to configure the connection and verify the tools.
