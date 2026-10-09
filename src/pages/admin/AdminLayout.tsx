@@ -8,7 +8,7 @@ import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { ADMIN_SESSION_KEY } from "@/lib/constants";
 
 const adminNavItems = [
-	{ href: "/admin", labelKey: "admin.dashboard", exact: true },
+	{ href: "/admin", labelKey: "nav.overview", exact: true },
 	{ href: "/admin/users", labelKey: "admin.users", exact: false },
 	{ href: "/admin/mcp-tokens", labelKey: "nav.mcp_tokens", exact: false },
 	{ href: "/admin/authorized-ips", labelKey: "nav.authorized_ips", exact: false },
@@ -50,29 +50,11 @@ export function AdminLayout() {
 	return (
 		<div className="min-h-screen bg-background">
 			<header className="bg-card shadow-sm border-b border-border">
-				<div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
-					<div className="flex justify-between items-center h-16">
-						<div className="flex items-center">
-							<h1 className="text-xl font-semibold text-foreground">{t("admin.title")}</h1>
-						</div>
-						<div className="flex items-center space-x-4">
-							<ThemeToggle />
-							<Button
-								onClick={handleLogout}
-								variant="link"
-								size="sm"
-								className="text-sm text-muted-foreground hover:text-foreground p-0 h-auto"
-							>
-								{t("common.logout")}
-							</Button>
-						</div>
-					</div>
-				</div>
-			</header>
-
-			<nav className="bg-card border-b border-border">
-				<div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
-					<div className="flex gap-4 overflow-x-auto sm:gap-8">
+				<div className="mx-auto flex min-h-12 items-center gap-3 px-4 sm:px-6 lg:px-8">
+					<nav
+						aria-label={t("admin.title")}
+						className="flex min-w-0 flex-1 gap-4 overflow-x-auto sm:gap-6"
+					>
 						{adminNavItems.map((item) => {
 							const normalizedPathname = pathname.replace(/\/$/, "") || "/";
 							const normalizedHref = item.href.replace(/\/$/, "") || "/";
@@ -85,7 +67,7 @@ export function AdminLayout() {
 								<Link
 									key={item.href}
 									to={item.href}
-									className={`shrink-0 whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium transition-colors ${
+									className={`shrink-0 whitespace-nowrap border-b-2 py-2.5 px-1 text-sm font-medium transition-colors ${
 										isActive
 											? "border-brand text-brand bg-brand/10"
 											: "border-transparent text-muted-foreground hover:text-foreground hover:border-primary"
@@ -95,11 +77,22 @@ export function AdminLayout() {
 								</Link>
 							);
 						})}
+					</nav>
+					<div className="flex shrink-0 items-center gap-2">
+						<ThemeToggle />
+						<Button
+							onClick={handleLogout}
+							variant="link"
+							size="sm"
+							className="h-auto p-0 text-sm text-muted-foreground hover:text-foreground"
+						>
+							{t("common.logout")}
+						</Button>
 					</div>
 				</div>
-			</nav>
+			</header>
 
-			<main className="max-w-full mx-auto py-6 px-4 sm:px-6 lg:px-8">
+			<main className="max-w-full mx-auto py-3 px-4 sm:px-6 lg:px-8">
 				<Outlet />
 			</main>
 		</div>

@@ -527,7 +527,6 @@
 	"admin": {
 		"title": "Admin Console",
 		"dashboard": "Admin Dashboard",
-		"dashboard_desc": "Global activity and account trends",
 		"stats_new_records": "New records in selected period",
 		"stats_calls": "Recorded calls in selected period",
 		"stats_paid_users": "Active Paid Users",

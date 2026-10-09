@@ -515,7 +515,6 @@
 	"admin": {
 		"title": "管理后台",
 		"dashboard": "管理面板",
-		"dashboard_desc": "全站调用与账号新增趋势",
 		"stats_new_records": "所选期间新增记录",
 		"stats_calls": "所选期间记录的调用",
 		"stats_paid_users": "有效付费用户",

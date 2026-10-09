@@ -24,7 +24,7 @@ export const AdminTrendChart = memo(function AdminTrendChart({
 	const { t, i18n } = useTranslation();
 	const { resolvedTheme } = useTheme();
 	const isRequest = !!metric.outcomes;
-	const height = isRequest ? 190 : 80;
+	const height = isRequest ? 145 : 48;
 	const options = useMemo<ApexOptions>(() => {
 		const locale = i18n.resolvedLanguage?.startsWith("zh") ? "zh-CN" : "en";
 		const formatter = new Intl.DateTimeFormat(locale, {

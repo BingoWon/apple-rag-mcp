@@ -53,16 +53,40 @@ export default function AdminDashboard() {
 		}).format(new Date(value));
 
 	return (
-		<div className="space-y-5">
-			<div className="flex flex-wrap items-start justify-between gap-4">
-				<div>
-					<h2 className="text-2xl font-semibold text-light">{t("admin.dashboard")}</h2>
-					<p className="mt-1 text-sm text-muted">{t("admin.dashboard_desc")}</p>
-				</div>
+		<div className="space-y-3">
+			<div className="flex flex-wrap items-center gap-2">
+				<TimeRangeSelector
+					timeRange={query.period === "custom" ? undefined : query.period}
+					onTimeRangeChange={(period) => {
+						setCustomOpen(false);
+						setRangeError(false);
+						setQuery({ period });
+					}}
+				/>
+				<Button
+					variant={query.period === "custom" ? "primary" : "secondary"}
+					size="sm"
+					aria-pressed={customOpen}
+					onClick={() => setCustomOpen((value) => !value)}
+					className="gap-1.5"
+				>
+					<IconCalendar className="h-3.5 w-3.5" />
+					{t("admin.stats_custom")}
+				</Button>
+				<span
+					className="ml-auto text-xs text-muted"
+					title={
+						stats
+							? `${formatDate(stats.start)} - ${formatDate(stats.end)}`
+							: t("admin.stats_timezone")
+					}
+				>
+					UTC+8
+				</span>
 				<Button
 					variant="secondary"
 					size="icon"
-					title={t("admin.stats_refresh")}
+					title={`${t("admin.stats_refresh")}${stats ? ` · ${t("admin.stats_updated", { time: formatDate(stats.generated_at) })}` : ""}`}
 					aria-label={t("admin.stats_refresh")}
 					disabled={loading}
 					onClick={() => setQuery((value) => ({ ...value }))}
@@ -70,92 +94,64 @@ export default function AdminDashboard() {
 					<IconRefresh className="h-4 w-4" />
 				</Button>
 			</div>
-			<div className="space-y-3 border-b border-default pb-4">
-				<div className="flex flex-wrap items-center justify-between gap-3">
-					<div className="flex flex-wrap items-center gap-2">
-						<TimeRangeSelector
-							timeRange={query.period === "custom" ? undefined : query.period}
-							onTimeRangeChange={(period) => {
-								setCustomOpen(false);
-								setRangeError(false);
-								setQuery({ period });
-							}}
+			{customOpen && (
+				<form
+					className="flex flex-wrap items-end gap-3"
+					onSubmit={(event) => {
+						event.preventDefault();
+						if (
+							!customStart ||
+							!customEnd ||
+							customStart > customEnd ||
+							customEnd > today ||
+							(Date.parse(customEnd) - Date.parse(customStart)) / 86_400_000 + 1 > 90
+						) {
+							setRangeError(true);
+							return;
+						}
+						setRangeError(false);
+						setQuery({ period: "custom", start: customStart, end: customEnd });
+					}}
+				>
+					<label className="space-y-1 text-xs text-muted">
+						<span className="block">{t("admin.stats_start_date")}</span>
+						<input
+							type="date"
+							required
+							max={customEnd || today}
+							value={customStart}
+							onChange={(event) => setCustomStart(event.target.value)}
+							className="block rounded-md border border-default bg-card px-3 py-2 text-sm text-light [color-scheme:light_dark]"
 						/>
-						<Button
-							variant={query.period === "custom" ? "primary" : "secondary"}
-							size="sm"
-							aria-pressed={customOpen}
-							onClick={() => setCustomOpen((value) => !value)}
-							className="gap-1.5"
-						>
-							<IconCalendar className="h-3.5 w-3.5" />
-							{t("admin.stats_custom")}
-						</Button>
-					</div>
-					<span className="text-xs text-muted">
-						{stats && `${formatDate(stats.start)} - ${formatDate(stats.end)} · `}
-						{t("admin.stats_timezone")}
-					</span>
-				</div>
-				{customOpen && (
-					<form
-						className="flex flex-wrap items-end gap-3"
-						onSubmit={(event) => {
-							event.preventDefault();
-							if (
-								!customStart ||
-								!customEnd ||
-								customStart > customEnd ||
-								customEnd > today ||
-								(Date.parse(customEnd) - Date.parse(customStart)) / 86_400_000 + 1 > 90
-							) {
-								setRangeError(true);
-								return;
-							}
-							setRangeError(false);
-							setQuery({ period: "custom", start: customStart, end: customEnd });
-						}}
+					</label>
+					<label className="space-y-1 text-xs text-muted">
+						<span className="block">{t("admin.stats_end_date")}</span>
+						<input
+							type="date"
+							required
+							min={customStart}
+							max={today}
+							value={customEnd}
+							onChange={(event) => setCustomEnd(event.target.value)}
+							className="block rounded-md border border-default bg-card px-3 py-2 text-sm text-light [color-scheme:light_dark]"
+						/>
+					</label>
+					<Button
+						type="submit"
+						size="sm"
+						variant="secondary"
+						title={t("admin.stats_apply")}
+						aria-label={t("admin.stats_apply")}
 					>
-						<label className="space-y-1 text-xs text-muted">
-							<span className="block">{t("admin.stats_start_date")}</span>
-							<input
-								type="date"
-								required
-								max={customEnd || today}
-								value={customStart}
-								onChange={(event) => setCustomStart(event.target.value)}
-								className="block rounded-md border border-default bg-card px-3 py-2 text-sm text-light [color-scheme:light_dark]"
-							/>
-						</label>
-						<label className="space-y-1 text-xs text-muted">
-							<span className="block">{t("admin.stats_end_date")}</span>
-							<input
-								type="date"
-								required
-								min={customStart}
-								max={today}
-								value={customEnd}
-								onChange={(event) => setCustomEnd(event.target.value)}
-								className="block rounded-md border border-default bg-card px-3 py-2 text-sm text-light [color-scheme:light_dark]"
-							/>
-						</label>
-						<Button
-							type="submit"
-							size="sm"
-							variant="secondary"
-							title={t("admin.stats_apply")}
-							aria-label={t("admin.stats_apply")}
-						>
-							<IconCheck className="h-4 w-4" />
-						</Button>
-						{rangeError && (
-							<p role="alert" className="text-xs text-error">
-								{t("admin.stats_range_error")}
-							</p>
-						)}
-					</form>
-				)}
-			</div>
+						<IconCheck className="h-4 w-4" />
+					</Button>
+					{rangeError && (
+						<p role="alert" className="text-xs text-error">
+							{t("admin.stats_range_error")}
+						</p>
+					)}
+				</form>
+			)}
 			{error && (
 				<div
 					role="alert"
@@ -168,11 +164,6 @@ export default function AdminDashboard() {
 				</div>
 			)}
 			<AdminStatsCards stats={stats} loading={loading} />
-			{stats && (
-				<p className="text-xs text-muted">
-					{t("admin.stats_updated", { time: formatDate(stats.generated_at) })}
-				</p>
-			)}
 		</div>
 	);
 }
