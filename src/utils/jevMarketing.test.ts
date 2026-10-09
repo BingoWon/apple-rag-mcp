@@ -90,7 +90,8 @@ test("both READMEs introduce Jev scoring with a local logo and official link", (
 		assert.ok(markdown.includes("[Jev](https://typesafe.ai/)"));
 		assert.ok(markdown.includes('src="./public/typesafe-logo.webp"'));
 		assert.ok(markdown.includes("API"));
-		assert.ok(markdown.includes(file === "README.md" ? "not generated" : "不负责生成回答"));
+		assert.ok(markdown.includes(file === "README.md" ? "relevance scores" : "相关性评分"));
+		assert.ok(markdown.includes(file === "README.md" ? "Powered by " : "### 由 "));
 	}
 });
 
@@ -146,16 +147,19 @@ test("sidebar promotion sits below logout and collapses to its logo in both lang
 				assert.ok(!html.includes('href="/#jev"'));
 				assert.ok(html.includes('src="/typesafe-logo.webp"'));
 				assert.equal(html.split('class="jev-brand ').length - 1, 0);
-				assert.equal(html.split('class="jev-brand-name font-bold"').length - 1, open ? 2 : 0);
+				assert.equal(html.split('class="jev-brand-name font-bold').length - 1, open ? 2 : 0);
 				if (open) {
 					assert.ok(html.includes(i18n.t("dashboard.jev_integration")));
+					assert.ok(html.includes(language === "en" ? "Powered by " : "驱动"));
+					assert.ok(!i18n.t("dashboard.jev_heading").includes("RAG"));
+					assert.ok(!i18n.t("dashboard.jev_integration").includes("RAG"));
 					assert.ok(html.includes("border-t border-default/60"));
 					assert.ok(!html.includes("border-l-typesafe"));
 					assert.ok(!html.includes("bg-typesafe/10"));
 					assert.ok(html.includes("jev-brand-name font-bold"));
 				} else {
 					assert.ok(!html.includes(i18n.t("dashboard.jev_integration")));
-					assert.ok(html.includes(`title="Jev: ${i18n.t("dashboard.jev_integration_label")}"`));
+					assert.ok(html.includes(`title="${i18n.t("dashboard.jev_integration_label")}"`));
 				}
 			}
 		}

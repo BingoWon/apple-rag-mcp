@@ -28,12 +28,12 @@ Others give you keyword search. We give you that, plus semantic understanding, p
 
 **Minimal footprint. Maximum signal.** Our MCP tools are designed to be lean—no bloated responses, no wasted tokens, no noise cluttering your agent's context. Just the information that matters.
 
-### Ranked by [<img src="./public/typesafe-logo.webp" alt="" width="22" height="22"> Jev](https://typesafe.ai/)
+### Powered by [<img src="./public/typesafe-logo.webp" alt="" width="22" height="22"> Jev](https://typesafe.ai/)
 
-[Jev](https://typesafe.ai/) is a decision model. We use its structured relevance
-scores to rank retrieved Apple documentation and video transcripts against your
-query's API, platform, and version requirements. It ranks sources, not generated
-answers; a backup reranker keeps search available if the primary API fails.
+[Jev](https://typesafe.ai/), a decision model, scores candidate Apple documentation
+and video transcripts against each query's API, platform, and version requirements.
+We use its relevance scores to rank the sources returned through MCP. A backup
+reranker takes over if the API call fails.
 
 ---
 

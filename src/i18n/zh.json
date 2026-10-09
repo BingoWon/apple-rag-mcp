@@ -76,8 +76,8 @@
 	},
 
 	"jev": {
-		"title": "<jev>Jev</jev> 文档重排序",
-		"description": "为软件而生的决策模型。<jev>Jev</jev> 用结构化评分判断资料的相关性，帮助智能体选对 Apple 官方文档。"
+		"title": "由 <jev>Jev</jev> 驱动",
+		"description": "它会根据问题中的 API、平台和版本要求，为 Apple 文档和视频字幕评分排序，优先呈现更相关的资料。"
 	},
 
 	"features": {
@@ -254,8 +254,9 @@
 	"dashboard": {
 		"title": "概览面板",
 		"subtitle": "监控 MCP 使用情况，管理你的账号",
-		"jev_integration_label": "已接入决策模型",
-		"jev_integration": "RAG 检索，决策模型排序。",
+		"jev_heading": "由 <jev>Jev</jev> 驱动",
+		"jev_integration_label": "由 Jev 驱动",
+		"jev_integration": "根据你的问题，为候选 Apple 资料评分排序，让更相关的内容优先呈现。",
 		"welcome_oauth": "欢迎，{{name}}！已通过 OAuth 成功登录。",
 		"auth_failed": "登录失败，请重试。",
 		"stats_status": "状态",

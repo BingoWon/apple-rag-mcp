@@ -12,7 +12,7 @@ import {
 } from "@tabler/icons-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { Avatar } from "@/components/ui/OptimizedImage";
@@ -133,7 +133,7 @@ function SidebarFooter({
 function SidebarJevPromotion() {
 	const { t } = useTranslation();
 	const { open } = useSidebar();
-	const label = `Jev: ${t("dashboard.jev_integration_label")}`;
+	const label = t("dashboard.jev_integration_label");
 
 	return (
 		<div
@@ -155,14 +155,19 @@ function SidebarJevPromotion() {
 					className={cn("shrink-0 object-cover", open ? "size-9 rounded-lg" : "size-8 rounded-md")}
 				/>
 				{open && (
-					<div className="min-w-0">
-						<h2 className="text-xl leading-7 text-light">
-							<span className="jev-brand-name font-bold">Jev</span>
-						</h2>
-						<p className="mt-0.5 text-xs leading-5 text-muted">{t("dashboard.jev_integration")}</p>
-					</div>
+					<h2 className="min-w-0 text-sm font-medium leading-7 text-muted">
+						<Trans
+							i18nKey="dashboard.jev_heading"
+							components={{
+								jev: <span className="jev-brand-name font-bold text-xl text-light">Jev</span>,
+							}}
+						/>
+					</h2>
 				)}
 			</div>
+			{open && (
+				<p className="mt-2 text-xs leading-5 text-muted">{t("dashboard.jev_integration")}</p>
+			)}
 		</div>
 	);
 }

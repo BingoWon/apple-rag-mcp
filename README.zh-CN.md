@@ -28,11 +28,11 @@
 
 **最小占用。最大信号。** 我们的 MCP 工具设计精简——没有臃肿的响应，没有浪费的 token，没有干扰你 AI agent 上下文的噪音。只有真正重要的信息。
 
-### [<img src="./public/typesafe-logo.webp" alt="" width="22" height="22"> Jev](https://typesafe.ai/) 相关性排序
+### 由 [<img src="./public/typesafe-logo.webp" alt="" width="22" height="22"> Jev](https://typesafe.ai/) 驱动
 
-[Jev](https://typesafe.ai/) 是一个决策模型。我们用它的结构化相关性评分，
-按问题涉及的 API、平台与版本要求，对检索到的 Apple 文档和视频字幕排序。
-它负责挑选资料，不负责生成回答；主 API 失败时，备用重排序模型会接手。
+我们已将 [Jev](https://typesafe.ai/) 决策模型接入搜索流程，用于相关性评分。
+它会结合查询中的 API、平台和版本要求，为候选 Apple 文档与视频字幕评分；
+我们再根据评分对结果排序，通过 MCP 交给智能体。调用失败时，备用重排序模型会自动接手。
 
 ---
 

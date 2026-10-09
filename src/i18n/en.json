@@ -76,8 +76,8 @@
 	},
 
 	"jev": {
-		"title": "Ranked by <jev>Jev</jev>",
-		"description": "A decision model built for software. <jev>Jev</jev> scores relevance so agents can pick the right Apple sources."
+		"title": "Powered by <jev>Jev</jev>",
+		"description": "It scores Apple sources against your API, platform, and version requirements, putting the most relevant results first."
 	},
 
 	"features": {
@@ -266,8 +266,9 @@
 	"dashboard": {
 		"title": "Dashboard Overview",
 		"subtitle": "Monitor your MCP usage and manage your account",
-		"jev_integration_label": "Decision model integrated",
-		"jev_integration": "Decision-model ranking for RAG.",
+		"jev_heading": "Powered by <jev>Jev</jev>",
+		"jev_integration_label": "Powered by Jev",
+		"jev_integration": "It scores Apple sources for relevance to your question, putting the best matches first.",
 		"welcome_oauth": "Welcome {{name}}! Successfully authenticated via OAuth.",
 		"auth_failed": "Authentication failed. Please try again.",
 		"stats_status": "Status",

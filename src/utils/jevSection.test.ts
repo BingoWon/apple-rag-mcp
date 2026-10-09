@@ -27,13 +27,14 @@ test("Jev section uses logo-prefixed branding and centered natural scrolling wit
 				createElement(I18nextProvider, { i18n }, createElement(JevSection)),
 			);
 
-			assert.equal(html.split('class="jev-brand ').length - 1, 2);
+			assert.equal(html.split('class="jev-brand ').length - 1, 1);
 			assert.ok(
 				html.includes(
-					language === "en" ? "A decision model built for software." : "为软件而生的决策模型。",
+					language === "en" ? "API, platform, and version requirements" : "API、平台和版本要求",
 				),
 			);
-			assert.ok(html.includes(language === "en" ? "Ranked by " : "文档重排序"));
+			assert.ok(html.includes(language === "en" ? "Powered by " : "驱动"));
+			assert.ok(!html.includes(language === "en" ? "Ranked by " : "文档重排序"));
 			assert.ok(html.includes("jev-drawing"));
 			assert.ok(html.includes('class="relative w-full"'));
 			assert.ok(html.includes("min-h-[65svh]"));
