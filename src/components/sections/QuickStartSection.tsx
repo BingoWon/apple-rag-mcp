@@ -101,7 +101,7 @@ export function QuickStartSection() {
 					</a>
 				</div>
 
-				<div className="mx-auto mt-10 max-w-3xl text-center">
+				<div className="mt-10 text-center">
 					<h3 className="text-sm font-semibold text-light mb-2">
 						{t("quickstart.supported_clients")}
 					</h3>

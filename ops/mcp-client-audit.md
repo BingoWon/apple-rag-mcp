@@ -66,6 +66,8 @@ or unrelated dependencies are changed by this audit.
   (`https://opencode.ai/favicon-96x96-v3.png`) and
   [Pi](https://github.com/earendil-works/pi) website favicon
   (`https://pi.dev/favicon.svg`).
+- The homepage client list uses the parent section's available width. Do not
+  add a narrower maximum width around the client names and logos.
 - Keep the downloaded Pi mark dark on its white badge instead of following the
   operating system color scheme; add its SVG accessibility title.
 - The visible JSON example is a client connection configuration, not an MCP
