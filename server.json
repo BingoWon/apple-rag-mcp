@@ -1,12 +1,12 @@
 {
 	"$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
 	"name": "com.apple-rag/mcp-server",
-	"description": "Apple developer docs and WWDC26 transcripts with semantic, keyword, and hybrid search",
+	"description": "Apple developer docs and WWDC transcripts with RAG retrieval and Jev relevance ranking.",
 	"repository": {
 		"url": "https://github.com/BingoWon/apple-rag-mcp",
 		"source": "github"
 	},
-	"version": "5.0.12",
+	"version": "5.0.13",
 	"remotes": [
 		{
 			"type": "streamable-http",

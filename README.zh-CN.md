@@ -6,7 +6,7 @@
 
 *Apple 文档。WWDC26 视频字幕。RAG 检索 + [Jev](https://typesafe.ai/) 相关性排序。一个干净的工具。*
 
-<a href="https://apple-rag.com"><img src="https://apple-rag.com/og-image.png" alt="Apple RAG MCP — apple-rag.com" width="800"></a>
+<a href="https://apple-rag.com"><img src="https://apple-rag.com/og-image-jev.png" alt="Apple RAG MCP — 由 Jev 驱动" width="800"></a>
 
 [![Install MCP Server](https://cursor.com/deeplink/mcp-install-light.svg)](https://cursor.com/en/install-mcp?name=apple-rag-mcp&config=eyJ1cmwiOiJodHRwczovL21jcC5hcHBsZS1yYWcuY29tIn0%3D)
 
@@ -24,7 +24,7 @@
 
 ## 不只是另一个文档工具
 
-其他工具只提供关键词搜索。我们不仅提供关键词搜索，还有语义理解，以及智能结合两者的 AI 驱动混合搜索。你需要的每种搜索模式，协同工作。
+RAG 结合语义和关键词检索，找到 Apple 官方资料。[Jev](https://typesafe.ai/) 根据你的问题判断相关性，将更匹配的内容交给智能体。
 
 **最小占用。最大信号。** 我们的 MCP 工具设计精简——没有臃肿的响应，没有浪费的 token，没有干扰你 AI agent 上下文的噪音。只有真正重要的信息。
 
@@ -86,7 +86,7 @@
 通过我们优化的搜索基础设施获得快速响应。不再需要翻遍文档。
 
 ### 🎯 **AI 驱动的混合搜索**
-先进的搜索技术，结合用于 RAG 的语义搜索、关键词搜索以及结合向量相似度和技术术语匹配的混合搜索，从 Apple 文档中提供准确、有上下文的答案。
+RAG 结合语义和关键词检索，找到候选 Apple 文档与视频字幕。[Jev](https://typesafe.ai/) 根据你的问题为资料评分排序，让智能体优先获取更相关的上下文。
 
 ### 🔒 **始终安全**
 MCP 认证确保你的 AI agent 获得可信的访问权限，具备企业级安全性。

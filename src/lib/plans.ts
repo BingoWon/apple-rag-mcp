@@ -58,8 +58,8 @@ function buildPricingPlans(): PricingPlan[] {
 			gradientFrom: "from-red-400",
 			gradientTo: "to-brand-tertiary",
 			features: [
-				i18n.t("plans.unlimited_queries"),
-				i18n.t("plans.unlimited_rpm"),
+				i18n.t("plans.team_usage"),
+				i18n.t("plans.request_capacity"),
 				i18n.t("plans.mcp_supported"),
 				i18n.t("plans.semantic_search"),
 				i18n.t("plans.keyword_search"),
@@ -68,8 +68,8 @@ function buildPricingPlans(): PricingPlan[] {
 				i18n.t("plans.multiple_tokens"),
 				i18n.t("plans.faster_response"),
 				i18n.t("plans.usage_analytics"),
-				i18n.t("plans.dedicated_infra"),
-				i18n.t("plans.premium_support"),
+				i18n.t("plans.integration_needs"),
+				i18n.t("plans.support_needs"),
 			],
 		},
 	];

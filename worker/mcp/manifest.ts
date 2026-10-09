@@ -10,7 +10,7 @@ export const SERVER_MANIFEST = {
 	title: "Apple Developer Documentation Search",
 	version: SERVER_VERSION,
 	description:
-		"Ultra-modern MCP server providing AI agents with comprehensive access to Apple's complete developer documentation using advanced RAG technology.",
+		"Apple developer docs and WWDC transcripts with RAG retrieval and Jev relevance ranking.",
 	protocolVersion: MCP_PROTOCOL_VERSION,
 	capabilities: {
 		tools: {},

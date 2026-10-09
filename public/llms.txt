@@ -1,28 +1,33 @@
 # Apple RAG MCP
 
-> Transform your AI agents into Apple development experts with instant access to official Swift docs, design guidelines, WWDC26 transcripts, and comprehensive Apple platform knowledge. Here's to the Vibe Coders - born with Apple DNA. RAG infuses your agents with WWDC26, iOS 27, and official documentation insights.
+> Official Apple developer documentation and WWDC video transcripts for your AI agents, with RAG retrieval and Jev relevance ranking.
 
 ## Why Developers Love Apple RAG MCP
 
 **Lightning Fast**: Get instant responses with our optimized search infrastructure. No more hunting through docs.
 
-**AI-Powered Search**: Advanced RAG hybrid technology understands context and provides accurate, relevant answers from Apple's documentation.
+**Powered by [Jev](https://typesafe.ai/)**: RAG combines semantic and keyword retrieval to find candidate sources. Jev scores them against your question's API, platform, and version requirements. Its relevance scores determine the order of the sources returned through MCP. A backup reranker takes over if the API call fails; your agent uses the sources to write its answer.
 
 **Always Secure**: MCP authentication ensures trusted access for your AI agents with enterprise-grade security.
 
 **Code Examples**: Get practical code examples in Swift, Objective-C, and SwiftUI alongside documentation references.
 
-**Real-time Updates**: Our documentation index tracks WWDC26, Xcode 27 beta, and the latest Apple developer resources.
+**Regular Updates**: Our collector checks official Apple documentation and video transcripts for new and updated content.
 
 **Comprehensive Knowledge Base**: Multiple data sources, one search - from official documentation to WWDC26 video transcripts, all accessible through our unified MCP interface.
 
 ## Quick Setup for AI Agents
+
+Copy the install prompt from the [dashboard](https://apple-rag.com/overview) and paste it into your current agent to configure the connection and verify the tools.
+
+The following JSON is a configuration example, not a universal client format. Use the native format supported by your client.
 
 **Basic Configuration (Try Without Registration)**:
 ```json
 {
   "mcpServers": {
     "apple-rag-mcp": {
+      "type": "http",
       "url": "https://mcp.apple-rag.com"
     }
   }
@@ -34,6 +39,7 @@
 {
   "mcpServers": {
     "apple-rag-mcp": {
+      "type": "http",
       "url": "https://mcp.apple-rag.com",
       "headers": {
         "Authorization": "Bearer your-mcp-token-here"
@@ -43,7 +49,7 @@
 }
 ```
 
-**Unlock Full Access**: Register and subscribe at https://apple-rag.com to get MCP tokens for seamless, unlimited access to our services.
+**Free Account**: Register at [apple-rag.com](https://apple-rag.com/) and configure your MCP Token for 50 tool calls per week and 5 per minute. Upgrade to [Pro](https://apple-rag.com/#pricing) for 50,000 tool calls per week and 50 per minute.
 
 ## Manual Configuration Parameters
 
@@ -53,30 +59,36 @@ For MCP clients that don't support JSON import:
 - **Name**: `apple-rag-mcp`
 - **MCP Type**: `Streamable HTTP`
 - **URL (Endpoint)**: `https://mcp.apple-rag.com`
+- **Protocol Version**: `2026-07-28`
 
-**Optional Authentication** (for subscribers):
+The client must support protocol `2026-07-28`. Writing a configuration alone does not verify a working connection.
+
+**Optional Authentication** (for registered users):
 - **Authentication Type**: `API key / Token`
 - **API key / Token**: `your-mcp-token-here`
 - **Authorization Header**: `Bearer your-mcp-token-here`
 
 ## Authentication Options
 
-**No Registration Required**: Start using immediately with basic configuration and limited queries
-**MCP Tokens**: Subscribe to get tokens for higher limits, usage tracking, and multiple project support
+**No Registration Required**: Start with 30 tool calls per week and 3 per minute
+**MCP Tokens**: Register for 50 tool calls per week and 5 per minute; Pro includes 50,000 per week and 50 per minute
 **IP Authentication**: Authorize your IP addresses for automatic authentication without needing tokens
 
 ## Available MCP Tools
 
-- **search**: Query Apple's official developer documentation and WWDC26 video transcripts using advanced RAG technology. Returns relevant content from frameworks, APIs, design guidelines, WWDC26 sessions, and current iOS 27, iPadOS 27, macOS 27, watchOS 27, tvOS 27, and visionOS 27 platform references.
+- **search**: Search official Apple developer documentation and WWDC video transcripts using hybrid RAG retrieval and Jev relevance ranking. Returns ranked source excerpts; use fetch for complete page content.
 - **fetch**: Retrieve complete cleaned content for specific Apple developer documentation or video by URL.
 
 ## Pricing & Benefits
 
-**Free Tier**: 50 queries per week, 5 requests per minute - perfect for getting started
-**Pro Plan**: $1/week - 50,000 queries per week, 50 requests per minute, multiple MCP tokens, faster response time, usage analytics
-**Enterprise**: Unlimited queries, dedicated infrastructure, 24/7 premium support
+**Anonymous**: 30 tool calls per week, 3 per minute
+**Free Account**: 50 tool calls per week, 5 per minute
+**Pro**: $1/week - 50,000 tool calls per week, 50 per minute, multiple MCP tokens and usage analytics
+**Enterprise**: [Contact us](https://apple-rag.com/#pricing) to discuss your team's requirements
 
-**Supported Clients**: Cursor, Windsurf, VS Code, Claude Code, Codex CLI, Gemini CLI, Claude Desktop, Augment Code, Zed, Cline, Kiro, BoltAI, JetBrains AI, and 50+ more MCP-compatible tools.
+The weekly and per-minute quotas are shared by search and fetch. All search tiers use RAG retrieval and Jev as the primary relevance ranker.
+
+**Setup Options**: The dashboard provides one-click install links and an install prompt for your current agent. Verify protocol compatibility and test both search and fetch after configuration.
 
 ## Get Started Now
 

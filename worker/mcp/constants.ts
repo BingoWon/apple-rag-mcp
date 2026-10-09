@@ -16,7 +16,7 @@ export const TOOLS = {
 	SEARCH: {
 		NAME: "search",
 		DESCRIPTION:
-			"Search Apple's official developer documentation and video content using advanced RAG technology. Returns relevant content from Apple's technical documentation, frameworks, APIs, design guidelines, and educational resources.",
+			"Search official Apple developer documentation and WWDC video transcripts using hybrid RAG retrieval and Jev relevance ranking. Returns ranked source excerpts; use fetch for complete page content.",
 	},
 	FETCH: {
 		NAME: "fetch",

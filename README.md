@@ -6,7 +6,7 @@
 
 *Apple docs. WWDC26 transcripts. RAG retrieval + [Jev](https://typesafe.ai/) relevance ranking. One clean tool.*
 
-<a href="https://apple-rag.com"><img src="https://apple-rag.com/og-image.png" alt="Apple RAG MCP — apple-rag.com" width="800"></a>
+<a href="https://apple-rag.com"><img src="https://apple-rag.com/og-image-jev.png" alt="Apple RAG MCP — Powered by Jev" width="800"></a>
 
 [![Install MCP Server](https://cursor.com/deeplink/mcp-install-light.svg)](https://cursor.com/en/install-mcp?name=apple-rag-mcp&config=eyJ1cmwiOiJodHRwczovL21jcC5hcHBsZS1yYWcuY29tIn0%3D)
 
@@ -24,7 +24,7 @@
 
 ## Not Just Another Docs Tool
 
-Others give you keyword search. We give you that, plus semantic understanding, plus AI-powered hybrid search that combines both intelligently. Every search mode you need, working together.
+RAG combines semantic and keyword retrieval to find Apple sources. [Jev](https://typesafe.ai/) ranks them for relevance to your question, bringing the best matches to your agent.
 
 **Minimal footprint. Maximum signal.** Our MCP tools are designed to be lean—no bloated responses, no wasted tokens, no noise cluttering your agent's context. Just the information that matters.
 
@@ -90,7 +90,7 @@ configuration alone does not verify a working connection.
 Get quick responses with our optimized search infrastructure. No more hunting through docs.
 
 ### 🎯 **AI-Powered Hybrid Search**
-Advanced search technology combining Semantic Search for RAG, Keyword Search, and Hybrid Search with vector similarity and technical term matching provides accurate, contextual answers from Apple's documentation.
+RAG finds candidate Apple documentation and video transcripts through semantic and keyword retrieval. [Jev](https://typesafe.ai/) ranks those sources against your question, giving your agent more relevant context.
 
 ### 🔒 **Always Secure**
 MCP authentication ensures trusted access for your AI agents with enterprise-grade security.

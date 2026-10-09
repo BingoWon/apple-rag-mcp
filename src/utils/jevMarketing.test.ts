@@ -6,8 +6,64 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { I18nextProvider } from "react-i18next";
 import { MemoryRouter } from "react-router-dom";
+import serverJson from "../../server.json";
+import { OAUTH_SUBSCRIPTION_QUOTAS } from "../../worker/api/types/permissions";
+import { TOOLS } from "../../worker/mcp/constants";
+import { SERVER_MANIFEST } from "../../worker/mcp/manifest";
 import en from "../i18n/en.json";
 import zh from "../i18n/zh.json";
+
+test("page and sharing metadata consistently describe Jev integration", () => {
+	const html = readFileSync(new URL("../../index.html", import.meta.url), "utf8");
+	const metadata = Object.fromEntries(
+		[...html.matchAll(/<meta (?:name|property)="([^"]+)" content="([^"]+)"\s*\/>/g)].map(
+			([, name, content]) => [name, content],
+		),
+	);
+	const title = html.match(/<title>([^<]+)<\/title>/)?.[1];
+	assert.match(title ?? "", /Powered by Jev/);
+	assert.equal(metadata["og:title"], title);
+	assert.equal(metadata["twitter:title"], title);
+	assert.match(metadata.description, /RAG retrieval and Jev relevance ranking/);
+	assert.equal(metadata["og:description"], metadata.description);
+	assert.equal(metadata["twitter:description"], metadata.description);
+	const structured = JSON.parse(
+		html.match(/<script type="application\/ld\+json">([^<]+)<\/script>/)?.[1] ?? "{}",
+	);
+	assert.equal(structured.description, metadata.description);
+	assert.ok(structured.featureList.includes("Jev Relevance Ranking"));
+	assert.equal(metadata["og:image"], metadata["twitter:image"]);
+	assert.match(metadata["og:image:alt"], /Jev/);
+	assert.equal(metadata["og:image:alt"], metadata["twitter:image:alt"]);
+	const image = readFileSync(
+		new URL(`../../public${new URL(metadata["og:image"]).pathname}`, import.meta.url),
+	);
+	assert.equal(image.subarray(1, 4).toString("ascii"), "PNG");
+	assert.equal(image.readUInt32BE(16), 1200);
+	assert.equal(image.readUInt32BE(20), 630);
+});
+
+test("discovery descriptions and agent documentation reflect the primary ranker and quotas", () => {
+	assert.equal(serverJson.description, SERVER_MANIFEST.description);
+	assert.match(SERVER_MANIFEST.description, /RAG retrieval and Jev relevance ranking/);
+	assert.match(TOOLS.SEARCH.DESCRIPTION, /Jev relevance ranking/);
+	assert.ok(!TOOLS.FETCH.DESCRIPTION.includes("Jev"));
+	const guide = readFileSync(new URL("../../public/llms.txt", import.meta.url), "utf8");
+	assert.ok(guide.includes("[Jev](https://typesafe.ai/)"));
+	assert.ok(guide.includes("API, platform, and version"));
+	assert.ok(guide.includes("shared by search and fetch"));
+	assert.ok(!/unlimited|24\/7|dedicated infrastructure/i.test(guide));
+	for (const [tier, label] of [
+		["anonymous", "Anonymous"],
+		["hobby", "Free Account"],
+		["pro", "Pro"],
+	] as const) {
+		const quota = OAUTH_SUBSCRIPTION_QUOTAS[tier];
+		const line = guide.split("\n").find((entry) => entry.startsWith(`**${label}**:`)) ?? "";
+		assert.ok(line.includes(`${quota.week.toLocaleString("en-US")} tool calls per week`));
+		assert.ok(line.includes(`${quota.minute} per minute`));
+	}
+});
 
 test("retrieval marketing pairs RAG with Jev across the entire website copy", () => {
 	for (const locale of [en, zh]) {
