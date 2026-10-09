@@ -20,3 +20,7 @@ answer.
 "RAG + Jev" may describe the overall technology stack. Define hybrid search as
 "keyword + semantic" and describe relevance ranking separately. Do not require
 every retrieval-related string to contain both brand names.
+
+Pricing uses concise annotations: "Semantic search (for RAG)" and
+"Hybrid search (ranked by [Jev](https://typesafe.ai/))". These identify the
+intended use and ranker, while the descriptions explain the retrieval steps.
