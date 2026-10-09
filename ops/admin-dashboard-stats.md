@@ -4,6 +4,10 @@ The admin homepage uses the installed
 [ApexCharts](https://github.com/apexcharts/apexcharts.js) charts and the existing
 period selector. No new package or schema migration is required.
 
+The admin console is a compact personal workspace. Omit introductory headings
+and repeated captions, combine navigation and actions into compact rows, and
+keep one card shell per metric.
+
 - Six trends count records created within the selected window: users, tokens,
   authorized IPs, search calls, fetch calls, and contact messages.
 - Search and fetch use stacked bars for success (`200`), rate limits (`429`),
