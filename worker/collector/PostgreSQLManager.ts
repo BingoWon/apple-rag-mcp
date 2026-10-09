@@ -27,24 +27,63 @@ function shouldRetryUrlInsert(error: unknown): boolean {
 
 class PostgreSQLManager {
 	private static readonly URL_INSERT_BATCH_SIZE = 1000;
+	private sql: postgres.Sql;
 
-	constructor(private readonly sql: postgres.Sql) {}
+	constructor(private readonly createClient: () => postgres.Sql) {
+		this.sql = createClient();
+	}
+
+	private async withRetry<T>(
+		stage: string,
+		operation: (sql: postgres.Sql) => Promise<T>,
+		shouldRetry = isTransientPostgresConnectionError,
+	): Promise<T> {
+		try {
+			return await retryTransientPostgres(
+				async () => {
+					try {
+						return await operation(this.sql);
+					} catch (error) {
+						if (isTransientPostgresConnectionError(error)) {
+							// A failed transaction must finish on its old pool, never the retry's connection.
+							await this.sql.end({ timeout: 0 }).catch(() => {});
+							this.sql = this.createClient();
+						}
+						throw error;
+					}
+				},
+				{
+					shouldRetry,
+					onRetry: ({ attempt, maxAttempts, delayMs, error }) => {
+						logger.warn(
+							`PostgreSQL ${stage} failed; retrying ${attempt}/${maxAttempts} in ${delayMs}ms: ${error instanceof Error ? error.message : String(error)}`,
+						);
+					},
+				},
+			);
+		} catch (error) {
+			throw new Error(
+				`PostgreSQL ${stage} failed: ${error instanceof Error ? error.message : String(error)}`,
+				{ cause: error },
+			);
+		}
+	}
 
 	// biome-ignore lint/suspicious/noExplicitAny: postgres.js TransactionSql generic type mismatch
-	private async withTransaction<T>(operation: (sql: any) => Promise<T>): Promise<T> {
-		return (await this.sql.begin(async (sql) => {
-			return await operation(sql);
-		})) as T;
+	private async withTransaction<T>(stage: string, operation: (sql: any) => Promise<T>): Promise<T> {
+		// Only replacements and deletions use this helper; counter-based claims are never replayed.
+		return this.withRetry(stage, async (sql) => {
+			return (await sql.begin(async (transaction) => operation(transaction))) as T;
+		});
 	}
 
 	async batchInsertUrls(urls: string[]): Promise<number> {
 		if (urls.length === 0) return 0;
 
-		const minCollectCount = await retryTransientPostgres(
-			async () => {
-				// Query minimum collect_count from Apple Developer URLs (excluding 0)
-				// This ensures new URLs integrate into normal scheduling without causing starvation
-				const minResult = await this.sql`
+		const minCollectCount = await this.withRetry("URL sync scheduling query", async (sql) => {
+			// Query minimum collect_count from Apple Developer URLs (excluding 0)
+			// This ensures new URLs integrate into normal scheduling without causing starvation
+			const minResult = await sql`
           SELECT COALESCE(
             (SELECT MIN(collect_count)
              FROM pages
@@ -53,17 +92,8 @@ class PostgreSQLManager {
             0
           ) as min
         `;
-				return parseInt(minResult[0]?.min || "0", 10);
-			},
-			{
-				onRetry: ({ attempt, maxAttempts, delayMs, error }) => {
-					const message = error instanceof Error ? error.message : String(error);
-					logger.warn(
-						`PostgreSQL URL sync scheduling query failed; retrying ${attempt}/${maxAttempts} in ${delayMs}ms: ${message}`,
-					);
-				},
-			},
-		);
+			return parseInt(minResult[0]?.min || "0", 10);
+		});
 		const newUrlCollectCount = Math.max(0, minCollectCount - 1);
 
 		let insertedCount = 0;
@@ -73,10 +103,11 @@ class PostgreSQLManager {
 			const batchNumber = Math.floor(offset / PostgreSQLManager.URL_INSERT_BATCH_SIZE) + 1;
 			const urlBatch = urls.slice(offset, offset + PostgreSQLManager.URL_INSERT_BATCH_SIZE);
 
-			insertedCount += await retryTransientPostgres(
-				async () => {
+			insertedCount += await this.withRetry(
+				`URL sync batch ${batchNumber}/${batchCount}`,
+				async (sql) => {
 					// Existing rows can be read without waiting on another collector's row locks.
-					const result = await this.sql`
+					const result = await sql`
             INSERT INTO pages (url, collect_count)
             SELECT incoming.url, ${newUrlCollectCount}
             FROM unnest(${urlBatch}::text[]) WITH ORDINALITY AS incoming(url, position)
@@ -99,15 +130,7 @@ class PostgreSQLManager {
           `;
 					return result.count;
 				},
-				{
-					shouldRetry: shouldRetryUrlInsert,
-					onRetry: ({ attempt, maxAttempts, delayMs, error }) => {
-						const message = error instanceof Error ? error.message : String(error);
-						logger.warn(
-							`PostgreSQL URL sync batch ${batchNumber}/${batchCount} failed; retrying ${attempt}/${maxAttempts} in ${delayMs}ms: ${message}`,
-						);
-					},
-				},
+				shouldRetryUrlInsert,
 			);
 		}
 
@@ -156,21 +179,18 @@ class PostgreSQLManager {
 			minMaxResult,
 			distributionResult,
 			chunksResult,
-		] = await Promise.all([
-			this
-				.sql`SELECT COUNT(*) as count FROM pages WHERE url LIKE ${appleUrlPattern} AND url NOT LIKE ${videoUrlPattern}`,
-			this
-				.sql`SELECT COUNT(*) as count FROM pages WHERE url LIKE ${appleUrlPattern} AND url NOT LIKE ${videoUrlPattern} AND collect_count > 0`,
-			this.sql`SELECT COUNT(*) as count FROM pages WHERE url LIKE ${videoUrlPattern}`,
-			this
-				.sql`SELECT COUNT(*) as count FROM pages WHERE url LIKE ${videoUrlPattern} AND collect_count > 0`,
-			this.sql`SELECT AVG(collect_count) as avg FROM pages WHERE url LIKE ${appleUrlPattern}`,
-			this
-				.sql`SELECT MIN(collect_count) as min, MAX(collect_count) as max FROM pages WHERE url LIKE ${appleUrlPattern}`,
-			this
-				.sql`SELECT collect_count, COUNT(*) as count FROM pages WHERE url LIKE ${appleUrlPattern} GROUP BY collect_count ORDER BY collect_count`,
-			this.sql`SELECT COUNT(*) as count FROM chunks WHERE url LIKE ${appleUrlPattern}`,
-		]);
+		] = await this.withRetry("statistics", (sql) =>
+			Promise.all([
+				sql`SELECT COUNT(*) as count FROM pages WHERE url LIKE ${appleUrlPattern} AND url NOT LIKE ${videoUrlPattern}`,
+				sql`SELECT COUNT(*) as count FROM pages WHERE url LIKE ${appleUrlPattern} AND url NOT LIKE ${videoUrlPattern} AND collect_count > 0`,
+				sql`SELECT COUNT(*) as count FROM pages WHERE url LIKE ${videoUrlPattern}`,
+				sql`SELECT COUNT(*) as count FROM pages WHERE url LIKE ${videoUrlPattern} AND collect_count > 0`,
+				sql`SELECT AVG(collect_count) as avg FROM pages WHERE url LIKE ${appleUrlPattern}`,
+				sql`SELECT MIN(collect_count) as min, MAX(collect_count) as max FROM pages WHERE url LIKE ${appleUrlPattern}`,
+				sql`SELECT collect_count, COUNT(*) as count FROM pages WHERE url LIKE ${appleUrlPattern} GROUP BY collect_count ORDER BY collect_count`,
+				sql`SELECT COUNT(*) as count FROM chunks WHERE url LIKE ${appleUrlPattern}`,
+			]),
+		);
 
 		const docsCount = parseInt(docsTotal[0]?.count || "0", 10);
 		const docsCollectedCount = parseInt(docsCollected[0]?.count || "0", 10);
@@ -221,7 +241,7 @@ class PostgreSQLManager {
 	): Promise<void> {
 		if (records.length === 0) return;
 
-		await this.withTransaction(async (sql) => {
+		await this.withTransaction("page updates", async (sql) => {
 			for (const record of records) {
 				await sql`
           UPDATE pages
@@ -232,15 +252,14 @@ class PostgreSQLManager {
           WHERE id = ${record.id}
         `;
 			}
-
-			logger.info(`📝 Updated full records: ${records.length} records`);
 		});
+		logger.info(`📝 Updated full records: ${records.length} records`);
 	}
 
 	async deleteRecords(recordIds: string[]): Promise<void> {
 		if (recordIds.length === 0) return;
 
-		await this.withTransaction(async (sql) => {
+		const deleted = await this.withTransaction("permanent URL deletion", async (sql) => {
 			const chunksDeleteResult = await sql`
         DELETE FROM chunks
         WHERE url IN (SELECT url FROM pages WHERE id = ANY(${recordIds}))
@@ -250,10 +269,11 @@ class PostgreSQLManager {
         DELETE FROM pages WHERE id = ANY(${recordIds})
       `;
 
-			logger.info(
-				`🗑️ Deleted permanent error records: ${pagesDeleteResult.count} pages, ${chunksDeleteResult.count} chunks`,
-			);
+			return { pages: pagesDeleteResult.count, chunks: chunksDeleteResult.count };
 		});
+		logger.info(
+			`🗑️ Deleted permanent error records: ${deleted.pages} pages, ${deleted.chunks} chunks`,
+		);
 	}
 
 	async insertChunks(
@@ -268,14 +288,15 @@ class PostgreSQLManager {
 	): Promise<void> {
 		if (chunks.length === 0) return;
 
-		await this.withTransaction(async (sql) => {
-			const urls = [...new Set(chunks.map((c) => c.url))];
+		const urls = [...new Set(chunks.map((c) => c.url))];
+		const deletedCount = await this.withTransaction("chunk replacement", async (sql) => {
+			let deleted = 0;
 
 			if (urls.length > 0) {
 				const deleteResult = await sql`
           DELETE FROM chunks WHERE url = ANY(${urls})
         `;
-				logger.info(`🗑️ Deleted ${deleteResult.count || 0} existing chunks for ${urls.length} URLs`);
+				deleted = deleteResult.count || 0;
 			}
 
 			for (const chunk of chunks) {
@@ -284,11 +305,17 @@ class PostgreSQLManager {
           VALUES (${chunk.url}, ${chunk.title}, ${chunk.content}, ${`[${chunk.embedding.join(",")}]`}, ${chunk.chunk_index}, ${chunk.total_chunks})
         `;
 			}
+			return deleted;
 		});
+		logger.info(`🗑️ Deleted ${deletedCount} existing chunks for ${urls.length} URLs`);
 	}
 
 	async close(): Promise<void> {
-		await this.sql.end({ timeout: 0 });
+		try {
+			await this.sql.end({ timeout: 0 });
+		} catch (error) {
+			if (!isTransientPostgresConnectionError(error)) throw error;
+		}
 	}
 }
 

@@ -1,9 +1,74 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-import test from "node:test";
+import test, { type TestContext } from "node:test";
 import postgres from "postgres";
 import { COLLECTOR_CONNECTION_PARAMETERS, PostgreSQLManager } from "./PostgreSQLManager.js";
 import { logger } from "./utils/logger.js";
+
+test("already-closed sockets during cleanup do not replace an operation's error", async () => {
+	const closed = Object.assign(new Error("write CONNECTION_CLOSED"), { code: "CONNECTION_CLOSED" });
+	const manager = new PostgreSQLManager(
+		() =>
+			({
+				end: async () => {
+					throw closed;
+				},
+			}) as unknown as postgres.Sql,
+	);
+	await manager.close();
+	const unexpected = new Error("unexpected cleanup failure");
+	const broken = new PostgreSQLManager(
+		() =>
+			({
+				end: async () => {
+					throw unexpected;
+				},
+			}) as unknown as postgres.Sql,
+	);
+	await assert.rejects(broken.close(), (error) => error === unexpected);
+});
+
+test("write recovery uses fresh pools, stops after three failures and preserves the stage", async (t) => {
+	let created = 0;
+	let closed = 0;
+	const failure = Object.assign(new Error("write CONNECTION_CLOSED"), {
+		code: "CONNECTION_CLOSED",
+	});
+	t.mock.method(logger, "warn", () => {});
+	const manager = new PostgreSQLManager(() => {
+		created++;
+		return {
+			begin: async () => {
+				throw failure;
+			},
+			end: async () => {
+				closed++;
+			},
+		} as unknown as postgres.Sql;
+	});
+	await assert.rejects(
+		manager.batchUpdateFullRecords([
+			{
+				id: "unused",
+				url: "https://developer.apple.com/documentation/test",
+				title: "Updated",
+				content: "",
+				raw_json: "{}",
+				collect_count: 1,
+				created_at: new Date(0),
+				updated_at: new Date(1),
+			},
+		]),
+		(error: unknown) =>
+			error instanceof Error &&
+			error.message.includes("PostgreSQL page updates failed") &&
+			error.cause === failure,
+	);
+	assert.equal(created, 4);
+	assert.equal(closed, 3);
+	await manager.close();
+	assert.equal(closed, 4);
+});
 
 test("skips exact and casefold URL conflicts without losing new URLs across batches", {
 	skip:
@@ -31,7 +96,7 @@ test("skips exact and casefold URL conflicts without losing new URLs across batc
 				{ length: 1001 },
 				(_, index) => `https://developer.apple.com/documentation/casefold-regression/${index}`,
 			);
-			const manager = new PostgreSQLManager(transaction as unknown as postgres.Sql);
+			const manager = new PostgreSQLManager(() => transaction as unknown as postgres.Sql);
 
 			assert.equal(await manager.batchInsertUrls([]), 0);
 			assert.equal(
@@ -62,7 +127,7 @@ test("skips exact and casefold URL conflicts without losing new URLs across batc
 test("collector database operations remain safe under concurrency and interrupted connections", {
 	skip:
 		!process.env.TEST_DATABASE_URL && "Set TEST_DATABASE_URL to run PostgreSQL integration tests",
-	timeout: 120_000,
+	timeout: 180_000,
 }, async (t) => {
 	const schema =
 		process.env.TEST_DATABASE_SCHEMA ?? `collector_test_${randomUUID().replaceAll("-", "")}`;
@@ -119,7 +184,17 @@ test("collector database operations remain safe under concurrency and interrupte
 		(CASE WHEN title IS NULL OR title = '' THEN 0 ELSE 1 END),
 		url, id
 	) WHERE url LIKE 'https://developer.apple.com/%'`;
-	const manager = new PostgreSQLManager(sql);
+	await sql`CREATE TABLE chunks (
+		id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+		url text NOT NULL,
+		title text,
+		content text NOT NULL,
+		embedding text,
+		chunk_index integer NOT NULL DEFAULT 0,
+		total_chunks integer NOT NULL DEFAULT 1,
+		created_at timestamptz NOT NULL DEFAULT now()
+	)`;
+	const manager = new PostgreSQLManager(() => sql);
 	const observer = connect();
 	const prefix = "https://developer.apple.com/documentation/collector-test/";
 
@@ -152,6 +227,42 @@ test("collector database operations remain safe under concurrency and interrupte
 			}),
 		]);
 		return { release, done };
+	}
+
+	function disconnectOnce(subtest: TestContext, afterCommit: boolean) {
+		let attempts = 0;
+		let created = 0;
+		const reconnecting = new PostgreSQLManager(() => {
+			const client = connect();
+			created++;
+			if (created === 1) {
+				const begin = client.begin.bind(client);
+				subtest.mock.method(
+					client,
+					"begin",
+					async (operation: (transaction: postgres.TransactionSql) => Promise<unknown>) => {
+						attempts++;
+						if (afterCommit) {
+							await begin(operation);
+							throw Object.assign(
+								new Error("write CONNECTION_CLOSED after commit acknowledgement was lost"),
+								{
+									code: "CONNECTION_CLOSED",
+								},
+							);
+						}
+						return begin(async (transaction) => {
+							const result = await operation(transaction);
+							const [backend] = await transaction`SELECT pg_backend_pid() AS pid`;
+							await observer`SELECT pg_terminate_backend(${backend.pid})`;
+							return result;
+						});
+					},
+				);
+			}
+			return client;
+		});
+		return { manager: reconnecting, connections: () => created, injectedFailures: () => attempts };
 	}
 
 	await t.test("collector session settings are accepted by the server", async () => {
@@ -207,7 +318,7 @@ test("collector database operations remain safe under concurrency and interrupte
 			await sql`TRUNCATE pages`;
 			await sql`INSERT INTO pages (url, collect_count)
 			SELECT ${prefix} || n::text, 157 FROM generate_series(1, 8) n`;
-			const second = new PostgreSQLManager(connect());
+			const second = new PostgreSQLManager(connect);
 			const [firstClaim, secondClaim] = await Promise.all([
 				manager.getBatchRecords(2),
 				second.getBatchRecords(2),
@@ -255,7 +366,7 @@ test("collector database operations remain safe under concurrency and interrupte
 			);
 			const started = performance.now();
 			assert.equal(
-				await new PostgreSQLManager(impatient).batchInsertUrls([
+				await new PostgreSQLManager(() => impatient).batchInsertUrls([
 					existing,
 					existing.toLowerCase(),
 					`${prefix}new`,
@@ -285,7 +396,7 @@ test("collector database operations remain safe under concurrency and interrupte
 				held.release();
 			});
 			try {
-				const retried = new PostgreSQLManager(connect({ lock_timeout: 100 }));
+				const retried = new PostgreSQLManager(() => connect({ lock_timeout: 100 }));
 				assert.equal(await retried.batchInsertUrls([`${prefix}other`, raced]), 1);
 				assert.ok(warning.mock.callCount() >= 1);
 				assert.equal(await held.done, null);
@@ -315,7 +426,7 @@ test("collector database operations remain safe under concurrency and interrupte
 			held.release();
 		});
 		try {
-			const retried = new PostgreSQLManager(
+			const retried = new PostgreSQLManager(() =>
 				connect({ lock_timeout: 1000, statement_timeout: 100 }),
 			);
 			assert.equal(await retried.batchInsertUrls([`${prefix}other`, raced]), 1);
@@ -341,7 +452,7 @@ test("collector database operations remain safe under concurrency and interrupte
 		const client = connect();
 		const [backend] = await client`SELECT pg_backend_pid() AS pid`;
 		const warning = subtest.mock.method(logger, "warn", () => {});
-		const insertion = new PostgreSQLManager(client)
+		const insertion = new PostgreSQLManager(() => client)
 			.batchInsertUrls([`${prefix}not-committed`, raced])
 			.then(
 				() => null,
@@ -361,7 +472,8 @@ test("collector database operations remain safe under concurrency and interrupte
 			assert.ok(waiting);
 			await observer`SELECT pg_cancel_backend(${backend.pid})`;
 			const error = await insertion;
-			assert.ok(error instanceof postgres.PostgresError && error.code === "57014");
+			assert.ok(error instanceof Error);
+			assert.ok(error.cause instanceof postgres.PostgresError && error.cause.code === "57014");
 			assert.match(error.message, /user request/);
 			assert.equal(warning.mock.callCount(), 0);
 			const [added] =
@@ -382,7 +494,7 @@ test("collector database operations remain safe under concurrency and interrupte
 			const url = `${prefix}WidgetKit/race`;
 			const [first, second] = await Promise.all([
 				manager.batchInsertUrls([url]),
-				new PostgreSQLManager(connect()).batchInsertUrls([url.toLowerCase()]),
+				new PostgreSQLManager(connect).batchInsertUrls([url.toLowerCase()]),
 			]);
 			assert.equal(first + second, 1);
 			const [count] = await observer`SELECT count(*)::integer AS count FROM pages
@@ -426,7 +538,7 @@ test("collector database operations remain safe under concurrency and interrupte
 			const urls = Array.from({ length: 10 }, (_, index) => `${prefix}opposite-${index}`);
 			const [forward, reverse] = await Promise.all([
 				manager.batchInsertUrls(urls),
-				new PostgreSQLManager(connect()).batchInsertUrls([...urls].reverse()),
+				new PostgreSQLManager(connect).batchInsertUrls([...urls].reverse()),
 			]);
 			assert.equal(forward + reverse, urls.length);
 			const rows = await observer`SELECT url FROM pages WHERE url = ANY(${urls}) ORDER BY url`;
@@ -458,7 +570,7 @@ test("collector database operations remain safe under concurrency and interrupte
 				);
 			await started;
 			const start = performance.now();
-			await new PostgreSQLManager(client).close();
+			await new PostgreSQLManager(() => client).close();
 			assert.ok(performance.now() - start < 2000);
 			assert.ok((await interrupted) instanceof Error);
 			await observer.begin(async (transaction) => {
@@ -471,11 +583,141 @@ test("collector database operations remain safe under concurrency and interrupte
 
 	await t.test("closing after a successful write keeps its committed changes", async () => {
 		const client = connect();
-		const writer = new PostgreSQLManager(client);
+		const writer = new PostgreSQLManager(() => client);
 		const url = `${prefix}committed`;
 		assert.equal(await writer.batchInsertUrls([url]), 1);
 		await writer.close();
 		const [row] = await observer`SELECT url FROM pages WHERE url = ${url}`;
 		assert.equal(row.url, url);
+	});
+
+	await t.test(
+		"page updates reconnect after a real disconnection before commit",
+		async (subtest) => {
+			await sql`TRUNCATE pages, chunks`;
+			const inserted = await sql`INSERT INTO pages (url, title, content, raw_json, collect_count)
+			VALUES (${`${prefix}page-a`}, 'Old', 'Old content', '{}', 157),
+			       (${`${prefix}page-b`}, 'Old', 'Old content', '{}', 157)
+			RETURNING *`;
+			const updatedAt = new Date("2026-10-09T00:00:00Z");
+			const update = inserted.map((row) => ({
+				id: row.id as string,
+				url: row.url as string,
+				title: "New",
+				content: "New content",
+				raw_json: '{"updated":true}',
+				collect_count: 999,
+				created_at: row.created_at as Date,
+				updated_at: updatedAt,
+			}));
+			const fault = disconnectOnce(subtest, false);
+			await fault.manager.batchUpdateFullRecords(update);
+			assert.equal(fault.injectedFailures(), 1);
+			assert.equal(fault.connections(), 2);
+			const rows = await observer`SELECT title, content, raw_json, collect_count, updated_at
+			FROM pages ORDER BY url`;
+			assert.equal(rows.length, 2);
+			assert.ok(
+				rows.every(
+					(row) =>
+						row.title === "New" &&
+						row.content === "New content" &&
+						row.raw_json === '{"updated":true}' &&
+						row.collect_count === 157 &&
+						row.updated_at.getTime() === updatedAt.getTime(),
+				),
+			);
+		},
+	);
+
+	await t.test(
+		"replaying a chunk commit with a lost acknowledgement never appends duplicate chunks",
+		async (subtest) => {
+			await sql`TRUNCATE chunks`;
+			const url = `${prefix}page-a`;
+			const replacement = [0, 1].map((index) => ({
+				url,
+				title: "Replacement",
+				content: `Chunk ${index}`,
+				embedding: [1, 2],
+				chunk_index: index,
+				total_chunks: 2,
+			}));
+			const fault = disconnectOnce(subtest, true);
+			await fault.manager.insertChunks(replacement);
+			assert.equal(fault.connections(), 2);
+			const rows =
+				await observer`SELECT title, content, chunk_index, total_chunks FROM chunks ORDER BY chunk_index`;
+			assert.deepEqual(
+				rows.map((row) => ({ ...row })),
+				replacement.map(({ title, content, chunk_index, total_chunks }) => ({
+					title,
+					content,
+					chunk_index,
+					total_chunks,
+				})),
+			);
+		},
+	);
+
+	await t.test(
+		"permanent deletion reconnects and leaves unrelated pages and chunks intact",
+		async (subtest) => {
+			const [target] = await observer`SELECT id FROM pages WHERE url = ${`${prefix}page-a`}`;
+			await sql`INSERT INTO chunks (url, content) VALUES (${`${prefix}page-b`}, 'Keep')`;
+			const fault = disconnectOnce(subtest, false);
+			await fault.manager.deleteRecords([target.id]);
+			assert.equal(fault.connections(), 2);
+			const rows = await observer`SELECT url FROM pages ORDER BY url`;
+			assert.deepEqual(
+				rows.map((row) => row.url),
+				[`${prefix}page-b`],
+			);
+			const chunks = await observer`SELECT url, content FROM chunks ORDER BY url`;
+			assert.deepEqual(
+				chunks.map((row) => ({ ...row })),
+				[{ url: `${prefix}page-b`, content: "Keep" }],
+			);
+		},
+	);
+
+	await t.test("statistics restart on a fresh connection without changing data", async () => {
+		let created = 0;
+		const reader = new PostgreSQLManager(() => {
+			const client = connect();
+			created++;
+			if (created !== 1) return client;
+			return new Proxy(client, {
+				apply: () => {
+					throw Object.assign(new Error("write CONNECTION_CLOSED"), { code: "CONNECTION_CLOSED" });
+				},
+			});
+		});
+		const stats = await reader.getStats();
+		assert.equal(created, 2);
+		assert.equal(stats.docs.total, 1);
+		assert.equal(stats.totalChunks, 1);
+		const [row] = await observer`SELECT collect_count FROM pages`;
+		assert.equal(row.collect_count, 157);
+	});
+
+	await t.test("a lost claim acknowledgement never replays the counter increment", async () => {
+		let created = 0;
+		const client = connect();
+		const claim = new PostgreSQLManager(() => {
+			created++;
+			return new Proxy(client, {
+				apply: (target, receiver, args) =>
+					Promise.resolve(Reflect.apply(target, receiver, args)).then(() => {
+						throw Object.assign(new Error("write CONNECTION_CLOSED after claim"), {
+							code: "CONNECTION_CLOSED",
+						});
+					}),
+			});
+		});
+		await assert.rejects(claim.getBatchRecords(1), /CONNECTION_CLOSED/);
+		assert.equal(created, 1);
+		const [row] = await observer`SELECT collect_count FROM pages`;
+		assert.equal(row.collect_count, 158);
 	});
 });
