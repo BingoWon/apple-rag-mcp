@@ -85,17 +85,18 @@ class AppleDocCollector {
 	async execute(): Promise<{
 		totalChunks: number;
 	}> {
-		const records = await this.dbManager.getBatchRecords(this.config.batchSize);
+		const records = await this.dbManager.getBatchRecords(this.config.batchSize).catch((error) => {
+			throw new Error(
+				`PostgreSQL batch claim failed: ${error instanceof Error ? error.message : String(error)}`,
+				{ cause: error },
+			);
+		});
 
 		const startTime = Date.now();
 
 		logger.info(`Processing ${records.length} URLs`);
 
 		const result = await this.processBatch(records);
-
-		if (result.extractedUrls.size > 0) {
-			await this.dbManager.batchInsertUrls([...result.extractedUrls]);
-		}
 
 		const duration = Date.now() - startTime;
 
@@ -299,6 +300,17 @@ class AppleDocCollector {
 		const processResults = changedRecords.map((r) => r.processResult).filter(Boolean);
 
 		const { allChunks, embeddings } = await this.generateChunksAndEmbeddings(processResults);
+		const result = this.buildProcessingResult(processingPlan, processResults, allChunks);
+
+		// Keep the source page unchanged if link discovery cannot be saved, so it can be retried.
+		if (result.extractedUrls.size > 0) {
+			await this.dbManager.batchInsertUrls([...result.extractedUrls]).catch((error) => {
+				throw new Error(
+					`PostgreSQL discovered URL sync failed: ${error instanceof Error ? error.message : String(error)}`,
+					{ cause: error },
+				);
+			});
+		}
 
 		if (changedRecords.length > 0) {
 			logger.info(`📝 Content changed: ${changedRecords.length} URLs (full processing)`);
@@ -374,7 +386,7 @@ class AppleDocCollector {
 			await logger.warn(`Temporary errors: ${temporaryErrorRecords.length} URLs\n${temporaryUrls}`);
 		}
 
-		return this.buildProcessingResult(processingPlan, processResults, allChunks);
+		return result;
 	}
 
 	private async generateChunksAndEmbeddings(

@@ -29,6 +29,7 @@ interface PostgresRetryOptions {
 	readonly baseDelayMs?: number;
 	readonly onRetry?: (notification: RetryNotification) => void;
 	readonly sleep?: (delayMs: number) => Promise<void>;
+	readonly shouldRetry?: (error: unknown) => boolean;
 }
 
 export async function retryTransientPostgres<T>(
@@ -39,12 +40,13 @@ export async function retryTransientPostgres<T>(
 	const baseDelayMs = Math.max(0, options.baseDelayMs ?? 250);
 	const sleep =
 		options.sleep ?? ((delayMs: number) => new Promise((resolve) => setTimeout(resolve, delayMs)));
+	const shouldRetry = options.shouldRetry ?? isTransientPostgresConnectionError;
 
 	for (let attempt = 1; attempt <= maxAttempts; attempt++) {
 		try {
 			return await operation();
 		} catch (error) {
-			if (attempt === maxAttempts || !isTransientPostgresConnectionError(error)) {
+			if (attempt === maxAttempts || !shouldRetry(error)) {
 				throw error;
 			}
 

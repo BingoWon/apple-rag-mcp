@@ -1,7 +1,28 @@
 import type postgres from "postgres";
-import { retryTransientPostgres } from "../shared/postgres-retry.js";
+import {
+	isTransientPostgresConnectionError,
+	retryTransientPostgres,
+} from "../shared/postgres-retry.js";
 import type { DatabaseRecord, DatabaseStats } from "./types/index.js";
 import { logger } from "./utils/logger.js";
+
+export const COLLECTOR_CONNECTION_PARAMETERS = {
+	application_name: "apple-rag-collector",
+	statement_timeout: 120_000,
+	lock_timeout: 60_000,
+	idle_in_transaction_session_timeout: 180_000,
+	tcp_user_timeout: 60_000,
+	client_connection_check_interval: 1_000,
+} as const;
+
+function shouldRetryUrlInsert(error: unknown): boolean {
+	const code = error && typeof error === "object" && "code" in error ? error.code : null;
+	return (
+		isTransientPostgresConnectionError(error) ||
+		code === "55P03" ||
+		(code === "57014" && error instanceof Error && error.message.includes("statement timeout"))
+	);
+}
 
 class PostgreSQLManager {
 	private static readonly URL_INSERT_BATCH_SIZE = 1000;
@@ -53,16 +74,29 @@ class PostgreSQLManager {
 
 			insertedCount += await retryTransientPostgres(
 				async () => {
-					// Skip duplicates from both url and lower(url) unique indexes.
+					// Existing rows can be read without waiting on another collector's row locks.
 					const result = await this.sql`
-            INSERT INTO pages ${this.sql(
-							urlBatch.map((url) => ({ url, collect_count: newUrlCollectCount })),
-						)}
+            INSERT INTO pages (url, collect_count)
+            SELECT incoming.url, ${newUrlCollectCount}
+            FROM unnest(${urlBatch}::text[]) WITH ORDINALITY AS incoming(url, position)
+            WHERE NOT EXISTS (
+              SELECT 1 FROM pages existing WHERE existing.url = incoming.url
+            )
+              AND (
+                incoming.url NOT LIKE 'https://developer.apple.com/%'
+                OR NOT EXISTS (
+                  SELECT 1 FROM pages existing
+                  WHERE existing.url LIKE 'https://developer.apple.com/%'
+                    AND lower(existing.url) = lower(incoming.url)
+                )
+              )
+            ORDER BY incoming.position
             ON CONFLICT DO NOTHING
           `;
 					return result.count;
 				},
 				{
+					shouldRetry: shouldRetryUrlInsert,
 					onRetry: ({ attempt, maxAttempts, delayMs, error }) => {
 						const message = error instanceof Error ? error.message : String(error);
 						logger.warn(
@@ -79,7 +113,7 @@ class PostgreSQLManager {
 	async getBatchRecords(batchSize: number): Promise<DatabaseRecord[]> {
 		// Atomic operation: SELECT records with minimum collect_count and UPDATE them
 		// This ensures different workers get different records by always taking the minimum collect_count
-		const result = await this.sql`
+		return this.sql<DatabaseRecord[]>`
       WITH min_count_records AS (
         SELECT id FROM pages
         WHERE url LIKE 'https://developer.apple.com/%'
@@ -98,16 +132,8 @@ class PostgreSQLManager {
       UPDATE pages
       SET collect_count = collect_count + 1
       WHERE id IN (SELECT id FROM min_count_records)
-      RETURNING *
+      RETURNING id, url, title, content, collect_count, created_at, updated_at
     `;
-
-		return result.map((row: Record<string, unknown>) => ({
-			...row,
-			raw_json: row.raw_json === undefined ? null : row.raw_json, // Fix postgres JSONB undefined → null
-			collect_count: Number(row.collect_count),
-			created_at: row.created_at,
-			updated_at: row.updated_at,
-		})) as DatabaseRecord[];
 	}
 
 	async getStats(): Promise<DatabaseStats> {
@@ -186,7 +212,9 @@ class PostgreSQLManager {
 		};
 	}
 
-	async batchUpdateFullRecords(records: DatabaseRecord[]): Promise<void> {
+	async batchUpdateFullRecords(
+		records: Array<DatabaseRecord & { readonly raw_json: string | null }>,
+	): Promise<void> {
 		if (records.length === 0) return;
 
 		await this.withTransaction(async (sql) => {
@@ -256,7 +284,7 @@ class PostgreSQLManager {
 	}
 
 	async close(): Promise<void> {
-		await this.sql.end();
+		await this.sql.end({ timeout: 0 });
 	}
 }
 

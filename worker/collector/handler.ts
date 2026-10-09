@@ -1,7 +1,7 @@
 import postgres from "postgres";
 import type { Env } from "../shared/types.js";
 import { AppleDocCollector } from "./AppleDocCollector.js";
-import { PostgreSQLManager } from "./PostgreSQLManager.js";
+import { COLLECTOR_CONNECTION_PARAMETERS, PostgreSQLManager } from "./PostgreSQLManager.js";
 import type { BatchConfig } from "./types/index.js";
 import { logger } from "./utils/logger.js";
 import { configureTelegram, notifyStats } from "./utils/telegram-notifier.js";
@@ -48,12 +48,7 @@ async function processAppleContent(env: Env, shouldDiscoverVideos: boolean): Pro
 		idle_timeout: 0,
 		connect_timeout: 60,
 		keep_alive: 30,
-		connection: {
-			application_name: "apple-rag-collector",
-			statement_timeout: 120_000,
-			lock_timeout: 60_000,
-			idle_in_transaction_session_timeout: 180_000,
-		},
+		connection: COLLECTOR_CONNECTION_PARAMETERS,
 		transform: { undefined: null },
 		onnotice: () => {},
 	});

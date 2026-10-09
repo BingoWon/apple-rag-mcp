@@ -43,20 +43,38 @@ test("retries transient failures and returns the successful result", async () =>
 });
 
 test("does not retry non-transient PostgreSQL errors", async () => {
-	let calls = 0;
+	for (const code of ["23505", "55P03", "57014"]) {
+		let calls = 0;
+		const error = Object.assign(new Error("database operation failed"), { code });
+		await assert.rejects(
+			retryTransientPostgres(
+				async () => {
+					calls++;
+					throw error;
+				},
+				{ sleep: async () => {} },
+			),
+			(candidate) => candidate === error,
+		);
+		assert.equal(calls, 1);
+	}
+});
 
+test("an operation-specific retry policy stays bounded and preserves the final error", async () => {
+	let calls = 0;
+	const error = Object.assign(new Error("lock timeout"), { code: "55P03" });
 	await assert.rejects(
 		retryTransientPostgres(
 			async () => {
 				calls++;
-				throw Object.assign(new Error("duplicate key"), { code: "23505" });
+				throw error;
 			},
 			{
+				shouldRetry: (candidate) => candidate === error,
 				sleep: async () => {},
 			},
 		),
-		/duplicate key/,
+		(candidate) => candidate === error,
 	);
-
-	assert.equal(calls, 1);
+	assert.equal(calls, 3);
 });

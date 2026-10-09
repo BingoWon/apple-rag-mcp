@@ -31,7 +31,6 @@ interface AppConfig {
 interface DatabaseRecord {
 	readonly id: string;
 	readonly url: string;
-	readonly raw_json: string | null;
 	readonly title: string | null;
 	readonly content: string;
 	readonly collect_count: number;
