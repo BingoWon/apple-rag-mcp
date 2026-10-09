@@ -106,7 +106,7 @@ test("sidebar promotion sits below logout and collapses to its logo in both lang
 	let expanded = false;
 	Object.defineProperty(globalThis, "localStorage", {
 		configurable: true,
-		value: { getItem: (key: string) => (key === "sidebar-pinned" && expanded ? "true" : null) },
+		value: { getItem: (key: string) => (key === "sidebar-pinned" ? String(expanded) : null) },
 	});
 	try {
 		const { AppleSidebar } = await import("../components/layout/AppleSidebar.js");
@@ -144,10 +144,11 @@ test("sidebar promotion sits below logout and collapses to its logo in both lang
 				const panel = html.indexOf("rounded-tl-2xl");
 				assert.ok(logout >= 0 && promotion > logout && panel > promotion);
 				assert.ok(!html.includes("dashboard-integration"));
+				assert.ok(!html.includes("fixed h-full w-[80%]"));
 				assert.ok(!html.includes('href="/#jev"'));
 				assert.ok(html.includes('src="/typesafe-logo.webp"'));
 				assert.equal(html.split('class="jev-brand ').length - 1, 0);
-				assert.equal(html.split('class="jev-brand-name font-bold').length - 1, open ? 2 : 0);
+				assert.equal(html.split('class="jev-brand-name font-bold').length - 1, open ? 1 : 0);
 				if (open) {
 					assert.ok(html.includes(i18n.t("dashboard.jev_integration")));
 					assert.ok(html.includes(language === "en" ? "Powered by " : "驱动"));

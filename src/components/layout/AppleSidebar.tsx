@@ -20,7 +20,13 @@ import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
-import { Sidebar, SidebarBody, SidebarLink, useSidebar } from "../ui/sidebar";
+import {
+	SIDEBAR_CONTROL_CLASS_NAME,
+	Sidebar,
+	SidebarBody,
+	SidebarLink,
+	useSidebar,
+} from "../ui/sidebar";
 
 const SIDEBAR_LINK_KEYS = [
 	{
@@ -71,7 +77,7 @@ function SidebarHeader() {
 					type="button"
 					onClick={togglePin}
 					className={cn(
-						"p-1.5 rounded-md transition-all duration-200",
+						"hidden md:inline-flex p-1.5 rounded-md transition-all duration-200",
 						pinned
 							? "text-brand hover:text-brand/80 bg-brand/10"
 							: "text-muted hover:text-light hover:bg-secondary",
@@ -102,8 +108,8 @@ function SidebarFooter({
 	if (!open) {
 		return (
 			<div className="flex flex-col items-center gap-3">
-				<LanguageSwitcher placement="top" />
-				<ThemeToggle variant="icon" placement="top" />
+				<LanguageSwitcher placement="top" className={SIDEBAR_CONTROL_CLASS_NAME} />
+				<ThemeToggle variant="icon" placement="top" className={SIDEBAR_CONTROL_CLASS_NAME} />
 				<Link to="/settings" className="shrink-0">
 					<Avatar src={user?.avatar} name={displayName} size="sm" className="h-7 w-7 shrink-0" />
 				</Link>
@@ -118,13 +124,13 @@ function SidebarFooter({
 			</Link>
 			<Link
 				to="/settings"
-				className="text-sm text-muted hover:text-light truncate flex-1 min-w-0 transition-colors duration-200"
+				className="text-sm font-medium text-light/90 hover:text-light truncate flex-1 min-w-0 transition-colors duration-200"
 			>
 				{displayName}
 			</Link>
 			<div className="flex items-center shrink-0 ml-auto">
-				<LanguageSwitcher placement="top" />
-				<ThemeToggle variant="icon" placement="top" />
+				<LanguageSwitcher placement="top" className={SIDEBAR_CONTROL_CLASS_NAME} />
+				<ThemeToggle variant="icon" placement="top" className={SIDEBAR_CONTROL_CLASS_NAME} />
 			</div>
 		</div>
 	);

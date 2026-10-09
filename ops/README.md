@@ -40,5 +40,7 @@ After `pnpm build`, run `node ops/ui/check-jev-copy.mjs` with
 [live-server](https://github.com/tapio/live-server) available on the
 [Node.js](https://github.com/nodejs/node) module path,
 and [Google Chrome](https://www.google.com/chrome/) installed.
-The check covers bilingual headings, sidebar folding, alignment, overflow, themes, and short screens.
-Generated results stay in the ignored `ops/ui/results/` directory; the temporary server closes automatically.
+The check covers bilingual headings, default desktop expansion, mobile menu closing, saved choices,
+label/icon hover synchronization, theme and language switching, alignment, overflow, and short screens.
+Generated results stay in the ignored `ops/ui/results/` directory.
+The temporary server chooses an available port and closes automatically.

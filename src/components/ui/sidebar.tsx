@@ -23,6 +23,9 @@ interface SidebarContextProps {
 
 const STORAGE_KEY = "sidebar-pinned";
 
+export const SIDEBAR_CONTROL_CLASS_NAME =
+	"size-9 rounded-md border-default/60 bg-transparent text-light/90 shadow-none backdrop-blur-none transition-all duration-200 hover:border-default hover:bg-tertiary hover:text-light hover:shadow-none [&_svg]:size-4.5";
+
 const SidebarContext = createContext<SidebarContextProps | undefined>(undefined);
 
 export const useSidebar = () => {
@@ -48,9 +51,9 @@ export const SidebarProvider = React.memo(
 		const [openState, setOpenState] = useState(false);
 		const [pinned, setPinned] = useState(() => {
 			try {
-				return localStorage.getItem(STORAGE_KEY) === "true";
+				return localStorage.getItem(STORAGE_KEY) !== "false";
 			} catch {
-				return false;
+				return true;
 			}
 		});
 
@@ -58,15 +61,13 @@ export const SidebarProvider = React.memo(
 		const setOpen = setOpenProp !== undefined ? setOpenProp : setOpenState;
 
 		const togglePin = useCallback(() => {
-			setPinned((prev) => {
-				const next = !prev;
-				try {
-					localStorage.setItem(STORAGE_KEY, String(next));
-				} catch {}
-				if (next) setOpen(true);
-				return next;
-			});
-		}, [setOpen]);
+			const next = !pinned;
+			setPinned(next);
+			try {
+				localStorage.setItem(STORAGE_KEY, String(next));
+			} catch {}
+			setOpen(next);
+		}, [pinned, setOpen]);
 
 		const contextValue = React.useMemo(
 			() => ({ open: pinned || open, setOpen, animate, pinned, togglePin }),
@@ -111,7 +112,7 @@ export const DesktopSidebar = ({
 	children,
 	...props
 }: React.ComponentProps<typeof motion.div>) => {
-	const { open, setOpen, animate, pinned } = useSidebar();
+	const { open, setOpen, animate } = useSidebar();
 	return (
 		<motion.div
 			className={cn(
@@ -123,12 +124,8 @@ export const DesktopSidebar = ({
 				paddingLeft: animate ? (open ? "16px" : "8px") : "16px",
 				paddingRight: animate ? (open ? "16px" : "8px") : "16px",
 			}}
-			onMouseEnter={() => {
-				if (!pinned) setOpen(true);
-			}}
-			onMouseLeave={() => {
-				if (!pinned) setOpen(false);
-			}}
+			onMouseEnter={() => setOpen(true)}
+			onMouseLeave={() => setOpen(false)}
 			{...props}
 		>
 			{children}
@@ -137,7 +134,12 @@ export const DesktopSidebar = ({
 };
 
 export const MobileSidebar = ({ className, children, ...props }: React.ComponentProps<"div">) => {
-	const { open, setOpen } = useSidebar();
+	const { setOpen } = useSidebar();
+	const [mobileOpen, setMobileOpen] = useState(false);
+	const setMenuOpen = (next: boolean) => {
+		setMobileOpen(next);
+		setOpen(next);
+	};
 	return (
 		<div
 			className={cn(
@@ -147,15 +149,15 @@ export const MobileSidebar = ({ className, children, ...props }: React.Component
 		>
 			{/* Right side controls */}
 			<div className="flex items-center gap-2 z-20">
-				<LanguageSwitcher />
-				<ThemeToggle variant="icon" />
+				<LanguageSwitcher className={SIDEBAR_CONTROL_CLASS_NAME} />
+				<ThemeToggle variant="icon" className={SIDEBAR_CONTROL_CLASS_NAME} />
 				<IconMenu2
 					className="text-light cursor-pointer hover:text-muted transition-colors p-1"
-					onClick={() => setOpen(!open)}
+					onClick={() => setMenuOpen(!mobileOpen)}
 				/>
 			</div>
 			<AnimatePresence>
-				{open && (
+				{mobileOpen && (
 					<>
 						<motion.div
 							initial={{ opacity: 0 }}
@@ -163,7 +165,7 @@ export const MobileSidebar = ({ className, children, ...props }: React.Component
 							exit={{ opacity: 0 }}
 							transition={{ duration: 0.3 }}
 							className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[90]"
-							onClick={() => setOpen(false)}
+							onClick={() => setMenuOpen(false)}
 						/>
 
 						<motion.div
@@ -182,7 +184,7 @@ export const MobileSidebar = ({ className, children, ...props }: React.Component
 							<button
 								type="button"
 								className="absolute right-6 top-6 z-50 text-light cursor-pointer hover:text-muted transition-colors"
-								onClick={() => setOpen(!open)}
+								onClick={() => setMenuOpen(false)}
 							>
 								<IconX />
 							</button>
@@ -218,8 +220,10 @@ export const SidebarLink = ({
 		<a
 			href={link.href}
 			className={cn(
-				"flex items-center group/sidebar py-2 rounded-lg transition-all duration-200 relative",
-				isActive ? "bg-brand text-white" : "text-muted hover:text-light hover:bg-tertiary",
+				"flex items-center group/sidebar py-2 rounded-lg font-medium transition-colors duration-200 relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand",
+				isActive
+					? "bg-brand-tertiary text-white"
+					: "text-light/90 hover:text-light hover:bg-tertiary",
 				className,
 			)}
 			style={{
@@ -231,12 +235,7 @@ export const SidebarLink = ({
 			onClick={handleClick}
 			{...props}
 		>
-			<div
-				className={cn(
-					"transition-colors duration-200 flex-shrink-0 relative",
-					isActive ? "text-white" : "text-muted group-hover/sidebar:text-light",
-				)}
-			>
+			<div className="flex-shrink-0 relative text-inherit">
 				{link.icon}
 
 				{link.badge && !open && (
@@ -253,10 +252,7 @@ export const SidebarLink = ({
 					duration: 0.2,
 					ease: "easeInOut",
 				}}
-				className={cn(
-					"text-sm whitespace-nowrap overflow-hidden inline-block",
-					isActive ? "text-white font-medium" : "text-muted",
-				)}
+				className="text-sm whitespace-nowrap overflow-hidden inline-block text-inherit"
 				style={{
 					display: open ? "inline-block" : "none",
 				}}

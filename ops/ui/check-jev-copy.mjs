@@ -9,25 +9,30 @@ const server = require("live-server");
 const root = fileURLToPath(new URL("../../", import.meta.url));
 const results = [];
 let browser;
-server.start({
+const httpServer = server.start({
 	root: `${root}dist/client`,
 	host: "127.0.0.1",
-	port: 4200,
+	port: 0,
 	file: "index.html",
 	open: false,
 	logLevel: 0,
 });
+await new Promise((resolve, reject) => {
+	httpServer.once("listening", resolve);
+	httpServer.once("error", reject);
+});
+const baseUrl = `http://127.0.0.1:${httpServer.address().port}`;
 try {
 	browser = await chromium.launch({
 		channel: "chrome",
 		headless: true,
 	});
 	for (const viewport of [
-		{ width: 320, height: 844 },
-		{ width: 390, height: 844 },
 		{ width: 768, height: 900 },
 		{ width: 1440, height: 900 },
 		{ width: 1280, height: 600 },
+		{ width: 320, height: 844 },
+		{ width: 390, height: 844 },
 	]) {
 		for (const language of ["en", "zh"]) {
 			for (const theme of ["light", "dark"]) {
@@ -63,18 +68,49 @@ try {
 						);
 						localStorage.setItem("apple-rag-lang", language);
 						localStorage.setItem("theme", theme);
-						localStorage.setItem("sidebar-pinned", "false");
+						localStorage.setItem("cookie-consent", "declined");
 					},
 					{ language, theme },
 				);
-				await page.goto("http://127.0.0.1:4200/settings/", { waitUntil: "networkidle" });
+				await page.goto(`${baseUrl}/settings/`, { waitUntil: "networkidle" });
 				await page.locator("h1").waitFor();
 				const promotion = page.locator(".sidebar-jev:visible");
+				assert.equal(await page.locator("div.fixed.inset-y-0.left-0:visible").count(), 0);
 				if (viewport.width < 768) {
 					await page.locator('svg[class*="menu-2"]:visible').click();
 				} else {
 					await promotion.waitFor();
-					assert.equal(await promotion.locator(".jev-brand-name").count(), 0);
+					await promotion.locator(".jev-brand-name").waitFor();
+					await page.mouse.move(viewport.width - 20, 150);
+					await page.waitForTimeout(600);
+					assert.equal(
+						await promotion.locator(".jev-brand-name").count(),
+						1,
+						JSON.stringify(
+							await promotion.evaluate((element) => ({
+								stage: "default-open",
+								savedPin: localStorage.getItem("sidebar-pinned"),
+								width: element.parentElement.parentElement.getBoundingClientRect().width,
+								pinTitle: document.querySelector('button[title*="sidebar"]')?.title,
+							})),
+						),
+					);
+					await page.getByRole("button", { name: "Auto-collapse sidebar" }).click();
+					await page.mouse.move(viewport.width - 20, 150);
+					await page.waitForTimeout(600);
+					assert.equal(
+						await promotion.locator(".jev-brand-name").count(),
+						0,
+						JSON.stringify(
+							await promotion.evaluate((element) => ({
+								savedPin: localStorage.getItem("sidebar-pinned"),
+								width: element.parentElement.parentElement.getBoundingClientRect().width,
+								hovered: element.parentElement.parentElement.matches(":hover"),
+								pinTitle: document.querySelector('button[title*="sidebar"]')?.title,
+								point: document.elementFromPoint(window.innerWidth - 20, 150)?.className,
+							})),
+						),
+					);
 					assert.equal(await promotion.locator("img").count(), 1);
 					await promotion.hover();
 				}
@@ -117,15 +153,78 @@ try {
 				assert.equal(measured.fontWeight, "700");
 				assert.equal(measured.color, theme === "dark" ? "rgb(255, 255, 255)" : "rgb(15, 23, 42)");
 				assert.equal(measured.shadow.match(/\)\s+[\d.]+px\s+[\d.]+px\s+0px/g)?.length, 1);
+				const inactive = page.locator('a[href="/mcp-tokens/"]:visible');
+				const colors = () =>
+					inactive.evaluate((element) => ({
+						row: getComputedStyle(element).color,
+						icon: getComputedStyle(element.querySelector("svg")).color,
+						label: getComputedStyle(element.querySelector(":scope > span")).color,
+						weight: getComputedStyle(element.querySelector(":scope > span")).fontWeight,
+					}));
+				const normal = await colors();
+				assert.equal(normal.row, normal.icon);
+				assert.equal(normal.row, normal.label);
+				assert.equal(normal.weight, "500");
+				await inactive.hover();
+				await page.waitForTimeout(80);
+				const intermediate = await colors();
+				assert.equal(intermediate.row, intermediate.icon);
+				assert.equal(intermediate.row, intermediate.label);
+				await page.waitForTimeout(250);
+				const hovered = await colors();
+				assert.equal(hovered.row, hovered.icon);
+				assert.equal(hovered.row, hovered.label);
+				assert.notEqual(hovered.row, normal.row);
+				const active = page.locator('a[href="/settings/"]:visible');
+				assert.equal(
+					await active.evaluate((element) => getComputedStyle(element).backgroundColor),
+					"rgb(37, 99, 235)",
+				);
+				const controls = promotion.locator("..");
+				const languageButton = controls.locator('button:has(svg[class*="language"])');
+				const themeButton = controls.locator("button:has(svg.absolute)");
+				for (const button of [languageButton, themeButton]) {
+					const rect = await button.boundingBox();
+					assert.equal(rect.width, 36);
+					assert.equal(rect.height, 36);
+				}
+				await languageButton.click();
+				await page.waitForTimeout(300);
+				assert.ok(
+					(await promotion.locator("h2").textContent()).includes(
+						language === "en" ? "驱动" : "Powered by",
+					),
+				);
+				await languageButton.click();
+				await page.waitForTimeout(300);
+				for (let count = 0; count < 3; count++) {
+					await themeButton.click();
+					await page.waitForTimeout(300);
+				}
+				assert.equal(await page.evaluate(() => localStorage.getItem("theme")), theme);
 				if (viewport.width >= 768) {
 					await page.mouse.move(viewport.width - 20, 150);
 					await page.waitForTimeout(600);
 					assert.equal(await promotion.locator(".jev-brand-name").count(), 0);
 					assert.equal(await promotion.locator("img").count(), 1);
+					await page.reload({ waitUntil: "networkidle" });
+					await promotion.waitFor();
+					assert.equal(await promotion.locator(".jev-brand-name").count(), 0);
+				} else {
+					await page.locator("div.fixed.inset-y-0.left-0:visible button").first().click();
+					await page.waitForTimeout(500);
+					assert.equal(await page.locator("div.fixed.inset-y-0.left-0:visible").count(), 0);
 				}
-				const result = { viewport, language, theme, sidebar: measured, errors };
+				const result = {
+					viewport,
+					language,
+					theme,
+					sidebar: measured,
+					navigation: { normal, intermediate, hovered },
+					errors,
+				};
 				if (viewport.width === 320 || viewport.width === 1440) {
-					await page.goto("http://127.0.0.1:4200/", { waitUntil: "networkidle" });
+					await page.goto(`${baseUrl}/`, { waitUntil: "networkidle" });
 					await page.locator("#jev").waitFor();
 					await page.evaluate(() => document.fonts.ready);
 					result.home = await page.locator("#jev").evaluate((element) => {
