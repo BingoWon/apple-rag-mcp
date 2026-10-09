@@ -12,6 +12,7 @@ ops/server/backups/
 ops/server/data/
 ops/server/secrets/
 ops/jev/results/
+ops/ui/results/
 
 # TypeScript
 *.tsbuildinfo

@@ -32,3 +32,13 @@ Update `package.json` and `server.json` to the same new version, then push to `m
 After CI succeeds, `.github/workflows/release.yml` creates its `vX.Y.Z` tag and release.
 An existing tag is skipped. `chore(release): vX.Y.Z` is the release commit naming convention,
 not the trigger; changing the commit message without changing the version does not publish a release.
+
+## Interface Checks
+
+After `pnpm build`, run `node ops/ui/check-jev-copy.mjs` with
+[Playwright](https://github.com/microsoft/playwright) and
+[live-server](https://github.com/tapio/live-server) available on the
+[Node.js](https://github.com/nodejs/node) module path,
+and [Google Chrome](https://www.google.com/chrome/) installed.
+The check covers bilingual headings, sidebar folding, alignment, overflow, themes, and short screens.
+Generated results stay in the ignored `ops/ui/results/` directory; the temporary server closes automatically.
