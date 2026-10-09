@@ -34,11 +34,12 @@ const TimeRangeSelector = memo<TimeRangeSelectorProps>(({ timeRange, onTimeRange
 	);
 
 	return (
-		<div className="flex gap-2">
+		<div className="flex flex-wrap gap-2">
 			{TIME_RANGE_KEYS.map(({ key, labelKey }) => (
 				<button
 					key={key}
 					type="button"
+					aria-pressed={timeRange === key}
 					className={`inline-flex items-center justify-center rounded-md text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-background cursor-pointer relative h-9 px-3 transition-all duration-200 select-none ${
 						timeRange === key
 							? "bg-brand text-white font-semibold shadow-complex hover:bg-brand/90 border-brand"

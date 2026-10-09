@@ -38,7 +38,7 @@ export interface MainChartProps {
 }
 
 export interface TimeRangeSelectorProps {
-	timeRange: TimeRange;
+	timeRange?: TimeRange;
 	onTimeRangeChange: (range: TimeRange) => void;
 }
 

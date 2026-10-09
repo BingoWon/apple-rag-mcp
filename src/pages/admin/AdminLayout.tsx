@@ -72,7 +72,7 @@ export function AdminLayout() {
 
 			<nav className="bg-card border-b border-border">
 				<div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
-					<div className="flex space-x-8">
+					<div className="flex gap-4 overflow-x-auto sm:gap-8">
 						{adminNavItems.map((item) => {
 							const normalizedPathname = pathname.replace(/\/$/, "") || "/";
 							const normalizedHref = item.href.replace(/\/$/, "") || "/";
@@ -85,7 +85,7 @@ export function AdminLayout() {
 								<Link
 									key={item.href}
 									to={item.href}
-									className={`border-b-2 py-4 px-1 text-sm font-medium transition-colors ${
+									className={`shrink-0 whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium transition-colors ${
 										isActive
 											? "border-brand text-brand bg-brand/10"
 											: "border-transparent text-muted-foreground hover:text-foreground hover:border-primary"

@@ -1,110 +1,178 @@
-/**
- * Admin Dashboard Home
- * Overview of all admin functions and quick stats
- */
-
-import {
-	IconCreditCard,
-	IconDownload,
-	IconKey,
-	IconMessageCircle,
-	IconSearch,
-	IconUsers,
-	IconWorld,
-} from "@tabler/icons-react";
+import { IconCalendar, IconCheck, IconRefresh } from "@tabler/icons-react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
-
-const adminSections = [
-	{
-		titleKey: "admin.users",
-		descKey: "admin.users_desc",
-		href: "/admin/users",
-		icon: IconUsers,
-		color: "bg-brand",
-	},
-	{
-		titleKey: "nav.mcp_tokens",
-		descKey: "admin.mcp_tokens_desc",
-		href: "/admin/mcp-tokens",
-		icon: IconKey,
-		color: "bg-brand-secondary",
-	},
-	{
-		titleKey: "nav.authorized_ips",
-		descKey: "admin.authorized_ips_desc",
-		href: "/admin/authorized-ips",
-		icon: IconWorld,
-		color: "bg-red-500",
-	},
-	{
-		titleKey: "admin.search_logs",
-		descKey: "admin.search_logs_desc",
-		href: "/admin/search-logs",
-		icon: IconSearch,
-		color: "bg-orange-500",
-	},
-	{
-		titleKey: "admin.fetch_logs",
-		descKey: "admin.fetch_logs_desc",
-		href: "/admin/fetch-logs",
-		icon: IconDownload,
-		color: "bg-amber-500",
-	},
-	{
-		titleKey: "admin.subscriptions",
-		descKey: "admin.subscriptions_desc",
-		href: "/admin/user-subscriptions",
-		icon: IconCreditCard,
-		color: "bg-green-500",
-	},
-	{
-		titleKey: "admin.contact_messages",
-		descKey: "admin.contact_messages_desc",
-		href: "/admin/contact-messages",
-		icon: IconMessageCircle,
-		color: "bg-pink-500",
-	},
-];
+import { AdminStatsCards } from "@/components/admin/AdminStatsCards";
+import TimeRangeSelector from "@/components/dashboard/ToolCallsChart/TimeRangeSelector";
+import { Button } from "@/components/ui/Button";
+import { api } from "@/lib/api";
+import type { AdminDashboardStats, AdminStatsQuery } from "@/types";
 
 export default function AdminDashboard() {
-	const { t } = useTranslation();
+	const { t, i18n } = useTranslation();
+	const [query, setQuery] = useState<AdminStatsQuery>({ period: "7d" });
+	const [stats, setStats] = useState<AdminDashboardStats | null>(null);
+	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState(false);
+	const [customOpen, setCustomOpen] = useState(false);
+	const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Singapore" }).format(Date.now());
+	const [customStart, setCustomStart] = useState(today);
+	const [customEnd, setCustomEnd] = useState(today);
+	const [rangeError, setRangeError] = useState(false);
+
+	useEffect(() => {
+		const controller = new AbortController();
+		setLoading(true);
+		setError(false);
+		setStats(null);
+		api
+			.getAdminStats(query, controller.signal)
+			.then((response) => {
+				if (!controller.signal.aborted) {
+					if (!response.success || !response.data) throw new Error("Statistics unavailable");
+					setStats(response.data);
+				}
+			})
+			.catch(() => {
+				if (!controller.signal.aborted) setError(true);
+			})
+			.finally(() => {
+				if (!controller.signal.aborted) setLoading(false);
+			});
+		return () => controller.abort();
+	}, [query]);
+
+	const locale = i18n.resolvedLanguage?.startsWith("zh") ? "zh-CN" : "en";
+	const formatDate = (value: string) =>
+		new Intl.DateTimeFormat(locale, {
+			timeZone: "Asia/Singapore",
+			month: "short",
+			day: "numeric",
+			hour: "2-digit",
+			minute: "2-digit",
+			hourCycle: "h23",
+		}).format(new Date(value));
 
 	return (
-		<div className="space-y-6">
-			{/* Page Header */}
-			<div>
-				<h2 className="text-2xl font-bold text-white">{t("admin.dashboard")}</h2>
-				<p className="text-gray-400 mt-1">{t("admin.dashboard_desc")}</p>
+		<div className="space-y-5">
+			<div className="flex flex-wrap items-start justify-between gap-4">
+				<div>
+					<h2 className="text-2xl font-semibold text-light">{t("admin.dashboard")}</h2>
+					<p className="mt-1 text-sm text-muted">{t("admin.dashboard_desc")}</p>
+				</div>
+				<Button
+					variant="secondary"
+					size="icon"
+					title={t("admin.stats_refresh")}
+					aria-label={t("admin.stats_refresh")}
+					disabled={loading}
+					onClick={() => setQuery((value) => ({ ...value }))}
+				>
+					<IconRefresh className="h-4 w-4" />
+				</Button>
 			</div>
-
-			{/* Admin Sections Grid */}
-			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-				{adminSections.map((section) => {
-					const IconComponent = section.icon;
-					return (
-						<Link
-							key={section.href}
-							to={section.href}
-							className="group relative bg-card rounded-lg border border-border p-6 hover:bg-muted hover:shadow-lg transition-all"
+			<div className="space-y-3 border-b border-default pb-4">
+				<div className="flex flex-wrap items-center justify-between gap-3">
+					<div className="flex flex-wrap items-center gap-2">
+						<TimeRangeSelector
+							timeRange={query.period === "custom" ? undefined : query.period}
+							onTimeRangeChange={(period) => {
+								setCustomOpen(false);
+								setRangeError(false);
+								setQuery({ period });
+							}}
+						/>
+						<Button
+							variant={query.period === "custom" ? "primary" : "secondary"}
+							size="sm"
+							aria-pressed={customOpen}
+							onClick={() => setCustomOpen((value) => !value)}
+							className="gap-1.5"
 						>
-							<div className="flex items-center">
-								<div className={`${section.color} rounded-lg p-3`}>
-									<IconComponent className="h-6 w-6 text-white" />
-								</div>
-								<div className="ml-4">
-									<h3 className="text-lg font-medium text-foreground group-hover:text-primary transition-colors">
-										{t(section.titleKey)}
-									</h3>
-									<p className="text-sm text-muted-foreground mt-1">{t(section.descKey)}</p>
-								</div>
-							</div>
-						</Link>
-					);
-				})}
+							<IconCalendar className="h-3.5 w-3.5" />
+							{t("admin.stats_custom")}
+						</Button>
+					</div>
+					<span className="text-xs text-muted">
+						{stats && `${formatDate(stats.start)} - ${formatDate(stats.end)} · `}
+						{t("admin.stats_timezone")}
+					</span>
+				</div>
+				{customOpen && (
+					<form
+						className="flex flex-wrap items-end gap-3"
+						onSubmit={(event) => {
+							event.preventDefault();
+							if (
+								!customStart ||
+								!customEnd ||
+								customStart > customEnd ||
+								customEnd > today ||
+								(Date.parse(customEnd) - Date.parse(customStart)) / 86_400_000 + 1 > 90
+							) {
+								setRangeError(true);
+								return;
+							}
+							setRangeError(false);
+							setQuery({ period: "custom", start: customStart, end: customEnd });
+						}}
+					>
+						<label className="space-y-1 text-xs text-muted">
+							<span className="block">{t("admin.stats_start_date")}</span>
+							<input
+								type="date"
+								required
+								max={customEnd || today}
+								value={customStart}
+								onChange={(event) => setCustomStart(event.target.value)}
+								className="block rounded-md border border-default bg-card px-3 py-2 text-sm text-light [color-scheme:light_dark]"
+							/>
+						</label>
+						<label className="space-y-1 text-xs text-muted">
+							<span className="block">{t("admin.stats_end_date")}</span>
+							<input
+								type="date"
+								required
+								min={customStart}
+								max={today}
+								value={customEnd}
+								onChange={(event) => setCustomEnd(event.target.value)}
+								className="block rounded-md border border-default bg-card px-3 py-2 text-sm text-light [color-scheme:light_dark]"
+							/>
+						</label>
+						<Button
+							type="submit"
+							size="sm"
+							variant="secondary"
+							title={t("admin.stats_apply")}
+							aria-label={t("admin.stats_apply")}
+						>
+							<IconCheck className="h-4 w-4" />
+						</Button>
+						{rangeError && (
+							<p role="alert" className="text-xs text-error">
+								{t("admin.stats_range_error")}
+							</p>
+						)}
+					</form>
+				)}
 			</div>
-
-			{/* Quick Info */}
+			{error && (
+				<div
+					role="alert"
+					className="flex flex-wrap items-center justify-between gap-3 border-l-2 border-error py-2 pl-3 text-sm text-error"
+				>
+					{t("admin.stats_load_error")}
+					<Button variant="secondary" size="sm" onClick={() => setQuery((value) => ({ ...value }))}>
+						{t("admin.stats_retry")}
+					</Button>
+				</div>
+			)}
+			<AdminStatsCards stats={stats} loading={loading} />
+			{stats && (
+				<p className="text-xs text-muted">
+					{t("admin.stats_updated", { time: formatDate(stats.generated_at) })}
+				</p>
+			)}
 		</div>
 	);
 }

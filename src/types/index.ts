@@ -58,6 +58,45 @@ export interface ToolCallsStats {
 	}>;
 }
 
+export interface AdminStatsQuery {
+	period: "24h" | "7d" | "30d" | "custom";
+	start?: string;
+	end?: string;
+}
+
+export interface AdminStatsPoint {
+	date: string;
+	count: number;
+	success?: number;
+	failed?: number;
+	limited?: number;
+	unknown?: number;
+}
+
+export interface AdminMetricStats {
+	total: number;
+	points: AdminStatsPoint[];
+	outcomes?: {
+		success: number;
+		failed: number;
+		limited: number;
+		unknown: number;
+	};
+}
+
+export interface AdminDashboardStats {
+	start: string;
+	end: string;
+	timezone: string;
+	bucket: "hour" | "day";
+	generated_at: string;
+	metrics: Record<
+		"users" | "tokens" | "ips" | "searches" | "fetches" | "messages",
+		AdminMetricStats
+	>;
+	subscriptions: { total: number; pro: number; enterprise: number };
+}
+
 export interface CorpusStats {
 	docs_total: number;
 	videos_total: number;

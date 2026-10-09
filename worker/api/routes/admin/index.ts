@@ -1,7 +1,6 @@
 /**
  * Admin API Routes
- * Provides administrative access to database tables for development/debugging
- * WARNING: No authentication - use only in development environment
+ * Password-protected administrative access and statistics.
  */
 import { logger } from "../../utils/logger.js";
 import { createOpenAPIApp } from "../../utils/openapi";
@@ -10,6 +9,7 @@ import contactMessagesAdmin from "./contact-messages";
 import fetchLogsAdmin from "./fetch-logs";
 import mcpTokensAdmin from "./mcp-tokens";
 import searchLogsAdmin from "./search-logs";
+import statsAdmin from "./stats";
 import userSubscriptionsAdmin from "./user-subscriptions";
 import usersAdmin from "./users";
 
@@ -58,6 +58,7 @@ app.use("*", async (c, next) => {
 
 // Mount admin routes
 app.route("/users", usersAdmin);
+app.route("/stats", statsAdmin);
 app.route("/mcp-tokens", mcpTokensAdmin);
 app.route("/authorized-ips", authorizedIPsAdmin);
 app.route("/search-logs", searchLogsAdmin);
@@ -73,6 +74,7 @@ app.get("/", (c) => {
 			message: "Admin API - Password Protected",
 			endpoints: [
 				"/admin/users",
+				"/admin/stats",
 				"/admin/mcp-tokens",
 				"/admin/authorized-ips",
 				"/admin/search-logs",

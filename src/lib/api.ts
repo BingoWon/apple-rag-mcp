@@ -1,5 +1,5 @@
 import axios, { type AxiosError, type AxiosInstance, type AxiosResponse } from "axios";
-import type { ApiResponse } from "@/types";
+import type { AdminDashboardStats, AdminStatsQuery, ApiResponse } from "@/types";
 import { normalizeEmail } from "@/utils/email";
 import { ADMIN_PASSWORD_HEADER, ADMIN_SESSION_KEY } from "./constants";
 
@@ -246,6 +246,10 @@ class ApiClient {
 	}
 
 	// Admin API methods with pagination support
+	async getAdminStats(query: AdminStatsQuery, signal?: AbortSignal) {
+		return this.get<AdminDashboardStats>("/admin/stats", { params: query, signal });
+	}
+
 	async getAdminUsers(page: number = 1, limit: number = 50) {
 		const offset = (page - 1) * limit;
 		return this.get(`/admin/users?limit=${limit}&offset=${offset}`);
