@@ -1,0 +1,5 @@
+name = "apple-rag-socket-probe-20261009"
+main = "./socket-probe.mjs"
+compatibility_date = "2026-09-02"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = true
