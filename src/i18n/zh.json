@@ -89,7 +89,7 @@
 		"always_secure": "原生 MCP 2026",
 		"always_secure_desc": "基于无状态 MCP 2026-07-28 协议构建。",
 		"ai_search": "AI 智能搜索",
-		"ai_search_desc": "RAG 检索候选文档，<jev>Jev</jev> 评分排序，让更相关的官方资料排在前面。",
+		"ai_search_desc": "关键词与语义搜索共同召回文档，<jev>Jev</jev> 对合并后的结果进行相关性重排。",
 		"code_examples": "代码示例",
 		"code_examples_desc": "搜索结果附带 Swift、Objective-C 和 SwiftUI 实用代码示例。",
 		"realtime_updates": "实时更新",
@@ -117,7 +117,7 @@
 		"fight_title": "No shirt, no shoes, no weapons.",
 		"fight_desc": "If someone yells \"stop!\", goes limp, or taps out, the fight is over.",
 		"videos_title": "WWDC26 视频与 Session",
-		"videos_desc": "WWDC26 与 Apple 开发者视频全文字幕，借助 RAG + <jev>Jev</jev> 检索相关内容。"
+		"videos_desc": "WWDC26 与 Apple 开发者视频字幕，通过关键词与语义混合检索，再由 <jev>Jev</jev> 重排。"
 	},
 
 	"testimonials": {
@@ -193,7 +193,7 @@
 		"mcp_supported": "完整 MCP 支持",
 		"semantic_search": "语义搜索",
 		"keyword_search": "关键词搜索",
-		"hybrid_search": "混合搜索（RAG + <jev>Jev</jev>）",
+		"hybrid_search": "混合搜索（关键词 + 语义）",
 		"community_support": "社区支持",
 		"multiple_tokens": "多个 MCP 令牌",
 		"model_calls_included": "包含检索模型调用",
@@ -704,7 +704,7 @@
 		"whats_next": "接下来",
 		"feature_queries": "每周 50,000 次查询",
 		"feature_rpm": "每分钟 50 次请求",
-		"feature_rag": "RAG 搜索与 <jev>Jev</jev> 相关性排序",
+		"feature_rag": "关键词与语义混合搜索，再由 <jev>Jev</jev> 进行相关性重排",
 		"feature_analytics": "使用量统计面板",
 		"go_dashboard": "前往控制台",
 		"back_home": "回到首页"

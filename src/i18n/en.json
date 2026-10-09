@@ -89,7 +89,7 @@
 		"always_secure": "MCP 2026 Native",
 		"always_secure_desc": "Built for the stateless MCP 2026-07-28 protocol.",
 		"ai_search": "AI-Powered Search",
-		"ai_search_desc": "RAG retrieves candidate documents. <jev>Jev</jev> scores relevance and puts the most useful sources first.",
+		"ai_search_desc": "Keyword and semantic search retrieve candidate documents. <jev>Jev</jev> ranks their combined results by relevance.",
 		"code_examples": "Code Examples",
 		"code_examples_desc": "Get practical code examples in Swift, Objective-C, and SwiftUI alongside documentation references.",
 		"realtime_updates": "Real-time Updates",
@@ -117,7 +117,7 @@
 		"fight_title": "No shirt, no shoes, no weapons.",
 		"fight_desc": "If someone yells \"stop!\", goes limp, or taps out, the fight is over.",
 		"videos_title": "WWDC26 Videos & Sessions",
-		"videos_desc": "WWDC26 and Apple Developer video transcripts, searchable with RAG + <jev>Jev</jev>."
+		"videos_desc": "WWDC26 and Apple Developer transcripts, found with keyword and semantic search, then ranked by <jev>Jev</jev>."
 	},
 
 	"testimonials": {
@@ -193,7 +193,7 @@
 		"mcp_supported": "MCP fully supported",
 		"semantic_search": "Semantic search",
 		"keyword_search": "Keyword search",
-		"hybrid_search": "Hybrid search (RAG + <jev>Jev</jev>)",
+		"hybrid_search": "Hybrid search (keyword + semantic)",
 		"community_support": "Community support",
 		"multiple_tokens": "Multiple MCP tokens",
 		"model_calls_included": "Retrieval model calls included",
@@ -211,7 +211,7 @@
 		"whats_next": "What's Next?",
 		"feature_queries": "Access to 50,000 queries per week",
 		"feature_rpm": "50 requests per minute",
-		"feature_rag": "RAG search with <jev>Jev</jev> relevance ranking",
+		"feature_rag": "Keyword + semantic search, followed by <jev>Jev</jev> relevance ranking",
 		"feature_analytics": "Usage analytics dashboard",
 		"go_dashboard": "Go to Dashboard",
 		"back_home": "Back to Home"

@@ -65,28 +65,38 @@ test("discovery descriptions and agent documentation reflect the primary ranker 
 	}
 });
 
-test("retrieval marketing pairs RAG with Jev across the entire website copy", () => {
+test("retrieval copy separates keyword/semantic recall from Jev ranking and retains stack branding", () => {
 	for (const locale of [en, zh]) {
+		assert.match(locale.plans.hybrid_search, /keyword|关键词/i);
+		assert.match(locale.plans.hybrid_search, /semantic|语义/i);
+		assert.doesNotMatch(locale.plans.hybrid_search, /RAG|Jev/);
+		for (const copy of [
+			locale.features.ai_search_desc,
+			locale.datasources.videos_desc,
+			locale.success.feature_rag,
+		]) {
+			assert.match(copy, /keyword|关键词/i);
+			assert.match(copy, /semantic|语义/i);
+			assert.match(copy, /rank|重排/i);
+			assert.ok(copy.includes("<jev>Jev</jev>"));
+		}
 		for (const copy of [
 			locale.hero.subtitle_desc,
 			locale.features.subtitle,
-			locale.features.ai_search_desc,
 			locale.quickstart.subtitle,
 			locale.datasources.subtitle,
 			locale.datasources.docs_desc,
-			locale.datasources.videos_desc,
 			locale.testimonials.subtitle,
 			locale.pricing.subtitle,
-			locale.plans.hybrid_search,
 			locale.cta.subtitle,
 			locale.footer.tagline,
-			locale.success.feature_rag,
 		]) {
 			assert.ok(copy.includes("RAG"));
 			assert.ok(copy.includes("<jev>Jev</jev>"));
 		}
-		assert.ok(!/Semantic|keyword|语义|关键词/.test(locale.jev.description));
 	}
+	assert.match(TOOLS.SEARCH.DESCRIPTION, /hybrid retrieval \(keyword \+ semantic\)/);
+	assert.match(TOOLS.SEARCH.DESCRIPTION, /ranking of the merged candidates/);
 });
 
 test("retrieval sections and footer render model logos in both languages", async () => {

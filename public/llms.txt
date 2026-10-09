@@ -6,7 +6,7 @@
 
 **Lightning Fast**: Get instant responses with our optimized search infrastructure. No more hunting through docs.
 
-**Powered by [Jev](https://typesafe.ai/)**: RAG combines semantic and keyword retrieval to find candidate sources. Jev scores them against your question's API, platform, and version requirements. Its relevance scores determine the order of the sources returned through MCP. A backup reranker takes over if the API call fails; your agent uses the sources to write its answer.
+**Powered by [Jev](https://typesafe.ai/)**: Hybrid retrieval combines keyword and semantic search to find candidate sources. The merged candidates are scored against your question's API, platform, and version requirements. Those relevance scores determine the order of the sources returned through MCP. A backup reranker takes over if the API call fails; your agent uses the sources to write its answer.
 
 **Always Secure**: MCP authentication ensures trusted access for your AI agents with enterprise-grade security.
 
@@ -82,7 +82,7 @@ The client must support protocol `2026-07-28`. Writing a configuration alone doe
 
 ## Available MCP Tools
 
-- **search**: Search official Apple developer documentation and WWDC video transcripts using hybrid RAG retrieval and Jev relevance ranking. Returns ranked source excerpts; use fetch for complete page content.
+- **search**: Search official Apple developer documentation and WWDC video transcripts using hybrid retrieval (keyword + semantic), followed by [Jev](https://typesafe.ai/) relevance ranking. Returns ranked source excerpts; use fetch for complete page content.
 - **fetch**: Retrieve complete cleaned content for specific Apple developer documentation or video by URL.
 
 ## Pricing & Benefits

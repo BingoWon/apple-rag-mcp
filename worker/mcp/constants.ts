@@ -16,7 +16,7 @@ export const TOOLS = {
 	SEARCH: {
 		NAME: "search",
 		DESCRIPTION:
-			"Search official Apple developer documentation and WWDC video transcripts using hybrid RAG retrieval and Jev relevance ranking. Returns ranked source excerpts; use fetch for complete page content.",
+			"Search official Apple developer documentation and WWDC video transcripts using hybrid retrieval (keyword + semantic), followed by Jev relevance ranking of the merged candidates. Returns ranked source excerpts; use fetch for complete page content.",
 	},
 	FETCH: {
 		NAME: "fetch",

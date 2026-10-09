@@ -24,7 +24,7 @@
 
 ## Not Just Another Docs Tool
 
-RAG combines semantic and keyword retrieval to find Apple sources. [Jev](https://typesafe.ai/) ranks them for relevance to your question, bringing the best matches to your agent.
+Hybrid retrieval combines keyword and semantic search to find Apple sources. [Jev](https://typesafe.ai/) then ranks the merged candidates for relevance to your question, bringing the best matches to your agent.
 
 **Minimal footprint. Maximum signal.** Our MCP tools are designed to be lean—no bloated responses, no wasted tokens, no noise cluttering your agent's context. Just the information that matters.
 
@@ -104,7 +104,7 @@ configuration alone does not verify a working connection.
 Get quick responses with our optimized search infrastructure. No more hunting through docs.
 
 ### 🎯 **AI-Powered Hybrid Search**
-RAG finds candidate Apple documentation and video transcripts through semantic and keyword retrieval. [Jev](https://typesafe.ai/) ranks those sources against your question, giving your agent more relevant context.
+Hybrid search combines keyword and semantic retrieval for Apple documentation and video transcripts. [Jev](https://typesafe.ai/) then ranks the combined candidates against your question, giving your agent more relevant context.
 
 ### 🔒 **Always Secure**
 MCP authentication ensures trusted access for your AI agents with enterprise-grade security.
@@ -127,9 +127,9 @@ Try without an account: 30 tool calls/week and 3/minute. Register at [apple-rag.
 
 ## 🎯 Features
 
-- **🔍 Semantic Search for RAG** - Vector similarity with semantic understanding for intelligent retrieval
+- **🔍 Semantic Search** - Vector similarity with semantic understanding for intelligent retrieval
 - **🔎 Keyword Search** - Precise technical term matching for API names and specific terminology
-- **🎯 Hybrid Search** - Semantic and keyword retrieval, ranked by [Jev](https://typesafe.ai/) relevance scores
+- **🎯 Hybrid Search** - Combines keyword and semantic retrieval
 - **📚 Complete Coverage** - iOS 27, iPadOS 27, macOS 27, watchOS 27, tvOS 27, and visionOS 27 documentation
 - **🎬 WWDC26 Videos** - Full transcripts from Apple Developer videos and WWDC26 sessions
 - **⚡ Fast Response** - Optimized for speed across all content types
