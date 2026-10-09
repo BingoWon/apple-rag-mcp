@@ -20,6 +20,7 @@ function shouldRetryUrlInsert(error: unknown): boolean {
 	return (
 		isTransientPostgresConnectionError(error) ||
 		code === "55P03" ||
+		code === "40P01" ||
 		(code === "57014" && error instanceof Error && error.message.includes("statement timeout"))
 	);
 }
@@ -90,7 +91,10 @@ class PostgreSQLManager {
                     AND lower(existing.url) = lower(incoming.url)
                 )
               )
-            ORDER BY incoming.position
+            ORDER BY
+              CASE WHEN incoming.url LIKE 'https://developer.apple.com/%'
+                THEN lower(incoming.url) ELSE incoming.url END,
+              incoming.position
             ON CONFLICT DO NOTHING
           `;
 					return result.count;

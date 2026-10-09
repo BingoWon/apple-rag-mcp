@@ -396,6 +396,48 @@ test("collector database operations remain safe under concurrency and interrupte
 	);
 
 	await t.test(
+		"opposite input orders keep the first spelling and recover from a deadlock victim",
+		async (subtest) => {
+			await sql`TRUNCATE pages`;
+			await sql`INSERT INTO pages (url, collect_count) VALUES (${`${prefix}seed`}, 157)`;
+			await sql`CREATE SEQUENCE deadlock_attempts`;
+			await sql`CREATE FUNCTION fail_first_insert() RETURNS trigger LANGUAGE plpgsql AS
+			'BEGIN
+				IF nextval(''deadlock_attempts'') = 1 THEN
+					RAISE EXCEPTION ''simulated external deadlock'' USING ERRCODE = ''40P01'';
+				END IF;
+				RETURN NEW;
+			END'`;
+			await sql`CREATE TRIGGER fail_first_insert BEFORE INSERT ON pages
+			FOR EACH ROW EXECUTE FUNCTION fail_first_insert()`;
+			const warning = subtest.mock.method(logger, "warn", () => {});
+			try {
+				const upper = `${prefix}WidgetKit/deadlock`;
+				assert.equal(
+					await manager.batchInsertUrls([`${prefix}deadlock-other`, upper, upper.toLowerCase()]),
+					2,
+				);
+				assert.equal(warning.mock.callCount(), 1);
+				const [spelling] = await observer`SELECT url FROM pages WHERE lower(url) = lower(${upper})`;
+				assert.equal(spelling.url, upper);
+			} finally {
+				await sql`DROP TRIGGER fail_first_insert ON pages`;
+			}
+			const urls = Array.from({ length: 10 }, (_, index) => `${prefix}opposite-${index}`);
+			const [forward, reverse] = await Promise.all([
+				manager.batchInsertUrls(urls),
+				new PostgreSQLManager(connect()).batchInsertUrls([...urls].reverse()),
+			]);
+			assert.equal(forward + reverse, urls.length);
+			const rows = await observer`SELECT url FROM pages WHERE url = ANY(${urls}) ORDER BY url`;
+			assert.deepEqual(
+				rows.map((row) => row.url),
+				[...urls].sort(),
+			);
+		},
+	);
+
+	await t.test(
 		"closing an interrupted transaction rolls it back and releases its row lock",
 		async () => {
 			const client = connect();
