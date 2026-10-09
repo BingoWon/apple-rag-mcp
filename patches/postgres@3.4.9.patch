@@ -1,0 +1,37 @@
+diff --git a/cf/polyfills.js b/cf/polyfills.js
+index 53c5203dd5b057d741d14d708ba83b27751b527c..15199107a8a0b51e7db8aca9d80d4c9c8a6469ba 100644
+--- a/cf/polyfills.js
++++ b/cf/polyfills.js
+@@ -130,6 +130,8 @@ export const tls = {
+ }
+ 
+ function Socket() {
++  let writes = Promise.resolve()
++    , writeFailed = false
+   const tcp = Object.assign(new EventEmitter(), {
+     readyState: 'open',
+     raw: null,
+@@ -179,7 +181,22 @@ function Socket() {
+   }
+ 
+   function write(data, cb) {
+-    tcp.writer.write(data).then(cb, error)
++    // workerd can disconnect on writes over 64 KiB; keep whole packets in FIFO order.
++    writes = writes.then(async() => {
++      for (let offset = 0; offset < data.byteLength; offset += 32768) {
++        if (tcp.destroyed || tcp.readyState === 'closed')
++          return
++        await tcp.writer.write(data.subarray(offset, offset + 32768))
++      }
++      if (!tcp.destroyed && tcp.readyState !== 'closed')
++        cb && cb()
++    })
++    writes.catch(err => {
++      if (writeFailed || tcp.destroyed || tcp.readyState === 'closed')
++        return
++      writeFailed = true
++      error(err)
++    })
+     return true
+   }
+ 

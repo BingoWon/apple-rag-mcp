@@ -7,3 +7,5 @@ minimumReleaseAgeExclude:
   - wrangler@4.128.0
 overrides:
   yaml: ^2.8.3
+patchedDependencies:
+  postgres@3.4.9: patches/postgres@3.4.9.patch

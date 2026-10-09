@@ -7,6 +7,9 @@ settings:
 overrides:
   yaml: ^2.8.3
 
+patchedDependencies:
+  postgres@3.4.9: db4e1bd424f9fdfa2ac849b55a69880cb3582081d851610fec4e412977530669
+
 importers:
 
   .:
@@ -69,8 +72,8 @@ importers:
         specifier: ^12.37.0
         version: 12.37.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       postgres:
-        specifier: ^3.4.9
-        version: 3.4.9
+        specifier: 3.4.9
+        version: 3.4.9(patch_hash=db4e1bd424f9fdfa2ac849b55a69880cb3582081d851610fec4e412977530669)
       react:
         specifier: ^19.2.8
         version: 19.2.8
@@ -3093,7 +3096,7 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
-  postgres@3.4.9: {}
+  postgres@3.4.9(patch_hash=db4e1bd424f9fdfa2ac849b55a69880cb3582081d851610fec4e412977530669): {}
 
   prettier@3.8.1: {}
 
