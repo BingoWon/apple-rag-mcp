@@ -76,6 +76,7 @@ export class RerankerService extends DeepInfraService<
 		query: string,
 		documents: RerankDocument[],
 		topN: number,
+		signal?: AbortSignal,
 	): Promise<RankedDocument[]> {
 		if (!query.trim() || !documents.length || !Number.isInteger(topN) || topN <= 0) {
 			throw new Error("Invalid reranking input");
@@ -83,28 +84,34 @@ export class RerankerService extends DeepInfraService<
 		return this.call(
 			{ query: query.trim(), documents, topN: Math.min(topN, documents.length) },
 			"Reranking",
+			signal,
 		);
 	}
 
 	protected override async call(
 		input: RerankerInput,
 		operationName: string,
+		signal?: AbortSignal,
 	): Promise<RankedDocument[]> {
+		signal?.throwIfAborted();
 		const started = Date.now();
 		let primaryError: Error;
 		try {
-			const response = await this.jevScores(input);
+			const response = await this.jevScores(input, signal);
+			signal?.throwIfAborted();
 			logger.info(
 				`[RERANK] provider=typesafe model=${response.model} candidates=${input.documents.length} elapsed_ms=${Date.now() - started}`,
 			);
 			return this.processResponse(response, input);
 		} catch (error) {
+			signal?.throwIfAborted();
 			primaryError = this.safeError(error);
 			logger.warn(`[RERANK] Jev failed: ${primaryError.message}; switching to Qwen3-Reranker-8B`);
 		}
 
 		try {
-			const response = await this.singleRequest(this.endpoint, this.buildPayload(input));
+			const response = await this.singleRequest(this.endpoint, this.buildPayload(input), signal);
+			signal?.throwIfAborted();
 			const ranked = this.processResponse(response, input);
 			this.reportFailure(
 				`rerank:jev:${this.signature(primaryError)}:recovered`,
@@ -115,6 +122,7 @@ export class RerankerService extends DeepInfraService<
 			);
 			return ranked;
 		} catch (error) {
+			signal?.throwIfAborted();
 			const backupError = this.safeError(error);
 			const message = `Jev (${JEV_MODEL}) failed: ${primaryError.message}\nFallback Qwen3-Reranker-8B failed: ${backupError.message}\nBoth rerankers failed. Search will return the original candidate order.`;
 			this.reportFailure(
@@ -143,7 +151,10 @@ export class RerankerService extends DeepInfraService<
 		return `${error instanceof ModelRequestError ? (error.status ?? "config") : error.name}:${error.message.slice(0, 120)}`;
 	}
 
-	private async jevScores(input: RerankerInput): Promise<RerankerResponse & { model: string }> {
+	private async jevScores(
+		input: RerankerInput,
+		signal?: AbortSignal,
+	): Promise<RerankerResponse & { model: string }> {
 		const key = this.env.TYPESAFE_API_KEY;
 		if (!key) throw new ModelRequestError("TYPESAFE_API_KEY is not configured", false);
 		if (input.documents.length > 128) throw new Error("Too many candidates for Jev");
@@ -187,7 +198,9 @@ export class RerankerService extends DeepInfraService<
 			method: "POST",
 			headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
 			body: JSON.stringify({ model: JEV_MODEL, state, questions }),
-			signal: AbortSignal.timeout(DEEPINFRA_CONFIG.TIMEOUT_MS),
+			signal: signal
+				? AbortSignal.any([signal, AbortSignal.timeout(DEEPINFRA_CONFIG.TIMEOUT_MS)])
+				: AbortSignal.timeout(DEEPINFRA_CONFIG.TIMEOUT_MS),
 		});
 		if (!response.ok) {
 			const reason = (await response.text().catch(() => ""))

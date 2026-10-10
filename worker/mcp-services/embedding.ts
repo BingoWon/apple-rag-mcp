@@ -32,13 +32,13 @@ export class EmbeddingService
 	/**
 	 * Create embedding (single provider)
 	 */
-	async createEmbedding(text: string): Promise<number[]> {
+	async createEmbedding(text: string, signal?: AbortSignal): Promise<number[]> {
 		if (!text?.trim()) {
 			throw new Error("Text cannot be empty for embedding generation");
 		}
 
 		const input: EmbeddingInput = { text: text.trim() };
-		return this.call(input, "Embedding generation");
+		return this.call(input, "Embedding generation", signal);
 	}
 
 	/**

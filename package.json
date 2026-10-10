@@ -1,6 +1,6 @@
 {
 	"name": "apple-rag-mcp",
-	"version": "5.0.14",
+	"version": "5.0.15",
 	"private": true,
 	"license": "MIT",
 	"type": "module",
@@ -26,7 +26,7 @@
 		"@hono/swagger-ui": "^0.6.1",
 		"@hono/zod-openapi": "^1.6.1",
 		"@hookform/resolvers": "^5.1.1",
-		"@modelcontextprotocol/server": "2.0.0",
+		"@modelcontextprotocol/server": "2.3.1",
 		"@radix-ui/react-label": "^2.1.7",
 		"@radix-ui/react-slot": "^1.2.4",
 		"@react-three/fiber": "^9.4.0",

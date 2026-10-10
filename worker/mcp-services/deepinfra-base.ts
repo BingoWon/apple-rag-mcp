@@ -36,19 +36,26 @@ export abstract class DeepInfraService<TRequest, TResponse, TResult> {
 		this.apiKey = apiKey;
 	}
 
-	protected async call(input: TRequest, operationName: string): Promise<TResult> {
+	protected async call(
+		input: TRequest,
+		operationName: string,
+		signal?: AbortSignal,
+	): Promise<TResult> {
+		signal?.throwIfAborted();
 		const startTime = Date.now();
 		const payload = this.buildPayload(input);
 		let lastError!: Error;
 
 		for (let attempt = 1; attempt <= 2; attempt++) {
 			try {
-				const json = await this.singleRequest(this.endpoint, payload);
+				signal?.throwIfAborted();
+				const json = await this.singleRequest(this.endpoint, payload, signal);
 				logger.info(
 					`${operationName} completed (${((Date.now() - startTime) / 1000).toFixed(1)}s)`,
 				);
 				return this.processResponse(json, input);
 			} catch (e) {
+				signal?.throwIfAborted();
 				lastError = e instanceof Error ? e : new Error(String(e));
 				if (attempt === 2 || (e instanceof ModelRequestError && !e.retryable)) {
 					break;
@@ -64,7 +71,12 @@ export abstract class DeepInfraService<TRequest, TResponse, TResult> {
 		throw lastError;
 	}
 
-	protected async singleRequest(endpoint: string, payload: unknown): Promise<TResponse> {
+	protected async singleRequest(
+		endpoint: string,
+		payload: unknown,
+		signal?: AbortSignal,
+	): Promise<TResponse> {
+		signal?.throwIfAborted();
 		if (!this.apiKey) throw new ModelRequestError("DEEPINFRA_API_KEY is not configured", false);
 		const res = await fetch(`${DEEPINFRA_CONFIG.BASE_URL}${endpoint}`, {
 			method: "POST",
@@ -74,7 +86,9 @@ export abstract class DeepInfraService<TRequest, TResponse, TResult> {
 				"User-Agent": DEEPINFRA_CONFIG.USER_AGENT,
 			},
 			body: JSON.stringify(payload),
-			signal: AbortSignal.timeout(DEEPINFRA_CONFIG.TIMEOUT_MS),
+			signal: signal
+				? AbortSignal.any([signal, AbortSignal.timeout(DEEPINFRA_CONFIG.TIMEOUT_MS)])
+				: AbortSignal.timeout(DEEPINFRA_CONFIG.TIMEOUT_MS),
 		});
 
 		if (!res.ok) {

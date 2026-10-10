@@ -1,5 +1,5 @@
 import {
-	type AuthInfo,
+	type CallToolResult,
 	createMcpHandler,
 	McpServer,
 	preloadSchemas,
@@ -16,21 +16,46 @@ const SERVER_INSTRUCTIONS =
 	"Search Apple's official developer documentation and WWDC video transcripts with search, then use fetch when complete page content is needed.";
 
 export class MCPProtocolHandler {
-	constructor(private services: Services) {}
+	constructor(private servicesFactory: () => Services | Promise<Services>) {}
 
-	async handleRequest(request: Request, authContext: AuthContext): Promise<Response> {
-		const handler = createMcpHandler(() => this.createServer(request, authContext), {
-			onerror: (error) => {
-				void logger.error(`MCP protocol error: ${error.message}`);
+	async handleRequest(request: Request): Promise<Response> {
+		let services: Services | undefined;
+		let toolCall: Promise<CallToolResult> | undefined;
+		const trackTool = (promise: Promise<CallToolResult>) => {
+			toolCall = promise;
+			return promise;
+		};
+		const handler = createMcpHandler(
+			async () => {
+				services = await this.servicesFactory();
+				const authContext = await services.auth.optionalAuth(request);
+				return this.createServer(services, request, authContext, trackTool);
 			},
-		});
-
-		return handler.fetch(request, {
-			authInfo: this.toAuthInfo(authContext),
-		});
+			{
+				legacy: "reject",
+				onerror: (error) => {
+					if (!request.signal.aborted) {
+						void logger.error(`MCP protocol error: ${error.message}`);
+					}
+				},
+			},
+		);
+		try {
+			return await handler.fetch(request);
+		} finally {
+			await handler.close();
+			// A disconnected transport finishes before tool cleanup and quota refunds.
+			await toolCall?.catch(() => {});
+			await services?.database.close();
+		}
 	}
 
-	private createServer(request: Request, authContext: AuthContext): McpServer {
+	private createServer(
+		services: Services,
+		request: Request,
+		authContext: AuthContext,
+		trackTool: (promise: Promise<CallToolResult>) => Promise<CallToolResult>,
+	): McpServer {
 		const server = new McpServer(
 			{
 				name: SERVER_NAME,
@@ -38,6 +63,7 @@ export class MCPProtocolHandler {
 			},
 			{
 				instructions: SERVER_INSTRUCTIONS,
+				capabilities: { tools: { listChanged: false } },
 				cacheHints: {
 					"server/discover": { ttlMs: 3_600_000, cacheScope: "public" },
 					"tools/list": { ttlMs: 3_600_000, cacheScope: "public" },
@@ -45,16 +71,17 @@ export class MCPProtocolHandler {
 			},
 		);
 
-		const searchTool = new SearchTool(this.services);
-		const fetchTool = new FetchTool(this.services);
+		const searchTool = new SearchTool(services);
+		const fetchTool = new FetchTool(services);
 
 		server.registerTool(
 			TOOLS.SEARCH.NAME,
 			{
 				description: TOOLS.SEARCH.DESCRIPTION,
 				inputSchema: SEARCH_TOOL_INPUT_SCHEMA,
+				annotations: { readOnlyHint: true, destructiveHint: false },
 			},
-			(args) => searchTool.handle(args, authContext, request),
+			(args, ctx) => trackTool(searchTool.handle(args, authContext, request, ctx.mcpReq.signal)),
 		);
 
 		server.registerTool(
@@ -62,25 +89,11 @@ export class MCPProtocolHandler {
 			{
 				description: TOOLS.FETCH.DESCRIPTION,
 				inputSchema: FETCH_TOOL_INPUT_SCHEMA,
+				annotations: { readOnlyHint: true, destructiveHint: false },
 			},
-			(args) => fetchTool.handle(args, authContext, request),
+			(args, ctx) => trackTool(fetchTool.handle(args, authContext, request, ctx.mcpReq.signal)),
 		);
 
 		return server;
-	}
-
-	private toAuthInfo(authContext: AuthContext): AuthInfo | undefined {
-		if (!authContext.isAuthenticated) {
-			return undefined;
-		}
-
-		return {
-			token: authContext.token ?? "ip-based",
-			clientId: authContext.userId ?? "apple-rag-user",
-			scopes: ["rag.read"],
-			extra: {
-				email: authContext.email,
-			},
-		};
 	}
 }

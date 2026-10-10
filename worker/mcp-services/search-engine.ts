@@ -63,8 +63,9 @@ export class SearchEngine {
 	 * Execute hybrid search optimized for Apple Developer Documentation
 	 */
 	async search(query: string, options: SearchOptions = {}): Promise<SearchEngineResult> {
-		const { resultCount = 4 } = options;
-		return this.hybridSearchWithReranker(query, resultCount);
+		const { resultCount = 4, signal } = options;
+		signal?.throwIfAborted();
+		return this.hybridSearchWithReranker(query, resultCount, signal);
 	}
 
 	/**
@@ -78,13 +79,15 @@ export class SearchEngine {
 	private async hybridSearchWithReranker(
 		query: string,
 		resultCount: number,
+		signal?: AbortSignal,
 	): Promise<SearchEngineResult> {
 		const candidateCount = resultCount * 4;
 
 		const [semanticOutcome, keywordOutcome] = await Promise.allSettled([
-			this.getSemanticCandidates(query, candidateCount),
+			this.getSemanticCandidates(query, candidateCount, signal),
 			this.getKeywordCandidates(query, candidateCount),
 		]);
+		signal?.throwIfAborted();
 
 		if (semanticOutcome.status === "rejected" && keywordOutcome.status === "rejected") {
 			throw new AggregateError(
@@ -117,7 +120,9 @@ export class SearchEngine {
 				query,
 				processedResults.map(({ content, title, url }) => ({ content, title, url })),
 				Math.min(resultCount, processedResults.length),
+				signal,
 			);
+			signal?.throwIfAborted();
 
 			// Step 5: Map back to final results
 			finalResults = rankedDocuments.map((doc) => {
@@ -134,6 +139,7 @@ export class SearchEngine {
 				};
 			});
 		} catch (error) {
+			signal?.throwIfAborted();
 			logger.error(
 				`Reranking failed, falling back to original order (query_length: ${query.length}, candidates: ${processedResults.length}): ${error instanceof Error ? error.message : String(error)}`,
 			);
@@ -162,10 +168,15 @@ export class SearchEngine {
 	/**
 	 * Retrieve semantic search candidates
 	 */
-	private async getSemanticCandidates(query: string, resultCount: number): Promise<SearchResult[]> {
+	private async getSemanticCandidates(
+		query: string,
+		resultCount: number,
+		signal?: AbortSignal,
+	): Promise<SearchResult[]> {
 		const startTime = Date.now();
 
-		const queryEmbedding = await this.embedding.createEmbedding(query);
+		const queryEmbedding = await this.embedding.createEmbedding(query, signal);
+		signal?.throwIfAborted();
 		const results = await this.database.semanticSearch(queryEmbedding, { resultCount });
 
 		logger.info(

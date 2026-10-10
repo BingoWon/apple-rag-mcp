@@ -3,6 +3,7 @@ import type { ToolCallLogger } from "../mcp-services/tool-call-logger.js";
 export interface RAGQuery {
 	query: string;
 	result_count?: number;
+	signal?: AbortSignal;
 }
 
 export interface AdditionalUrl {
@@ -59,11 +60,12 @@ export interface DatabaseService {
 }
 
 export interface EmbeddingService {
-	createEmbedding(text: string): Promise<number[]>;
+	createEmbedding(text: string, signal?: AbortSignal): Promise<number[]>;
 }
 
 export interface SearchOptions {
 	resultCount?: number;
+	signal?: AbortSignal;
 }
 
 export interface PageResult {

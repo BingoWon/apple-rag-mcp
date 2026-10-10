@@ -1,6 +1,6 @@
 import type { CallToolResult } from "@modelcontextprotocol/server";
 import { z } from "zod";
-import type { AuthContext, Services } from "../../mcp-types/index.js";
+import type { AuthContext, RateLimitResult, Services } from "../../mcp-types/index.js";
 import { logger } from "../../mcp-utils/logger.js";
 import { buildRateLimitMessage, extractClientInfo } from "../../mcp-utils/request-info.js";
 import { validateAndNormalizeUrl } from "../../mcp-utils/url-processor.js";
@@ -26,31 +26,33 @@ export class FetchTool {
 		args: FetchToolArgs,
 		authContext: AuthContext,
 		httpRequest: Request,
+		signal: AbortSignal = httpRequest.signal,
 	): Promise<CallToolResult> {
+		signal.throwIfAborted();
 		const startTime = Date.now();
 		const { url } = args;
 
 		const { ip: ipAddress, country: countryCode } = extractClientInfo(httpRequest);
 
-		const rateLimitResult = await this.services.rateLimit.checkLimits(ipAddress, authContext);
-
-		if (!rateLimitResult.allowed) {
-			this.logFetch(
-				authContext,
-				url,
-				url,
-				"",
-				0,
-				ipAddress,
-				countryCode,
-				429,
-				"RATE_LIMIT_EXCEEDED",
-			);
-
-			return createToolErrorResult(buildRateLimitMessage(rateLimitResult, authContext));
-		}
-
+		let rateLimitResult: RateLimitResult | undefined;
 		try {
+			rateLimitResult = await this.services.rateLimit.checkLimits(ipAddress, authContext);
+			signal.throwIfAborted();
+			if (!rateLimitResult.allowed) {
+				this.logFetch(
+					authContext,
+					url,
+					url,
+					"",
+					0,
+					ipAddress,
+					countryCode,
+					429,
+					"RATE_LIMIT_EXCEEDED",
+				);
+
+				return createToolErrorResult(buildRateLimitMessage(rateLimitResult, authContext));
+			}
 			// Validate and normalize URL
 			const urlResult = validateAndNormalizeUrl(url);
 			if (!urlResult.isValid) {
@@ -63,6 +65,7 @@ export class FetchTool {
 			// Use normalized URL for database lookup
 			const processedUrl = urlResult.normalizedUrl;
 			const page = await this.services.database.getPageByUrl(processedUrl);
+			signal.throwIfAborted();
 			const responseTime = Date.now() - startTime;
 
 			if (!page) {
@@ -96,7 +99,8 @@ export class FetchTool {
 
 			return createSuccessResult(formattedContent);
 		} catch (error) {
-			await this.services.rateLimit.refund(rateLimitResult);
+			if (rateLimitResult?.allowed) await this.services.rateLimit.refund(rateLimitResult);
+			signal.throwIfAborted();
 			this.logFetch(
 				authContext,
 				url,

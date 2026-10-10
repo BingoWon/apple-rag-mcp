@@ -43,6 +43,48 @@ function service(
 	};
 }
 
+for (const cancelBackup of [false, true]) {
+	test(`cancelling ${cancelBackup ? "backup" : "Jev"} aborts the request without fallback or alerts`, async (t) => {
+		const controller = new AbortController();
+		const reason = new Error("User cancelled");
+		const setup = service(t, (url, _body, init) => {
+			if (cancelBackup && url.includes("typesafe"))
+				return new Response("unavailable", { status: 503 });
+			return new Promise<Response>((_resolve, reject) => {
+				const signal = init?.signal;
+				assert.ok(signal);
+				signal.addEventListener("abort", () => reject(signal.reason), { once: true });
+				controller.abort(reason);
+				assert.equal(signal.aborted, true);
+			});
+		});
+		await assert.rejects(setup.reranker.rerank("query", documents, 1, controller.signal), reason);
+		assert.equal(setup.calls.length, cancelBackup ? 2 : 1);
+		assert.deepEqual(setup.alerts, []);
+	});
+}
+
+test("cancelled embeddings do not retry or send provider failure alerts", async (t) => {
+	const controller = new AbortController();
+	const reason = new Error("User cancelled");
+	let calls = 0;
+	const alerts: string[] = [];
+	t.mock.method(globalThis, "fetch", async (_input, init) => {
+		calls++;
+		const signal = init?.signal;
+		assert.ok(signal);
+		controller.abort(reason);
+		assert.equal(signal.aborted, true);
+		throw signal.reason;
+	});
+	const embedding = new EmbeddingService(keys.DEEPINFRA_API_KEY, (_key, message) =>
+		alerts.push(message),
+	);
+	await assert.rejects(embedding.createEmbedding("query", controller.signal), reason);
+	assert.equal(calls, 1);
+	assert.deepEqual(alerts, []);
+});
+
 test("uses Jev score-only requests with metadata and preserves original document mapping", async (t) => {
 	const setup = service(t, (url, body, init) => {
 		assert.equal(url, "https://api.typesafe.ai/v1/systemone");

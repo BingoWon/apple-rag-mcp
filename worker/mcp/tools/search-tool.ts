@@ -38,7 +38,9 @@ export class SearchTool {
 		args: SearchToolArgs,
 		authContext: AuthContext,
 		httpRequest: Request,
+		signal: AbortSignal = httpRequest.signal,
 	): Promise<CallToolResult> {
+		signal.throwIfAborted();
 		const startTime = Date.now();
 		const { query, result_count = 4 } = args;
 
@@ -53,6 +55,7 @@ export class SearchTool {
 
 		try {
 			rateLimitResult = await this.services.rateLimit.checkLimits(clientIP, authContext);
+			signal.throwIfAborted();
 
 			if (!rateLimitResult.allowed) {
 				this.logSearch(
@@ -78,6 +81,7 @@ export class SearchTool {
 				clientIP,
 				countryCode,
 				startTime,
+				signal,
 			);
 
 			const formattedResponse = formatRAGResponse(ragResult, authContext.isAuthenticated);
@@ -87,6 +91,7 @@ export class SearchTool {
 			if (rateLimitResult?.allowed) {
 				await this.services.rateLimit.refund(rateLimitResult);
 			}
+			signal.throwIfAborted();
 			this.logSearch(
 				authContext,
 				requestedQuery,
@@ -115,11 +120,14 @@ export class SearchTool {
 		ipAddress: string,
 		countryCode: string | null,
 		startTime: number,
+		signal: AbortSignal,
 	) {
 		const ragResult = await this.services.rag.query({
 			query: actualQuery,
 			result_count: resultCount,
+			signal,
 		});
+		signal.throwIfAborted();
 
 		this.logSearch(
 			authContext,

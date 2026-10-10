@@ -93,8 +93,10 @@ async function send(
 	headers?: Record<string, string>,
 	authContext: AuthContext = { isAuthenticated: false },
 ) {
-	const handler = new MCPProtocolHandler(createServices());
-	return handler.handleRequest(createRequest(body, headers), authContext);
+	const services = createServices();
+	services.auth.optionalAuth = async () => authContext;
+	const handler = new MCPProtocolHandler(() => services);
+	return handler.handleRequest(createRequest(body, headers));
 }
 
 async function readPayload<T>(response: Response): Promise<T> {
@@ -131,6 +133,7 @@ test("serves modern server discovery", async () => {
 		result: {
 			resultType: string;
 			supportedVersions: string[];
+			capabilities: { tools: { listChanged: boolean } };
 			instructions: string;
 			ttlMs: number;
 			cacheScope: string;
@@ -138,6 +141,7 @@ test("serves modern server discovery", async () => {
 	}>(response);
 	assert.equal(payload.result.resultType, "complete");
 	assert.deepEqual(payload.result.supportedVersions, [MODERN_VERSION]);
+	assert.equal(payload.result.capabilities.tools.listChanged, false);
 	assert.match(payload.result.instructions, /search.*fetch/);
 	assert.equal(payload.result.ttlMs, 3_600_000);
 	assert.equal(payload.result.cacheScope, "public");
@@ -161,7 +165,10 @@ test("serves modern tools/list with cache metadata", async () => {
 	const payload = await readPayload<{
 		result: {
 			resultType: string;
-			tools: Array<{ name: string }>;
+			tools: Array<{
+				name: string;
+				annotations: { readOnlyHint: boolean; destructiveHint: boolean };
+			}>;
 			ttlMs: number;
 			cacheScope: string;
 		};
@@ -173,6 +180,10 @@ test("serves modern tools/list with cache metadata", async () => {
 	);
 	assert.equal(payload.result.ttlMs, 3_600_000);
 	assert.equal(payload.result.cacheScope, "public");
+	for (const tool of payload.result.tools) {
+		assert.equal(tool.annotations.readOnlyHint, true);
+		assert.equal(tool.annotations.destructiveHint, false);
+	}
 });
 
 test("preserves authenticated tool behavior on a modern request", async () => {
@@ -235,4 +246,55 @@ test("rejects a modern header and body mismatch", async () => {
 		error: { code: number };
 	}>(response);
 	assert.equal(payload.error.code, -32020);
+});
+
+test("unsupported tool-list subscriptions acknowledge no notifications and close", async () => {
+	const response = await send(
+		{
+			jsonrpc: "2.0",
+			id: "listen",
+			method: "subscriptions/listen",
+			params: { _meta: modernMeta(), notifications: { toolsListChanged: true } },
+		},
+		{ "MCP-Protocol-Version": MODERN_VERSION, "Mcp-Method": "subscriptions/listen" },
+	);
+	assert.equal(response.status, 200);
+	const events = (await response.text())
+		.split(/\r?\n/)
+		.filter((line) => line.startsWith("data:"))
+		.map((line) => JSON.parse(line.slice(5)));
+	const acknowledged = events.find(
+		(event) => event.method === "notifications/subscriptions/acknowledged",
+	);
+	assert.deepEqual(acknowledged.params.notifications, {});
+	assert.equal(events.at(-1).result.resultType, "complete");
+});
+
+test("request-scoped services close after successful calls and auth failures", async () => {
+	for (const failAuth of [false, true]) {
+		const services = createServices();
+		let closed = 0;
+		services.database.close = async () => {
+			closed++;
+		};
+		if (failAuth) {
+			services.auth.optionalAuth = async () => {
+				throw new Error("Auth unavailable");
+			};
+		}
+		const handler = new MCPProtocolHandler(() => services);
+		const response = await handler.handleRequest(
+			createRequest(
+				{
+					jsonrpc: "2.0",
+					id: "close",
+					method: "tools/list",
+					params: { _meta: modernMeta() },
+				},
+				{ "MCP-Protocol-Version": MODERN_VERSION, "Mcp-Method": "tools/list" },
+			),
+		);
+		assert.equal(response.status, failAuth ? 500 : 200);
+		assert.equal(closed, 1);
+	}
 });

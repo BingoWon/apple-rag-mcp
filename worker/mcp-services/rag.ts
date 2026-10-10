@@ -23,7 +23,8 @@ export class RAGService {
 
 	async query(request: RAGQuery): Promise<RAGResult> {
 		const startTime = Date.now();
-		const { query, result_count = 4 } = request;
+		const { query, result_count = 4, signal } = request;
+		signal?.throwIfAborted();
 
 		if (!query?.trim()) {
 			throw new Error("Search query cannot be empty");
@@ -35,7 +36,7 @@ export class RAGService {
 		}
 
 		const resultCount = Math.min(Math.max(result_count, 1), 10);
-		const searchResult = await this.searchEngine.search(trimmedQuery, { resultCount });
+		const searchResult = await this.searchEngine.search(trimmedQuery, { resultCount, signal });
 		const formattedResults = this.formatResults(searchResult.results);
 		const totalTime = Date.now() - startTime;
 

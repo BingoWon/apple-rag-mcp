@@ -3,7 +3,6 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { apiApp } from "./api/app.js";
 import { handleScheduled } from "./collector/handler.js";
-import { MCP_PROTOCOL_VERSION } from "./mcp/constants.js";
 import { HEALTH_STATUS, SERVER_MANIFEST } from "./mcp/manifest.js";
 import { MCPProtocolHandler } from "./mcp/protocol-handler.js";
 import { createServices } from "./mcp-services/index.js";
@@ -38,30 +37,9 @@ async function handleMCPRequest(c: {
 		return originRejection;
 	}
 
-	const protocolVersion = c.req.raw.headers.get("MCP-Protocol-Version");
-	if (protocolVersion !== MCP_PROTOCOL_VERSION) {
-		return Response.json(
-			{
-				jsonrpc: "2.0",
-				id: null,
-				error: {
-					code: -32600,
-					message: `MCP-Protocol-Version must be ${MCP_PROTOCOL_VERSION}`,
-				},
-			},
-			{ status: 400 },
-		);
-	}
-
 	configureTelegram(c.env.TELEGRAM_DEFAULT_BOT_URL);
-	const services = await createServices(c.env, c.executionCtx);
-	try {
-		const authContext = await services.auth.optionalAuth(c.req.raw);
-		const handler = new MCPProtocolHandler(services);
-		return await handler.handleRequest(c.req.raw, authContext);
-	} finally {
-		await services.database.close();
-	}
+	const handler = new MCPProtocolHandler(() => createServices(c.env, c.executionCtx));
+	return handler.handleRequest(c.req.raw);
 }
 
 // ─── Main App (apple-rag.com) ────────────────────────────────

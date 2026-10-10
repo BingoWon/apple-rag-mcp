@@ -66,27 +66,129 @@ test("rejects legacy MCP protocol versions before service initialization", async
 				"Content-Type": "application/json",
 				"MCP-Protocol-Version": "2025-11-25",
 			},
-			body: JSON.stringify({ jsonrpc: "2.0", id: "legacy", method: "ping" }),
+			body: JSON.stringify({
+				jsonrpc: "2.0",
+				id: "legacy",
+				method: "server/discover",
+				params: {
+					_meta: {
+						"io.modelcontextprotocol/protocolVersion": "2025-11-25",
+						"io.modelcontextprotocol/clientCapabilities": {},
+					},
+				},
+			}),
 		}),
 		{} as never,
 		executionContext,
 	);
 
 	assert.equal(response.status, 400);
-	const payload = (await response.json()) as { error: { message: string } };
-	assert.match(payload.error.message, /2026-07-28/);
+	const payload = (await response.json()) as {
+		id: string;
+		error: { code: number; data: { supported: string[]; requested: string } };
+	};
+	assert.equal(payload.id, "legacy");
+	assert.equal(payload.error.code, -32022);
+	assert.deepEqual(payload.error.data.supported, ["2026-07-28"]);
+	assert.equal(payload.error.data.requested, "2025-11-25");
 });
 
 test("requires an explicit MCP protocol version", async () => {
 	const response = await worker.fetch(
 		new Request("https://mcp.apple-rag.com/", {
 			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ jsonrpc: "2.0", id: "missing", method: "ping" }),
+			headers: {
+				"Content-Type": "application/json",
+				Accept: "application/json, text/event-stream",
+				"Mcp-Method": "tools/list",
+			},
+			body: JSON.stringify({
+				jsonrpc: "2.0",
+				id: 0,
+				method: "tools/list",
+				params: {
+					_meta: {
+						"io.modelcontextprotocol/protocolVersion": "2026-07-28",
+						"io.modelcontextprotocol/clientCapabilities": {},
+					},
+				},
+			}),
 		}),
 		{} as never,
 		executionContext,
 	);
 
 	assert.equal(response.status, 400);
+	const payload = (await response.json()) as { id: number; error: { code: number } };
+	assert.equal(payload.id, 0);
+	assert.equal(payload.error.code, -32020);
+});
+
+test("rejects unknown versions with supported revisions on both production endpoints", async () => {
+	for (const url of ["https://mcp.apple-rag.com/", "https://apple-rag.com/mcp"]) {
+		const response = await worker.fetch(
+			new Request(url, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					Accept: "application/json, text/event-stream",
+					"MCP-Protocol-Version": "2099-01-01",
+					"Mcp-Method": "server/discover",
+				},
+				body: JSON.stringify({
+					jsonrpc: "2.0",
+					id: 0,
+					method: "server/discover",
+					params: {
+						_meta: {
+							"io.modelcontextprotocol/protocolVersion": "2099-01-01",
+							"io.modelcontextprotocol/clientCapabilities": {},
+						},
+					},
+				}),
+			}),
+			{} as never,
+			executionContext,
+		);
+		assert.equal(response.status, 400);
+		const payload = (await response.json()) as {
+			id: number;
+			error: { code: number; data: { supported: string[]; requested: string } };
+		};
+		assert.equal(payload.id, 0);
+		assert.equal(payload.error.code, -32022);
+		assert.deepEqual(payload.error.data, {
+			supported: ["2026-07-28"],
+			requested: "2099-01-01",
+		});
+	}
+});
+
+test("oversized requests are rejected before creating database services", async () => {
+	const response = await worker.fetch(
+		new Request("https://mcp.apple-rag.com/", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				Accept: "application/json, text/event-stream",
+				"MCP-Protocol-Version": "2026-07-28",
+				"Mcp-Method": "server/discover",
+			},
+			body: JSON.stringify({
+				jsonrpc: "2.0",
+				id: "oversized",
+				method: "server/discover",
+				params: {
+					_meta: {
+						"io.modelcontextprotocol/protocolVersion": "2026-07-28",
+						"io.modelcontextprotocol/clientCapabilities": {},
+						"org.example/padding": "x".repeat(4 * 1024 * 1024),
+					},
+				},
+			}),
+		}),
+		{} as never,
+		executionContext,
+	);
+	assert.equal(response.status, 413);
 });

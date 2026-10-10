@@ -113,3 +113,23 @@ test("keeps original candidate order and full content when both rerankers fail",
 		["content-a", "content-b"],
 	);
 });
+
+test("cancelled reranking propagates cancellation instead of returning original candidates", async () => {
+	const controller = new AbortController();
+	const reason = new Error("User cancelled");
+	const engine = new SearchEngine(
+		{
+			semanticSearch: async () => [result("a", "https://developer.apple.com/a", "A")],
+			keywordSearch: async () => [],
+		} as never,
+		{ createEmbedding: async () => [1] } as never,
+		{
+			rerank: async (_query: string, _documents: unknown, _topN: number, signal: AbortSignal) => {
+				assert.equal(signal, controller.signal);
+				controller.abort(reason);
+				throw reason;
+			},
+		} as never,
+	);
+	await assert.rejects(engine.search("query", { signal: controller.signal }), reason);
+});
