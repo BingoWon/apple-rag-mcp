@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import worker from "../index.js";
 
@@ -6,6 +7,11 @@ const executionContext = {
 	waitUntil: () => {},
 	passThroughOnException: () => {},
 } as unknown as ExecutionContext;
+
+test("the Worker enables incoming disconnect signals for protocol cancellation", () => {
+	const config = readFileSync(new URL("../../wrangler.toml", import.meta.url), "utf8");
+	assert.match(config, /compatibility_flags\s*=\s*\[[^\]]*"enable_request_signal"/);
+});
 
 test("allows production browser origins and modern MCP headers", async () => {
 	const response = await worker.fetch(
@@ -126,6 +132,7 @@ test("requires an explicit MCP protocol version", async () => {
 
 test("rejects unknown versions with supported revisions on both production endpoints", async () => {
 	for (const url of ["https://mcp.apple-rag.com/", "https://apple-rag.com/mcp"]) {
+		const completions: Promise<unknown>[] = [];
 		const response = await worker.fetch(
 			new Request(url, {
 				method: "POST",
@@ -148,8 +155,13 @@ test("rejects unknown versions with supported revisions on both production endpo
 				}),
 			}),
 			{} as never,
-			executionContext,
+			{
+				...executionContext,
+				waitUntil: (promise: Promise<unknown>) => completions.push(promise),
+			} as unknown as ExecutionContext,
 		);
+		assert.equal(completions.length, 1);
+		await Promise.all(completions);
 		assert.equal(response.status, 400);
 		const payload = (await response.json()) as {
 			id: number;

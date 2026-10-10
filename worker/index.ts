@@ -39,7 +39,9 @@ async function handleMCPRequest(c: {
 
 	configureTelegram(c.env.TELEGRAM_DEFAULT_BOT_URL);
 	const handler = new MCPProtocolHandler(() => createServices(c.env, c.executionCtx));
-	return handler.handleRequest(c.req.raw);
+	const response = handler.handleRequest(c.req.raw);
+	c.executionCtx.waitUntil(response);
+	return response;
 }
 
 // ─── Main App (apple-rag.com) ────────────────────────────────
