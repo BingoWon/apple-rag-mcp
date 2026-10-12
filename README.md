@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/bingowon-apple-rag-mcp-badge.png)](https://mseep.ai/app/bingowon-apple-rag-mcp)
+
 <div align="center">
 
 <img src="https://apple-rag.com/logo-with-text.svg" alt="Apple RAG MCP" width="400">
