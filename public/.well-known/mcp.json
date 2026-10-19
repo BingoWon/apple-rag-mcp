@@ -1,1 +1,5 @@
-{"name":"Apple RAG MCP","url":"https://mcp.apple-rag.com","description":"Apple developer docs and WWDC transcripts with RAG retrieval and Jev relevance ranking."}
+{
+	"name": "Apple RAG MCP",
+	"url": "https://mcp.apple-rag.com",
+	"description": "Apple developer docs and WWDC transcripts with RAG retrieval and Jev relevance ranking."
+}
