@@ -25,3 +25,9 @@ ops/ui/results/
 
 # Local operations (accounts, listings, runbooks)
 .ops/
+
+# Private strategy and local build values
+gtm/
+.env
+.env.*
+!.env.example
