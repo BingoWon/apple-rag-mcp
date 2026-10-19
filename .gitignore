@@ -22,3 +22,6 @@ ops/ui/results/
 .vscode/
 *.swp
 *.swo
+
+# Local operations (accounts, listings, runbooks)
+.ops/
