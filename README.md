@@ -77,12 +77,11 @@ also retains manual configuration examples.
 **Manual Configuration Parameters:**
 - **MCP Type:** `Streamable HTTP`
 - **URL:** `https://mcp.apple-rag.com`
-- **Protocol:** `2026-07-28`
+- **Protocol:** `2026-07-28`, with legacy `initialize` support for `2025-11-25`, `2025-06-18`, and `2025-03-26`
 - **Authentication:** `Optional` (MCP Token for higher limits)
 - **MCP Token:** Get yours at [apple-rag.com](https://apple-rag.com) for increased quota
 
-Client compatibility requires support for protocol `2026-07-28`; saving a
-configuration alone does not verify a working connection.
+Saving a configuration alone does not verify a working connection.
 
 > **Note:** No MCP Token required to start! You get free queries without any authentication. Add an MCP Token later for higher usage limits.
 
@@ -128,7 +127,7 @@ Try without an account: 30 tool calls/week and 3/minute. Register at [apple-rag.
 - **🚀 High Performance** - Multi-instance cluster deployment for maximum throughput
 - **🔄 Always Current** - Synced with Apple's latest docs, WWDC26 sessions, and Xcode 27 beta references
 - **🛡️ Secure & Private** - Your queries stay private
-- **🌐 MCP 2026 Native** - Stateless MCP `2026-07-28`
+- **🌐 MCP 2026 Native** - Stateless MCP `2026-07-28`, with legacy Streamable HTTP compatibility
 
 ## 📄 License
 

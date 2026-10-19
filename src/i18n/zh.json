@@ -87,7 +87,7 @@
 		"lightning_fast": "极速响应",
 		"lightning_fast_desc": "优化的搜索架构，即问即答。",
 		"always_secure": "原生 MCP 2026",
-		"always_secure_desc": "基于无状态 MCP 2026-07-28 协议构建。",
+		"always_secure_desc": "原生支持无状态 MCP 2026-07-28，并兼容旧版 Streamable HTTP。",
 		"ai_search": "AI 智能搜索",
 		"ai_search_desc": "关键词与语义搜索共同召回文档，<jev>Jev</jev> 对合并后的结果进行相关性重排。",
 		"code_examples": "代码示例",

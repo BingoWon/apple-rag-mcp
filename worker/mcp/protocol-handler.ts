@@ -32,7 +32,10 @@ export class MCPProtocolHandler {
 				return this.createServer(services, request, authContext, trackTool);
 			},
 			{
-				legacy: "reject",
+				// Cursor 3.24 still opens Streamable HTTP with initialize.
+				// The SDK default serves that legacy handshake statelessly
+				// beside the per-request 2026-07-28 path.
+				legacy: "stateless",
 				onerror: (error) => {
 					if (!request.signal.aborted) {
 						void logger.error(`MCP protocol error: ${error.message}`);

@@ -64,39 +64,84 @@ test("rejects an untrusted Origin before service initialization", async () => {
 	assert.match(payload.error.message, /Invalid Origin/);
 });
 
-test("rejects legacy MCP protocol versions before service initialization", async () => {
+test("serves a Cursor-style legacy initialize without modern headers", async () => {
+	const database = {
+		prepare: () => ({
+			bind: () => ({
+				first: async () => null,
+				all: async () => ({ results: [] }),
+				run: async () => ({ success: true }),
+			}),
+		}),
+	};
 	const response = await worker.fetch(
 		new Request("https://mcp.apple-rag.com/", {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
-				"MCP-Protocol-Version": "2025-11-25",
+				Accept: "application/json, text/event-stream",
 			},
 			body: JSON.stringify({
 				jsonrpc: "2.0",
 				id: "legacy",
-				method: "server/discover",
+				method: "initialize",
 				params: {
-					_meta: {
-						"io.modelcontextprotocol/protocolVersion": "2025-11-25",
-						"io.modelcontextprotocol/clientCapabilities": {},
-					},
+					protocolVersion: "2025-06-18",
+					capabilities: {},
+					clientInfo: { name: "cursor", version: "3.24.18" },
 				},
 			}),
 		}),
-		{} as never,
+		{ DB: database } as never,
 		executionContext,
 	);
 
-	assert.equal(response.status, 400);
-	const payload = (await response.json()) as {
-		id: string;
-		error: { code: number; data: { supported: string[]; requested: string } };
-	};
-	assert.equal(payload.id, "legacy");
-	assert.equal(payload.error.code, -32022);
-	assert.deepEqual(payload.error.data.supported, ["2026-07-28"]);
-	assert.equal(payload.error.data.requested, "2025-11-25");
+	assert.equal(response.status, 200);
+	const body = await response.text();
+	const messages = body
+		.split(/\r?\n/)
+		.filter((line) => line.startsWith("data:"))
+		.map(
+			(line) =>
+				JSON.parse(line.slice(5).trim()) as {
+					id?: string;
+					result?: { protocolVersion?: string; serverInfo?: { name?: string } };
+				},
+		);
+	const payload = messages.find((message) => message.result?.protocolVersion);
+	assert.equal(payload?.id, "legacy");
+	assert.equal(payload?.result?.protocolVersion, "2025-06-18");
+	assert.equal(payload?.result?.serverInfo?.name, "apple-rag-mcp");
+
+	const toolsResponse = await worker.fetch(
+		new Request("https://mcp.apple-rag.com/", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				Accept: "application/json, text/event-stream",
+			},
+			body: JSON.stringify({
+				jsonrpc: "2.0",
+				id: "tools",
+				method: "tools/list",
+			}),
+		}),
+		{ DB: database } as never,
+		executionContext,
+	);
+	assert.equal(toolsResponse.status, 200);
+	const toolMessages = (await toolsResponse.text())
+		.split(/\r?\n/)
+		.filter((line) => line.startsWith("data:"))
+		.map(
+			(line) =>
+				JSON.parse(line.slice(5).trim()) as { result?: { tools?: Array<{ name: string }> } },
+		);
+	const tools = toolMessages.find((message) => message.result?.tools)?.result?.tools ?? [];
+	assert.deepEqual(
+		tools.map((tool) => tool.name),
+		["search", "fetch"],
+	);
 });
 
 test("requires an explicit MCP protocol version", async () => {

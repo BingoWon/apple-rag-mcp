@@ -110,7 +110,8 @@ test("generates a localized agent prompt with literal URL and token", () => {
 		assert.ok(prompt.includes(CUSTOM_URL));
 		assert.ok(prompt.includes(`Authorization: Bearer ${TOKEN}`));
 		assert.match(prompt, /search.*fetch/);
-		assert.match(prompt, /manifest/);
+		assert.match(prompt, /2026-07-28/);
+		assert.match(prompt, /initialize/);
 		assert.doesNotMatch(prompt, /\[https?:\/\//);
 		assert.doesNotMatch(prompt, /\\_/);
 		assert.doesNotMatch(prompt, /mcpServers|\[mcp_servers|claude mcp add/);

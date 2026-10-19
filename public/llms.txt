@@ -65,9 +65,9 @@ For MCP clients that don't support JSON import:
 - **Name**: `apple-rag-mcp`
 - **MCP Type**: `Streamable HTTP`
 - **URL (Endpoint)**: `https://mcp.apple-rag.com`
-- **Protocol Version**: `2026-07-28`
+- **Protocol Version**: `2026-07-28`, plus legacy `initialize` versions `2025-11-25`, `2025-06-18`, and `2025-03-26`
 
-The client must support protocol `2026-07-28`. Writing a configuration alone does not verify a working connection.
+A missing `MCP-Protocol-Version` header is compatible. Writing a configuration alone does not verify a working connection.
 
 **Optional Authentication** (for registered users):
 - **Authentication Type**: `API key / Token`

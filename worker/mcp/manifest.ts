@@ -12,6 +12,7 @@ export const SERVER_MANIFEST = {
 	description:
 		"Apple developer docs and WWDC transcripts with RAG retrieval and Jev relevance ranking.",
 	protocolVersion: MCP_PROTOCOL_VERSION,
+	supportedProtocolVersions: ["2026-07-28", "2025-11-25", "2025-06-18", "2025-03-26"],
 	capabilities: {
 		tools: {},
 	},
@@ -28,9 +29,14 @@ export const SERVER_MANIFEST = {
 		type: "streamable-http",
 		methods: ["POST"],
 		headers: {
-			required: ["Content-Type", "MCP-Protocol-Version", "Mcp-Method"],
+			required: ["Content-Type", "Accept"],
+			modern: ["MCP-Protocol-Version", "Mcp-Method"],
 			conditional: ["Mcp-Name"],
 			optional: ["Authorization"],
+		},
+		legacy: {
+			handshake: "initialize",
+			protocolVersions: ["2025-11-25", "2025-06-18", "2025-03-26"],
 		},
 	},
 	authorization: {
