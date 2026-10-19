@@ -8,6 +8,14 @@ Every code change must therefore be committed to `main` and pushed to GitHub pro
 
 The manual `pnpm build && wrangler deploy` procedure in `ops/README.md` is not the normal release path.
 
+## Releases
+
+Every code change ships with a release. A change to `worker/`, `src/`, `skills/`, or `public/` bumps `package.json` and `server.json` to the same new version, and the bump is pushed to `main` in the same change. CI success on `main` then creates the `vX.Y.Z` GitHub release.
+
+- Patch bump for fixes and small changes; minor bump for new user-facing capabilities.
+- Documentation-only changes may skip the bump.
+- Never push a version that already has a tag; the workflow skips it and no release is created.
+
 ## MCP Protocol Compatibility
 
 Do not make the production MCP endpoint `2026-07-28`-only. Current clients, including Cursor 3.24, still open Streamable HTTP with the legacy `initialize` handshake. The server must keep `legacy: "stateless"` in `worker/mcp/protocol-handler.ts` so those clients work beside the modern per-request protocol.
