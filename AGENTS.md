@@ -40,7 +40,7 @@ The Worker also binds Cloudflare D1 (`env.DB`) for accounts, tokens, rate limits
 
 ## Agent Identity
 
-Every third-party account must use an agent-owned identity. Never register, sign in, or authorize a platform with the owner's personal GitHub, Google, Outlook, or any other personal account.
+Every third-party account must use an agent-owned identity. Never register, sign in, or authorize a platform with the owner's personal GitHub, Google, Outlook, or any other personal account by default.
 
 The purpose is to keep the owner's identity out of platform signups. Convenience is not a reason to use their account, even when a session is already open.
 
@@ -48,3 +48,21 @@ The purpose is to keep the owner's identity out of platform signups. Convenience
 - If a provider rejects the agent domain, requires phone verification, CAPTCHA, or an OAuth account the agent does not own, stop and report the blocker. Do not fall back to the owner's account.
 - Record every account and the identity used in `.ops/accounts/registry.md`.
 - Existing accounts created with the owner's identity are violations to migrate or retire, not precedents.
+
+### Platform exception
+
+The owner may grant a written exception for one named platform. An exception is valid only when all of these hold:
+
+- It names the platform and the exact scope, and is recorded in `.ops/identity.md`.
+- Only the minimum session needed for that task is used.
+- Marketing, newsletters, and product-update opt-ins stay off.
+- The authorization is revoked, or the session is discarded, when the task is done.
+- It does not become a precedent for any other platform.
+
+## Working Agreements
+
+- Minimize owner involvement. Automate every step that can be automated; ask only for the single step that cannot.
+- Protect the owner's inbox. Never subscribe the owner's email or GitHub account to marketing, newsletters, or product updates. Use the agent identity by default.
+- When an exception allows the owner's account, do not enable marketing, disable notifications where possible, and revoke the authorization when the task is done.
+- Stop only at hard gates: CAPTCHA, phone verification, payment, or legal acceptance. Report the gate; do not substitute the owner's account unless an exception covers it.
+- Record platform exceptions, scope, and cleanup in `.ops/identity.md`.
