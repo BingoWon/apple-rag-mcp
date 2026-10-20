@@ -37,3 +37,14 @@ Production data is on the VPS. PostgreSQL configuration and operations live in `
 
 The Worker also binds Cloudflare D1 (`env.DB`) for accounts, tokens, rate limits, and tool-call logs. That is application state served by the Worker, not the retrieval corpus.
 
+
+## Agent Identity
+
+Every third-party account must use an agent-owned identity. Never register, sign in, or authorize a platform with the owner's personal GitHub, Google, Outlook, or any other personal account.
+
+The purpose is to keep the owner's identity out of platform signups. Convenience is not a reason to use their account, even when a session is already open.
+
+- Use the dedicated agent mailbox recorded in `.ops/accounts/registry.md`.
+- If a provider rejects the agent domain, requires phone verification, CAPTCHA, or an OAuth account the agent does not own, stop and report the blocker. Do not fall back to the owner's account.
+- Record every account and the identity used in `.ops/accounts/registry.md`.
+- Existing accounts created with the owner's identity are violations to migrate or retire, not precedents.
