@@ -1,0 +1,8 @@
+{
+	"mcpServers": {
+		"apple-rag-mcp": {
+			"type": "http",
+			"url": "https://mcp.apple-rag.com"
+		}
+	}
+}
