@@ -53,7 +53,7 @@ The purpose is to keep the owner's identity out of platform signups. Convenience
 
 The owner may grant a written exception for one named platform. An exception is valid only when all of these hold:
 
-- It names the platform and the exact scope, and is recorded in `.ops/identity.md`.
+- It names the platform, the exact scope, and explicitly authorizes the owner's identity. A request to complete a task is not consent to use the owner's account, and is recorded in `.ops/identity.md`.
 - Only the minimum session needed for that task is used.
 - Marketing, newsletters, and product-update opt-ins stay off.
 - The authorization is revoked, or the session is discarded, when the task is done.
