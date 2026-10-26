@@ -27,7 +27,7 @@ export class EmbeddingService
 	extends DeepInfraService<EmbeddingInput, EmbeddingResponse, number[]>
 	implements IEmbeddingService
 {
-	protected readonly endpoint = "/v1/openai/embeddings";
+	protected readonly endpoint: string = "/v1/openai/embeddings";
 
 	/**
 	 * Create embedding (single provider)
@@ -94,6 +94,7 @@ export class EmbeddingService
 
 export class SiliconFlowEmbeddingService extends EmbeddingService {
 	protected readonly baseUrl = "https://api.siliconflow.cn";
+	protected readonly endpoint = "/v1/embeddings";
 	protected readonly providerName = "SiliconFlow";
 
 	protected override buildPayload(input: EmbeddingInput): EmbeddingPayload {

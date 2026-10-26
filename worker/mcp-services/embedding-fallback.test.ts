@@ -72,7 +72,7 @@ test("SiliconFlow uses the OpenAI-compatible endpoint and 2560 dimensions", asyn
 	});
 	const service = new SiliconFlowEmbeddingService("sf-key", () => {});
 	assert.deepEqual(await service.createEmbedding("query"), [1, 0]);
-	assert.equal(requestUrl, "https://api.siliconflow.cn/v1/openai/embeddings");
+	assert.equal(requestUrl, "https://api.siliconflow.cn/v1/embeddings");
 	assert.equal(authorization, "Bearer sf-key");
 	assert.equal(requestBody.model, "Qwen/Qwen3-Embedding-4B");
 	assert.equal(requestBody.dimensions, 2560);
@@ -96,6 +96,6 @@ test("SiliconFlow failure falls back to DeepInfra with provider-specific alerts"
 	);
 	assert.deepEqual(await service.createEmbedding("query"), [0.6, 0.8]);
 	assert.equal(calls.length, 2);
-	assert.equal(calls[0], "https://api.siliconflow.cn/v1/openai/embeddings");
+	assert.equal(calls[0], "https://api.siliconflow.cn/v1/embeddings");
 	assert.match(alerts[0], /SiliconFlow Embedding generation failed/);
 });
