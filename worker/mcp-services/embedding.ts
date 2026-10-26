@@ -1,6 +1,5 @@
 /**
- * Modern Embedding Service - MCP Optimized
- * DeepInfra API integration (single provider, no fallback)
+ * Embedding providers with SiliconFlow primary and DeepInfra fallback.
  */
 
 import type { EmbeddingService as IEmbeddingService } from "../mcp-types/index.js";
@@ -15,6 +14,7 @@ interface EmbeddingPayload {
 	model: "Qwen/Qwen3-Embedding-4B";
 	input: string;
 	encoding_format: "float";
+	dimensions?: number;
 }
 
 interface EmbeddingResponse {
@@ -89,5 +89,36 @@ export class EmbeddingService
 		}
 
 		return embedding.map((val) => val / norm);
+	}
+}
+
+export class SiliconFlowEmbeddingService extends EmbeddingService {
+	protected readonly baseUrl = "https://api.siliconflow.cn";
+	protected readonly providerName = "SiliconFlow";
+
+	protected override buildPayload(input: EmbeddingInput): EmbeddingPayload {
+		return { ...super.buildPayload(input), dimensions: 2560 };
+	}
+}
+
+export class FallbackEmbeddingService implements IEmbeddingService {
+	constructor(
+		private readonly primary: IEmbeddingService,
+		private readonly fallback: IEmbeddingService,
+	) {}
+
+	async createEmbedding(text: string, signal?: AbortSignal): Promise<number[]> {
+		if (!text?.trim()) {
+			throw new Error("Text cannot be empty for embedding generation");
+		}
+		try {
+			return await this.primary.createEmbedding(text, signal);
+		} catch (error) {
+			signal?.throwIfAborted();
+			logger.warn(
+				`Primary embedding provider failed; using DeepInfra fallback: ${error instanceof Error ? error.message : String(error)}`,
+			);
+			return this.fallback.createEmbedding(text, signal);
+		}
 	}
 }

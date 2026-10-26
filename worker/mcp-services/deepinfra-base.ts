@@ -27,7 +27,9 @@ export class ModelRequestError extends Error {
 
 export abstract class DeepInfraService<TRequest, TResponse, TResult> {
 	protected abstract readonly endpoint: string;
-	private readonly apiKey: string;
+	protected readonly apiKey: string;
+	protected readonly baseUrl: string = DEEPINFRA_CONFIG.BASE_URL;
+	protected readonly providerName: string = "DeepInfra";
 
 	constructor(
 		apiKey: string,
@@ -51,7 +53,7 @@ export abstract class DeepInfraService<TRequest, TResponse, TResult> {
 				signal?.throwIfAborted();
 				const json = await this.singleRequest(this.endpoint, payload, signal);
 				logger.info(
-					`${operationName} completed (${((Date.now() - startTime) / 1000).toFixed(1)}s)`,
+					`${this.providerName} ${operationName} completed (${((Date.now() - startTime) / 1000).toFixed(1)}s)`,
 				);
 				return this.processResponse(json, input);
 			} catch (e) {
@@ -65,8 +67,8 @@ export abstract class DeepInfraService<TRequest, TResponse, TResult> {
 		}
 
 		this.reportFailure(
-			`deepinfra:${this.endpoint}:${lastError instanceof ModelRequestError ? lastError.status : lastError.name}`,
-			`DeepInfra ${operationName} failed: ${lastError.message}. Semantic retrieval may fall back to keyword results.`,
+			`${this.providerName.toLowerCase()}:${this.endpoint}:${lastError instanceof ModelRequestError ? lastError.status : lastError.name}`,
+			`${this.providerName} ${operationName} failed: ${lastError.message}. Semantic retrieval may use a fallback provider or keyword results.`,
 		);
 		throw lastError;
 	}
@@ -77,8 +79,13 @@ export abstract class DeepInfraService<TRequest, TResponse, TResult> {
 		signal?: AbortSignal,
 	): Promise<TResponse> {
 		signal?.throwIfAborted();
-		if (!this.apiKey) throw new ModelRequestError("DEEPINFRA_API_KEY is not configured", false);
-		const res = await fetch(`${DEEPINFRA_CONFIG.BASE_URL}${endpoint}`, {
+		if (!this.apiKey) {
+			throw new ModelRequestError(
+				`${this.providerName.toUpperCase()}_API_KEY is not configured`,
+				false,
+			);
+		}
+		const res = await fetch(`${this.baseUrl}${endpoint}`, {
 			method: "POST",
 			headers: {
 				Authorization: `Bearer ${this.apiKey}`,

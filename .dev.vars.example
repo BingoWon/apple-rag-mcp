@@ -43,6 +43,9 @@ RAG_DB_SSLMODE=disable
 # ─── DeepInfra (required for MCP search) ─────────────────
 DEEPINFRA_API_KEY=
 
+# ─── SiliconFlow (optional primary embedding provider) ───
+SILICONFLOW_API_KEY=
+
 # Jev primary reranker (DeepInfra 8B remains the fallback)
 TYPESAFE_API_KEY=
 

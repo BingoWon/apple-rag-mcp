@@ -14,10 +14,14 @@
  * - AI reranking with Qwen3-Reranker-8B
  */
 
-import type { AdditionalUrl, SearchOptions, SearchResult } from "../mcp-types/index.js";
+import type {
+	AdditionalUrl,
+	EmbeddingService,
+	SearchOptions,
+	SearchResult,
+} from "../mcp-types/index.js";
 import { logger } from "../mcp-utils/logger.js";
 import type { DatabaseService } from "./database.js";
-import type { EmbeddingService } from "./embedding.js";
 import type { RerankerService } from "./reranker.js";
 
 export interface ParsedChunk {
