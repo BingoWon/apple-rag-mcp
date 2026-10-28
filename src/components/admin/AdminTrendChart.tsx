@@ -29,7 +29,7 @@ export const AdminTrendChart = memo(function AdminTrendChart({
 	const hasBreakdown = metric.points.some(
 		(point) => point.registered !== undefined || point.anonymous !== undefined,
 	);
-	const height = heightProp ?? (isRequest ? 240 : 160);
+	const height = heightProp ?? (isRequest ? 180 : 120);
 	const options = useMemo<ApexOptions>(() => {
 		const locale = i18n.resolvedLanguage?.startsWith("zh") ? "zh-CN" : "en";
 		const formatter = new Intl.DateTimeFormat(locale, {
@@ -50,14 +50,14 @@ export const AdminTrendChart = memo(function AdminTrendChart({
 					tools: {
 						download: true,
 						selection: false,
-						zoom: true,
-						zoomin: true,
-						zoomout: true,
-						pan: true,
-						reset: true,
+						zoom: false,
+						zoomin: false,
+						zoomout: false,
+						pan: false,
+						reset: false,
 					},
 				},
-				zoom: { enabled: isRequest || hasBreakdown, type: "x", autoScaleYaxis: false },
+				zoom: { enabled: false },
 				foreColor: resolvedTheme === "dark" ? "#94a3b8" : "#64748b",
 			},
 			plotOptions: { bar: { columnWidth: "65%", borderRadius: 2 } },

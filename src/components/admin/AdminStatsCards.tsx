@@ -90,11 +90,11 @@ function AudienceCard({
 				</Link>
 			</div>
 			{metric ? (
-				<AdminTrendChart metric={metric} bucket={bucket} color={color} height={220} />
+				<AdminTrendChart metric={metric} bucket={bucket} color={color} height={180} />
 			) : (
 				<div
 					className="flex items-center justify-center text-xs text-muted"
-					style={{ height: 220 }}
+					style={{ height: 180 }}
 				>
 					{t(loading ? "admin.stats_loading" : "admin.stats_unavailable")}
 				</div>
@@ -194,7 +194,7 @@ export function AdminStatsCards({
 						) : (
 							<div
 								className="flex items-center justify-center text-xs text-muted"
-								style={{ height: isRequest ? 240 : 160 }}
+								style={{ height: isRequest ? 180 : 120 }}
 							>
 								{t(loading ? "admin.stats_loading" : "admin.stats_unavailable")}
 							</div>
