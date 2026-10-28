@@ -110,18 +110,12 @@ function AudienceCard({
 					<tbody className="tabular-nums">
 						{(
 							[
-								["registered", "admin.stats_registered", "#2563eb"],
-								["anonymous", "admin.stats_anonymous", "#f59e0b"],
+								["registered", "admin.stats_registered"],
+								["anonymous", "admin.stats_anonymous"],
 							] as const
-						).map(([key, label, dotColor]) => (
+						).map(([key, label]) => (
 							<tr key={key}>
-								<td className="py-0.5">
-									<span
-										className="mr-1.5 inline-block h-2 w-2 rounded-full"
-										style={{ backgroundColor: dotColor }}
-									/>
-									{t(label)}
-								</td>
+								<td className="py-0.5">{t(label)}</td>
 								<td className="py-0.5 text-right font-medium text-light">
 									{metric.breakdown![key].toLocaleString(i18n.resolvedLanguage)}
 								</td>
