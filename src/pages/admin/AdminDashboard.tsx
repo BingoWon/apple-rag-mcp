@@ -53,7 +53,7 @@ export default function AdminDashboard() {
 		}).format(new Date(value));
 
 	return (
-		<div className="space-y-3">
+		<div className="space-y-4">
 			<div className="flex flex-wrap items-center gap-2">
 				<TimeRangeSelector
 					timeRange={query.period === "custom" ? undefined : query.period}

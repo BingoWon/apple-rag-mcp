@@ -46,6 +46,8 @@ const pointSchema = z.object({
 	failed: z.number().optional(),
 	limited: z.number().optional(),
 	unknown: z.number().optional(),
+	registered: z.number().optional(),
+	anonymous: z.number().optional(),
 });
 const metricSchema = z.object({
 	total: z.number(),
@@ -56,6 +58,12 @@ const metricSchema = z.object({
 			failed: z.number(),
 			limited: z.number(),
 			unknown: z.number(),
+		})
+		.optional(),
+	breakdown: z
+		.object({
+			registered: z.number(),
+			anonymous: z.number(),
 		})
 		.optional(),
 });
@@ -94,6 +102,8 @@ const statsRoute = createRoute({
 								searches: metricSchema,
 								fetches: metricSchema,
 								messages: metricSchema,
+								new_users: metricSchema,
+								active_users: metricSchema,
 							}),
 							subscriptions: z.object({
 								total: z.number(),
@@ -156,6 +166,68 @@ app.openapi(statsRoute, async (c) => {
 				 GROUP BY bucket ORDER BY bucket`,
 			).bind(start.slice(0, 10), new Date(range.end + DAY).toISOString().slice(0, 10), start, end);
 		});
+		const newAnonymousQuery = c.env.DB.prepare(
+			`WITH all_logs AS (
+				SELECT user_id, created_at FROM search_logs WHERE user_id LIKE 'anon_%' ESCAPE '\\'
+				UNION ALL
+				SELECT user_id, created_at FROM fetch_logs WHERE user_id LIKE 'anon_%' ESCAPE '\\'
+			), first_seen AS (
+				SELECT user_id, MIN(created_at) AS first_seen FROM all_logs GROUP BY user_id
+			)
+			SELECT strftime('${format}', first_seen, '+8 hours') AS bucket, COUNT(*) AS count
+			FROM first_seen
+			WHERE first_seen >= ? AND first_seen < ?
+			  AND julianday(first_seen) >= julianday(?) AND julianday(first_seen) < julianday(?)
+			GROUP BY bucket ORDER BY bucket`,
+		).bind(start.slice(0, 10), new Date(range.end + DAY).toISOString().slice(0, 10), start, end);
+		const activeUsersQuery = c.env.DB.prepare(
+			`WITH all_logs AS (
+				SELECT user_id, created_at FROM search_logs
+				WHERE created_at >= ? AND created_at < ?
+				  AND julianday(created_at) >= julianday(?) AND julianday(created_at) < julianday(?)
+				UNION ALL
+				SELECT user_id, created_at FROM fetch_logs
+				WHERE created_at >= ? AND created_at < ?
+				  AND julianday(created_at) >= julianday(?) AND julianday(created_at) < julianday(?)
+			)
+			SELECT strftime('${format}', created_at, '+8 hours') AS bucket,
+				COUNT(DISTINCT CASE WHEN user_id NOT LIKE 'anon_%' ESCAPE '\\' THEN user_id END) AS registered,
+				COUNT(DISTINCT CASE WHEN user_id LIKE 'anon_%' ESCAPE '\\' THEN user_id END) AS anonymous
+			FROM all_logs GROUP BY bucket ORDER BY bucket`,
+		).bind(
+			start.slice(0, 10),
+			new Date(range.end + DAY).toISOString().slice(0, 10),
+			start,
+			end,
+			start.slice(0, 10),
+			new Date(range.end + DAY).toISOString().slice(0, 10),
+			start,
+			end,
+		);
+		const activeTotalQuery = c.env.DB.prepare(
+			`WITH all_logs AS (
+				SELECT user_id, created_at FROM search_logs
+				WHERE created_at >= ? AND created_at < ?
+				  AND julianday(created_at) >= julianday(?) AND julianday(created_at) < julianday(?)
+				UNION ALL
+				SELECT user_id, created_at FROM fetch_logs
+				WHERE created_at >= ? AND created_at < ?
+				  AND julianday(created_at) >= julianday(?) AND julianday(created_at) < julianday(?)
+			)
+			SELECT COUNT(DISTINCT CASE WHEN user_id NOT LIKE 'anon_%' ESCAPE '\\' THEN user_id END) AS registered,
+				COUNT(DISTINCT CASE WHEN user_id LIKE 'anon_%' ESCAPE '\\' THEN user_id END) AS anonymous
+			FROM all_logs`,
+		).bind(
+			start.slice(0, 10),
+			new Date(range.end + DAY).toISOString().slice(0, 10),
+			start,
+			end,
+			start.slice(0, 10),
+			new Date(range.end + DAY).toISOString().slice(0, 10),
+			start,
+			end,
+		);
+		statements.push(newAnonymousQuery, activeUsersQuery, activeTotalQuery);
 		statements.push(
 			c.env.DB.prepare(
 				`SELECT plan_type, COUNT(*) AS count FROM user_subscriptions
@@ -203,8 +275,60 @@ app.openapi(statsRoute, async (c) => {
 			}
 			metrics[key] = metric;
 		});
+		const pointBucket = (date: string) =>
+			new Date(Date.parse(date) + OFFSET).toISOString().slice(0, range.bucket === "hour" ? 13 : 10);
+		const newAnonymousRows = new Map(
+			results[METRICS.length].results.map((row) => [String(row.bucket), row]),
+		);
+		const newUsers: AdminMetricStats = {
+			total: metrics.users.total,
+			points: [],
+			breakdown: { registered: metrics.users.total, anonymous: 0 },
+		};
+		for (const point of metrics.users.points) {
+			const row = newAnonymousRows.get(pointBucket(point.date));
+			const anonymous = Number(row?.count) || 0;
+			newUsers.total += anonymous;
+			newUsers.breakdown!.anonymous += anonymous;
+			newUsers.points.push({
+				...point,
+				count: point.count + anonymous,
+				registered: point.count,
+				anonymous,
+			});
+		}
+		metrics.new_users = newUsers;
+
+		const activeRows = new Map(
+			results[METRICS.length + 1].results.map((row) => [String(row.bucket), row]),
+		);
+		const activePoints: AdminMetricStats["points"] = [];
+		for (let timestamp = range.firstBucket; timestamp <= lastBucket; timestamp += range.step) {
+			const bucket = new Date(timestamp + OFFSET)
+				.toISOString()
+				.slice(0, range.bucket === "hour" ? 13 : 10);
+			const row = activeRows.get(bucket);
+			const registered = Number(row?.registered) || 0;
+			const anonymous = Number(row?.anonymous) || 0;
+			activePoints.push({
+				date: new Date(timestamp).toISOString(),
+				count: registered + anonymous,
+				registered,
+				anonymous,
+			});
+		}
+		const activeTotal = results[METRICS.length + 2].results[0];
+		metrics.active_users = {
+			total: (Number(activeTotal?.registered) || 0) + (Number(activeTotal?.anonymous) || 0),
+			points: activePoints,
+			breakdown: {
+				registered: Number(activeTotal?.registered) || 0,
+				anonymous: Number(activeTotal?.anonymous) || 0,
+			},
+		};
+
 		const subscriptions = { total: 0, pro: 0, enterprise: 0 };
-		for (const row of results[METRICS.length].results) {
+		for (const row of results[METRICS.length + 3].results) {
 			if (row.plan_type === "pro" || row.plan_type === "enterprise") {
 				subscriptions[row.plan_type] = Number(row.count) || 0;
 				subscriptions.total += Number(row.count) || 0;

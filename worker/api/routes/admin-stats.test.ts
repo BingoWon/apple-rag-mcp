@@ -57,6 +57,7 @@ function insertLog(
 	table: "search_logs" | "fetch_logs",
 	createdAt: string,
 	status: number | null,
+	userId = "anon_203.0.113.10",
 ) {
 	const columns =
 		table === "search_logs" ? "requested_query, actual_query" : "requested_url, actual_url";
@@ -64,7 +65,7 @@ function insertLog(
 		.prepare(
 			`INSERT INTO ${table} (user_id, ${columns}, status_code, created_at) VALUES (?, ?, ?, ?, ?)`,
 		)
-		.run("anon_203.0.113.10", "test", "test", status, createdAt);
+		.run(userId, "test", "test", status, createdAt);
 }
 
 test("admin statistics require the existing password before querying data", async () => {
@@ -126,6 +127,11 @@ test("global daily statistics handle SQLite/ISO dates, Singapore boundaries, out
 	assert.equal(data.start, "2026-10-02T16:00:00.000Z");
 	assert.equal(data.end, new Date(NOW).toISOString());
 	assert.equal(data.metrics.users.total, 2);
+	assert.equal(data.metrics.new_users.total, 2);
+	assert.equal(data.metrics.active_users.total, 1);
+	assert.equal(data.metrics.new_users.breakdown?.registered, 2);
+	assert.equal(data.metrics.new_users.breakdown?.anonymous, 0);
+	assert.equal(data.metrics.active_users.breakdown?.anonymous, 1);
 	assert.equal(data.metrics.tokens.total, 1);
 	assert.equal(data.metrics.ips.total, 1);
 	assert.equal(data.metrics.messages.total, 1);
@@ -146,14 +152,16 @@ test("global daily statistics handle SQLite/ISO dates, Singapore boundaries, out
 	assert.equal(data.metrics.searches.points[0].count, 1);
 	assert.equal(data.metrics.searches.points[2].count, 0);
 	assert.equal(data.metrics.searches.points.at(-1)?.count, 3);
-	for (const metric of Object.values(data.metrics)) {
+	for (const [key, metric] of Object.entries(data.metrics)) {
 		assert.equal(metric.points.length, 7);
-		assert.equal(
-			metric.total,
-			metric.points.reduce((sum, point) => sum + point.count, 0),
-		);
+		if (key !== "active_users") {
+			assert.equal(
+				metric.total,
+				metric.points.reduce((sum, point) => sum + point.count, 0),
+			);
+		}
 	}
-	assert.equal(queries.length, 7);
+	assert.equal(queries.length, 10);
 	for (const table of ["search_logs", "fetch_logs"]) {
 		const sql = queries.find((query) => query.includes(`FROM ${table}`))!;
 		const plan = sqlite
@@ -162,6 +170,37 @@ test("global daily statistics handle SQLite/ISO dates, Singapore boundaries, out
 		assert.ok(plan.some((row) => String(row.detail).includes(`idx_${table}_created_at`)));
 	}
 	assert.doesNotMatch(JSON.stringify(data), /anon_|test-token|example\.com|requested_query/);
+});
+
+test("new and active user metrics count first-seen anonymous identities and deduplicate tools", async (t) => {
+	t.mock.method(Date, "now", () => NOW);
+	const { sqlite, request } = createDatabase();
+	t.after(() => sqlite.close());
+	insertUser(sqlite, "registered-new", "2026-10-08T20:00:00.000Z");
+	insertUser(sqlite, "registered-old", "2026-10-01T00:00:00.000Z");
+	insertLog(sqlite, "search_logs", "2026-10-01T12:00:00.000Z", 200, "anon_return");
+	insertLog(sqlite, "search_logs", "2026-10-07T20:00:00.000Z", 200, "anon_return");
+	insertLog(sqlite, "search_logs", "2026-10-08T20:00:00.000Z", 200, "anon_return");
+	insertLog(sqlite, "search_logs", "2026-10-08T21:00:00.000Z", 200, "anon_new");
+	insertLog(sqlite, "fetch_logs", "2026-10-08T22:00:00.000Z", 200, "anon_new");
+	insertLog(sqlite, "search_logs", "2026-10-08T22:30:00.000Z", 200, "registered-new");
+	insertLog(sqlite, "fetch_logs", "2026-10-08T22:45:00.000Z", 200, "registered-new");
+	const response = await request();
+	const { data } = (await response.json()) as { data: AdminDashboardStats };
+	assert.equal(response.status, 200);
+	assert.equal(data.metrics.users.total, 1);
+	assert.equal(data.metrics.new_users.total, 2);
+	assert.deepEqual(data.metrics.new_users.breakdown, { registered: 1, anonymous: 1 });
+	assert.equal(data.metrics.active_users.total, 3);
+	assert.deepEqual(data.metrics.active_users.breakdown, { registered: 1, anonymous: 2 });
+	assert.equal(data.metrics.new_users.points.at(-1)?.count, 2);
+	assert.equal(data.metrics.active_users.points.at(-1)?.count, 3);
+	assert.equal(data.metrics.active_users.points.at(-1)?.registered, 1);
+	assert.equal(data.metrics.active_users.points.at(-1)?.anonymous, 2);
+	assert.ok(
+		data.metrics.active_users.total <
+			data.metrics.active_users.points.reduce((sum, point) => sum + point.count, 0),
+	);
 });
 
 test("rolling 24h statistics exclude partial-hour records before the window and group hourly", async (t) => {

@@ -71,6 +71,8 @@ export interface AdminStatsPoint {
 	failed?: number;
 	limited?: number;
 	unknown?: number;
+	registered?: number;
+	anonymous?: number;
 }
 
 export interface AdminMetricStats {
@@ -82,6 +84,10 @@ export interface AdminMetricStats {
 		limited: number;
 		unknown: number;
 	};
+	breakdown?: {
+		registered: number;
+		anonymous: number;
+	};
 }
 
 export interface AdminDashboardStats {
@@ -91,7 +97,7 @@ export interface AdminDashboardStats {
 	bucket: "hour" | "day";
 	generated_at: string;
 	metrics: Record<
-		"users" | "tokens" | "ips" | "searches" | "fetches" | "messages",
+		"users" | "tokens" | "ips" | "searches" | "fetches" | "messages" | "new_users" | "active_users",
 		AdminMetricStats
 	>;
 	subscriptions: { total: number; pro: number; enterprise: number };

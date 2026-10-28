@@ -16,15 +16,20 @@ export const AdminTrendChart = memo(function AdminTrendChart({
 	metric,
 	bucket,
 	color,
+	height: heightProp,
 }: {
 	metric: AdminMetricStats;
 	bucket: "hour" | "day";
 	color: string;
+	height?: number;
 }) {
 	const { t, i18n } = useTranslation();
 	const { resolvedTheme } = useTheme();
 	const isRequest = !!metric.outcomes;
-	const height = isRequest ? 145 : 48;
+	const hasBreakdown = metric.points.some(
+		(point) => point.registered !== undefined || point.anonymous !== undefined,
+	);
+	const height = heightProp ?? (isRequest ? 240 : 160);
 	const options = useMemo<ApexOptions>(() => {
 		const locale = i18n.resolvedLanguage?.startsWith("zh") ? "zh-CN" : "en";
 		const formatter = new Intl.DateTimeFormat(locale, {
@@ -37,11 +42,11 @@ export const AdminTrendChart = memo(function AdminTrendChart({
 			theme: { mode: resolvedTheme },
 			chart: {
 				type: isRequest ? "bar" : "area",
-				stacked: isRequest,
+				stacked: isRequest || hasBreakdown,
 				animations: { enabled: false },
-				sparkline: { enabled: !isRequest },
+				sparkline: { enabled: false },
 				toolbar: {
-					show: isRequest,
+					show: isRequest || hasBreakdown,
 					tools: {
 						download: true,
 						selection: false,
@@ -52,15 +57,19 @@ export const AdminTrendChart = memo(function AdminTrendChart({
 						reset: true,
 					},
 				},
-				zoom: { enabled: isRequest, type: "x", autoScaleYaxis: false },
+				zoom: { enabled: isRequest || hasBreakdown, type: "x", autoScaleYaxis: false },
 				foreColor: resolvedTheme === "dark" ? "#94a3b8" : "#64748b",
 			},
 			plotOptions: { bar: { columnWidth: "65%", borderRadius: 2 } },
 			stroke: { width: isRequest ? 0 : 2, curve: "straight" },
-			fill: { opacity: isRequest ? 1 : 0.15, type: "solid" },
-			colors: isRequest ? Object.values(OUTCOME_COLORS) : [color],
+			fill: { opacity: isRequest ? 1 : 0.2, type: "solid" },
+			colors: isRequest
+				? Object.values(OUTCOME_COLORS)
+				: hasBreakdown
+					? [color, "#f59e0b"]
+					: [color],
 			dataLabels: { enabled: false },
-			legend: { show: false },
+			legend: { show: hasBreakdown, position: "bottom" },
 			grid: {
 				borderColor: resolvedTheme === "dark" ? "#334155" : "#e2e8f0",
 				strokeDashArray: 3,
@@ -88,20 +97,31 @@ export const AdminTrendChart = memo(function AdminTrendChart({
 				y: { formatter: (value) => value.toLocaleString(locale) },
 			},
 		};
-	}, [isRequest, resolvedTheme, bucket, color, i18n.resolvedLanguage]);
-	const series = isRequest
-		? (["success", "failed", "limited", "unknown"] as const)
-				.filter((outcome) => outcome !== "unknown" || metric.outcomes?.unknown)
-				.map((outcome) => ({
-					name: t(`admin.stats_${outcome}`),
-					data: metric.points.map((point) => [Date.parse(point.date), point[outcome] ?? 0]),
-				}))
-		: [
+	}, [isRequest, hasBreakdown, resolvedTheme, bucket, color, i18n.resolvedLanguage]);
+	const series = hasBreakdown
+		? [
 				{
-					name: t("admin.stats_new_records"),
-					data: metric.points.map((point) => [Date.parse(point.date), point.count]),
+					name: t("admin.stats_registered"),
+					data: metric.points.map((point) => [Date.parse(point.date), point.registered ?? 0]),
 				},
-			];
+				{
+					name: t("admin.stats_anonymous"),
+					data: metric.points.map((point) => [Date.parse(point.date), point.anonymous ?? 0]),
+				},
+			]
+		: isRequest
+			? (["success", "failed", "limited", "unknown"] as const)
+					.filter((outcome) => outcome !== "unknown" || metric.outcomes?.unknown)
+					.map((outcome) => ({
+						name: t(`admin.stats_${outcome}`),
+						data: metric.points.map((point) => [Date.parse(point.date), point[outcome] ?? 0]),
+					}))
+			: [
+					{
+						name: t("admin.stats_new_records"),
+						data: metric.points.map((point) => [Date.parse(point.date), point.count]),
+					},
+				];
 
 	if (metric.total === 0) {
 		return (
