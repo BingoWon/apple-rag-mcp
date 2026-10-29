@@ -95,7 +95,7 @@ test("empty data shows real zero counts, status breakdown and the current paid s
 	]) {
 		const html = await renderCards(stats, false, language);
 		assert.equal(html.match(/href="\/admin\//g)?.length, 10);
-		assert.equal(html.split(empty).length - 1, 9);
+		assert.equal(html.split(empty).length - 1, 10);
 		assert.ok(html.includes(snapshot));
 		assert.match(html, />3</);
 		assert.doesNotMatch(html, /--/);

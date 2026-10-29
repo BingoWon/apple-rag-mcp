@@ -56,43 +56,116 @@ const METRICS = [
 	},
 ] as const;
 
+const CUMULATIVE_SIDES = [
+	{ key: "registered", label: "admin.stats_registered", color: "#7c3aed" },
+	{ key: "anonymous", label: "admin.stats_anonymous", color: "#f59e0b" },
+] as const;
+
+function cumulativeSeries(
+	metric: AdminMetricStats,
+	key: (typeof CUMULATIVE_SIDES)[number]["key"],
+): AdminMetricStats {
+	return {
+		total: metric.breakdown?.[key] ?? 0,
+		points: metric.points.map((point) => ({ date: point.date, count: point[key] ?? 0 })),
+	};
+}
+
+function CumulativeUsersCard({
+	metric,
+	bucket,
+	loading,
+}: {
+	metric?: AdminMetricStats;
+	bucket: "hour" | "day";
+	loading: boolean;
+}) {
+	const { t, i18n } = useTranslation();
+	const format = (value: number) => value.toLocaleString(i18n.resolvedLanguage);
+	return (
+		<Card className="p-4 md:col-span-2 xl:col-span-4">
+			<div className="flex items-center gap-2">
+				<IconTrendingUp className="h-4 w-4 shrink-0 text-[#7c3aed]" />
+				<h3 className="min-w-0 flex-1 truncate text-sm font-medium text-light">
+					{t("admin.stats_cumulative_users")}
+				</h3>
+				<span className="shrink-0 text-xl font-semibold tabular-nums text-light">
+					{metric ? format(metric.total) : "--"}
+				</span>
+				<Link
+					to="/admin/users"
+					title={t("admin.stats_view_details")}
+					aria-label={t("admin.stats_view_details")}
+					className="shrink-0 rounded p-1 text-muted hover:text-light focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+				>
+					<IconArrowUpRight className="h-4 w-4" />
+				</Link>
+			</div>
+			<div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2">
+				{CUMULATIVE_SIDES.map((side) => {
+					const series = metric ? cumulativeSeries(metric, side.key) : undefined;
+					return (
+						<div key={side.key} className="min-w-0">
+							<div className="mb-1 flex items-baseline justify-between gap-2">
+								<h4 className="text-xs font-medium" style={{ color: side.color }}>
+									{t(side.label)}
+								</h4>
+								<span className="text-sm font-semibold tabular-nums text-light">
+									{series ? format(series.total) : "--"}
+								</span>
+							</div>
+							{series ? (
+								<AdminTrendChart
+									metric={series}
+									bucket={bucket}
+									color={side.color}
+									height={180}
+									seriesName={t(side.label)}
+								/>
+							) : (
+								<div
+									className="flex items-center justify-center text-xs text-muted"
+									style={{ height: 180 }}
+								>
+									{t(loading ? "admin.stats_loading" : "admin.stats_unavailable")}
+								</div>
+							)}
+						</div>
+					);
+				})}
+			</div>
+			<p className="mt-2 text-xs text-muted">{t("admin.stats_cumulative_users_note")}</p>
+		</Card>
+	);
+}
+
 function AudienceCard({
 	kind,
 	metric,
 	bucket,
 	loading,
 }: {
-	kind: "cumulative_users" | "new_users" | "active_users";
+	kind: "new_users" | "active_users";
 	metric?: AdminMetricStats;
 	bucket: "hour" | "day";
 	loading: boolean;
 }) {
 	const { t, i18n } = useTranslation();
-	const isCumulative = kind === "cumulative_users";
 	const isNew = kind === "new_users";
-	const Icon = isCumulative ? IconTrendingUp : isNew ? IconUserPlus : IconActivity;
-	const color = isCumulative ? "#7c3aed" : isNew ? "#2563eb" : "#0d9488";
-	const title = isCumulative
-		? "admin.stats_cumulative_users"
-		: isNew
-			? "admin.stats_new_users"
-			: "admin.stats_active_users";
-	const note = isCumulative
-		? "admin.stats_cumulative_users_note"
-		: isNew
-			? "admin.stats_new_users_note"
-			: "admin.stats_active_users_note";
-	const height = isCumulative ? 220 : 180;
+	const Icon = isNew ? IconUserPlus : IconActivity;
+	const color = isNew ? "#2563eb" : "#0d9488";
 	return (
-		<Card className={`p-4 md:col-span-2 ${isCumulative ? "xl:col-span-4" : "xl:col-span-2"}`}>
+		<Card className="p-4 md:col-span-2 xl:col-span-2">
 			<div className="flex items-center gap-2">
 				<Icon className="h-4 w-4 shrink-0" style={{ color }} />
-				<h3 className="min-w-0 flex-1 truncate text-sm font-medium text-light">{t(title)}</h3>
+				<h3 className="min-w-0 flex-1 truncate text-sm font-medium text-light">
+					{t(isNew ? "admin.stats_new_users" : "admin.stats_active_users")}
+				</h3>
 				<span className="shrink-0 text-xl font-semibold tabular-nums text-light">
 					{metric ? metric.total.toLocaleString(i18n.resolvedLanguage) : "--"}
 				</span>
 				<Link
-					to={kind === "active_users" ? "/admin/search-logs" : "/admin/users"}
+					to={isNew ? "/admin/users" : "/admin/search-logs"}
 					title={t("admin.stats_view_details")}
 					aria-label={t("admin.stats_view_details")}
 					className="shrink-0 rounded p-1 text-muted hover:text-light focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
@@ -101,13 +174,16 @@ function AudienceCard({
 				</Link>
 			</div>
 			{metric ? (
-				<AdminTrendChart metric={metric} bucket={bucket} color={color} height={height} />
+				<AdminTrendChart metric={metric} bucket={bucket} color={color} height={180} />
 			) : (
-				<div className="flex items-center justify-center text-xs text-muted" style={{ height }}>
+				<div
+					className="flex items-center justify-center text-xs text-muted"
+					style={{ height: 180 }}
+				>
 					{t(loading ? "admin.stats_loading" : "admin.stats_unavailable")}
 				</div>
 			)}
-			{(isNew || isCumulative) && metric?.breakdown && (
+			{isNew && metric?.breakdown && (
 				<table className="mt-2 w-full text-xs">
 					<thead>
 						<tr className="text-left text-muted">
@@ -138,7 +214,9 @@ function AudienceCard({
 					</tbody>
 				</table>
 			)}
-			<p className="mt-2 text-xs text-muted">{t(note)}</p>
+			<p className="mt-2 text-xs text-muted">
+				{t(isNew ? "admin.stats_new_users_note" : "admin.stats_active_users_note")}
+			</p>
 		</Card>
 	);
 }
@@ -153,8 +231,7 @@ export function AdminStatsCards({
 	const { t, i18n } = useTranslation();
 	return (
 		<div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4" aria-busy={loading}>
-			<AudienceCard
-				kind="cumulative_users"
+			<CumulativeUsersCard
 				metric={stats?.metrics.cumulative_users}
 				bucket={stats?.bucket ?? "day"}
 				loading={loading}

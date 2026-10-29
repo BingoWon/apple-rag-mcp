@@ -17,11 +17,13 @@ export const AdminTrendChart = memo(function AdminTrendChart({
 	bucket,
 	color,
 	height: heightProp,
+	seriesName,
 }: {
 	metric: AdminMetricStats;
 	bucket: "hour" | "day";
 	color: string;
 	height?: number;
+	seriesName?: string;
 }) {
 	const { t, i18n } = useTranslation();
 	const { resolvedTheme } = useTheme();
@@ -118,7 +120,7 @@ export const AdminTrendChart = memo(function AdminTrendChart({
 					}))
 			: [
 					{
-						name: t("admin.stats_new_records"),
+						name: seriesName ?? t("admin.stats_new_records"),
 						data: metric.points.map((point) => [Date.parse(point.date), point.count]),
 					},
 				];
