@@ -12,18 +12,31 @@ export const OUTCOME_COLORS = {
 	unknown: "#94a3b8",
 };
 
+/** Zoom the axis to the values in range so a small change on a large total stays visible. */
+export function fittedCountAxis(values: number[]) {
+	const finite = values.filter((value) => Number.isFinite(value));
+	if (finite.length === 0) return { min: 0, max: 1 };
+	const lowest = Math.min(...finite);
+	const highest = Math.max(...finite);
+	const span = highest - lowest;
+	const pad = span === 0 ? Math.max(1, Math.abs(highest) * 0.05) : span * 0.2;
+	return { min: Math.max(0, lowest - pad), max: highest + pad };
+}
+
 export const AdminTrendChart = memo(function AdminTrendChart({
 	metric,
 	bucket,
 	color,
 	height: heightProp,
 	seriesName,
+	fitScale = false,
 }: {
 	metric: AdminMetricStats;
 	bucket: "hour" | "day";
 	color: string;
 	height?: number;
 	seriesName?: string;
+	fitScale?: boolean;
 }) {
 	const { t, i18n } = useTranslation();
 	const { resolvedTheme } = useTheme();
@@ -32,6 +45,7 @@ export const AdminTrendChart = memo(function AdminTrendChart({
 		(point) => point.registered !== undefined || point.anonymous !== undefined,
 	);
 	const height = heightProp ?? (isRequest ? 180 : 120);
+	const fitted = fitScale ? fittedCountAxis(metric.points.map((point) => point.count)) : undefined;
 	const options = useMemo<ApexOptions>(() => {
 		const locale = i18n.resolvedLanguage?.startsWith("zh") ? "zh-CN" : "en";
 		const formatter = new Intl.DateTimeFormat(locale, {
@@ -43,7 +57,7 @@ export const AdminTrendChart = memo(function AdminTrendChart({
 		return {
 			theme: { mode: resolvedTheme },
 			chart: {
-				type: isRequest ? "bar" : "area",
+				type: isRequest ? "bar" : fitScale ? "line" : "area",
 				stacked: isRequest || hasBreakdown,
 				animations: { enabled: false },
 				sparkline: { enabled: false },
@@ -63,7 +77,7 @@ export const AdminTrendChart = memo(function AdminTrendChart({
 				foreColor: resolvedTheme === "dark" ? "#94a3b8" : "#64748b",
 			},
 			plotOptions: { bar: { columnWidth: "65%", borderRadius: 2 } },
-			stroke: { width: isRequest ? 0 : 2, curve: "straight" },
+			stroke: { width: isRequest ? 0 : fitScale ? 3 : 2, curve: "straight" },
 			fill: { opacity: isRequest ? 1 : 0.2, type: "solid" },
 			colors: isRequest
 				? Object.values(OUTCOME_COLORS)
@@ -87,8 +101,10 @@ export const AdminTrendChart = memo(function AdminTrendChart({
 				},
 			},
 			yaxis: {
-				min: 0,
-				forceNiceScale: true,
+				min: fitted?.min ?? 0,
+				max: fitted?.max,
+				forceNiceScale: !fitScale,
+				decimalsInFloat: 0,
 				labels: { formatter: (value) => Math.round(value).toLocaleString(locale) },
 			},
 			tooltip: {
@@ -99,7 +115,17 @@ export const AdminTrendChart = memo(function AdminTrendChart({
 				y: { formatter: (value) => value.toLocaleString(locale) },
 			},
 		};
-	}, [isRequest, hasBreakdown, resolvedTheme, bucket, color, i18n.resolvedLanguage]);
+	}, [
+		isRequest,
+		hasBreakdown,
+		resolvedTheme,
+		bucket,
+		color,
+		i18n.resolvedLanguage,
+		fitScale,
+		fitted?.min,
+		fitted?.max,
+	]);
 	const series = hasBreakdown
 		? [
 				{
@@ -144,7 +170,7 @@ export const AdminTrendChart = memo(function AdminTrendChart({
 				<ApexChart
 					options={options}
 					series={series}
-					type={isRequest ? "bar" : "area"}
+					type={isRequest ? "bar" : fitScale ? "line" : "area"}
 					height={height}
 				/>
 			</Suspense>

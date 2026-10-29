@@ -121,6 +121,7 @@ function CumulativeUsersCard({
 									color={side.color}
 									height={180}
 									seriesName={t(side.label)}
+									fitScale
 								/>
 							) : (
 								<div

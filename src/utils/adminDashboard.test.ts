@@ -5,6 +5,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { I18nextProvider } from "react-i18next";
 import { MemoryRouter } from "react-router-dom";
+import { fittedCountAxis } from "../components/admin/AdminTrendChart.js";
 import { ThemeProvider } from "../components/providers/ThemeProvider.js";
 import en from "../i18n/en.json";
 import zh from "../i18n/zh.json";
@@ -44,6 +45,14 @@ async function renderCards(stats: AdminDashboardStats | null, loading: boolean, 
 		),
 	);
 }
+
+test("cumulative axis fits the change in range instead of starting at zero", () => {
+	const axis = fittedCountAxis([10_000, 10_020, 10_010]);
+	assert.ok(axis.min > 9_000);
+	assert.ok(axis.min < 10_000);
+	assert.ok(axis.max > 10_020);
+	assert.equal(fittedCountAxis([0, 4]).min, 0);
+});
 
 test("loading and failed statistics retain all ten detail links without reporting zeros", async () => {
 	for (const loading of [true, false]) {
