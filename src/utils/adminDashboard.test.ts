@@ -45,10 +45,10 @@ async function renderCards(stats: AdminDashboardStats | null, loading: boolean, 
 	);
 }
 
-test("loading and failed statistics retain all nine detail links without reporting zeros", async () => {
+test("loading and failed statistics retain all ten detail links without reporting zeros", async () => {
 	for (const loading of [true, false]) {
 		const html = await renderCards(null, loading);
-		assert.equal(html.match(/href="\/admin\//g)?.length, 9);
+		assert.equal(html.match(/href="\/admin\//g)?.length, 10);
 		assert.match(html, /--/);
 		assert.doesNotMatch(html, />0</);
 		assert.ok(html.includes(loading ? "Loading statistics..." : "Statistics unavailable"));
@@ -76,6 +76,11 @@ test("empty data shows real zero counts, status breakdown and the current paid s
 				points: [{ ...point, registered: 0, anonymous: 0 }],
 				breakdown: { registered: 0, anonymous: 0 },
 			},
+			cumulative_users: {
+				total: 0,
+				points: [{ ...point, registered: 0, anonymous: 0 }],
+				breakdown: { registered: 0, anonymous: 0 },
+			},
 			tokens: { total: 0, points: [point] },
 			ips: { total: 0, points: [point] },
 			messages: { total: 0, points: [point] },
@@ -89,8 +94,8 @@ test("empty data shows real zero counts, status breakdown and the current paid s
 		["zh", "所选期间暂无新记录", "当前总数"],
 	]) {
 		const html = await renderCards(stats, false, language);
-		assert.equal(html.match(/href="\/admin\//g)?.length, 9);
-		assert.equal(html.split(empty).length - 1, 8);
+		assert.equal(html.match(/href="\/admin\//g)?.length, 10);
+		assert.equal(html.split(empty).length - 1, 9);
 		assert.ok(html.includes(snapshot));
 		assert.match(html, />3</);
 		assert.doesNotMatch(html, /--/);
@@ -99,6 +104,7 @@ test("empty data shows real zero counts, status breakdown and the current paid s
 		assert.ok(html.includes(language === "zh" ? "新用户" : "New users"));
 		assert.ok(html.includes(language === "zh" ? "匿名用户" : "Anonymous"));
 		assert.ok(html.includes(language === "zh" ? "实际使用用户" : "Active users"));
+		assert.ok(html.includes(language === "zh" ? "累计用户" : "Cumulative users"));
 	}
 });
 
@@ -122,6 +128,11 @@ test("new-user table and active-user breakdown use real registered and anonymous
 				points: [{ ...point, count: 4, registered: 1, anonymous: 3 }],
 				breakdown: { registered: 1, anonymous: 3 },
 			},
+			cumulative_users: {
+				total: 9,
+				points: [{ ...point, count: 9, registered: 4, anonymous: 5 }],
+				breakdown: { registered: 4, anonymous: 5 },
+			},
 			tokens: { total: 0, points: [point] },
 			ips: { total: 0, points: [point] },
 			messages: { total: 0, points: [point] },
@@ -137,6 +148,9 @@ test("new-user table and active-user breakdown use real registered and anonymous
 	assert.ok(html.includes("Anonymous"));
 	assert.ok(html.includes("Active users"));
 	assert.ok(html.includes("New signups plus first-seen anonymous identities"));
+	assert.ok(html.includes("Cumulative users"));
+	assert.ok(html.includes("accounts that still exist"));
 	assert.match(html, />5</);
 	assert.match(html, />4</);
+	assert.match(html, />9</);
 });

@@ -132,6 +132,16 @@ test("global daily statistics handle SQLite/ISO dates, Singapore boundaries, out
 	assert.equal(data.metrics.new_users.breakdown?.registered, 2);
 	assert.equal(data.metrics.new_users.breakdown?.anonymous, 0);
 	assert.equal(data.metrics.active_users.breakdown?.anonymous, 1);
+	assert.equal(data.metrics.cumulative_users.total, 4);
+	assert.deepEqual(data.metrics.cumulative_users.breakdown, { registered: 3, anonymous: 1 });
+	assert.equal(data.metrics.cumulative_users.points[0]?.registered, 2);
+	assert.equal(data.metrics.cumulative_users.points[0]?.anonymous, 1);
+	assert.equal(data.metrics.cumulative_users.points.at(-1)?.count, 4);
+	assert.ok(
+		data.metrics.cumulative_users.points.every(
+			(point, index, points) => index === 0 || point.count >= points[index - 1].count,
+		),
+	);
 	assert.equal(data.metrics.tokens.total, 1);
 	assert.equal(data.metrics.ips.total, 1);
 	assert.equal(data.metrics.messages.total, 1);
@@ -154,14 +164,14 @@ test("global daily statistics handle SQLite/ISO dates, Singapore boundaries, out
 	assert.equal(data.metrics.searches.points.at(-1)?.count, 3);
 	for (const [key, metric] of Object.entries(data.metrics)) {
 		assert.equal(metric.points.length, 7);
-		if (key !== "active_users") {
+		if (key !== "active_users" && key !== "cumulative_users") {
 			assert.equal(
 				metric.total,
 				metric.points.reduce((sum, point) => sum + point.count, 0),
 			);
 		}
 	}
-	assert.equal(queries.length, 10);
+	assert.equal(queries.length, 11);
 	for (const table of ["search_logs", "fetch_logs"]) {
 		const sql = queries.find((query) => query.includes(`FROM ${table}`))!;
 		const plan = sqlite
@@ -197,6 +207,11 @@ test("new and active user metrics count first-seen anonymous identities and dedu
 	assert.equal(data.metrics.active_users.points.at(-1)?.count, 3);
 	assert.equal(data.metrics.active_users.points.at(-1)?.registered, 1);
 	assert.equal(data.metrics.active_users.points.at(-1)?.anonymous, 2);
+	assert.equal(data.metrics.cumulative_users.total, 4);
+	assert.deepEqual(data.metrics.cumulative_users.breakdown, { registered: 2, anonymous: 2 });
+	assert.equal(data.metrics.cumulative_users.points[0]?.count, 2);
+	assert.equal(data.metrics.cumulative_users.points.at(-1)?.registered, 2);
+	assert.equal(data.metrics.cumulative_users.points.at(-1)?.anonymous, 2);
 	assert.ok(
 		data.metrics.active_users.total <
 			data.metrics.active_users.points.reduce((sum, point) => sum + point.count, 0),

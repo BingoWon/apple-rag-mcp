@@ -97,7 +97,15 @@ export interface AdminDashboardStats {
 	bucket: "hour" | "day";
 	generated_at: string;
 	metrics: Record<
-		"users" | "tokens" | "ips" | "searches" | "fetches" | "messages" | "new_users" | "active_users",
+		| "users"
+		| "tokens"
+		| "ips"
+		| "searches"
+		| "fetches"
+		| "messages"
+		| "new_users"
+		| "active_users"
+		| "cumulative_users",
 		AdminMetricStats
 	>;
 	subscriptions: { total: number; pro: number; enterprise: number };

@@ -104,6 +104,7 @@ const statsRoute = createRoute({
 								messages: metricSchema,
 								new_users: metricSchema,
 								active_users: metricSchema,
+								cumulative_users: metricSchema,
 							}),
 							subscriptions: z.object({
 								total: z.number(),
@@ -174,12 +175,15 @@ app.openapi(statsRoute, async (c) => {
 			), first_seen AS (
 				SELECT user_id, MIN(created_at) AS first_seen FROM all_logs GROUP BY user_id
 			)
-			SELECT strftime('${format}', first_seen, '+8 hours') AS bucket, COUNT(*) AS count
+			SELECT CASE
+					WHEN julianday(first_seen) < julianday(?) THEN '__before__'
+					ELSE strftime('${format}', first_seen, '+8 hours')
+				END AS bucket,
+				COUNT(*) AS count
 			FROM first_seen
-			WHERE first_seen >= ? AND first_seen < ?
-			  AND julianday(first_seen) >= julianday(?) AND julianday(first_seen) < julianday(?)
+			WHERE julianday(first_seen) < julianday(?)
 			GROUP BY bucket ORDER BY bucket`,
-		).bind(start.slice(0, 10), new Date(range.end + DAY).toISOString().slice(0, 10), start, end);
+		).bind(start, end);
 		const activeUsersQuery = c.env.DB.prepare(
 			`WITH all_logs AS (
 				SELECT user_id, created_at FROM search_logs
@@ -227,7 +231,10 @@ app.openapi(statsRoute, async (c) => {
 			start,
 			end,
 		);
-		statements.push(newAnonymousQuery, activeUsersQuery, activeTotalQuery);
+		const registeredBaselineQuery = c.env.DB.prepare(
+			"SELECT COUNT(*) AS count FROM users WHERE julianday(created_at) < julianday(?)",
+		).bind(start);
+		statements.push(newAnonymousQuery, activeUsersQuery, activeTotalQuery, registeredBaselineQuery);
 		statements.push(
 			c.env.DB.prepare(
 				`SELECT plan_type, COUNT(*) AS count FROM user_subscriptions
@@ -298,6 +305,25 @@ app.openapi(statsRoute, async (c) => {
 			});
 		}
 		metrics.new_users = newUsers;
+		const registeredBaseline = Number(results[METRICS.length + 3].results[0]?.count) || 0;
+		const anonymousBaseline = Number(newAnonymousRows.get("__before__")?.count) || 0;
+		let registeredTotal = registeredBaseline;
+		let anonymousTotal = anonymousBaseline;
+		const cumulativePoints = newUsers.points.map((point) => {
+			registeredTotal += point.registered ?? 0;
+			anonymousTotal += point.anonymous ?? 0;
+			return {
+				date: point.date,
+				count: registeredTotal + anonymousTotal,
+				registered: registeredTotal,
+				anonymous: anonymousTotal,
+			};
+		});
+		metrics.cumulative_users = {
+			total: registeredTotal + anonymousTotal,
+			points: cumulativePoints,
+			breakdown: { registered: registeredTotal, anonymous: anonymousTotal },
+		};
 
 		const activeRows = new Map(
 			results[METRICS.length + 1].results.map((row) => [String(row.bucket), row]),
@@ -328,7 +354,7 @@ app.openapi(statsRoute, async (c) => {
 		};
 
 		const subscriptions = { total: 0, pro: 0, enterprise: 0 };
-		for (const row of results[METRICS.length + 3].results) {
+		for (const row of results[METRICS.length + 4].results) {
 			if (row.plan_type === "pro" || row.plan_type === "enterprise") {
 				subscriptions[row.plan_type] = Number(row.count) || 0;
 				subscriptions.total += Number(row.count) || 0;
