@@ -1,5 +1,6 @@
 import { createRoute, z } from "@hono/zod-openapi";
 import type { AdminDashboardStats, AdminMetricStats, AdminStatsQuery } from "../../../../src/types";
+import { emptyOutcomes, TOOL_OUTCOMES } from "../../../shared/tool-outcomes.js";
 import { logger } from "../../utils/logger";
 import { createOpenAPIApp } from "../../utils/openapi";
 
@@ -43,6 +44,9 @@ const pointSchema = z.object({
 	date: z.string(),
 	count: z.number(),
 	success: z.number().optional(),
+	degraded: z.number().optional(),
+	no_content: z.number().optional(),
+	invalid: z.number().optional(),
 	failed: z.number().optional(),
 	limited: z.number().optional(),
 	unknown: z.number().optional(),
@@ -55,6 +59,9 @@ const metricSchema = z.object({
 	outcomes: z
 		.object({
 			success: z.number(),
+			degraded: z.number(),
+			no_content: z.number(),
+			invalid: z.number(),
 			failed: z.number(),
 			limited: z.number(),
 			unknown: z.number(),
@@ -153,10 +160,10 @@ app.openapi(statsRoute, async (c) => {
 		const statements = METRICS.map(({ key, table }) => {
 			const statuses =
 				key === "searches" || key === "fetches"
-					? `, SUM(CASE WHEN status_code = 200 THEN 1 ELSE 0 END) AS success
-					   , SUM(CASE WHEN status_code NOT IN (200, 429) THEN 1 ELSE 0 END) AS failed
-					   , SUM(CASE WHEN status_code = 429 THEN 1 ELSE 0 END) AS limited
-					   , SUM(CASE WHEN status_code IS NULL THEN 1 ELSE 0 END) AS unknown`
+					? TOOL_OUTCOMES.map(
+							(outcome) =>
+								`, SUM(CASE WHEN outcome = '${outcome}' THEN 1 ELSE 0 END) AS ${outcome}`,
+						).join("")
 					: "";
 			// Date-prefix bounds retain index use; julianday handles both ISO and SQLite timestamps.
 			return c.env.DB.prepare(
@@ -256,7 +263,7 @@ app.openapi(statsRoute, async (c) => {
 			const metric: AdminMetricStats = {
 				total: 0,
 				points: [],
-				...(hasStatus ? { outcomes: { success: 0, failed: 0, limited: 0, unknown: 0 } } : {}),
+				...(hasStatus ? { outcomes: emptyOutcomes() } : {}),
 			};
 			for (let timestamp = range.firstBucket; timestamp <= lastBucket; timestamp += range.step) {
 				const bucket = new Date(timestamp + OFFSET)
@@ -268,11 +275,14 @@ app.openapi(statsRoute, async (c) => {
 				if (metric.outcomes) {
 					const outcomes = {
 						success: Number(row?.success) || 0,
+						degraded: Number(row?.degraded) || 0,
+						no_content: Number(row?.no_content) || 0,
+						invalid: Number(row?.invalid) || 0,
 						failed: Number(row?.failed) || 0,
 						limited: Number(row?.limited) || 0,
 						unknown: Number(row?.unknown) || 0,
 					};
-					for (const outcome of ["success", "failed", "limited", "unknown"] as const) {
+					for (const outcome of TOOL_OUTCOMES) {
 						metric.outcomes[outcome] += outcomes[outcome];
 					}
 					metric.points.push({ ...point, ...outcomes });

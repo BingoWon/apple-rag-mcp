@@ -33,8 +33,8 @@ for (const tool of ["search", "fetch"] as const) {
 						throw reason;
 					},
 				},
-				database: {
-					getPageByUrl: async () => {
+				pages: {
+					getPage: async () => {
 						calls++;
 						controller.abort(reason);
 						throw reason;

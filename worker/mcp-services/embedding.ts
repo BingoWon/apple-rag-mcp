@@ -108,7 +108,11 @@ export class FallbackEmbeddingService implements IEmbeddingService {
 		private readonly fallback: IEmbeddingService,
 	) {}
 
-	async createEmbedding(text: string, signal?: AbortSignal): Promise<number[]> {
+	async createEmbedding(
+		text: string,
+		signal?: AbortSignal,
+		onFallback?: (reason: string) => void,
+	): Promise<number[]> {
 		if (!text?.trim()) {
 			throw new Error("Text cannot be empty for embedding generation");
 		}
@@ -119,6 +123,7 @@ export class FallbackEmbeddingService implements IEmbeddingService {
 			logger.warn(
 				`Primary embedding provider failed; using DeepInfra fallback: ${error instanceof Error ? error.message : String(error)}`,
 			);
+			onFallback?.("EMBEDDING_FALLBACK");
 			return this.fallback.createEmbedding(text, signal);
 		}
 	}

@@ -62,6 +62,7 @@ export class RAGService {
 
 		return {
 			success: true,
+			degradations: searchResult.degradations,
 			query: trimmedQuery,
 			results: formattedResults,
 			additionalUrls: searchResult.additionalUrls,

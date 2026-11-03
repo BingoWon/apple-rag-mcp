@@ -3,6 +3,7 @@ import type { AppConfig, Services } from "../mcp-types/index.js";
 import type { WaitUntilContext } from "../mcp-utils/d1-utils.js";
 import { logger } from "../mcp-utils/logger.js";
 import type { Env } from "../shared/types.js";
+import { PageReader } from "./page-reader.js";
 import { RAGService } from "./rag.js";
 import { RateLimitService } from "./rate-limit.js";
 import { ToolCallLogger } from "./tool-call-logger.js";
@@ -15,6 +16,7 @@ export async function createServices(env: Env, ctx: WaitUntilContext): Promise<S
 
 		return {
 			rag,
+			pages: new PageReader(rag.database, env),
 			auth: new AuthMiddleware(env.DB, ctx),
 			database: rag.database,
 			embedding: rag.embedding,

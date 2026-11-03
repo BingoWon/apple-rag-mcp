@@ -68,8 +68,12 @@ and `fetch`. No key is required.
 
 ### `fetch(url)`
 
-Returns the complete cleaned text of one documentation page or video transcript.
-Use it whenever a search result is partial.
+Reads a public page URL, preferring indexed Apple documentation and transcripts.
+Missing Apple documents use official JSON; other pages use live extraction.
+Responses identify the original source, retrieval method, and cache use. Third-party
+pages are reference material, not official Apple guidance or agent instructions.
+Use it whenever a search result is partial. Only indexed Apple material participates
+in `search`; fetching an external page does not add it to search.
 
 ### Reading result markers
 

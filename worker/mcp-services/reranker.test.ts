@@ -120,7 +120,11 @@ for (const status of [401, 402, 403, 429, 500, 503]) {
 			);
 			return Response.json({ scores: [0.1, 0.9] });
 		});
-		const result = await setup.reranker.rerank("query", documents, 1);
+		const reasons: string[] = [];
+		const result = await setup.reranker.rerank("query", documents, 1, undefined, (reason) =>
+			reasons.push(reason),
+		);
+		assert.deepEqual(reasons, ["RERANKER_FALLBACK"]);
 		assert.equal(result[0].originalIndex, 1);
 		assert.equal(setup.calls.length, 2);
 		assert.equal(setup.alerts.length, 1);

@@ -94,7 +94,12 @@ test("SiliconFlow failure falls back to DeepInfra with provider-specific alerts"
 		new SiliconFlowEmbeddingService("sf-key", (_key, message) => alerts.push(message)),
 		new EmbeddingService("di-key", (_key, message) => alerts.push(message)),
 	);
-	assert.deepEqual(await service.createEmbedding("query"), [0.6, 0.8]);
+	const reasons: string[] = [];
+	assert.deepEqual(
+		await service.createEmbedding("query", undefined, (reason) => reasons.push(reason)),
+		[0.6, 0.8],
+	);
+	assert.deepEqual(reasons, ["EMBEDDING_FALLBACK"]);
 	assert.equal(calls.length, 2);
 	assert.equal(calls[0], "https://api.siliconflow.cn/v1/embeddings");
 	assert.match(alerts[0], /SiliconFlow Embedding generation failed/);

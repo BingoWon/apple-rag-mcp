@@ -41,6 +41,13 @@ The [hosted service](https://apple-rag.com/) connects your agent to an Apple kno
 
 The source is public for inspection and self-hosting. Running your own instance means operating a database, building and refreshing your corpus, and managing your model API credentials.
 
+`search` retrieves the indexed Apple corpus. `fetch` reads indexed pages first,
+resolves Apple redirects, and uses official document JSON or Firecrawl when content
+is missing. Responses identify the original source and retrieval method. Public
+webpages are cached separately from the RAG corpus; arbitrary third-party pages
+never enter search automatically. See [web retrieval operations](ops/web-retrieval.md)
+for limits, setup, and log meanings.
+
 [Start free](https://apple-rag.com/). [Pro](https://apple-rag.com/#pricing) includes 50,000 tool calls/week and 50/minute for $1/week, shared by `search` and `fetch`.
 
 ---

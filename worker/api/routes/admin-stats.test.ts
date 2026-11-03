@@ -63,9 +63,24 @@ function insertLog(
 		table === "search_logs" ? "requested_query, actual_query" : "requested_url, actual_url";
 	sqlite
 		.prepare(
-			`INSERT INTO ${table} (user_id, ${columns}, status_code, created_at) VALUES (?, ?, ?, ?, ?)`,
+			`INSERT INTO ${table} (user_id, ${columns}, status_code, outcome, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
 		)
-		.run(userId, "test", "test", status, createdAt);
+		.run(
+			userId,
+			"test",
+			"test",
+			status,
+			status === 200
+				? "success"
+				: status === 429
+					? "limited"
+					: status === 404
+						? "no_content"
+						: status === null
+							? "unknown"
+							: "failed",
+			createdAt,
+		);
 }
 
 test("admin statistics require the existing password before querying data", async () => {
@@ -149,13 +164,19 @@ test("global daily statistics handle SQLite/ISO dates, Singapore boundaries, out
 	assert.equal(data.metrics.fetches.total, 2);
 	assert.deepEqual(data.metrics.searches.outcomes, {
 		success: 1,
+		degraded: 0,
+		no_content: 0,
+		invalid: 0,
 		failed: 2,
 		limited: 1,
 		unknown: 1,
 	});
 	assert.deepEqual(data.metrics.fetches.outcomes, {
 		success: 1,
-		failed: 1,
+		degraded: 0,
+		no_content: 1,
+		invalid: 0,
+		failed: 0,
 		limited: 0,
 		unknown: 0,
 	});

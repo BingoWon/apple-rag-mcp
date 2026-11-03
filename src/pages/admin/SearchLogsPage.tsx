@@ -15,7 +15,8 @@ interface AdminSearchLog {
 	result_count: number;
 	response_time_ms: number | null;
 	status_code: number | null;
-	error_code: string | null;
+	reason: string | null;
+	outcome: string;
 	country_code: string | null;
 	created_at: string;
 }
@@ -54,8 +55,14 @@ export default function AdminSearchLogsPage() {
 			},
 			{ key: "result_count", label: t("admin.col_results"), width: "w-20" },
 			{ key: "response_time_ms", label: t("admin.col_time_s"), width: "w-24" },
+			{
+				key: "outcome",
+				label: t("admin.col_outcome"),
+				width: "w-28",
+				render: (value: unknown) => t(`admin.stats_${value}`),
+			},
 			{ key: "status_code", label: t("admin.col_status"), width: "w-20" },
-			{ key: "error_code", label: t("admin.col_error"), width: "w-32" },
+			{ key: "reason", label: t("admin.col_reason"), width: "w-32" },
 			{ key: "country_code", label: "🌍", width: "w-12" },
 			{ key: "created_at", label: t("admin.col_created"), width: "w-40" },
 		],

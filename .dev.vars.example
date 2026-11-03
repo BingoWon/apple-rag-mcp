@@ -49,6 +49,11 @@ SILICONFLOW_API_KEY=
 # Jev primary reranker (DeepInfra 8B remains the fallback)
 TYPESAFE_API_KEY=
 
+# ─── Live webpage reading (keyless when no key is set) ───
+FIRECRAWL_API_KEY=
+# Shared UTC-day spending ceiling; 0 disables cloud webpage reads.
+FIRECRAWL_DAILY_LIMIT=25
+
 # ─── Telegram (optional) ─────────────────────────────────
 TELEGRAM_ALERT_BOT_URL=
 TELEGRAM_STATS_BOT_URL=

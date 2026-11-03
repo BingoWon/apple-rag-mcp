@@ -3,6 +3,7 @@
  * Administrative access to search_logs table
  */
 import { createRoute, z } from "@hono/zod-openapi";
+import { TOOL_OUTCOMES, type ToolOutcome } from "../../../shared/tool-outcomes.js";
 import { logger } from "../../utils/logger";
 import { createOpenAPIApp } from "../../utils/openapi";
 
@@ -17,7 +18,8 @@ const AdminSearchLogSchema = z.object({
 	result_count: z.number(),
 	response_time_ms: z.number().nullable(),
 	status_code: z.number().nullable(),
-	error_code: z.string().nullable(),
+	reason: z.string().nullable(),
+	outcome: z.enum(TOOL_OUTCOMES),
 	country_code: z.string().nullable(),
 	created_at: z.string(),
 });
@@ -82,7 +84,7 @@ app.openapi(getSearchLogsRoute, async (c) => {
 
 		const logsResult = await c.env.DB.prepare(`
       SELECT id, user_id, mcp_token, requested_query, actual_query, result_count,
-             response_time_ms, status_code, error_code, country_code, created_at
+             response_time_ms, status_code, error_code AS reason, outcome, country_code, created_at
       FROM search_logs
       ORDER BY created_at DESC
       LIMIT ? OFFSET ?
@@ -105,7 +107,8 @@ app.openapi(getSearchLogsRoute, async (c) => {
 				result_count: Number(row.result_count) || 0,
 				response_time_ms: row.response_time_ms ? Number(row.response_time_ms) : null,
 				status_code: row.status_code ? Number(row.status_code) : null,
-				error_code: row.error_code as string | null,
+				reason: row.reason as string | null,
+				outcome: row.outcome as ToolOutcome,
 				country_code: row.country_code as string | null,
 				created_at: row.created_at as string,
 			};

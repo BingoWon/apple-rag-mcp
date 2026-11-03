@@ -146,12 +146,12 @@ export class SearchTool {
 		authContext: AuthContext,
 		requestedQuery: string,
 		actualQuery: string,
-		ragResult: { count?: number },
+		ragResult: { count?: number; degradations?: string[] },
 		responseTime: number,
 		ipAddress: string,
 		countryCode: string | null,
 		statusCode = 200,
-		errorCode?: string,
+		reason?: string,
 	): void {
 		this.services.logger?.logSearch({
 			userId: authContext.userId || `anon_${ipAddress}`,
@@ -162,7 +162,17 @@ export class SearchTool {
 			ipAddress,
 			countryCode,
 			statusCode,
-			errorCode,
+			reason: reason ?? (ragResult.degradations?.join(",") || null),
+			outcome:
+				statusCode === 429
+					? "limited"
+					: statusCode >= 500
+						? "failed"
+						: ragResult.degradations?.length
+							? "degraded"
+							: ragResult.count
+								? "success"
+								: "no_content",
 			mcpToken: authContext.token || null,
 		});
 	}

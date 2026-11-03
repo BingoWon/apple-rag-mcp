@@ -1,3 +1,4 @@
+import type { PageReader, StoredWebPage } from "../mcp-services/page-reader.js";
 import type { ToolCallLogger } from "../mcp-services/tool-call-logger.js";
 
 export interface RAGQuery {
@@ -19,6 +20,7 @@ export interface RAGResult {
 	additionalUrls: AdditionalUrl[];
 	count: number;
 	processing_time_ms: number;
+	degradations: string[];
 }
 
 export interface SearchResult {
@@ -34,6 +36,7 @@ export interface SearchResult {
 
 export interface Services {
 	rag: RAGService;
+	pages: PageReader;
 	auth: { optionalAuth(request: Request): Promise<AuthContext> };
 	database: DatabaseService;
 	embedding: EmbeddingService;
@@ -56,11 +59,19 @@ export interface DatabaseService {
 	semanticSearch(embedding: number[], options: SearchOptions): Promise<SearchResult[]>;
 	keywordSearch(query: string, options: SearchOptions): Promise<SearchResult[]>;
 	getPageByUrl(url: string): Promise<PageResult | null>;
+	getCachedPage(url: string): Promise<StoredWebPage | null>;
+	cachePage(requestedUrl: string, page: StoredWebPage): Promise<void>;
+	reserveWebFetch(limit: number): Promise<boolean>;
+	enqueuePage(url: string): Promise<void>;
 	close(): Promise<void>;
 }
 
 export interface EmbeddingService {
-	createEmbedding(text: string, signal?: AbortSignal): Promise<number[]>;
+	createEmbedding(
+		text: string,
+		signal?: AbortSignal,
+		onFallback?: (reason: string) => void,
+	): Promise<number[]>;
 }
 
 export interface SearchOptions {

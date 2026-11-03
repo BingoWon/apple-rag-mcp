@@ -23,8 +23,21 @@ function createServices(): Services {
 					},
 				],
 				additionalUrls: [],
+				degradations: [],
 				count: 1,
 				processing_time_ms: 1,
+			}),
+		},
+		pages: {
+			getPage: async (url: string) => ({
+				url,
+				title: "Swift",
+				content: "Complete Swift documentation.",
+				provider: "index",
+				source: "apple",
+				status: 200,
+				cacheHit: false,
+				pageId: "page-1",
 			}),
 		},
 		auth: {

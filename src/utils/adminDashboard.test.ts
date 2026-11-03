@@ -66,7 +66,15 @@ test("loading and failed statistics retain all ten detail links without reportin
 
 test("empty data shows real zero counts, status breakdown and the current paid snapshot in both languages", async () => {
 	const point = { date: "2026-10-08T16:00:00Z", count: 0 };
-	const outcomes = { success: 0, failed: 0, limited: 0, unknown: 0 };
+	const outcomes = {
+		success: 0,
+		degraded: 0,
+		no_content: 0,
+		invalid: 0,
+		failed: 0,
+		limited: 0,
+		unknown: 0,
+	};
 	const stats: AdminDashboardStats = {
 		start: point.date,
 		end: "2026-10-09T04:15:00Z",
@@ -108,7 +116,7 @@ test("empty data shows real zero counts, status breakdown and the current paid s
 		assert.ok(html.includes(snapshot));
 		assert.match(html, />3</);
 		assert.doesNotMatch(html, /--/);
-		assert.ok(html.includes(language === "zh" ? "限流" : "Rate limited"));
+		assert.ok(html.includes(language === "zh" ? "成功" : "Success"));
 		assert.ok(!html.includes(language === "zh" ? "状态未知" : "Unknown status"));
 		assert.ok(html.includes(language === "zh" ? "新用户" : "New users"));
 		assert.ok(html.includes(language === "zh" ? "匿名用户" : "Anonymous"));

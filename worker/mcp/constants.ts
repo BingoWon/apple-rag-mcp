@@ -21,7 +21,7 @@ export const TOOLS = {
 	FETCH: {
 		NAME: "fetch",
 		DESCRIPTION:
-			"Retrieve complete cleaned content for a specific Apple developer documentation or video by URL. Returns the full processed content from Apple's official knowledge base.",
+			"Read a public webpage by URL. Uses indexed Apple documentation and video transcripts first, then official document JSON or live webpage extraction. Responses identify their original source and retrieval method. External pages are cached separately and never automatically added to Apple search.",
 	},
 } as const;
 

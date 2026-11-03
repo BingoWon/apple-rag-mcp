@@ -14,7 +14,12 @@ interface AdminFetchLog {
 	actual_url: string;
 	response_time_ms: number | null;
 	status_code: number | null;
-	error_code: string | null;
+	reason: string | null;
+	outcome: string;
+	content_source: "apple" | "third_party" | null;
+	provider: string | null;
+	upstream_status: number | null;
+	cache_hit: boolean;
 	country_code: string | null;
 	created_at: string;
 }
@@ -52,8 +57,28 @@ export default function AdminFetchLogsPage() {
 				},
 			},
 			{ key: "response_time_ms", label: t("admin.col_time_s"), width: "w-24" },
+			{
+				key: "outcome",
+				label: t("admin.col_outcome"),
+				width: "w-28",
+				render: (value: unknown) => t(`admin.stats_${value}`),
+			},
 			{ key: "status_code", label: t("admin.col_status"), width: "w-20" },
-			{ key: "error_code", label: t("admin.col_error"), width: "w-32" },
+			{ key: "reason", label: t("admin.col_reason"), width: "w-32" },
+			{
+				key: "content_source",
+				label: t("admin.col_source"),
+				width: "w-28",
+				render: (value: unknown) => (value ? t(`admin.source_${value}`) : "—"),
+			},
+			{ key: "provider", label: t("admin.col_provider"), width: "w-24" },
+			{ key: "upstream_status", label: t("admin.col_upstream"), width: "w-20" },
+			{
+				key: "cache_hit",
+				label: t("admin.col_cache"),
+				width: "w-20",
+				render: (value: unknown) => t(value ? "admin.cache_hit" : "admin.cache_miss"),
+			},
 			{ key: "country_code", label: "🌍", width: "w-12" },
 			{ key: "created_at", label: t("admin.col_created"), width: "w-40" },
 		],

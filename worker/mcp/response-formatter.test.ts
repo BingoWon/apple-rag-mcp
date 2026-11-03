@@ -19,6 +19,7 @@ test("includes the source URL for complete search results", () => {
 				},
 			],
 			additionalUrls: [],
+			degradations: [],
 			count: 1,
 			processing_time_ms: 1,
 		},

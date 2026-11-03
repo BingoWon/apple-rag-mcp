@@ -10,6 +10,7 @@ export interface RerankDocument {
 }
 
 interface RerankerInput {
+	onFallback?: (reason: string) => void;
 	query: string;
 	documents: RerankDocument[];
 	topN: number;
@@ -77,12 +78,13 @@ export class RerankerService extends DeepInfraService<
 		documents: RerankDocument[],
 		topN: number,
 		signal?: AbortSignal,
+		onFallback?: (reason: string) => void,
 	): Promise<RankedDocument[]> {
 		if (!query.trim() || !documents.length || !Number.isInteger(topN) || topN <= 0) {
 			throw new Error("Invalid reranking input");
 		}
 		return this.call(
-			{ query: query.trim(), documents, topN: Math.min(topN, documents.length) },
+			{ query: query.trim(), documents, topN: Math.min(topN, documents.length), onFallback },
 			"Reranking",
 			signal,
 		);
@@ -120,6 +122,7 @@ export class RerankerService extends DeepInfraService<
 			logger.info(
 				`[RERANK] provider=deepinfra model=${DEEPINFRA_CONFIG.RERANKER_MODEL} fallback=true elapsed_ms=${Date.now() - started}`,
 			);
+			input.onFallback?.("RERANKER_FALLBACK");
 			return ranked;
 		} catch (error) {
 			signal?.throwIfAborted();

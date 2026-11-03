@@ -97,7 +97,16 @@ test("expired minute windows never produce a negative retry delay", (t) => {
 });
 
 test("anonymous successful results recommend free registration with concrete shared quotas", () => {
-	const fetched = { success: true, title: "SwiftUI", content: "Complete SwiftUI documentation." };
+	const fetched = {
+		title: "SwiftUI",
+		content: "Complete SwiftUI documentation.",
+		url: "https://developer.apple.com/documentation/swiftui",
+		source: "apple" as const,
+		provider: "index" as const,
+		status: 200,
+		pageId: "page-1",
+		cacheHit: false,
+	};
 	const searched = {
 		success: true,
 		query: "SwiftUI",
@@ -114,6 +123,8 @@ test("anonymous successful results recommend free registration with concrete sha
 		],
 		count: 1,
 		processing_time_ms: 1,
+		additionalUrls: [],
+		degradations: [],
 	};
 	for (const message of [formatFetchResponse(fetched, false), formatRAGResponse(searched, false)]) {
 		assert.ok(message.includes(MESSAGES.ANONYMOUS_ACCESS));

@@ -1,3 +1,4 @@
+import { readText } from "../shared/read-text.js";
 import {
 	extractHlsSourceUrl,
 	extractHtmlTranscriptText,
@@ -9,7 +10,7 @@ import type { AppleAPIResponse, BatchResult, VideoContent } from "./types/index.
 import { BatchErrorHandler } from "./utils/batch-error-handler.js";
 
 class AppleAPIClient {
-	private static readonly PERMANENT_ERROR_CODES = [403, 404, 410];
+	private static readonly PERMANENT_ERROR_CODES = [404, 410];
 	private static readonly PAGE_FETCH_TIMEOUT_MS = 30_000;
 	private static readonly VIDEO_INDEX_TIMEOUT_MS = 30_000;
 	private static readonly VIDEO_INDEX_MAX_ATTEMPTS = 2;
@@ -143,27 +144,45 @@ class AppleAPIClient {
 		});
 	}
 
-	async fetchDocuments(urls: string[]): Promise<BatchResult<AppleAPIResponse>[]> {
-		return await Promise.all(urls.map((url) => this.fetchSingleDocument(url)));
+	async fetchDocuments(
+		urls: string[],
+		signal?: AbortSignal,
+	): Promise<BatchResult<AppleAPIResponse>[]> {
+		return await Promise.all(urls.map((url) => this.fetchSingleDocument(url, signal)));
 	}
 
-	private async fetchSingleDocument(documentUrl: string): Promise<BatchResult<AppleAPIResponse>> {
+	private async fetchSingleDocument(
+		documentUrl: string,
+		signal?: AbortSignal,
+	): Promise<BatchResult<AppleAPIResponse>> {
 		const result = await BatchErrorHandler.safeExecute(documentUrl, async () => {
 			const url = this.convertUrlToJsonApi(documentUrl);
 			const response = await fetch(url, {
 				headers: AppleAPIClient.DEFAULT_HEADERS,
-				signal: AbortSignal.timeout(AppleAPIClient.PAGE_FETCH_TIMEOUT_MS),
+				signal: signal ?? AbortSignal.timeout(AppleAPIClient.PAGE_FETCH_TIMEOUT_MS),
+				redirect: "error",
 			});
 
 			if (AppleAPIClient.PERMANENT_ERROR_CODES.includes(response.status)) {
+				await response.body?.cancel();
+				// A missing JSON representation is not proof that the original page was removed.
+				const page = await fetch(documentUrl, {
+					signal: signal ?? AbortSignal.timeout(AppleAPIClient.PAGE_FETCH_TIMEOUT_MS),
+					redirect: "error",
+				});
+				await page.body?.cancel();
+				if (!AppleAPIClient.PERMANENT_ERROR_CODES.includes(page.status)) {
+					throw new Error(`DOCUMENT_JSON_UNAVAILABLE:${response.status}:${documentUrl}`);
+				}
 				throw new Error(`PERMANENT_ERROR:${response.status}:${documentUrl}`);
 			}
 
 			if (!response.ok) {
+				await response.body?.cancel();
 				throw new Error(`HTTP ${response.status}: ${response.statusText}`);
 			}
 
-			const data = (await response.json()) as AppleAPIResponse;
+			const data = JSON.parse(await readText(response)) as AppleAPIResponse;
 			this.validateDocumentData(data);
 			return data;
 		});
@@ -190,7 +209,7 @@ class AppleAPIClient {
 				? AppleAPIClient.API_ENDPOINTS.docc
 				: AppleAPIClient.API_ENDPOINTS.default;
 
-			return `${endpoint}${path}.json`;
+			return `${endpoint}${path}.json${urlObj.search}`;
 		} catch (error) {
 			throw new Error(`Invalid URL: ${error instanceof Error ? error.message : "Unknown error"}`);
 		}
@@ -202,7 +221,7 @@ class AppleAPIClient {
 		}
 		const record = data as Record<string, unknown>;
 		if (!record.primaryContentSections) {
-			throw new Error("PERMANENT_ERROR:NO_PRIMARY_CONTENT:Missing primaryContentSections field");
+			throw new Error("UNSUPPORTED_DOCUMENT:Missing primaryContentSections field");
 		}
 		if (!record.metadata) {
 			throw new Error("Invalid response: missing metadata field");
@@ -211,7 +230,7 @@ class AppleAPIClient {
 		// Content quality validation - check for substantial content
 		const sections = record.primaryContentSections;
 		if (!Array.isArray(sections) || sections.length === 0) {
-			throw new Error("PERMANENT_ERROR:NO_SUBSTANTIAL_CONTENT:Empty sections");
+			throw new Error("UNSUPPORTED_DOCUMENT:Empty sections");
 		}
 
 		const hasSubstantialContent = sections.some((section) => {
@@ -232,9 +251,7 @@ class AppleAPIClient {
 		});
 
 		if (!hasSubstantialContent) {
-			throw new Error(
-				"PERMANENT_ERROR:NO_SUBSTANTIAL_CONTENT:Only contains mentions or link lists",
-			);
+			throw new Error("UNSUPPORTED_DOCUMENT:Only contains mentions or link lists");
 		}
 	}
 }

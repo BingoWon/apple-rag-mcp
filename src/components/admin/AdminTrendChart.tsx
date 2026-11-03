@@ -3,10 +3,14 @@ import { lazy, memo, Suspense, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@/components/providers/ThemeProvider";
 import type { AdminMetricStats } from "@/types";
+import { TOOL_OUTCOMES } from "../../../worker/shared/tool-outcomes";
 
 const ApexChart = lazy(() => import("react-apexcharts"));
 export const OUTCOME_COLORS = {
 	success: "#22c55e",
+	degraded: "#06b6d4",
+	no_content: "#8b5cf6",
+	invalid: "#ec4899",
 	failed: "#ef4444",
 	limited: "#f59e0b",
 	unknown: "#94a3b8",
@@ -80,7 +84,9 @@ export const AdminTrendChart = memo(function AdminTrendChart({
 			stroke: { width: isRequest ? 0 : fitScale ? 3 : 2, curve: "straight" },
 			fill: { opacity: isRequest ? 1 : 0.2, type: "solid" },
 			colors: isRequest
-				? Object.values(OUTCOME_COLORS)
+				? TOOL_OUTCOMES.filter(
+						(outcome) => outcome === "success" || metric.outcomes?.[outcome],
+					).map((outcome) => OUTCOME_COLORS[outcome])
 				: hasBreakdown
 					? [color, "#f59e0b"]
 					: [color],
@@ -117,6 +123,7 @@ export const AdminTrendChart = memo(function AdminTrendChart({
 		};
 	}, [
 		isRequest,
+		metric.outcomes,
 		hasBreakdown,
 		resolvedTheme,
 		bucket,
@@ -138,12 +145,12 @@ export const AdminTrendChart = memo(function AdminTrendChart({
 				},
 			]
 		: isRequest
-			? (["success", "failed", "limited", "unknown"] as const)
-					.filter((outcome) => outcome !== "unknown" || metric.outcomes?.unknown)
-					.map((outcome) => ({
+			? TOOL_OUTCOMES.filter((outcome) => outcome === "success" || metric.outcomes?.[outcome]).map(
+					(outcome) => ({
 						name: t(`admin.stats_${outcome}`),
 						data: metric.points.map((point) => [Date.parse(point.date), point[outcome] ?? 0]),
-					}))
+					}),
+				)
 			: [
 					{
 						name: seriesName ?? t("admin.stats_new_records"),

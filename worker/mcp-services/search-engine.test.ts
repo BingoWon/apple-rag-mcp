@@ -86,6 +86,7 @@ test("falls back when one retrieval mode fails", async () => {
 
 	const output = await engine.search("A", { resultCount: 1 });
 	assert.equal(output.results.length, 1);
+	assert.deepEqual(output.degradations, ["SEMANTIC_UNAVAILABLE"]);
 });
 
 test("throws when both retrieval modes fail", async () => {
@@ -104,6 +105,7 @@ test("keeps original candidate order and full content when both rerankers fail",
 		rerankError: new Error("Both rerankers failed"),
 	});
 	const output = await engine.search("query", { resultCount: 2 });
+	assert.deepEqual(output.degradations, ["RERANKING_UNAVAILABLE"]);
 	assert.deepEqual(
 		output.results.map((row) => row.id),
 		["a", "b"],

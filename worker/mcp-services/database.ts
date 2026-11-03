@@ -6,6 +6,7 @@ import postgres from "postgres";
 import type { AppConfig, SearchOptions, SearchResult } from "../mcp-types/index.js";
 import { logger } from "../mcp-utils/logger.js";
 import { isTransientPostgresConnectionError } from "../shared/postgres-retry.js";
+import type { StoredWebPage } from "./page-reader.js";
 
 export class DatabaseService {
 	private sql: ReturnType<typeof postgres>;
@@ -203,5 +204,64 @@ export class DatabaseService {
 
 	async close(): Promise<void> {
 		await this.sql.end({ timeout: 0 }).catch(() => {});
+	}
+
+	async getCachedPage(url: string): Promise<StoredWebPage | null> {
+		const rows = await this.withReconnect(
+			(sql) => sql`
+			SELECT result FROM web_page_cache
+			WHERE url = COALESCE((SELECT canonical_url FROM web_page_aliases
+				WHERE url = ${url} AND expires_at > now()), ${url}) AND expires_at > now()
+		`,
+		);
+		return (rows[0]?.result as StoredWebPage | undefined) ?? null;
+	}
+
+	async cachePage(requestedUrl: string, page: StoredWebPage): Promise<void> {
+		await this.withReconnect((sql) =>
+			sql.begin(async (tx) => {
+				await tx`SET LOCAL lock_timeout = '2s'`;
+				await tx`SELECT pg_advisory_xact_lock(782641)`;
+				const ttl = page.status === 200 ? 86400 : 300;
+				await tx`DELETE FROM web_page_cache WHERE expires_at <= now()`;
+				await tx`DELETE FROM web_page_aliases WHERE expires_at <= now()`;
+				await tx`INSERT INTO web_page_cache (url, result, expires_at, fetched_at)
+				VALUES (${page.url}, ${tx.json({ ...page })}, now() + ${ttl} * interval '1 second', now())
+				ON CONFLICT (url) DO UPDATE SET result = EXCLUDED.result,
+					expires_at = EXCLUDED.expires_at, fetched_at = EXCLUDED.fetched_at`;
+				if (requestedUrl !== page.url) {
+					await tx`INSERT INTO web_page_aliases (url, canonical_url, expires_at)
+					VALUES (${requestedUrl}, ${page.url}, now() + ${ttl} * interval '1 second')
+					ON CONFLICT (url) DO UPDATE SET canonical_url = EXCLUDED.canonical_url,
+						expires_at = EXCLUDED.expires_at`;
+				}
+				await tx`DELETE FROM web_page_cache WHERE url IN
+				(SELECT url FROM web_page_cache ORDER BY fetched_at DESC, url OFFSET 500)`;
+				await tx`DELETE FROM web_page_aliases WHERE url IN
+				(SELECT url FROM web_page_aliases ORDER BY expires_at DESC, url OFFSET 1000)`;
+			}),
+		);
+	}
+
+	async reserveWebFetch(limit: number): Promise<boolean> {
+		// Reservations are not replayed after connection errors: an uncertain charge stays consumed.
+		const rows = await this.sql`INSERT INTO web_fetch_budget (day, attempts)
+			SELECT (now() AT TIME ZONE 'UTC')::date, 1 WHERE ${limit} > 0
+			ON CONFLICT (day) DO UPDATE SET attempts = web_fetch_budget.attempts + 1
+			WHERE web_fetch_budget.attempts < ${limit} RETURNING attempts`;
+		await this.sql`DELETE FROM web_fetch_budget WHERE day < (now() AT TIME ZONE 'UTC')::date - 7`;
+		return rows.length > 0;
+	}
+
+	async enqueuePage(url: string): Promise<void> {
+		await this.withReconnect(
+			(sql) => sql`
+			INSERT INTO pages (url, collect_count)
+			VALUES (${url}, GREATEST(0, (SELECT COALESCE(MIN(collect_count), 1) - 1
+				FROM pages WHERE url LIKE 'https://developer.apple.com/%' AND url <> ${url})))
+			ON CONFLICT (url) DO UPDATE SET collect_count = LEAST(pages.collect_count, EXCLUDED.collect_count)
+			WHERE COALESCE(pages.content, '') = ''
+		`,
+		);
 	}
 }

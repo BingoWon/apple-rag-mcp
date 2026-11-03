@@ -3,6 +3,7 @@
  * Administrative access to fetch_logs table
  */
 import { createRoute, z } from "@hono/zod-openapi";
+import { TOOL_OUTCOMES, type ToolOutcome } from "../../../shared/tool-outcomes.js";
 import { logger } from "../../utils/logger";
 import { createOpenAPIApp } from "../../utils/openapi";
 
@@ -17,7 +18,12 @@ const AdminFetchLogSchema = z.object({
 	page_id: z.string().nullable(),
 	response_time_ms: z.number().nullable(),
 	status_code: z.number().nullable(),
-	error_code: z.string().nullable(),
+	reason: z.string().nullable(),
+	outcome: z.enum(TOOL_OUTCOMES),
+	content_source: z.string().nullable(),
+	provider: z.string().nullable(),
+	upstream_status: z.number().nullable(),
+	cache_hit: z.boolean(),
 	country_code: z.string().nullable(),
 	created_at: z.string(),
 });
@@ -82,7 +88,7 @@ app.openapi(getFetchLogsRoute, async (c) => {
 
 		const logsResult = await c.env.DB.prepare(`
       SELECT id, user_id, mcp_token, requested_url, actual_url, page_id,
-             response_time_ms, status_code, error_code, country_code, created_at
+             response_time_ms, status_code, error_code AS reason, outcome, country_code, created_at, content_source, provider, upstream_status, cache_hit
       FROM fetch_logs
       ORDER BY created_at DESC
       LIMIT ? OFFSET ?
@@ -102,7 +108,12 @@ app.openapi(getFetchLogsRoute, async (c) => {
 				page_id: row.page_id as string | null,
 				response_time_ms: row.response_time_ms ? Number(row.response_time_ms) : null,
 				status_code: row.status_code ? Number(row.status_code) : null,
-				error_code: row.error_code as string | null,
+				reason: row.reason as string | null,
+				outcome: row.outcome as ToolOutcome,
+				content_source: row.content_source as string | null,
+				provider: row.provider as string | null,
+				upstream_status: row.upstream_status == null ? null : Number(row.upstream_status),
+				cache_hit: Boolean(row.cache_hit),
 				country_code: row.country_code as string | null,
 				created_at: row.created_at as string,
 			};

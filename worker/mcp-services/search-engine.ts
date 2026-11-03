@@ -54,6 +54,7 @@ export interface RankedSearchResult {
 export interface SearchEngineResult {
 	results: RankedSearchResult[];
 	additionalUrls: AdditionalUrl[];
+	degradations: string[];
 }
 
 export class SearchEngine {
@@ -86,9 +87,13 @@ export class SearchEngine {
 		signal?: AbortSignal,
 	): Promise<SearchEngineResult> {
 		const candidateCount = resultCount * 4;
+		const degradations: string[] = [];
+		const onFallback = (reason: string) => {
+			degradations.push(reason);
+		};
 
 		const [semanticOutcome, keywordOutcome] = await Promise.allSettled([
-			this.getSemanticCandidates(query, candidateCount, signal),
+			this.getSemanticCandidates(query, candidateCount, signal, onFallback),
 			this.getKeywordCandidates(query, candidateCount),
 		]);
 		signal?.throwIfAborted();
@@ -104,9 +109,11 @@ export class SearchEngine {
 		const keywordResults = keywordOutcome.status === "fulfilled" ? keywordOutcome.value : [];
 
 		if (semanticOutcome.status === "rejected") {
+			degradations.push("SEMANTIC_UNAVAILABLE");
 			logger.warn(`Semantic retrieval unavailable: ${String(semanticOutcome.reason)}`);
 		}
 		if (keywordOutcome.status === "rejected") {
+			degradations.push("KEYWORD_UNAVAILABLE");
 			logger.warn(`Keyword retrieval unavailable: ${String(keywordOutcome.reason)}`);
 		}
 
@@ -114,7 +121,7 @@ export class SearchEngine {
 		const processedResults = this.processResults(mergedCandidates);
 
 		if (processedResults.length === 0) {
-			return { results: [], additionalUrls: [] };
+			return { results: [], additionalUrls: [], degradations };
 		}
 
 		let finalResults: RankedSearchResult[];
@@ -125,6 +132,7 @@ export class SearchEngine {
 				processedResults.map(({ content, title, url }) => ({ content, title, url })),
 				Math.min(resultCount, processedResults.length),
 				signal,
+				onFallback,
 			);
 			signal?.throwIfAborted();
 
@@ -144,6 +152,7 @@ export class SearchEngine {
 			});
 		} catch (error) {
 			signal?.throwIfAborted();
+			degradations.push("RERANKING_UNAVAILABLE");
 			logger.error(
 				`Reranking failed, falling back to original order (query_length: ${query.length}, candidates: ${processedResults.length}): ${error instanceof Error ? error.message : String(error)}`,
 			);
@@ -166,7 +175,7 @@ export class SearchEngine {
 		// Collect additional URLs
 		const additionalUrls = this.collectAdditionalUrls(processedResults, finalResults);
 
-		return { results: finalResults, additionalUrls };
+		return { results: finalResults, additionalUrls, degradations: [...new Set(degradations)] };
 	}
 
 	/**
@@ -176,10 +185,11 @@ export class SearchEngine {
 		query: string,
 		resultCount: number,
 		signal?: AbortSignal,
+		onFallback?: (reason: string) => void,
 	): Promise<SearchResult[]> {
 		const startTime = Date.now();
 
-		const queryEmbedding = await this.embedding.createEmbedding(query, signal);
+		const queryEmbedding = await this.embedding.createEmbedding(query, signal, onFallback);
 		signal?.throwIfAborted();
 		const results = await this.database.semanticSearch(queryEmbedding, { resultCount });
 

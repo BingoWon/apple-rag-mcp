@@ -300,7 +300,7 @@ class AppleDocCollector {
 		const processResults = changedRecords.map((r) => r.processResult).filter(Boolean);
 
 		const { allChunks, embeddings } = await this.generateChunksAndEmbeddings(processResults);
-		const result = this.buildProcessingResult(processingPlan, processResults, allChunks);
+		const result = this.buildProcessingResult(processingPlan, allChunks);
 
 		// Keep the source page unchanged if link discovery cannot be saved, so it can be retried.
 		if (result.extractedUrls.size > 0) {
@@ -433,7 +433,6 @@ class AppleDocCollector {
 
 	private buildProcessingResult(
 		processingPlan: ProcessingPlanItem[],
-		processResults: (BatchResult<DocumentContent> | undefined)[],
 		allChunks: Array<{
 			url: string;
 			chunk: {
@@ -448,9 +447,8 @@ class AppleDocCollector {
 		const failureRecords: DatabaseRecord[] = [];
 		const extractedUrls = new Set<string>();
 
-		let processIndex = 0;
 		for (const planItem of processingPlan) {
-			const { record, collectResult, hasChanged, error } = planItem;
+			const { record, collectResult, error } = planItem;
 
 			if (error) {
 				failureRecords.push(record);
@@ -459,8 +457,8 @@ class AppleDocCollector {
 
 			successRecords.push(record);
 
-			if (hasChanged && collectResult?.data && processIndex < processResults.length) {
-				const processResult = processResults[processIndex++];
+			if (collectResult?.data) {
+				const processResult = planItem.processResult;
 				if (processResult?.data?.extractedUrls) {
 					for (const url of processResult.data.extractedUrls) {
 						extractedUrls.add(url);

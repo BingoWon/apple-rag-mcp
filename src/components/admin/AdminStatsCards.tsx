@@ -15,6 +15,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/Card";
 import type { AdminDashboardStats, AdminMetricStats } from "@/types";
+import { TOOL_OUTCOMES } from "../../../worker/shared/tool-outcomes";
 import { AdminTrendChart, OUTCOME_COLORS } from "./AdminTrendChart";
 
 const METRICS = [
@@ -291,9 +292,8 @@ export function AdminStatsCards({
 						)}
 						{outcomes && (
 							<ul className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted">
-								{(["success", "failed", "limited", "unknown"] as const)
-									.filter((outcome) => outcome !== "unknown" || outcomes.unknown)
-									.map((outcome) => (
+								{TOOL_OUTCOMES.filter((outcome) => outcome === "success" || outcomes[outcome]).map(
+									(outcome) => (
 										<li key={outcome} className="inline-flex items-center gap-1.5">
 											<span
 												className="h-2 w-2 rounded-full"
@@ -304,7 +304,8 @@ export function AdminStatsCards({
 												{outcomes[outcome].toLocaleString(i18n.resolvedLanguage)}
 											</span>
 										</li>
-									))}
+									),
+								)}
 							</ul>
 						)}
 					</Card>

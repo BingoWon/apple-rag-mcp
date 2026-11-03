@@ -1,3 +1,4 @@
+import type { ToolOutcome } from "../../worker/shared/tool-outcomes";
 export interface User {
 	id: string;
 	email: string;
@@ -68,6 +69,9 @@ export interface AdminStatsPoint {
 	date: string;
 	count: number;
 	success?: number;
+	degraded?: number;
+	no_content?: number;
+	invalid?: number;
 	failed?: number;
 	limited?: number;
 	unknown?: number;
@@ -78,12 +82,7 @@ export interface AdminStatsPoint {
 export interface AdminMetricStats {
 	total: number;
 	points: AdminStatsPoint[];
-	outcomes?: {
-		success: number;
-		failed: number;
-		limited: number;
-		unknown: number;
-	};
+	outcomes?: Record<ToolOutcome, number>;
 	breakdown?: {
 		registered: number;
 		anonymous: number;

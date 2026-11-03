@@ -45,6 +45,8 @@ export interface Env {
 	DEEPINFRA_API_KEY: string;
 	SILICONFLOW_API_KEY?: string;
 	TYPESAFE_API_KEY?: string;
+	FIRECRAWL_API_KEY?: string;
+	FIRECRAWL_DAILY_LIMIT?: string;
 
 	// Collector Configuration
 	BATCH_SIZE?: string;
