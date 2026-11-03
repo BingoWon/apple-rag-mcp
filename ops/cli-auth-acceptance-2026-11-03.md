@@ -41,7 +41,7 @@ artifact byte-for-byte. Its SHA256 is
 - A temporary first-party test account with a reserved `.invalid` address signed
   in through the normal password API, then explicitly approved CLI grants through
   website authorization APIs. No owner's identity, supplied MCP token or browser
-  session was used. This does **not** sign the owner into their own CLI.
+  session was used. The automated phase did **not** sign the owner into their own CLI.
 - Both PKCE loopback and device-code login completed using the npm binary and
   real Keychain. A wrong callback state was rejected. Files contained endpoint
   metadata only. Account/status/doctor consumed no retrieval quota.
@@ -65,6 +65,22 @@ production management credential was changed or recovered. Authorized admin
 channel filtering is verified by the real HTTP/SQLite fixture; production data
 attribution is checked through the test user's history and direct D1 queries.
 A production Admin login/filter session is not claimed.
+
+## Owner-operated browser login verification
+
+On 2026-11-03, the official npm CLI 2.0.0 was installed globally using empty npm
+user/global configs. The CLI started its normal PKCE browser login. The owner
+personally signed in and approved the device in the website, then confirmed that
+approval in chat; no consent API shortcut or pasted MCP token was used for this
+phase. The CLI received the loopback callback and reported OAuth authentication
+with the existing Pro entitlement.
+
+Independent `auth status` and `doctor` checks passed. One real CLI search returned
+Apple documentation and consumed exactly one weekly quota unit. The owner-approved
+session remains in the native credential store for normal use. No personal email,
+password, access token or refresh credential is recorded in this report. Browser
+login interaction is now verified with owner participation; broader visual UI
+acceptance and production Admin login remain outside these checks.
 
 ## D1 cutover
 
