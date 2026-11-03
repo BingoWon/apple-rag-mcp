@@ -27,6 +27,15 @@
 - Service deployment, public npm 2.0.0 install and final column removal are pending
   at this checkpoint; update this section after observing production results.
 
+## Deployment checks
+
+The first CI run passed Linux/application checks and macOS but blocked npm release
+on a Windows test-loader path: Node ESM requires a file URL for the `--import`
+hook. The fixture invocation now uses `URL.href`; no product authentication
+fallback is added. The first Cloudflare build also failed, leaving 5.4.1 live.
+The existing Wrangler OAuth token lacks Workers CI read scope, so its build-log
+API returned 403. No broader account authorization or browser login was attempted.
+
 ## Limits
 
 No real subscription/charge is created or changed; paid lifecycle checks use
