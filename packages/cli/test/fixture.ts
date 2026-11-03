@@ -2,6 +2,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { createServer } from "node:http";
 import { DatabaseSync } from "node:sqlite";
 import { Hono } from "hono";
+import usageLogs from "../../../worker/api/routes/usage-logs.js";
 import type { AppEnv } from "../../../worker/api/types/hono.js";
 import type { User } from "../../../worker/api/types/index.js";
 import { generateAccessToken } from "../../../worker/api/utils/jwt-simple.js";
@@ -159,7 +160,8 @@ export async function fixture() {
 			"/api/cli",
 			createCLIRoutes(async () => services),
 		)
-		.route("/oauth/cli", cliOAuthRoutes);
+		.route("/oauth/cli", cliOAuthRoutes)
+		.route("/api/usage-logs", usageLogs);
 	const server = createServer(async (req, res) => {
 		requests.push({
 			path: req.url!,

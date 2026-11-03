@@ -1,5 +1,5 @@
 /**
- * MCP Tool Call Logs Routes
+ * Tool Call Logs Routes
  * Modern implementation for tracking separated search and fetch tool call logs
  */
 import { createRoute, z } from "@hono/zod-openapi";
@@ -20,7 +20,10 @@ const UsageLogItemSchema = z.object({
 	query: z.string().nullable(),
 	result_count: z.number(),
 	status: z.enum(["success", "error"]),
-	mcp_token: z.string().nullable(),
+	channel: z.enum(["mcp", "cli", "unknown"]),
+	credential_id: z.string().nullable(),
+	request_id: z.string().nullable(),
+	response_time_ms: z.number().nullable(),
 	created_at: z.string(),
 	log_type: z.enum(["search", "fetch"]),
 });
@@ -42,13 +45,13 @@ const getUsageLogsRoute = createRoute({
 			page: z.coerce.number().int().min(1).optional().default(1),
 			limit: z.coerce.number().int().min(1).max(100).optional().default(20),
 			status: z.enum(["success", "error", "all"]).optional().default("all"),
-			search: z.string().optional(),
+			search: z.string().max(2048).optional(),
 			log_type: z.enum(["search", "fetch", "all"]).optional().default("all"),
 		}),
 	},
 	responses: {
 		200: {
-			description: "MCP usage logs retrieved successfully",
+			description: "Usage logs retrieved successfully",
 			content: {
 				"application/json": {
 					schema: z.object({
@@ -100,99 +103,35 @@ app.openapi(getUsageLogsRoute, async (c) => {
 	try {
 		const offset = (page - 1) * limit;
 
-		// Build dynamic WHERE conditions
-		const buildConditions = (tablePrefix: string) => {
-			const conditions = [`${tablePrefix}.user_id = ?`];
-			const params = [user.id];
-
-			if (status !== "all") {
-				conditions.push(`${tablePrefix}.status_code = ?`);
-				params.push(status === "success" ? "200" : "500");
-			}
-
+		const kinds = log_type === "all" ? ["search", "fetch"] : [log_type];
+		const parameters: (string | number)[] = [];
+		const selects = kinds.map((kind) => {
+			const field = kind === "search" ? "requested_query" : "requested_url";
+			const conditions = ["user_id = ?"];
+			parameters.push(user.id);
+			if (status !== "all")
+				conditions.push(status === "success" ? "status_code=200" : "status_code>=400");
 			if (search) {
-				if (tablePrefix === "s") {
-					conditions.push(`s.requested_query LIKE ?`);
-				} else {
-					conditions.push(`f.requested_url LIKE ?`);
-				}
-				params.push(`%${search}%`);
+				conditions.push(`instr(lower(${field}),lower(?))>0`);
+				parameters.push(search);
 			}
-
-			return { conditions: conditions.join(" AND "), params };
-		};
-
-		// Execute queries based on log_type
-		let countQuery: string;
-		let dataQuery: string;
-		let queryParams: unknown[];
-
-		if (log_type === "search") {
-			const { conditions, params } = buildConditions("s");
-			countQuery = `SELECT COUNT(*) as total FROM search_logs s WHERE ${conditions}`;
-			dataQuery = `
-        SELECT s.id, s.requested_query as query, s.result_count,
-               CASE WHEN s.status_code = 200 THEN 'success' ELSE 'error' END as status,
-               s.mcp_token, s.created_at, 'search' as log_type
-        FROM search_logs s
-        WHERE ${conditions}
-        ORDER BY s.created_at DESC
-        LIMIT ? OFFSET ?`;
-			queryParams = [...params, limit, offset];
-		} else if (log_type === "fetch") {
-			const { conditions, params } = buildConditions("f");
-			countQuery = `SELECT COUNT(*) as total FROM fetch_logs f WHERE ${conditions}`;
-			dataQuery = `
-        SELECT f.id, f.requested_url as query, 1 as result_count,
-               CASE WHEN f.status_code = 200 THEN 'success' ELSE 'error' END as status,
-               f.mcp_token, f.created_at, 'fetch' as log_type
-        FROM fetch_logs f
-        WHERE ${conditions}
-        ORDER BY f.created_at DESC
-        LIMIT ? OFFSET ?`;
-			queryParams = [...params, limit, offset];
-		} else {
-			// log_type === "all" - Use UNION for optimal performance
-			const searchConditions = buildConditions("s");
-			const fetchConditions = buildConditions("f");
-
-			countQuery = `
-        SELECT (
-          (SELECT COUNT(*) FROM search_logs s WHERE ${searchConditions.conditions}) +
-          (SELECT COUNT(*) FROM fetch_logs f WHERE ${fetchConditions.conditions})
-        ) as total`;
-
-			dataQuery = `
-        (SELECT s.id, s.requested_query as query, s.result_count,
-                CASE WHEN s.status_code = 200 THEN 'success' ELSE 'error' END as status,
-                s.mcp_token, s.created_at, 'search' as log_type
-         FROM search_logs s WHERE ${searchConditions.conditions})
-        UNION ALL
-        (SELECT f.id, f.requested_url as query, 1 as result_count,
-                CASE WHEN f.status_code = 200 THEN 'success' ELSE 'error' END as status,
-                f.mcp_token, f.created_at, 'fetch' as log_type
-         FROM fetch_logs f WHERE ${fetchConditions.conditions})
-        ORDER BY created_at DESC
-        LIMIT ? OFFSET ?`;
-
-			queryParams = [...searchConditions.params, ...fetchConditions.params, limit, offset];
-		}
-
-		// Execute count query
-		const countResult = await c.env.DB.prepare(countQuery)
-			.bind(
-				...(log_type === "all"
-					? [...buildConditions("s").params, ...buildConditions("f").params]
-					: buildConditions(log_type === "search" ? "s" : "f").params),
-			)
+			return `SELECT id,${field} AS query,${kind === "search" ? "result_count" : "CASE WHEN status_code=200 THEN 1 ELSE 0 END"} AS result_count,
+                CASE WHEN status_code=200 THEN 'success' ELSE 'error' END AS status,
+                channel,credential_id,request_id,response_time_ms,created_at,'${kind}' AS log_type FROM ${kind}_logs WHERE ${conditions.join(" AND ")}`;
+		});
+		const union = selects.join(" UNION ALL ");
+		const countResult = await c.env.DB.prepare(`SELECT count(*) AS total FROM (${union})`)
+			.bind(...parameters)
 			.first();
 
 		const total = Number(countResult?.total) || 0;
 		const totalPages = Math.ceil(total / limit);
 
 		// Execute data query
-		const dataResult = await c.env.DB.prepare(dataQuery)
-			.bind(...queryParams)
+		const dataResult = await c.env.DB.prepare(
+			`SELECT * FROM (${union}) ORDER BY julianday(created_at) DESC,id DESC LIMIT ? OFFSET ?`,
+		)
+			.bind(...parameters, limit, offset)
 			.all();
 
 		const items = (dataResult.results || []).map((row: Record<string, unknown>) => ({
@@ -200,7 +139,10 @@ app.openapi(getUsageLogsRoute, async (c) => {
 			query: row.query ? String(row.query) : null,
 			result_count: Number(row.result_count) || 0,
 			status: row.status as "success" | "error",
-			mcp_token: row.mcp_token ? `${String(row.mcp_token).substring(0, 12)}...` : null,
+			channel: row.channel as "mcp" | "cli" | "unknown",
+			credential_id: row.credential_id as string | null,
+			request_id: row.request_id as string | null,
+			response_time_ms: row.response_time_ms == null ? null : Number(row.response_time_ms),
 			created_at: String(row.created_at),
 			log_type: row.log_type as "search" | "fetch",
 		}));

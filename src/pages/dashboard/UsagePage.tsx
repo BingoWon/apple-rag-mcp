@@ -2,6 +2,7 @@ import { IconClipboard, IconClock, IconRefresh } from "@tabler/icons-react";
 import { useCallback } from "react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
+import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { DataTable, type DataTableColumn, DataTableRenderers } from "@/components/ui/DataTable";
@@ -9,17 +10,8 @@ import { PaginationControls } from "@/components/ui/PaginationControls";
 import { Tabs } from "@/components/ui/usage-tabs";
 import { type PaginatedApiResponse, usePagination } from "@/hooks/usePagination";
 import { api } from "@/lib/api";
+import type { UsageLogItem as UsageLog } from "@/types";
 import { copyText } from "@/utils/clipboard";
-
-interface UsageLog {
-	id: string;
-	query: string | null;
-	result_count: number;
-	status: "success" | "error";
-	mcp_token: string | null;
-	created_at: string;
-	log_type: "search" | "fetch";
-}
 
 export default function UsagePage() {
 	const { t } = useTranslation();
@@ -55,12 +47,12 @@ export default function UsagePage() {
 	// Define columns for search logs
 	const searchColumns: DataTableColumn<UsageLog>[] = [
 		{
-			key: "mcp_token",
-			label: t("usage.mcp_token"),
-			render: (value) => (
-				<div className="font-medium text-foreground text-sm">
-					{String(value || t("usage.not_used"))}
-				</div>
+			key: "channel",
+			label: t("admin.col_channel"),
+			render: (value, row) => (
+				<Badge variant="outline" title={row.credential_id || undefined}>
+					{t(`admin.channel_${value}`)}
+				</Badge>
 			),
 		},
 		{
@@ -96,12 +88,12 @@ export default function UsagePage() {
 	// Define columns for fetch logs
 	const fetchColumns: DataTableColumn<UsageLog>[] = [
 		{
-			key: "mcp_token",
-			label: t("usage.mcp_token"),
-			render: (value) => (
-				<div className="font-medium text-foreground text-sm">
-					{String(value || t("usage.not_used"))}
-				</div>
+			key: "channel",
+			label: t("admin.col_channel"),
+			render: (value, row) => (
+				<Badge variant="outline" title={row.credential_id || undefined}>
+					{t(`admin.channel_${value}`)}
+				</Badge>
 			),
 		},
 		{

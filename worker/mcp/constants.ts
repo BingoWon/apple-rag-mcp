@@ -3,7 +3,6 @@ import { FREE_ACCESS_GUIDANCE } from "../services/access-guidance.js";
 
 export const SERVER_NAME = "apple-rag-mcp";
 export const SERVER_VERSION = packageJson.version;
-export const SUBSCRIPTION_URL = "https://apple-rag.com";
 
 export const TOOLS = {
 	SEARCH: {

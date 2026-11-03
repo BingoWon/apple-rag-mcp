@@ -1,6 +1,6 @@
 # CLI operations and npm publication
 
-Current implementation: service 5.5.0, independent npm `apple-rag-cli` 2.0.0;
+Current implementation: service 5.5.1, independent npm `apple-rag-cli` 2.0.0;
 executable `apple-rag`, Node.js 22.20+. See [authorization architecture](cli-auth-architecture.md)
 and [acceptance](cli-auth-acceptance-2026-11-03.md). The CLI uses a versioned JSON
 API and independent OAuth/device/API-key credentials, with shared account billing
@@ -70,6 +70,8 @@ Settings → Trusted publishing → GitHub Actions form remains an optional fall
 
 The CI publish job runs only on main pushes after checks/portability succeed.
 GitHub-hosted runners use OIDC (`id-token: write`), without a long-lived npm token.
+Before publishing a new CLI, CI waits for the matching production service version
+and independent CLI API health. A failed deployment cannot release an unusable client.
 Missing package: record the owner bootstrap step and skip. Existing exact version:
 skip. New version of an existing package: publish through the trusted workflow.
 Registry/network/publish errors fail CI rather than masquerade as a missing package.

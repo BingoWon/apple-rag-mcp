@@ -1,6 +1,6 @@
 # Independent CLI authorization and request channels
 
-Implemented: 2026-11-03. Service 5.5.0; CLI 2.0.0. Production acceptance and
+Implemented: 2026-11-03. Service 5.5.1; CLI 2.0.0. Production acceptance and
 migration results are recorded in [the acceptance report](cli-auth-acceptance-2026-11-03.md).
 
 ## Boundaries
@@ -81,7 +81,9 @@ and cancellation use the same shared orchestration. CLI auth rejection is HTTP
 `channel` identifies the entry/resource, not proof of the running executable.
 Names/version headers are untrusted diagnostic text, capped in length. A curl
 client using its own CLI key is still a CLI API request. No self-reported header
-can change channel or entitlement. Admin uses the existing shared table/details
+can change channel or entitlement. User history also shows the verified channel and credential references; its combined
+search/fetch query preserves user isolation and includes 4xx outcomes as errors.
+Admin uses the existing shared table/details
 components, with channel badges/filter in both views and credential IDs instead
 of masked secret values.
 

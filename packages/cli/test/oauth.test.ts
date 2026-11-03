@@ -235,3 +235,29 @@ test("website management errors keep their HTTP status and expired devices canno
 		OAuthError,
 	);
 });
+
+test("user history preserves channel, excludes secrets and includes 4xx errors with valid combined SQL", async (t) => {
+	const f = await setup(t);
+	f.sql.exec(
+		"INSERT INTO search_logs(user_id,requested_query,actual_query,status_code,channel,credential_id) VALUES('reader','Swift','Swift',200,'cli','cli-id'),('reader','limited','limited',429,'mcp','mcp-id'); INSERT INTO fetch_logs(user_id,requested_url,status_code,channel) VALUES('reader','https://example.com/a%_b',404,'cli'),('someone-else','private',200,'cli')",
+	);
+	for (const kind of ["all", "search", "fetch"]) {
+		const r = await fetch(`${f.endpoint}/api/usage-logs/history?log_type=${kind}`, {
+			headers: bearer(f.webToken),
+		});
+		assert.equal(r.status, 200);
+		const { data } = await r.json();
+		assert.equal(data.items.length, kind === "all" ? 3 : kind === "search" ? 2 : 1);
+		assert(data.items.every((r: Record<string, unknown>) => r.channel && !("mcp_token" in r)));
+	}
+	const errors = await (
+		await fetch(`${f.endpoint}/api/usage-logs/history?status=error`, {
+			headers: bearer(f.webToken),
+		})
+	).json();
+	assert.equal(errors.data.pagination.total, 2);
+	const literal = await (
+		await fetch(`${f.endpoint}/api/usage-logs/history?search=%25_`, { headers: bearer(f.webToken) })
+	).json();
+	assert.equal(literal.data.pagination.total, 1);
+});

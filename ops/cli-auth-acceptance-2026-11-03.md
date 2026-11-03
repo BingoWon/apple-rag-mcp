@@ -2,7 +2,7 @@
 
 ## Local verification
 
-- Full lint, TypeScript, 216 application/PostgreSQL tests and 13 CLI HTTP/SQLite tests
+- Full lint, TypeScript, 218 application/PostgreSQL tests and 14 CLI HTTP/SQLite tests
   pass. CLI tests cover real PKCE and device consent, login denial and cancellation,
   refresh rotation/replay, expiry/revocation, cross-resource rejection (including
   stripped JWT prefixes), shared paid/free quotas, refund/cancellation, invalid
@@ -32,9 +32,19 @@
 The first CI run passed Linux/application checks and macOS but blocked npm release
 on a Windows test-loader path: Node ESM requires a file URL for the `--import`
 hook. The fixture invocation now uses `URL.href`; no product authentication
-fallback is added. The first Cloudflare build also failed, leaving 5.4.1 live.
+fallback is added. The first Cloudflare build also failed, leaving 5.4.1 live at that time.
+A subsequent automatic build succeeded and production now serves 5.5.0. The cause
+of the first build failure was not established.
 The existing Wrangler OAuth token lacks Workers CI read scope, so its build-log
 API returned 403. No broader account authorization or browser login was attempted.
+
+CLI tool responses also keep cleanup/refunds alive through Worker `waitUntil`
+after disconnect; cancellation is not reported as a service outage.
+
+The user-facing usage-history API also read the old secret column; 5.5.1 changes
+its contract/UI to channel and credential references, fixes combined SQLite history
+queries and includes non-500 4xx errors in history filters. npm publication now
+waits for the matching deployed service and CLI API, after full CI checks.
 
 ## Limits
 

@@ -89,7 +89,7 @@ export function RecentQueries() {
 											<Badge variant={query.status === "success" ? "default" : "destructive"}>
 												{query.status}
 											</Badge>
-											{query.status === "success" && query.response_time_ms > 0 && (
+											{query.status === "success" && (query.response_time_ms ?? 0) > 0 && (
 												<span className="text-xs text-gray-500">{query.response_time_ms}ms</span>
 											)}
 											<span className="text-xs text-gray-500">{query.result_count} results</span>

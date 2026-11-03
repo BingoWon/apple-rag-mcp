@@ -103,6 +103,7 @@ export function createCLIRoutes(
 		await next();
 	});
 	app.onError((error, c) => {
+		if (c.req.raw.signal.aborted) return new Response(null, { status: 499, headers: noStore });
 		if (error instanceof OAuthError)
 			return Response.json(
 				{ success: false, error: { code: error.error, message: error.message } },
@@ -142,57 +143,61 @@ export function createCLIRoutes(
 		return c.json(accountStatus(identity, quota, "cli"));
 	});
 	for (const operation of ["search", "fetch"] as const)
-		app.post(`/v1/${operation}`, async (c) => {
-			let identity: AuthContext = { isAuthenticated: false };
-			let input: unknown;
-			const logger = new ToolCallLogger(c.env.DB, c.executionCtx);
-			try {
-				input = await c.req.json();
-			} catch {
-				const result = rejectOperation(logger, operation, {}, identity, c.req.raw, "cli");
-				return Response.json(result, {
-					status: 400,
-					headers: { ...noStore, "X-Request-ID": result.request_id! },
-				});
-			}
-			try {
-				identity = await auth(c.env, c.req.raw).authenticate(c.req.raw);
-			} catch (error) {
-				if (!(error instanceof OAuthError)) throw error;
-				const result = rejectOperation(
-					logger,
-					operation,
-					input,
-					identity,
-					c.req.raw,
-					"cli",
-					"INVALID_TOKEN",
-					"CLI credential rejected. Run apple-rag auth login.",
-					401,
-				);
-				return Response.json(result, {
-					status: 401,
-					headers: {
-						...noStore,
-						"X-Request-ID": result.request_id!,
-						"WWW-Authenticate": 'Bearer error="invalid_token"',
-					},
-				});
-			}
-			const services = await factory(c.env, c.executionCtx);
-			const tools = new ToolService(services);
-			try {
-				const result =
-					operation === "search"
-						? await tools.execute("search", input, identity, c.req.raw, "cli")
-						: await tools.execute("fetch", input, identity, c.req.raw, "cli");
-				return Response.json(result, {
-					status: result.ok ? 200 : result.error.status,
-					headers: { ...noStore, "X-Request-ID": result.request_id! },
-				});
-			} finally {
-				await services.database.close();
-			}
+		app.post(`/v1/${operation}`, (c) => {
+			const response = (async () => {
+				let identity: AuthContext = { isAuthenticated: false };
+				let input: unknown;
+				const logger = new ToolCallLogger(c.env.DB, c.executionCtx);
+				try {
+					input = await c.req.json();
+				} catch {
+					const result = rejectOperation(logger, operation, {}, identity, c.req.raw, "cli");
+					return Response.json(result, {
+						status: 400,
+						headers: { ...noStore, "X-Request-ID": result.request_id! },
+					});
+				}
+				try {
+					identity = await auth(c.env, c.req.raw).authenticate(c.req.raw);
+				} catch (error) {
+					if (!(error instanceof OAuthError)) throw error;
+					const result = rejectOperation(
+						logger,
+						operation,
+						input,
+						identity,
+						c.req.raw,
+						"cli",
+						"INVALID_TOKEN",
+						"CLI credential rejected. Run apple-rag auth login.",
+						401,
+					);
+					return Response.json(result, {
+						status: 401,
+						headers: {
+							...noStore,
+							"X-Request-ID": result.request_id!,
+							"WWW-Authenticate": 'Bearer error="invalid_token"',
+						},
+					});
+				}
+				const services = await factory(c.env, c.executionCtx);
+				const tools = new ToolService(services);
+				try {
+					const result =
+						operation === "search"
+							? await tools.execute("search", input, identity, c.req.raw, "cli")
+							: await tools.execute("fetch", input, identity, c.req.raw, "cli");
+					return Response.json(result, {
+						status: result.ok ? 200 : result.error.status,
+						headers: { ...noStore, "X-Request-ID": result.request_id! },
+					});
+				} finally {
+					await services.database.close();
+				}
+			})();
+			c.executionCtx.waitUntil(response.catch(() => {}));
+			return response;
 		});
 	// These management endpoints use the existing website session, never CLI/MCP credentials.
 	app.use("/authorization", authMiddleware);

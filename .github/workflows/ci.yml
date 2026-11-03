@@ -97,6 +97,9 @@ jobs:
       - name: Check whether npm publication is needed
         id: npm
         run: node ops/cli/npm-release.mjs
+      - name: Verify deployed service before publishing a new CLI
+        if: steps.npm.outputs.publish == 'true'
+        run: node ops/cli/wait-for-service.mjs
       - name: Publish verified artifact with OIDC
         if: steps.npm.outputs.publish == 'true'
         run: npm publish ./cli-release/*.tgz --access public --provenance=false

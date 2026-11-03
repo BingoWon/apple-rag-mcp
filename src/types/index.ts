@@ -132,8 +132,11 @@ export interface UsageLogItem {
 	query: string | null;
 	result_count: number;
 	status: "success" | "error";
-	response_time_ms: number;
-	mcp_token: string | null;
+	response_time_ms: number | null;
+	channel: "mcp" | "cli" | "unknown";
+	credential_id: string | null;
+	request_id: string | null;
+	log_type: "search" | "fetch";
 	created_at: string;
 }
 
