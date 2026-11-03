@@ -1,9 +1,7 @@
-import { IconBrandGithub } from "@tabler/icons-react";
-import type React from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
+import { Brand } from "@/components/layout/Brand";
 import { JevText } from "@/components/ui/jev-brand";
-import { trackEvent } from "@/lib/analytics";
 import { activateFabContact } from "@/utils/contact";
 
 export function Footer() {
@@ -12,6 +10,8 @@ export function Footer() {
 	const navigation = {
 		product: [
 			{ name: t("nav.features"), href: "/#features" },
+			{ name: t("nav.mcp_guide"), href: "/connect#mcp" },
+			{ name: t("nav.cli_guide"), href: "/connect#cli" },
 			{ name: t("nav.pricing"), href: "/#pricing" },
 			{ name: t("nav.contact"), href: "#", action: "contact" },
 		],
@@ -22,24 +22,6 @@ export function Footer() {
 			{ name: t("nav.billing"), href: "/billing/" },
 			{ name: t("nav.usage"), href: "/usage/" },
 		],
-		social: [
-			{
-				name: "GitHub",
-				href: "https://github.com/BingoWon/apple-rag-mcp",
-				icon: (props: React.SVGProps<SVGSVGElement>) => <IconBrandGithub {...props} />,
-			},
-			{
-				name: "Aceternity UI",
-				href: "https://ui.aceternity.com/",
-				icon: (_props: Record<string, unknown>) => (
-					<img
-						src="https://ui.aceternity.com/logo-dark.png"
-						alt="Aceternity UI"
-						className="h-6 w-6"
-					/>
-				),
-			},
-		],
 	};
 
 	return (
@@ -48,33 +30,11 @@ export function Footer() {
 				<div className="xl:grid xl:grid-cols-3 xl:gap-16">
 					<div className="space-y-8">
 						<div className="flex items-center">
-							<img src="/logo-with-text.svg" alt="Apple RAG MCP" className="h-8 w-auto" />
+							<Brand />
 						</div>
 						<p className="text-sm leading-6 text-muted">
 							<JevText i18nKey="footer.tagline" />
 						</p>
-						<div className="flex space-x-6">
-							{navigation.social.map((item) => (
-								<a
-									key={item.name}
-									href={item.href}
-									className="text-muted hover:text-light"
-									target="_blank"
-									rel="noopener noreferrer"
-									onClick={() => {
-										if (item.name === "GitHub") {
-											trackEvent("GITHUB_CLICK", {
-												link_url: item.href,
-												location: "footer",
-											});
-										}
-									}}
-								>
-									<span className="sr-only">{item.name}</span>
-									<item.icon className="h-6 w-6" aria-hidden="true" />
-								</a>
-							))}
-						</div>
 					</div>
 					<div className="mt-16 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">
 						<div>

@@ -86,6 +86,34 @@ export function CLIAccess() {
 			setBusy(false);
 		}
 	};
+	const renderSession = (row: Session) => (
+		<li key={row.id} className="flex items-center justify-between gap-3 px-6 py-4">
+			<div className="flex min-w-0 items-center gap-3">
+				<div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-default bg-secondary text-muted-foreground">
+					{row.kind === "device" ? <IconDeviceLaptop size={18} /> : <IconKey size={18} />}
+				</div>
+				<div className="min-w-0">
+					<p className="truncate text-sm font-medium" title={row.name}>
+						{row.name}
+					</p>
+					<div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground">
+						<span>{t(row.kind === "device" ? "cli.device" : "cli.api_key")}</span>
+						<span aria-hidden="true">·</span>
+						<span>{t("cli.expires", { date: new Date(row.expires_at).toLocaleDateString() })}</span>
+					</div>
+				</div>
+			</div>
+			<Button
+				size="sm"
+				variant="link"
+				className="shrink-0 text-muted-foreground hover:text-error"
+				onClick={() => setTarget(row)}
+				aria-label={t("cli.revoke_named", { name: row.name })}
+			>
+				{t("cli.revoke")}
+			</Button>
+		</li>
+	);
 	return (
 		<Card id="cli-access" className="rounded-xl shadow-none">
 			<CardHeader className="flex-row flex-wrap items-start justify-between gap-4 border-b border-default space-y-0">
@@ -100,37 +128,13 @@ export function CLIAccess() {
 						</CardDescription>
 					</div>
 				</div>
-				<Button
-					variant="outline"
-					size="sm"
-					onClick={() => setCreateOpen(true)}
-					disabled={busy || rows.length >= 20}
-				>
-					<IconPlus size={14} />
-					{t("cli.create_key")}
-				</Button>
 			</CardHeader>
 			<CardContent className="p-0">
-				<div className="flex flex-wrap items-center justify-between gap-3 border-b border-default bg-secondary/50 px-6 py-4">
-					<div className="min-w-0">
-						<p className="text-xs text-muted-foreground mb-2">{t("cli.login_hint")}</p>
-						<code className="text-[13px] font-medium text-foreground">apple-rag auth login</code>
-					</div>
-					<Button
-						size="icon"
-						variant="outline"
-						aria-label={t("cli.copy_command")}
-						onClick={async () => {
-							try {
-								await copyText("apple-rag auth login");
-								toast.success(t("common.copied"));
-							} catch {
-								toast.error(t("common.copy_failed"));
-							}
-						}}
-					>
-						<IconCopy size={15} />
-					</Button>
+				<div className="border-b border-default bg-secondary/50 px-6 py-4">
+					<p className="text-xs leading-6 text-muted">{t("cli.login_hint")}</p>
+					<a href="/connect#cli" className="mt-2 inline-block text-sm text-brand hover:underline">
+						{t("nav.cli_guide")} →
+					</a>
 				</div>
 				{error ? (
 					<div role="alert" className="flex items-center justify-between gap-3 px-6 py-5 text-sm">
@@ -143,7 +147,7 @@ export function CLIAccess() {
 					<div role="status" className="px-6 py-8 text-center text-sm text-muted-foreground">
 						{t("common.loading")}
 					</div>
-				) : rows.length === 0 ? (
+				) : rows.filter((row) => row.kind === "device").length === 0 ? (
 					<div className="px-6 py-8 text-center">
 						<IconDeviceLaptop size={24} className="mx-auto mb-3 text-muted-foreground" />
 						<p className="text-sm font-medium">{t("cli.no_sessions_title")}</p>
@@ -151,38 +155,31 @@ export function CLIAccess() {
 					</div>
 				) : (
 					<ul className="divide-y divide-border">
-						{rows.map((row) => (
-							<li key={row.id} className="flex items-center justify-between gap-3 px-6 py-4">
-								<div className="flex min-w-0 items-center gap-3">
-									<div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-default bg-secondary text-muted-foreground">
-										{row.kind === "device" ? <IconDeviceLaptop size={18} /> : <IconKey size={18} />}
-									</div>
-									<div className="min-w-0">
-										<p className="truncate text-sm font-medium" title={row.name}>
-											{row.name}
-										</p>
-										<div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground">
-											<span>{t(row.kind === "device" ? "cli.device" : "cli.api_key")}</span>
-											<span aria-hidden="true">·</span>
-											<span>
-												{t("cli.expires", { date: new Date(row.expires_at).toLocaleDateString() })}
-											</span>
-										</div>
-									</div>
-								</div>
-								<Button
-									size="sm"
-									variant="link"
-									className="shrink-0 text-muted-foreground hover:text-error"
-									onClick={() => setTarget(row)}
-									aria-label={t("cli.revoke_named", { name: row.name })}
-								>
-									{t("cli.revoke")}
-								</Button>
-							</li>
-						))}
+						{rows.filter((row) => row.kind === "device").map(renderSession)}
 					</ul>
 				)}
+				<details className="border-t border-default">
+					<summary className="cursor-pointer px-6 py-5 text-sm font-medium">
+						{t("cli.automation_title")}
+					</summary>
+					<div className="space-y-4 px-6 pb-5">
+						<p className="text-xs leading-6 text-muted">{t("cli.automation_description")}</p>
+						<Button
+							variant="outline"
+							size="sm"
+							onClick={() => setCreateOpen(true)}
+							disabled={busy || rows.length >= 20}
+						>
+							<IconPlus size={14} />
+							{t("cli.create_key")}
+						</Button>
+					</div>
+					{!loading && !error && (
+						<ul className="divide-y divide-border">
+							{rows.filter((row) => row.kind === "api_key").map(renderSession)}
+						</ul>
+					)}
+				</details>
 			</CardContent>
 			<Dialog
 				open={createOpen}

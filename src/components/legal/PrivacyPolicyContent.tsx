@@ -5,10 +5,10 @@ export default function PrivacyPolicyContent() {
 				<section className="mb-8">
 					<h2 className="text-2xl font-bold text-light mb-4">1. Introduction</h2>
 					<p className="mb-0">
-						Apple RAG MCP ("we," "our," or "us") is committed to protecting your privacy. This
-						Privacy Policy explains how we collect, use, disclose, and safeguard your information
-						when you use our Model Context Protocol (MCP) services that provide access to Apple
-						developer documentation and related resources.
+						Apple RAG ("we," "our," or "us") is committed to protecting your privacy. This Privacy
+						Policy explains how we collect, use, disclose, and safeguard your information when you
+						use our MCP and CLI services that provide access to Apple developer documentation and
+						related resources.
 					</p>
 				</section>
 
@@ -27,10 +27,10 @@ export default function PrivacyPolicyContent() {
 					<div className="mb-6">
 						<h3 className="text-lg font-semibold text-light mb-3">2.2 Usage Data</h3>
 						<p className="mb-3">
-							We collect information about how you use our MCP services, including:
+							We collect information about how you use our services, including:
 						</p>
 						<ul className="list-disc pl-6 space-y-2 mb-0">
-							<li>API requests and responses through our MCP server</li>
+							<li>API requests and responses through MCP and CLI</li>
 							<li>Search queries and usage patterns</li>
 							<li>Token usage and rate limiting data</li>
 							<li>Performance metrics and error logs</li>
@@ -52,7 +52,7 @@ export default function PrivacyPolicyContent() {
 					<h2 className="text-2xl font-bold text-light mb-4">3. How We Use Your Information</h2>
 					<p className="mb-3">We use the collected information for the following purposes:</p>
 					<ul className="list-disc pl-6 space-y-2 mb-0">
-						<li>Providing and maintaining our MCP services</li>
+						<li>Providing and maintaining our services</li>
 						<li>Processing your search requests and API calls</li>
 						<li>Managing your account and authentication</li>
 						<li>Monitoring usage for rate limiting and fair use policies</li>

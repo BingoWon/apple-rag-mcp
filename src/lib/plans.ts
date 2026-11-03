@@ -17,7 +17,7 @@ function buildPricingPlans(): PricingPlan[] {
 			features: [
 				i18n.t("plans.tool_calls_per_week", { count: 50 }),
 				i18n.t("plans.requests_per_minute", { count: 5 }),
-				i18n.t("plans.mcp_supported"),
+				i18n.t("plans.mcp_cli_supported"),
 				i18n.t("plans.semantic_search"),
 				i18n.t("plans.keyword_search"),
 				i18n.t("plans.hybrid_search"),
@@ -38,7 +38,7 @@ function buildPricingPlans(): PricingPlan[] {
 			features: [
 				i18n.t("plans.tool_calls_per_week", { count: 50000 }),
 				i18n.t("plans.requests_per_minute", { count: 50 }),
-				i18n.t("plans.mcp_supported"),
+				i18n.t("plans.mcp_cli_supported"),
 				i18n.t("plans.semantic_search"),
 				i18n.t("plans.keyword_search"),
 				i18n.t("plans.hybrid_search"),
@@ -61,7 +61,7 @@ function buildPricingPlans(): PricingPlan[] {
 			features: [
 				i18n.t("plans.team_usage"),
 				i18n.t("plans.request_capacity"),
-				i18n.t("plans.mcp_supported"),
+				i18n.t("plans.mcp_cli_supported"),
 				i18n.t("plans.semantic_search"),
 				i18n.t("plans.keyword_search"),
 				i18n.t("plans.hybrid_search"),

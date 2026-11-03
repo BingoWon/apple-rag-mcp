@@ -3,6 +3,7 @@ import { AnimatePresence, motion, useMotionValueEvent, useScroll } from "motion/
 import React, { createContext, useCallback, useContext, useState } from "react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
+import { Brand } from "@/components/layout/Brand";
 import { Button } from "@/components/ui/Button";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
@@ -298,8 +299,9 @@ export function AppNavbar() {
 	const handleMenuClose = () => setIsMobileMenuOpen(false);
 
 	const navItems = [
-		{ name: t("nav.features"), link: "#features" },
-		{ name: t("nav.pricing"), link: "#pricing" },
+		{ name: t("nav.features"), link: "/#features" },
+		{ name: t("nav.pricing"), link: "/#pricing" },
+		{ name: t("nav.connect"), link: "/connect" },
 		{ name: t("nav.contact"), link: "#contact" },
 	];
 
@@ -311,7 +313,7 @@ export function AppNavbar() {
 					href="/"
 					className="relative z-20 mr-4 flex items-center text-sm font-medium text-light transition-fast hover:text-brand"
 				>
-					<img src="/logo-with-text.svg" alt="Apple RAG MCP" className="h-8 w-auto" />
+					<Brand />
 				</a>
 				<NavItems items={navItems} onItemClick={handleMenuClose} />
 				<div className="flex items-center gap-3">
@@ -336,7 +338,7 @@ export function AppNavbar() {
 						href="/"
 						className="relative z-20 mr-4 flex items-center text-sm font-medium text-light transition-fast hover:text-brand"
 					>
-						<img src="/logo-with-text.svg" alt="Apple RAG MCP" className="h-8 w-auto" />
+						<Brand />
 					</a>
 					<div className="flex items-center gap-3">
 						<LanguageSwitcher />

@@ -3,9 +3,8 @@ import { ResetPasswordForm } from "@/components/forms/ResetPasswordForm";
 import { LoaderFive } from "@/components/ui/loader";
 
 export const metadata = {
-	title: "Reset Password | Apple RAG MCP",
-	description:
-		"Reset your Apple RAG MCP account password to regain access to your dashboard and API keys.",
+	title: "Reset Password | Apple RAG",
+	description: "Reset your Apple RAG account password to regain access to your account.",
 };
 
 export default function ResetPasswordPage() {

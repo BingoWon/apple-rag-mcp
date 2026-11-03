@@ -65,7 +65,7 @@ export class EmailService {
         </head>
         <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #2563eb; margin: 0;">Apple RAG MCP</h1>
+            <h1 style="color: #2563eb; margin: 0;">Apple RAG</h1>
           </div>
 
           <div style="background: #f8fafc; border-radius: 8px; padding: 30px; margin-bottom: 30px;">
@@ -91,7 +91,7 @@ export class EmailService {
 			const result = await this.resend.emails.send({
 				from: this.fromEmail,
 				to: [to],
-				subject: "Reset Your Password - Apple RAG MCP",
+				subject: "Reset Your Password - Apple RAG",
 				html: emailHtml,
 			});
 
@@ -144,7 +144,7 @@ export class EmailService {
         </head>
         <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #2563eb; margin: 0;">Apple RAG MCP Support</h1>
+            <h1 style="color: #2563eb; margin: 0;">Apple RAG Support</h1>
           </div>
 
           <div style="background: #f8fafc; border-radius: 8px; padding: 30px; margin-bottom: 30px;">
@@ -171,7 +171,7 @@ export class EmailService {
 
           <div style="text-align: center; color: #64748b; font-size: 12px;">
             <p>Message ID: ${messageId}</p>
-            <p>This is an automated email from Apple RAG MCP Support.</p>
+            <p>This is an automated email from Apple RAG Support.</p>
           </div>
         </body>
         </html>
@@ -180,7 +180,7 @@ export class EmailService {
 			const result = await this.resend.emails.send({
 				from: this.fromEmail,
 				to: [to],
-				subject: "Reply to Your Message - Apple RAG MCP Support",
+				subject: "Reply to Your Message - Apple RAG Support",
 				html: emailHtml,
 				replyTo: this.fromEmail,
 			});

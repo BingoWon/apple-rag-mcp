@@ -18,14 +18,14 @@ const actions = [
 	},
 	{
 		title: "View Documentation",
-		description: "Learn how to integrate Apple RAG MCP service",
-		href: "/docs",
+		description: "Learn how to integrate Apple RAG through MCP or CLI",
+		href: "/connect",
 		icon: IconFileText,
 		color: "bg-info hover:bg-info/80",
 	},
 	{
 		title: "Usage Analytics",
-		description: "Monitor your MCP usage and performance",
+		description: "Monitor your agents’ MCP / CLI usage and performance",
 		href: "/usage",
 		icon: IconChartBar,
 		color: "bg-brand hover:bg-brand-secondary",

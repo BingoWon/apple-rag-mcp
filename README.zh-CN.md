@@ -1,16 +1,18 @@
 <div align="center">
 
-<img src="https://apple-rag.com/logo-with-text.svg" alt="Apple RAG MCP" width="400">
+<img src="https://apple-rag.com/logo.svg" alt="Apple RAG" width="64">
 
-### 你的 AI 真正需要的 Apple 文档 MCP。
+# Apple RAG
 
-*Apple 文档。WWDC26 视频字幕。RAG 检索 + [Jev](https://typesafe.ai/) 相关性排序。一个干净的工具。*
+### 面向智能体的 Apple 开发知识服务。
+
+*Apple 文档。WWDC26 视频字幕。RAG 检索 + [Jev](https://typesafe.ai/) 相关性排序。支持 MCP / CLI。*
 
 [官网](https://apple-rag.com) · 由 [<img src="./public/typesafe-logo.webp" alt="" width="18" height="18"> Jev](https://typesafe.ai/) 驱动
 
 [![CI](https://github.com/BingoWon/apple-rag-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/BingoWon/apple-rag-mcp/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) · [English](./README.md) | **中文**
 
-<a href="https://apple-rag.com"><img src="https://apple-rag.com/og-image-jev.png" alt="Apple RAG MCP — 由 Jev 驱动" width="800"></a>
+<a href="https://apple-rag.com"><img src="https://apple-rag.com/og-image.png" alt="Apple RAG — MCP / CLI 智能体接入" width="800"></a>
 
 </div>
 
@@ -100,7 +102,7 @@ CLI 与 MCP 共用匿名、免费和 Pro 权益及账号额度。CLI 2.x 通过�
 
 > **注意：** 无需 MCP Token 即可开始使用！你可以免费查询，无需任何认证。之后可添加 MCP Token 以获得更高的使用限额。
 
-## 🌟 开发者为何喜爱 Apple RAG MCP
+## 🌟 为智能体提供开发资料
 
 <table>
 <tr>
@@ -112,14 +114,14 @@ CLI 与 MCP 共用匿名、免费和 Pro 权益及账号额度。CLI 2.x 通过�
 ### 🎯 **AI 驱动的混合搜索**
 混合搜索结合关键词与语义检索，找到候选 Apple 文档与视频字幕，再由 [Jev](https://typesafe.ai/) 对合并后的资料进行相关性重排，让智能体优先获取更相关的上下文。
 
-### 🔒 **始终安全**
-MCP 认证确保你的 AI agent 获得可信的访问权限，具备企业级安全性。
+### 🔒 **账号访问管理**
+MCP 与 CLI 使用独立凭据，共用账号额度，可单独撤销访问。
 
 </td>
 <td width="50%">
 
-### 📝 **代码示例**
-获取 Swift、Objective-C 和 SwiftUI 的实用代码示例，以及文档参考。
+### 📝 **可追溯的资料**
+结果附带来源链接，便于智能体核对 API 细节并引用依据。
 
 ### 🔄 **实时更新**
 我们的文档索引持续跟进 WWDC26、Xcode 27 beta 以及最新 Apple 开发者资源。

@@ -212,9 +212,10 @@ try {
 				await access.waitFor();
 				await access.scrollIntoViewIfNeeded();
 				await capture("settings");
+				await access.locator("summary").click();
 				await access
 					.getByRole("button", {
-						name: language === "zh" ? "创建 API 密钥" : "Create API key",
+						name: language === "zh" ? "创建自动化密钥" : "Create automation key",
 						exact: true,
 					})
 					.click();
@@ -224,7 +225,7 @@ try {
 				await capture("create-key");
 				await dialog
 					.getByRole("button", {
-						name: language === "zh" ? "创建 API 密钥" : "Create API key",
+						name: language === "zh" ? "创建自动化密钥" : "Create automation key",
 						exact: true,
 					})
 					.click();

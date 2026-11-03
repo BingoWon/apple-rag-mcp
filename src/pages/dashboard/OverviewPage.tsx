@@ -7,9 +7,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { authReturnPath, clearAuthReturn } from "@/lib/auth-return";
 import { useDashboardStore } from "@/stores/dashboard";
 
-const MCPUsageGuide = lazy(() =>
-	import("@/components/dashboard/MCPUsageGuide").then(({ MCPUsageGuide }) => ({
-		default: MCPUsageGuide,
+const AgentUsageGuide = lazy(() =>
+	import("@/components/dashboard/AgentUsageGuide").then(({ AgentUsageGuide }) => ({
+		default: AgentUsageGuide,
 	})),
 );
 const ToolCallsChart = lazy(() =>
@@ -81,7 +81,7 @@ function DashboardOverviewContent() {
 			<div className="grid grid-cols-1 lg:grid-cols-9 gap-6">
 				{/* Left Side - MCP Usage Guide */}
 				<div className="lg:col-span-4">
-					<MCPUsageGuide />
+					<AgentUsageGuide />
 				</div>
 
 				{/* Right Side - Stats Cards and Interactive Charts */}

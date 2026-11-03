@@ -1,9 +1,11 @@
-import { lazy, StrictMode, Suspense } from "react";
+import { lazy, StrictMode, Suspense, useEffect } from "react";
 import { createRoot } from "react-dom/client";
+import { useTranslation } from "react-i18next";
 import { BrowserRouter, useLocation } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Providers } from "@/components/providers/Providers";
 import { CookieConsent } from "@/components/ui/CookieConsent";
+import { SITE_PAGES } from "../shared/site";
 import { AppRouter } from "./router";
 import "./i18n";
 import "./styles/globals.css";
@@ -16,6 +18,37 @@ const UnreadReplyNotification = lazy(() =>
 		default: UnreadReplyNotification,
 	})),
 );
+
+function SiteMetadata() {
+	const { pathname } = useLocation();
+	const { t, i18n } = useTranslation();
+	useEffect(() => {
+		const path = pathname.replace(/\/$/, "") || "/";
+		const page = SITE_PAGES[path === "/connect" ? "/connect" : "/"];
+		const title = i18n.resolvedLanguage?.startsWith("zh")
+			? path === "/connect"
+				? "接入智能体 · MCP / CLI — Apple RAG"
+				: "Apple RAG — 面向智能体的 Apple 开发知识服务"
+			: page.title;
+		const description = i18n.resolvedLanguage?.startsWith("zh")
+			? t(path === "/connect" ? "connect.description" : "hero.description")
+			: page.description;
+		document.title = title;
+		document.documentElement.lang = i18n.resolvedLanguage?.startsWith("zh") ? "zh" : "en";
+		for (const selector of [
+			'meta[name="description"]',
+			'meta[property="og:description"]',
+			'meta[name="twitter:description"]',
+		])
+			document.querySelector(selector)?.setAttribute("content", description);
+		for (const selector of ['meta[property="og:title"]', 'meta[name="twitter:title"]'])
+			document.querySelector(selector)?.setAttribute("content", title);
+		const canonical = `https://apple-rag.com${path === "/connect" ? "/connect" : ""}`;
+		document.querySelector('link[rel="canonical"]')?.setAttribute("href", canonical);
+		document.querySelector('meta[property="og:url"]')?.setAttribute("content", canonical);
+	}, [pathname, t, i18n.resolvedLanguage]);
+	return null;
+}
 
 function CustomerOverlays() {
 	const { pathname } = useLocation();
@@ -44,6 +77,7 @@ if (root) {
 			<BrowserRouter>
 				<ErrorBoundary>
 					<Providers>
+						<SiteMetadata />
 						<AppRouter />
 					</Providers>
 					<CustomerOverlays />

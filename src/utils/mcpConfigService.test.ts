@@ -180,3 +180,13 @@ test("all native install buttons use the selected server URL and token", async (
 		else Reflect.deleteProperty(globalThis, "window");
 	}
 });
+
+test("public MCP setup instructions use anonymous access without empty bearer credentials", () => {
+	for (const language of ["en", "zh"]) {
+		const prompt = generateInstallPrompt({}, language);
+		assert.ok(prompt.includes(SERVER_URL));
+		assert.ok(prompt.includes("https://apple-rag.com/overview"));
+		assert.ok(prompt.includes("initialize"));
+		assert.doesNotMatch(prompt, /Bearer|undefined|null/);
+	}
+});

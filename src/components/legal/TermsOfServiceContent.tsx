@@ -5,8 +5,8 @@ export default function TermsOfServiceContent() {
 				<section className="mb-8">
 					<h2 className="text-2xl font-bold text-light mb-4">1. Acceptance of Terms</h2>
 					<p className="mb-0">
-						By accessing and using Apple RAG MCP services ("the Service"), you accept and agree to
-						be bound by the terms and provisions of this agreement. If you do not agree to abide by
+						By accessing and using Apple RAG services ("the Service"), you accept and agree to be
+						bound by the terms and provisions of this agreement. If you do not agree to abide by
 						these terms, please do not use this Service.
 					</p>
 				</section>
@@ -14,12 +14,11 @@ export default function TermsOfServiceContent() {
 				<section className="mb-8">
 					<h2 className="text-2xl font-bold text-light mb-4">2. Description of Service</h2>
 					<p className="mb-4">
-						Apple RAG MCP provides a Model Context Protocol server that enables AI assistants and
-						applications to search and retrieve information from Apple's developer documentation.
-						Our service includes:
+						Apple RAG provides MCP and CLI access that enables AI agents and applications to search
+						and retrieve information from Apple's developer documentation. Our service includes:
 					</p>
 					<ul className="list-disc pl-6 space-y-2 mb-0">
-						<li>MCP server endpoints for AI assistant integration</li>
+						<li>MCP and CLI interfaces for AI agent integration</li>
 						<li>Search functionality across Apple developer documentation</li>
 						<li>API token management and authentication</li>
 						<li>Usage monitoring and rate limiting</li>
@@ -103,8 +102,8 @@ export default function TermsOfServiceContent() {
 						<h3 className="text-lg font-semibold text-light mb-3">6.1 Our Content</h3>
 						<p className="mb-0">
 							The Service and its original content, features, and functionality are owned by Apple
-							RAG MCP and are protected by international copyright, trademark, patent, trade secret,
-							and other intellectual property laws.
+							RAG and are protected by international copyright, trademark, patent, trade secret, and
+							other intellectual property laws.
 						</p>
 					</div>
 
@@ -164,8 +163,8 @@ export default function TermsOfServiceContent() {
 					<div className="mb-6">
 						<h3 className="text-lg font-semibold text-light mb-3">8.2 Limitation of Liability</h3>
 						<p className="mb-4">
-							To the fullest extent permitted by applicable law, in no event shall Apple RAG MCP,
-							its affiliates, officers, directors, employees, agents, or licensors be liable for any
+							To the fullest extent permitted by applicable law, in no event shall Apple RAG, its
+							affiliates, officers, directors, employees, agents, or licensors be liable for any
 							direct, indirect, incidental, special, consequential, or punitive damages, including
 							but not limited to:
 						</p>

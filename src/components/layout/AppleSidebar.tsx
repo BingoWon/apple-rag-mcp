@@ -14,6 +14,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { Trans, useTranslation } from "react-i18next";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Brand } from "@/components/layout/Brand";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { Avatar } from "@/components/ui/OptimizedImage";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
@@ -29,6 +30,7 @@ import {
 } from "../ui/sidebar";
 
 const SIDEBAR_LINK_KEYS = [
+	{ labelKey: "nav.connect", href: "/connect", icon: <IconWorld className="h-5 w-5 shrink-0" /> },
 	{
 		labelKey: "nav.overview",
 		href: "/overview/",
@@ -286,13 +288,7 @@ export const Logo = () => {
 			to="/"
 			className="relative z-20 flex items-center space-x-2 py-1 text-sm font-normal text-light"
 		>
-			<img
-				src="/logo-with-text.svg"
-				alt="Apple RAG MCP"
-				width={160}
-				height={32}
-				className="h-8 w-auto"
-			/>
+			<Brand />
 		</Link>
 	);
 };
@@ -303,7 +299,7 @@ export const LogoIcon = () => {
 			to="/"
 			className="relative z-20 flex items-center space-x-2 py-1 text-sm font-normal text-light"
 		>
-			<img src="/logo.svg" alt="Apple RAG MCP" width={32} height={32} className="h-8 shrink-0" />
+			<img src="/logo.svg" alt="Apple RAG" width={32} height={32} className="h-8 shrink-0" />
 		</Link>
 	);
 };

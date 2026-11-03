@@ -12,6 +12,7 @@ import { AuthMiddleware } from "./mcp-auth/auth-middleware.js";
 import type { WaitUntilContext } from "./services/d1-utils.js";
 import { createServices } from "./services/index.js";
 import type { Env } from "./shared/types.js";
+import { connectionPage } from "./site-pages.js";
 
 const MCP_HOSTNAME = "mcp.apple-rag.com";
 const MCP_ALLOWED_ORIGIN_HOSTNAMES = ["apple-rag.com", "www.apple-rag.com", MCP_HOSTNAME];
@@ -90,6 +91,7 @@ app.get("/sitemap.xml", (c) => {
 	const base = "https://apple-rag.com";
 	const pages = [
 		{ loc: "/", priority: "1.0", changefreq: "daily" },
+		{ loc: "/connect", priority: "0.9", changefreq: "monthly" },
 		{ loc: "/register", priority: "0.6", changefreq: "monthly" },
 		{ loc: "/login", priority: "0.4", changefreq: "monthly" },
 		{ loc: "/privacy-policy", priority: "0.2", changefreq: "yearly" },
@@ -152,6 +154,13 @@ app.post("/api/collector/trigger", async (c) => {
 	} catch {
 		return c.json({ error: "Processing failed" }, 500);
 	}
+});
+
+app.on("GET", ["/connect", "/connect/"], async (c) => {
+	const url = new URL(c.req.url);
+	url.pathname = "/";
+	const response = await c.env.ASSETS.fetch(new Request(url, c.req.raw));
+	return connectionPage(response);
 });
 
 app.notFound(async (c) => {

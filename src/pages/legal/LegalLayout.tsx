@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, Outlet } from "react-router-dom";
+import { Brand } from "@/components/layout/Brand";
 import LegalTabs from "@/components/legal/LegalTabs";
 import { ShootingStars } from "@/components/ui/shooting-stars";
 import { StarsBackground } from "@/components/ui/stars-background";
@@ -24,13 +25,7 @@ export function LegalLayout() {
 						<div className="max-w-5xl mx-auto px-4 py-4">
 							<div className="flex items-center justify-between">
 								<Link to="/" className="flex items-center">
-									<img
-										src="/logo-with-text.svg"
-										alt="Apple RAG MCP"
-										width={160}
-										height={32}
-										className="h-8 w-auto"
-									/>
+									<Brand />
 								</Link>
 								<div className="animate-pulse w-10 h-10 bg-secondary rounded-lg" />
 							</div>
@@ -59,13 +54,7 @@ export function LegalLayout() {
 					<div className="max-w-5xl mx-auto px-4 py-4">
 						<div className="flex items-center justify-between">
 							<Link to="/" className="flex items-center hover:opacity-80 transition-opacity">
-								<img
-									src="/logo-with-text.svg"
-									alt="Apple RAG MCP"
-									width={160}
-									height={32}
-									className="h-8 w-auto"
-								/>
+								<Brand />
 							</Link>
 							<ThemeToggle variant="icon" />
 						</div>

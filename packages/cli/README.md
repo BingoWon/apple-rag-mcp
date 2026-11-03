@@ -1,8 +1,9 @@
 # Apple RAG CLI
 
-Search Apple's official developer documentation and WWDC transcripts from your
-terminal or coding agent. Uses the same hosted service, account, subscription and
-quotas as Apple RAG MCP. Requires Node.js 22.20+.
+Give a shell-enabled AI agent access to Apple developer documentation and WWDC
+transcripts. The CLI and MCP connect to the same Apple RAG service, with a shared
+account, subscription, and usage allowance. This guide is for agent integration
+and deployment; documentation lookups are performed by the agent. Requires Node.js 22.20+.
 
 ```sh
 npm install -g apple-rag-cli
@@ -21,7 +22,7 @@ The client is publicly installable; cloud access is limited:
 
 Search and fetch, all tokens and all MCP/CLI clients share the same account quota.
 
-## Sign in and subscribe
+## Account authorization
 
 Authorize this CLI through your Apple RAG account:
 
@@ -41,11 +42,11 @@ Access/rotating refresh credentials live in the OS credential store: macOS
 Keychain, Windows Credential Manager or Linux Secret Service. Unlock it before
 login. Only endpoint metadata is saved in `~/.config/apple-rag-cli` (POSIX 0700/
 0600). `APPLE_RAG_CONFIG_DIR` overrides that directory. Each device can be revoked
-individually in website **Settings → CLI access**; logout revokes the saved device
+individually in website **Settings → Connected CLI devices**; logout revokes the saved device
 server-side and removes its local state. MCP connections are independent.
 
-For headless automation, generate a dedicated, expiring CLI API key in those
-settings and inject `APPLE_RAG_TOKEN` through a secret manager. Keys are shown
+For unattended agents, generate a dedicated, expiring automation key under
+Settings → Automation access and inject `APPLE_RAG_TOKEN` through a secret manager. Keys are shown
 once, stored hashed server-side and expire within 90 days. Environment credentials
 override saved sessions even when invalid; unset the variable before interactive
 login. Logout does not unset environment variables or revoke their independent
@@ -62,7 +63,7 @@ include the same account snapshot.
 Token from `APPLE_RAG_TOKEN`, then run `apple-rag auth login`. CLI 2.x deliberately
 does not import old plaintext MCP credentials. MCP itself continues to work.
 
-## Search and read
+## Agent command reference
 
 ```sh
 apple-rag search "StoreKit Transaction currentEntitlements" --limit 4

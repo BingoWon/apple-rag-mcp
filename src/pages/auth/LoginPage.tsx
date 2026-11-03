@@ -1,8 +1,8 @@
 import { LoginForm } from "@/components/forms/LoginForm";
 
 export const metadata = {
-	title: "Sign In | Apple RAG MCP",
-	description: "Sign in to your Apple RAG MCP account to access your dashboard and API keys.",
+	title: "Sign In | Apple RAG",
+	description: "Sign in to your Apple RAG account to manage your agent connections and account.",
 };
 
 export default function LoginPage() {

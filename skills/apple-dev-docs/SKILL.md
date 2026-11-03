@@ -4,7 +4,7 @@ description: Use when verifying Apple API behavior, availability, deprecation or
 license: MIT
 compatibility: Requires Apple RAG remote MCP tools, or apple-rag-cli with Node.js 22.20+. Anonymous trial, signed-in free and Pro access share service quotas.
 metadata:
-  version: "2.0.0"
+  version: "2.0.2"
 ---
 
 # Apple Developer Documentation
@@ -16,8 +16,9 @@ generation with no API fact to verify needs no lookup.
 
 ## Choose an available connection
 
-Prefer native Apple RAG MCP `search` and `fetch` tools when connected. Otherwise,
-use an installed `apple-rag` CLI in a shell-enabled environment:
+Use an available Apple RAG connection: native MCP `search` and `fetch` tools, or
+an installed `apple-rag` CLI when shell execution is available. Both provide the
+same core retrieval service. Keep the connection already configured for this task:
 
 ```sh
 apple-rag auth status --json
@@ -42,7 +43,7 @@ no retrieval quota; `doctor` verifies identity/API health, not retrieval readine
 OAuth PKCE; credentials stay in the OS vault. `--device --no-browser` supports
 remote terminals. Never approve a device on the user's behalf without their
 instruction. The CLI uses its own JSON API and does not accept MCP Tokens.
-For automation, inject a dedicated CLI API key from website Settings → CLI access
+For automation, inject a dedicated CLI API key from website Settings → Automation access
 via `APPLE_RAG_TOKEN`. Never include secrets in commands/reports. Invalid/revoked explicit credentials must stop; never fall back to anonymous or authorized-IP access.
 Logout revokes the saved CLI device; independent environment API keys remain and
 must be revoked in settings. MCP credentials and sessions are unaffected.

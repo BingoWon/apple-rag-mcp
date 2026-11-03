@@ -1,5 +1,6 @@
 import { motion } from "motion/react";
 import type React from "react";
+import { Brand } from "@/components/layout/Brand";
 import { cn } from "@/lib/utils";
 
 export const LampContainer = ({
@@ -92,13 +93,7 @@ export const LampContainer = ({
 
 			{/* Logo at bottom of lamp container */}
 			<div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-50">
-				<img
-					src="/logo-with-text.svg"
-					alt="Apple RAG Logo"
-					width={200}
-					height={40}
-					className="opacity-60"
-				/>
+				<Brand />
 			</div>
 		</div>
 	);

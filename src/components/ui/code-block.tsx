@@ -1,5 +1,6 @@
 import { IconCheck, IconCopy } from "@tabler/icons-react";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { atomDark } from "react-syntax-highlighter/dist/cjs/styles/prism";
 import { copyText } from "@/utils/clipboard";
@@ -31,6 +32,7 @@ export const CodeBlock = ({
 	highlightLines = [],
 	tabs = [],
 }: CodeBlockProps) => {
+	const { t } = useTranslation();
 	const [copied, setCopied] = React.useState(false);
 	const [activeTab, setActiveTab] = React.useState(0);
 
@@ -74,6 +76,7 @@ export const CodeBlock = ({
 						<button
 							type="button"
 							onClick={copyToClipboard}
+							aria-label={t(copied ? "common.copied" : "common.copy")}
 							className="flex items-center gap-1 text-xs text-zinc-400 hover:text-zinc-200 transition-colors font-sans"
 						>
 							{copied ? <IconCheck size={14} /> : <IconCopy size={14} />}

@@ -1,16 +1,18 @@
 <div align="center">
 
-<img src="https://apple-rag.com/logo-with-text.svg" alt="Apple RAG MCP" width="400">
+<img src="https://apple-rag.com/logo.svg" alt="Apple RAG" width="64">
 
-### The Apple docs MCP your AI actually deserves.
+# Apple RAG
 
-*Apple docs. WWDC26 transcripts. RAG retrieval + [Jev](https://typesafe.ai/) relevance ranking. One clean tool.*
+### Apple developer knowledge for your AI agent.
+
+*Apple docs. WWDC26 transcripts. RAG retrieval + [Jev](https://typesafe.ai/) relevance ranking. Connect via MCP / CLI.*
 
 [Website](https://apple-rag.com) · Powered by [<img src="./public/typesafe-logo.webp" alt="" width="18" height="18"> Jev](https://typesafe.ai/)
 
 [![CI](https://github.com/BingoWon/apple-rag-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/BingoWon/apple-rag-mcp/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![Listed on mcpservers.org](https://mcpservers.org/badge.svg)](https://mcpservers.org/servers/bingowon/apple-rag-mcp) · **English** | [中文](./README.zh-CN.md)
 
-<a href="https://apple-rag.com"><img src="https://apple-rag.com/og-image-jev.png" alt="Apple RAG MCP — Powered by Jev" width="800"></a>
+<a href="https://apple-rag.com"><img src="https://apple-rag.com/og-image.png" alt="Apple RAG — MCP / CLI for AI agents" width="800"></a>
 
 </div>
 
@@ -26,7 +28,7 @@ Hybrid retrieval combines keyword and semantic search to find Apple sources. [Je
 
 [Jev](https://typesafe.ai/), a decision model, scores candidate Apple documentation
 and video transcripts against each query's API, platform, and version requirements.
-We use its relevance scores to rank the sources returned through MCP. A backup
+We use its relevance scores to rank the sources returned through MCP or CLI. A backup
 reranker takes over if the API call fails.
 
 ---
@@ -54,7 +56,7 @@ for limits, setup, and log meanings.
 
 ## Start in Seconds
 
-**Terminal and coding agents:** use the [Apple RAG CLI](packages/cli/README.md):
+**Agents with shell access:** use the [Apple RAG CLI](packages/cli/README.md):
 
 ```sh
 npm install -g apple-rag-cli
@@ -106,7 +108,7 @@ Saving a configuration alone does not verify a working connection.
 
 > **Note:** No MCP Token required to start! You get free queries without any authentication. Add an MCP Token later for higher usage limits.
 
-## 🌟 Why Developers Love Apple RAG MCP
+## 🌟 Built for AI agents
 
 <table>
 <tr>
@@ -118,14 +120,14 @@ Get quick responses with our optimized search infrastructure. No more hunting th
 ### 🎯 **AI-Powered Hybrid Search**
 Hybrid search combines keyword and semantic retrieval for Apple documentation and video transcripts. [Jev](https://typesafe.ai/) then ranks the combined candidates against your question, giving your agent more relevant context.
 
-### 🔒 **Always Secure**
-MCP authentication ensures trusted access for your AI agents with enterprise-grade security.
+### 🔒 **Account Access**
+Use separate MCP and CLI credentials with shared account quotas and individually revocable access.
 
 </td>
 <td width="50%">
 
-### 📝 **Code Examples**
-Get practical code examples in Swift, Objective-C, and SwiftUI alongside documentation references.
+### 📝 **Source References**
+Results include source URLs so agents can verify API details and cite their references.
 
 ### 🔄 **Real-time Updates**
 Our documentation index is continuously updated for WWDC26, Xcode 27 beta, and the latest Apple developer resources.

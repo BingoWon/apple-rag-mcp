@@ -7,13 +7,14 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { I18nextProvider, Trans } from "react-i18next";
 import { MemoryRouter } from "react-router-dom";
 import serverJson from "../../server.json";
+import { SITE_PAGES } from "../../shared/site";
 import { OAUTH_SUBSCRIPTION_QUOTAS } from "../../worker/api/types/permissions";
 import { TOOLS } from "../../worker/mcp/constants";
 import { SERVER_MANIFEST } from "../../worker/mcp/manifest";
 import en from "../i18n/en.json";
 import zh from "../i18n/zh.json";
 
-test("page and sharing metadata consistently describe Jev integration", () => {
+test("page and sharing metadata describe the agent-first brand and preserve ranker attribution", () => {
 	const html = readFileSync(new URL("../../index.html", import.meta.url), "utf8");
 	const metadata = Object.fromEntries(
 		[...html.matchAll(/<meta (?:name|property)="([^"]+)" content="([^"]+)"\s*\/>/g)].map(
@@ -21,10 +22,10 @@ test("page and sharing metadata consistently describe Jev integration", () => {
 		),
 	);
 	const title = html.match(/<title>([^<]+)<\/title>/)?.[1];
-	assert.match(title ?? "", /Powered by Jev/);
+	assert.equal(title, SITE_PAGES["/"].title);
 	assert.equal(metadata["og:title"], title);
 	assert.equal(metadata["twitter:title"], title);
-	assert.match(metadata.description, /RAG retrieval and Jev relevance ranking/);
+	assert.equal(metadata.description, SITE_PAGES["/"].description);
 	assert.equal(metadata["og:description"], metadata.description);
 	assert.equal(metadata["twitter:description"], metadata.description);
 	const structured = JSON.parse(
@@ -33,7 +34,7 @@ test("page and sharing metadata consistently describe Jev integration", () => {
 	assert.equal(structured.description, metadata.description);
 	assert.ok(structured.featureList.includes("Jev Relevance Ranking"));
 	assert.equal(metadata["og:image"], metadata["twitter:image"]);
-	assert.match(metadata["og:image:alt"], /Jev/);
+	assert.match(metadata["og:image:alt"], /MCP \/ CLI/);
 	assert.equal(metadata["og:image:alt"], metadata["twitter:image:alt"]);
 	const image = readFileSync(
 		new URL(`../../public${new URL(metadata["og:image"]).pathname}`, import.meta.url),
@@ -84,12 +85,10 @@ test("retrieval copy separates keyword/semantic recall from Jev ranking and reta
 			assert.ok(copy.includes("<jev>Jev</jev>"));
 		}
 		for (const copy of [
-			locale.hero.subtitle_desc,
+			locale.hero.ranking,
 			locale.features.subtitle,
-			locale.quickstart.subtitle,
 			locale.datasources.subtitle,
 			locale.datasources.docs_desc,
-			locale.testimonials.subtitle,
 			locale.pricing.subtitle,
 			locale.cta.subtitle,
 			locale.footer.tagline,
@@ -110,9 +109,7 @@ test("retrieval sections and footer render model logos in both languages", async
 	});
 	try {
 		const { FeaturesSection } = await import("../components/sections/FeaturesSection.js");
-		const { QuickStartSection } = await import("../components/sections/QuickStartSection.js");
 		const { DataSourcesShowcase } = await import("../components/sections/DataSourcesSection.js");
-		const { TestimonialsSection } = await import("../components/sections/TestimonialsSection.js");
 		const { CTASection } = await import("../components/sections/CTASection.js");
 		const { Footer } = await import("../components/layout/Footer.js");
 		const { default: SuccessPage } = await import("../pages/SuccessPage.js");
@@ -138,9 +135,7 @@ test("retrieval sections and footer render model logos in both languages", async
 			assert.ok(!featureHtml.includes("&lt;jev&gt;"));
 			for (const [Component, count] of [
 				[FeaturesSection, 2],
-				[QuickStartSection, 1],
 				[DataSourcesShowcase, 3],
-				[TestimonialsSection, 1],
 				[CTASection, 1],
 				[Footer, 1],
 				[SuccessPage, 1],
@@ -157,10 +152,6 @@ test("retrieval sections and footer render model logos in both languages", async
 				assert.ok(!html.includes("&lt;jev&gt;"));
 				assert.ok(!html.includes("text-typesafe leading-none"));
 				assert.ok(html.includes("jev-brand-name font-bold"));
-				if (Component === CTASection) {
-					assert.ok(!html.includes("max-w-2xl"));
-					assert.ok(!html.includes("max-w-5xl"));
-				}
 			}
 		}
 	} finally {

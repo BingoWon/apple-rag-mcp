@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { Route, Routes } from "react-router-dom";
 
+const ConnectPage = lazy(() => import("@/pages/ConnectPage"));
 const CLIAuthorizePage = lazy(() => import("@/pages/cli/AuthorizePage"));
 const DashboardLayout = lazy(() => import("@/components/layout/DashboardLayout"));
 const HomePage = lazy(() => import("@/pages/HomePage"));
@@ -52,6 +53,7 @@ export function AppRouter() {
 			<Routes>
 				{/* Home */}
 				<Route path="/" element={<HomePage />} />
+				<Route path="/connect" element={<ConnectPage />} />
 
 				{/* Auth */}
 				<Route element={<AuthLayout />}>
