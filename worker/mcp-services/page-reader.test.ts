@@ -51,7 +51,7 @@ function setup(
 		);
 		calls.push(url);
 		if (url.startsWith("https://cloudflare-dns.com/"))
-			return Response.json({ Answer: [{ type: 1, data: "8.8.8.8" }] });
+			return Response.json({ Status: 0, Answer: [{ type: 1, data: "8.8.8.8" }] });
 		return respond(url, init);
 	});
 	return {
@@ -241,7 +241,7 @@ test("DNS destinations on private networks are rejected before cloud disclosure"
 		throw new Error("Provider must not run");
 	});
 	t.mock.method(globalThis, "fetch", async () =>
-		Response.json({ Answer: [{ type: 1, data: "10.0.0.1" }] }),
+		Response.json({ Status: 0, Answer: [{ type: 1, data: "10.0.0.1" }] }),
 	);
 	await assert.rejects(s.reader.getPage(external, signal()), /public website/);
 	assert.equal(s.reservations(), 0);
@@ -256,4 +256,19 @@ test("client cancellation propagates instead of becoming a missing-page or syste
 	});
 	await assert.rejects(s.reader.getPage(apple, controller.signal), (error) => error === reason);
 	assert.equal(s.cache.size, 0);
+});
+
+test("DNS service failures are operational failures, not invalid user URLs", async (t) => {
+	const s = setup(t, () => {
+		throw new Error("Provider must not run");
+	});
+	t.mock.method(globalThis, "fetch", async () => new Response("Unavailable", { status: 503 }));
+	await assert.rejects(
+		s.reader.getPage(external, signal()),
+		(error: unknown) =>
+			error instanceof PageReadError &&
+			error.reason === "DNS_LOOKUP_FAILED" &&
+			error.outcome === "failed",
+	);
+	assert.equal(s.reservations(), 0);
 });

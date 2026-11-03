@@ -1,5 +1,7 @@
 import { readText } from "./read-text.js";
 
+export class UnsafeUrlError extends Error {}
+
 const APPLE_HOSTS = new Set([
 	"developer.apple.com",
 	"support.apple.com",
@@ -95,14 +97,17 @@ export async function assertPublicHost(url: string, signal: AbortSignal): Promis
 			);
 			if (!response.ok) throw new Error("Could not validate the public destination.");
 			const data = JSON.parse(await readText(response, 16_384)) as {
+				Status: number;
 				Answer?: { type: number; data: string }[];
 			};
+			if (data.Status !== 0) throw new Error("DNS resolution failed.");
 			return (data.Answer ?? [])
 				.filter((answer) => answer.type === 1 || answer.type === 28)
 				.map((answer) => answer.data);
 		}),
 	);
 	const addresses = answers.flat();
-	if (!addresses.length || !addresses.every(isPublicAddress))
-		throw new Error("The destination is not a public website.");
+	if (!addresses.length) throw new Error("DNS returned no public address records.");
+	if (!addresses.every(isPublicAddress))
+		throw new UnsafeUrlError("The destination is not a public website.");
 }

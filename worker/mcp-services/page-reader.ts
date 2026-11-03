@@ -6,7 +6,13 @@ import { logger } from "../mcp-utils/logger.js";
 import { readText } from "../shared/read-text.js";
 import type { ToolOutcome } from "../shared/tool-outcomes.js";
 import type { Env } from "../shared/types.js";
-import { assertPublicHost, canCacheUrl, isAppleUrl, publicUrl } from "../shared/web-url.js";
+import {
+	assertPublicHost,
+	canCacheUrl,
+	isAppleUrl,
+	publicUrl,
+	UnsafeUrlError,
+} from "../shared/web-url.js";
 
 export interface StoredWebPage {
 	url: string;
@@ -202,8 +208,16 @@ export class PageReader {
 	private async readWeb(url: string, signal: AbortSignal): Promise<StoredWebPage> {
 		try {
 			await assertPublicHost(url, signal);
-		} catch {
+		} catch (error) {
 			signal.throwIfAborted();
+			if (!(error instanceof UnsafeUrlError))
+				throw new PageReadError(
+					"DNS_LOOKUP_FAILED",
+					"The public hostname could not be checked. Please retry.",
+					502,
+					"failed",
+					url,
+				);
 			throw new PageReadError(
 				"BLOCKED_URL",
 				"The destination could not be verified as a public website.",
