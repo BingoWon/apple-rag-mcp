@@ -69,14 +69,14 @@
 	"hero": {
 		"model_team": "Model team",
 		"model_logo": "Model logo",
-		"title_apple": "Apple developer knowledge",
-		"title_agent": "for your AI agent.",
-		"description": "Give your agent access to official Apple documentation and WWDC transcripts. It can search for relevant sources and read them as it works on your code.",
-		"connection": "Connect via MCP or CLI.",
-		"account": "One account and subscription for both.",
-		"cta": "Connect your agent",
-		"secondary": "See how it works",
-		"ranking": "RAG retrieval with <jev>Jev</jev> relevance ranking."
+		"title_inject": "Inject",
+		"title_apple": "Apple Expertise",
+		"title_into": "into AI Agents via MCP / CLI",
+		"subtitle_heres": "Here's to the",
+		"subtitle_vibecoders": "Vibe Coders",
+		"subtitle_desc": ". Born with Apple DNA. <combo><rag>RAG</rag> + <jev>Jev</jev></combo> bring WWDC26, iOS 27, and official documentation insights to your agents.",
+		"setup": "MCP / CLI setup",
+		"cta": "Connect your agent"
 	},
 	"jev": {
 		"title": "Powered by <jev>Jev</jev>",

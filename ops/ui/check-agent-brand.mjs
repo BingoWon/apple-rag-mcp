@@ -103,14 +103,31 @@ try {
 				await page.locator("#hero h1").waitFor();
 				assert(
 					(await page.locator("#hero").innerText()).includes(
-						language === "en" ? "for your AI agent." : "让你的智能体随时查阅。",
+						language === "en" ? "into AI Agents via MCP / CLI" : "通过 MCP / CLI 注入 AI Agent",
 					),
 				);
 				assert.equal(
 					await page.locator('a[href="https://github.com/BingoWon/apple-rag-mcp"]').count(),
 					0,
 				);
+				const heading = page.locator("#hero h1");
+				assert((await heading.getAttribute("class")).includes("md:text-7xl"));
+				assert((await heading.locator("span[style]").count()) > 10);
+				if (language === "en") {
+					const rows = await heading
+						.locator("span[style]")
+						.evaluateAll((letters) => [
+							...new Set(letters.map((letter) => Math.round(letter.getBoundingClientRect().top))),
+						]);
+					assert.equal(rows.length, 1, "Keep the colorful phrase together without orphan letters");
+				}
+				assert.equal(await page.locator("#hero .arrow-button").count(), 1);
+				assert.equal(await page.locator('#hero a[href="/connect"]').count(), 1);
+				assert.equal(await page.locator('#hero a[href="/register"]').count(), 1);
 				await capture("home");
+				await page.locator('#hero a[href="/connect"]').click();
+				await page.waitForURL("**/connect");
+				await page.goto(base, { waitUntil: "networkidle" });
 				const quick = page.locator("#quickstart");
 				await quick.scrollIntoViewIfNeeded();
 				assert.equal(await quick.getByRole("button").count(), 2);

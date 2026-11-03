@@ -69,14 +69,14 @@
 	"hero": {
 		"model_team": "模型团队",
 		"model_logo": "模型标志",
-		"title_apple": "Apple 开发知识",
-		"title_agent": "让你的智能体随时查阅。",
-		"description": "让智能体在开发过程中搜索 Apple 官方文档与 WWDC 字幕，读取相关资料，并根据来源完成任务。",
-		"connection": "支持 MCP / CLI 两种接入方式。",
-		"account": "同一账号、同一套餐，两种方式均可使用。",
-		"cta": "接入你的智能体",
-		"secondary": "了解接入方式",
-		"ranking": "RAG 检索与 <jev>Jev</jev> 相关性排序。"
+		"title_inject": "将",
+		"title_apple": "Apple 开发者文档",
+		"title_into": "通过 MCP / CLI 注入 AI Agent",
+		"subtitle_heres": "致敬每一位",
+		"subtitle_vibecoders": "Vibe Coder",
+		"subtitle_desc": "，源自 Apple 基因。<combo><rag>RAG</rag> + <jev>Jev</jev></combo> 为你的 Agent 注入 WWDC26、iOS 27 与官方文档洞见。",
+		"setup": "MCP / CLI 接入",
+		"cta": "接入你的智能体"
 	},
 	"jev": {
 		"title": "由 <jev>Jev</jev> 驱动",

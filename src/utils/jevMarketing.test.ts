@@ -85,7 +85,7 @@ test("retrieval copy separates keyword/semantic recall from Jev ranking and reta
 			assert.ok(copy.includes("<jev>Jev</jev>"));
 		}
 		for (const copy of [
-			locale.hero.ranking,
+			locale.hero.subtitle_desc,
 			locale.features.subtitle,
 			locale.datasources.subtitle,
 			locale.datasources.docs_desc,

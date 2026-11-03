@@ -16,6 +16,13 @@ Every code change ships with a release. A change to `worker/`, `src/`, `skills/`
 - Documentation-only changes may skip the bump.
 - Never push a version that already has a tag; the workflow skips it and no release is created.
 
+## Homepage Hero
+
+Preserve the custom Hero design: colorful heading, Vibe Coders badge, rainbow CTA,
+arrow button, MacBook scroll and stickers. Brand or MCP / CLI copy changes must
+adapt this design, not replace its layout, typography or effects. A redesign
+requires an explicit owner request. See `ops/brand-agent-content-2026-11-03.md`.
+
 ## MCP Protocol Compatibility
 
 Do not make the production MCP endpoint `2026-07-28`-only. Current clients, including Cursor 3.24, still open Streamable HTTP with the legacy `initialize` handshake. The server must keep `legacy: "stateless"` in `worker/mcp/protocol-handler.ts` so those clients work beside the modern per-request protocol.

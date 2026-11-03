@@ -46,7 +46,15 @@ test("hero stickers use local images, accessible labels and official links in bo
 			assert.equal(html.split('href="https://typesafe.ai/"').length - 1, 3);
 			assert.ok(!html.includes('href="https://github.com/BingoWon/apple-rag-mcp"'));
 			assert.ok(html.includes('href="/connect"'));
-			assert.ok(html.includes(locale.hero.title_agent));
+			assert.ok(html.includes(locale.hero.title_into));
+			assert.ok(html.includes("MCP / CLI"));
+			assert.ok(html.includes(locale.hero.subtitle_vibecoders));
+			assert.ok(html.includes("bg-clip-text text-transparent bg-gradient-to-b"));
+			assert.ok(html.includes("inline-block whitespace-pre font-sans"));
+			assert.ok(html.includes("transform -rotate-2"));
+			assert.ok(html.includes("before:[filter:blur(calc(0.8*1rem))]"));
+			assert.ok(html.includes("arrow-button"));
+			assert.ok(html.includes('href="/register"'));
 			assert.ok(html.includes('class="jev-brand '));
 			assert.ok(!html.includes("TypeSafe"));
 			assert.ok(!html.includes("&lt;jev&gt;"));

@@ -14,9 +14,11 @@ and page reads. The CLI is not positioned as a manual research tool for people.
   Lead with the agent's task and use direct verbs. Avoid translated slogans such
   as “same service, choose by workflow”, claims of instant answers, universal
   client compatibility, complete coverage, or identical performance/cost.
-- The headline is “Apple developer knowledge for your AI agent.” The short
-  connection message is “Connect via MCP or CLI.” Both connections have equal
-  visual weight and share core retrieval, the account plan and usage allowance.
+- The homepage Hero retains its custom colorful title, Vibe Coders badge, rainbow
+  setup link, arrow CTA, MacBook scroll and stickers. Adapt the original headline
+  to “Inject Apple Expertise into AI Agents via MCP / CLI”; do not replace its
+  visual design during copy updates. Both connections share core retrieval, the
+  account plan and usage allowance.
 - Keep RAG retrieval and Jev ranking attribution in the relevant product sections.
   The product returns sources; the consuming agent uses them to produce an answer.
 - Setup instructions are addressed to the agent. The owner only handles required
@@ -68,3 +70,16 @@ Push main to deploy through Workers Builds. CI publishes the CLI patch only afte
 service 5.6.0 is available. Existing CLI login remains valid; no user reauthorization,
 production data migration or manual Worker deployment is required. Do not claim
 more subscriptions or improved retention until actual adoption data supports it.
+
+## Hero correction — 5.6.2
+
+The 5.6.0 content pass incorrectly replaced the custom Hero typography and CTAs.
+Restore the pre-refresh Hero design from c26fad8. The only functional adaptation
+is replacing the obsolete private GitHub CTA with the MCP / CLI connection guide,
+using its existing rainbow treatment. Its foreground follows the theme for
+readability. Keep the original English/Chinese message and Vibe Coders badge,
+adding CLI alongside MCP. The rest of the brand, content and metadata work remains.
+
+For future content changes, preserve this Hero design unless the owner explicitly
+requests a redesign. Regression assertions cover its distinctive visual elements;
+browser checks cover both languages, themes, responsive layouts and setup links.
