@@ -140,3 +140,23 @@ Pro banner, client logos and the rest of the homepage composition. This explicit
 request supersedes the earlier requirement to retain the prompt window. Regression
 checks cover real clipboard contents, absent prompt markup, responsive sticker
 positions, unchanged rotation and positive transform determinants (no mirroring).
+
+## Quick-start hierarchy — 5.6.7
+
+Refine only the existing quick-start section. Use a short heading and introduction,
+a compact segmented MCP / CLI selector beside the primary copy action, and one
+contained setup panel. Group trial/shared-plan information as secondary copy and
+integrate the Pro offer into the panel footer. Arrange the nine client-guide links
+in a two-column mobile / three-column desktop grid with consistent icon and link
+sizes, rather than a row spanning the page.
+
+The selected method remains MCP by default. The visible action is concise; its
+accessible name still identifies MCP or CLI. Copy feedback keeps the control width
+stable. The complete existing setup generators are unchanged and prompt text is
+not rendered. The Hero, stickers, other homepage sections, authentication and quota
+rules are outside this layout refinement.
+
+Validation: 13 focused unit checks, type checking, lint and the production build
+pass. The 150-case browser sweep covers both languages and themes at 320, 390 and
+1440px, exact clipboard contents, absent prompt markup, aligned panel/grid edges,
+responsive controls and client links that fit with at least 40px-high targets.

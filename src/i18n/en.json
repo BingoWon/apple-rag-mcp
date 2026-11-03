@@ -99,15 +99,16 @@
 	},
 	"quickstart": {
 		"eyebrow": "Get connected",
-		"title": "Two ways to connect your agent",
-		"subtitle": "Connect your agent to a maintained Apple knowledge base through MCP or CLI, with RAG retrieval and <jev>Jev</jev> ranking. We handle collection, indexing, and ongoing upkeep.",
-		"shared": "Your account plan and usage allowance apply to both MCP and CLI.",
+		"title": "Connect your agent",
+		"subtitle": "Copy the setup instructions and send them to your agent. RAG retrieval and <jev>Jev</jev> ranking are included.",
+		"shared": "One plan with shared limits for MCP and CLI.",
 		"free_access": "Try without an account: 30 calls per week, up to 3 per minute.",
 		"supported_clients": "MCP client setup guides",
 		"pro_weekly_calls": "50,000 calls per week",
 		"pro_minute_calls": "50 calls per minute",
 		"pro_cta": "See plans",
-		"connection_label": "Connection method"
+		"connection_label": "Connection method",
+		"copy": "Copy setup instructions"
 	},
 	"datasources": {
 		"eyebrow": "Source library",

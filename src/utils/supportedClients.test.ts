@@ -66,7 +66,7 @@ test("quick start presents both agent connections and current trial limits with 
 			),
 		);
 		const list = html.slice(html.indexOf("<ul"), html.indexOf("</ul>"));
-		assert.equal(list.match(/<li>/g)?.length, 9);
+		assert.equal(list.match(/<li[ >]/g)?.length, 9);
 		assert.equal(list.match(/<img /g)?.length, 9);
 		let lastIndex = -1;
 		for (const client of SUPPORTED_CLIENTS) {

@@ -190,7 +190,30 @@ try {
 						language === "en" ? "50,000 calls per week" : "每周 50,000 次调用",
 					),
 				);
+				const setupLayout = await quick.evaluate((section) => {
+					const selector = section.querySelector("fieldset");
+					const action = section.querySelector("button[aria-label]");
+					const grid = section.querySelector("ul");
+					return {
+						selectorTop: selector.getBoundingClientRect().top,
+						actionTop: action.getBoundingClientRect().top,
+						columns: getComputedStyle(grid).gridTemplateColumns.split(" ").length,
+						panelWidth: selector.closest(".rounded-2xl").getBoundingClientRect().width,
+						gridWidth: grid.getBoundingClientRect().width,
+						linksFit: [...grid.querySelectorAll("a")].every(
+							(link) =>
+								link.scrollWidth <= link.clientWidth + 1 &&
+								link.getBoundingClientRect().height >= 40,
+						),
+					};
+				});
+				assert.equal(setupLayout.columns, width >= 640 ? 3 : 2);
+				assert(Math.abs(setupLayout.panelWidth - setupLayout.gridWidth) < 1);
+				assert(setupLayout.linksFit, "Client guides must remain readable and easy to select");
+				if (width >= 640) assert(Math.abs(setupLayout.selectorTop - setupLayout.actionTop) < 1);
+				else assert(setupLayout.actionTop > setupLayout.selectorTop);
 				await capture("connections");
+				await quick.screenshot({ path: `${results}/quickstart-${language}-${theme}-${width}.png` });
 				const testimonials = page.locator("#testimonials");
 				await testimonials.scrollIntoViewIfNeeded();
 				await expectCarouselName("Jake Mitchell");

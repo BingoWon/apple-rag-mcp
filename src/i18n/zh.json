@@ -99,15 +99,16 @@
 	},
 	"quickstart": {
 		"eyebrow": "开始接入",
-		"title": "为你的智能体选择接入方式",
-		"subtitle": "通过 MCP / CLI 为智能体接入持续维护的 Apple 知识库，由 RAG 检索与 <jev>Jev</jev> 排序提供相关资料。采集、索引和日常维护由我们负责。",
-		"shared": "MCP / CLI 共用账号套餐与调用额度。",
+		"title": "接入你的智能体",
+		"subtitle": "复制说明并交给智能体，即可接入 Apple 资料的 RAG 检索与 <jev>Jev</jev> 排序。",
+		"shared": "MCP / CLI 共用套餐与额度。",
 		"free_access": "免注册体验：每周 30 次、每分钟最多 3 次调用。",
 		"supported_clients": "MCP 客户端配置指南",
 		"pro_weekly_calls": "每周 50,000 次调用",
 		"pro_minute_calls": "每分钟 50 次调用",
 		"pro_cta": "查看套餐",
-		"connection_label": "接入方式"
+		"connection_label": "接入方式",
+		"copy": "复制接入说明"
 	},
 	"datasources": {
 		"eyebrow": "资料来源",
