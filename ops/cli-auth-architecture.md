@@ -1,6 +1,6 @@
 # Independent CLI authorization and request channels
 
-Implemented: 2026-11-03. Service 5.5.1; CLI 2.0.0. Production acceptance and
+Implemented: 2026-11-03. Service 5.5.2; CLI 2.0.0. Production acceptance and
 migration results are recorded in [the acceptance report](cli-auth-acceptance-2026-11-03.md).
 
 ## Boundaries
@@ -91,8 +91,8 @@ The old implementation persisted bearer MCP tokens in log rows; masking the UI
 was insufficient. Migration 0009 maps surviving token IDs, clears those secrets,
 and temporarily scrubs old Worker inserts during rollout. Old rows remain
 `unknown`; their exact client is not inferred. After the new Worker is confirmed,
-0010 removes the temporary triggers and obsolete secret columns. Neither phase
-rebuilds the log tables or changes the PostgreSQL corpus. Inspect live schema,
+0010 removes the temporary triggers and obsolete secret columns. There is no manual table-copy rebuild or PostgreSQL corpus change. SQLite may
+rewrite storage during DROP COLUMN; account for those D1 writes. Inspect live schema,
 D1 Time Travel bookmark, row counts and write budget before applying. Existing
 backup retention can still contain historical secrets; do not claim it is erased
 by an application-table migration.

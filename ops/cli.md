@@ -1,6 +1,6 @@
 # CLI operations and npm publication
 
-Current implementation: service 5.5.1, independent npm `apple-rag-cli` 2.0.0;
+Current implementation: service 5.5.2, independent npm `apple-rag-cli` 2.0.0;
 executable `apple-rag`, Node.js 22.20+. See [authorization architecture](cli-auth-architecture.md)
 and [acceptance](cli-auth-acceptance-2026-11-03.md). The CLI uses a versioned JSON
 API and independent OAuth/device/API-key credentials, with shared account billing

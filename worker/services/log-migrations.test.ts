@@ -78,6 +78,43 @@ test("CLI migration preserves rows, maps credential IDs and prevents old writers
 			db.prepare("SELECT mcp_token FROM search_logs ORDER BY rowid DESC LIMIT 1").get()?.mcp_token,
 			null,
 		);
+		const before = [
+			db
+				.prepare("SELECT id,credential_id,channel,requested_query FROM search_logs ORDER BY rowid")
+				.all(),
+			db
+				.prepare("SELECT id,credential_id,channel,requested_url FROM fetch_logs ORDER BY rowid")
+				.all(),
+		];
+		db.exec(load("0010_drop_log_bearer_columns.sql"));
+		assert.deepEqual(
+			[
+				db
+					.prepare(
+						"SELECT id,credential_id,channel,requested_query FROM search_logs ORDER BY rowid",
+					)
+					.all(),
+				db
+					.prepare("SELECT id,credential_id,channel,requested_url FROM fetch_logs ORDER BY rowid")
+					.all(),
+			],
+			before,
+		);
+		for (const table of ["search_logs", "fetch_logs"])
+			assert(
+				db
+					.prepare(`PRAGMA table_info(${table})`)
+					.all()
+					.every((row) => row.name !== "mcp_token"),
+			);
+		assert.equal(
+			db
+				.prepare(
+					"SELECT count(*) AS n FROM sqlite_master WHERE type='trigger' AND name LIKE 'scrub_%'",
+				)
+				.get()?.n,
+			0,
+		);
 	} finally {
 		db.close();
 	}

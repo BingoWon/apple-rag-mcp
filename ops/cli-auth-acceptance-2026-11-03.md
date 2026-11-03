@@ -1,55 +1,104 @@
 # CLI 2 independent authorization acceptance — 2026-11-03
 
-## Local verification
+## Delivered behavior
 
-- Full lint, TypeScript, 218 application/PostgreSQL tests and 14 CLI HTTP/SQLite tests
-  pass. CLI tests cover real PKCE and device consent, login denial and cancellation,
-  refresh rotation/replay, expiry/revocation, cross-resource rejection (including
-  stripped JWT prefixes), shared paid/free quotas, refund/cancellation, invalid
-  input, output-file protection and log attribution with spoofed headers.
-- The npm artifact contains exactly five allowlisted files. It is packed,
-  clean-installed and invoked as the real `apple-rag` executable against the
-  independent API fixture, with no MCP client dependency or owner npm login.
-- Actual native macOS Keychain write/read/delete passed with a fresh test entry.
-  HTTP integration tests use a test-only vault adapter not included in the archive.
-- Browser UI automation was not used, as requested. Website source/type/build and
-  authorization HTTP behavior are checked; visual interaction is not claimed.
+See [the implemented architecture](cli-auth-architecture.md) for grants, scopes,
+OS-vault storage, service boundaries and migration order.
 
-## Production cutover
+CLI 2.0.0 is publicly available on npm through GitHub OIDC. Service 5.5.1 was
+verified on production with the final D1 schema. The 5.5.2 release records that
+schema cleanup and its regression coverage. CLI and MCP have independent
+credentials/API entries and share platform account subscriptions and quotas.
 
-- Before migration: 18,769 search rows (11,109 with non-null old token field),
-  7,236 fetch rows (3,703 with non-null old token field). No secret values were
-  exported. The pre-change D1 Time Travel bookmark is retained in private evidence.
-- Only 0009 was pending; it applied successfully (26 SQL commands, 335.69 ms).
-  It adds CLI authorization state/context, clears old log secrets and installs
-  temporary scrub triggers for the old Worker. Post-migration counts are unchanged and both raw-token counts are zero. No corpus migration or log-table
-  rebuild is involved. The owner had already upgraded the Cloudflare account.
-- Service deployment, public npm 2.0.0 install and final column removal are pending
-  at this checkpoint; update this section after observing production results.
+## Local and CI verification
 
-## Deployment checks
+- Full lint, TypeScript, 218 application/PostgreSQL tests and 14 CLI HTTP/SQLite
+  tests pass. The final schema also passes targeted migration, real log-writer,
+  admin-filter and CLI integration checks. Authorization, PKCE/device consent,
+  refresh/replay, HTTP routing and SQL execute real implementation code; only the
+  OS vault in child-process integration tests is replaced by a test-only adapter.
+- [CI 41604212364](https://github.com/BingoWon/apple-rag-mcp/actions/runs/41604212364)
+  passed Linux/Node22, macOS/Node24 and Windows/Node26 checks, isolated distributable
+  installation and OIDC publication. POSIX terminal/signal tests are skipped on
+  Windows. Five npm files are allowlisted; fixtures, private config and secrets
+  are excluded. The CLI has no MCP client dependency.
+- Actual native macOS Keychain write/read/delete passed. Production npm-installed
+  login and refresh below also used the real OS vault.
+- New publication waits for the matching deployed service version and independent
+  CLI API health; a failed deployment cannot release a new client prematurely.
 
-The first CI run passed Linux/application checks and macOS but blocked npm release
-on a Windows test-loader path: Node ESM requires a file URL for the `--import`
-hook. The fixture invocation now uses `URL.href`; no product authentication
-fallback is added. The first Cloudflare build also failed, leaving 5.4.1 live at that time.
-A subsequent automatic build succeeded and production now serves 5.5.0. The cause
-of the first build failure was not established.
-The existing Wrangler OAuth token lacks Workers CI read scope, so its build-log
-API returned 403. No broader account authorization or browser login was attempted.
+## Official npm installation and production acceptance
 
-CLI tool responses also keep cleanup/refunds alive through Worker `waitUntil`
-after disconnect; cancellation is not reported as a service outage.
+A fresh public-registry global installation into a temporary prefix and a separate
+fresh-cache `npm exec --package=apple-rag-cli@2.0.0` both report 2.0.0. Empty user
+and global npm configs were used; the owner's npm login was never used. The
+public archive matches the registry SHA512 integrity and the exact CI-tested
+artifact byte-for-byte. Its SHA256 is
+`2be1d895d2f744078d1d706433f0bf4259b98aaf8f7e546e385cf467194dd75a`.
 
-The user-facing usage-history API also read the old secret column; 5.5.1 changes
-its contract/UI to channel and credential references, fixes combined SQLite history
-queries and includes non-500 4xx errors in history filters. npm publication now
-waits for the matching deployed service and CLI API, after full CI checks.
+46 production assertions passed against `apple-rag.com` / `mcp.apple-rag.com`:
 
-## Limits
+- A temporary first-party test account with a reserved `.invalid` address signed
+  in through the normal password API, then explicitly approved CLI grants through
+  website authorization APIs. No owner's identity, supplied MCP token or browser
+  session was used. This does **not** sign the owner into their own CLI.
+- Both PKCE loopback and device-code login completed using the npm binary and
+  real Keychain. A wrong callback state was rejected. Files contained endpoint
+  metadata only. Account/status/doctor consumed no retrieval quota.
+- Real CLI search and indexed Apple fetch succeeded. Legacy and modern MCP calls
+  using a separately issued test MCP token consumed the same user's weekly quota:
+  four successful operations across the two entries reduced 50 to 46.
+- MCP and website credentials were rejected by the CLI resource; CLI keys were
+  rejected by MCP and website management. An expiring automation key had its own
+  authentication method and became unusable immediately after revocation.
+- Forcing only the test vault's local access expiry caused a real server refresh
+  and vault rotation. Replaying the old refresh credential revoked that device's
+  still-unexpired access, while its MCP credential remained valid. Both browser
+  and device sessions were logged out and removed from the vault.
+- After old-column removal, production user history returned CLI search/fetch and
+  MCP fetch rows with the expected request/credential IDs and no bearer field.
+  The authorization SPA route returned HTTP 200. Cursor-style `initialize` with
+  `2025-06-18` still succeeded.
 
-No real subscription/charge is created or changed; paid lifecycle checks use
-isolated fixtures. Test authorization must use a temporary first-party account,
-never the owner's login or supplied MCP token. Historical backups can contain old
-log secrets under provider retention; SQL cleanup affects the live application
-rows. No claim of authenticating the owner's personal CLI session is made.
+Production Admin rejected the local **development** password with HTTP 401. No
+production management credential was changed or recovered. Authorized admin
+channel filtering is verified by the real HTTP/SQLite fixture; production data
+attribution is checked through the test user's history and direct D1 queries.
+A production Admin login/filter session is not claimed.
+
+## D1 cutover
+
+- Before 0009: 18,769 search rows (11,109 with a non-null old token field), 7,236
+  fetch rows (3,703 with a non-null old field). No secret values were exported.
+  Private evidence retains the pre-change D1 Time Travel bookmark.
+- 0009 applied successfully: 26 commands, 335.69 ms. Row counts were unchanged,
+  old token fields became null, and temporary triggers scrubbed old Worker writes.
+  Historical channels remain `unknown`; surviving credential IDs were mapped
+  without guessing which client used a shared token.
+- Production 5.5.1 was checked before 0010: the remaining user-history reader was
+  replaced, combined history SQL worked, and only the two temporary triggers still
+  referenced the obsolete columns. A fresh bookmark/count check was retained.
+- 0010 applied successfully: 5 commands, 39.95 ms. Both secret columns and scrub
+  triggers are removed. Existing rows and indexes are preserved; live test calls
+  successfully write/read their new metadata. No PostgreSQL corpus change or
+  hand-written table-copy migration was performed. SQLite may rewrite storage
+  for DROP COLUMN; the already-upgraded Cloudflare account covers these writes.
+- After 0010, do not roll the Worker back before 5.5.1 without a matching schema
+  recovery. Prefer a forward fix. Historical backups can retain old secrets under
+  provider retention; live-table cleanup does not erase every backup.
+
+## Issues found and limits
+
+The first Windows test run failed because Node ESM requires a file URL for the
+`--import` fixture hook. Using `URL.href` fixed it, and Windows CI passed. The first
+Cloudflare build failed without changing the live service; the subsequent automatic
+build succeeded. Its initial cause was not established. The current Wrangler
+OAuth token lacks Workers CI log-read scope (HTTP 403); no broader authorization
+or browser login was attempted.
+
+No real subscription or charge was created/changed; paid lifecycle tests use
+isolated fixtures. Browser UI automation was not used, as requested. Website
+source/types/build and authorization HTTP behavior are checked; visual interaction
+is not claimed. Temporary account/grants/keys, test log/counter rows, native vault
+entries were verified removed; temporary installation/config/cache files are
+removed after final deployment checks.
