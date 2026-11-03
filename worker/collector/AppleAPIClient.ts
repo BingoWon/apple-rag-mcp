@@ -160,7 +160,7 @@ class AppleAPIClient {
 			const response = await fetch(url, {
 				headers: AppleAPIClient.DEFAULT_HEADERS,
 				signal: signal ?? AbortSignal.timeout(AppleAPIClient.PAGE_FETCH_TIMEOUT_MS),
-				redirect: "error",
+				redirect: "manual",
 			});
 
 			if (AppleAPIClient.PERMANENT_ERROR_CODES.includes(response.status)) {
@@ -168,7 +168,7 @@ class AppleAPIClient {
 				// A missing JSON representation is not proof that the original page was removed.
 				const page = await fetch(documentUrl, {
 					signal: signal ?? AbortSignal.timeout(AppleAPIClient.PAGE_FETCH_TIMEOUT_MS),
-					redirect: "error",
+					redirect: "manual",
 				});
 				await page.body?.cancel();
 				if (!AppleAPIClient.PERMANENT_ERROR_CODES.includes(page.status)) {

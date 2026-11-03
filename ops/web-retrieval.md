@@ -43,7 +43,9 @@ page; queue failures are logged and can be retried on a subsequent uncached read
 Only approved Apple hosts receive direct page requests. External targets go to
 Firecrawl after public HTTP(S) URL validation and public DNS address checks.
 Private/reserved addresses, embedded credentials and custom ports are rejected.
-No caller cookies or authentication headers are forwarded. Firecrawl is asked
+Cloudflare Workers do not support `redirect: "error"`; transports use `manual`
+and reject unexpected redirect statuses before forwarding credentials. No caller
+cookies or authentication headers are forwarded. Firecrawl is asked
 not to store the fetched content in its cache/index and to verify target TLS.
 The DNS check cannot pin a cloud provider's later connections: its own redirect
 and destination protections remain necessary. `storeInCache: false` is not a

@@ -90,7 +90,7 @@ export async function assertPublicHost(url: string, signal: AbortSignal): Promis
 				{
 					headers: { Accept: "application/dns-json" },
 					signal,
-					redirect: "error",
+					redirect: "manual",
 				},
 			);
 			if (!response.ok) throw new Error("Could not validate the public destination.");

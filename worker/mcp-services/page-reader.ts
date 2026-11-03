@@ -230,7 +230,7 @@ export class PageReader {
 		signal.throwIfAborted();
 		const response = await fetch("https://api.firecrawl.dev/v2/scrape", {
 			method: "POST",
-			redirect: "error",
+			redirect: "manual",
 			signal,
 			headers: {
 				"Content-Type": "application/json",

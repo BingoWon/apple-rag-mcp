@@ -44,6 +44,11 @@ function setup(
 	};
 	t.mock.method(globalThis, "fetch", async (input: string | URL | Request, init?: RequestInit) => {
 		const url = String(input);
+		assert.equal(
+			init?.redirect,
+			"manual",
+			"Cloudflare Workers require explicit manual redirect checks",
+		);
 		calls.push(url);
 		if (url.startsWith("https://cloudflare-dns.com/"))
 			return Response.json({ Answer: [{ type: 1, data: "8.8.8.8" }] });
@@ -127,7 +132,7 @@ test("JSON unavailable on a valid Apple page uses Firecrawl without changing its
 test("external pages preserve case, identify their origin, cache, and never enter the RAG queue", async (t) => {
 	const s = setup(t, (url, init) => {
 		assert.equal(url, "https://api.firecrawl.dev/v2/scrape");
-		assert.equal(init?.redirect, "error");
+		assert.equal(init?.redirect, "manual");
 		const body = JSON.parse(String(init?.body));
 		assert.equal(body.url, external);
 		assert.equal(body.storeInCache, false);
