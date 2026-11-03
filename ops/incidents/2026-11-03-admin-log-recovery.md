@@ -58,6 +58,10 @@ available in the details panel with copy controls. Dates display explicitly in
 UTC+8; legacy SQLite UTC dates and ISO dates share one parser. Invalid/missing
 values display an em dash.
 
+Narrow screens use cards instead of squeezing desktop columns. Customer contact
+overlays are excluded from admin routes so they cannot cover list actions. Admin
+navigation reuses the existing language/theme controls.
+
 Filters are implemented in SQL over the full dataset, with matching count and
 pagination predicates. Bound `INSTR` queries treat `%`, `_` and quotes literally
 and support long URLs without D1's 50-byte LIKE pattern limit. Date filters use
@@ -81,7 +85,11 @@ added. The implementation keeps the native semantic table for server-paged data.
   it binds only 127.0.0.1 and contains no production identities or credentials.
 - Visual and keyboard checks exercise long URLs/queries, details/copy/escape/focus,
   filtering, empty results, pagination, narrow viewports, both themes/languages.
-  Final production verification is recorded after automatic deployment.
+  The isolated fixture retained a 2,048-character URL and 9,908-character query in
+  details. At 1280px, the page width remained 1280px with fixed table layout; at
+  390px, the card list and full-width details panel stayed within the viewport.
+  Copy preserved the full URL, Escape returned focus to the opener, and invalid
+  date ranges displayed the validation error. Empty results disabled Next.
 - Before a D1 schema/data migration: inspect actual production column metadata,
   record affected rows and Time Travel point, estimate data/index write work and
   verify plan/available write budget. Do not assume small table size means low
@@ -92,3 +100,25 @@ added. The implementation keeps the native semantic table for server-paged data.
 - Per the owner's policy, the existing GitHub repository was made private with
   history retained before source edits. HTTPS Git uses the existing authorized
   project credential; no third-party signup or identity grant was created.
+
+## Release acceptance
+
+- Source commit: [4e8f3a7](https://github.com/BingoWon/apple-rag-mcp/commit/4e8f3a7d3a4062108f3d6a8cc8f87904bf61cdc5).
+- Local build and [GitHub CI](https://github.com/BingoWon/apple-rag-mcp/actions/runs/41579907077)
+  passed lint, type checking, all 208 tests (zero skipped) and production builds.
+  Existing bundle-size warnings remain outside this incident's scope.
+- Cloudflare automatically deployed version `682bad69-eae3-40cb-9f3d-98ff358e4c3a`
+  at 100% on 2026-11-03 04:46:10 UTC. No manual deployment was performed.
+  `/health` returned 5.3.0 and [v5.3.0](https://github.com/BingoWon/apple-rag-mcp/releases/tag/v5.3.0)
+  was created by the release workflow.
+- The authenticated production admin session loaded the new six-column fetch
+  list, UTC+8 dates, filters and details actions. Detailed filter/copy/focus and
+  responsive checks used isolated fixture data, avoiding changes to user records.
+- Post-deployment calls to `https://mcp.apple-rag.com` returned successful MCP
+  results (`isError` absent/false) for SwiftUI fetch and NavigationStack search,
+  with their expected document content. The new fetch also appeared in admin.
+- Read-only D1 verification after those calls: 7,208 fetch rows, zero invalid
+  dates and zero timestamps in country fields. No user rows were deleted.
+- Production quota exhaustion/load tests and customer billing/message-send flows
+  were not repeated. Workers Paid removes the free daily-write blocker; normal
+  account quotas and usage billing still apply.
