@@ -99,4 +99,4 @@ jobs:
         run: node ops/cli/npm-release.mjs
       - name: Publish verified artifact with OIDC
         if: steps.npm.outputs.publish == 'true'
-        run: npm publish cli-release/*.tgz --access public --provenance=false
+        run: npm publish ./cli-release/*.tgz --access public --provenance=false

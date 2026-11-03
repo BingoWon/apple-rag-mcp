@@ -75,6 +75,12 @@ tests and seven CLI tests. Service 5.4.1 / CLI 1.0.1 carries the fix.
 Publication and a new npm-installed 1.0.1 terminal check must be verified after CI;
 a passing local source test alone is not acceptance of the published fix.
 
+The first real publish job also exposed a release-path bug: npm interpreted
+`cli-release/package.tgz` as GitHub shorthand and attempted a Git SSH lookup.
+The job now uses `./cli-release/*.tgz` to identify a local tarball. A real anonymous
+`npm publish ./cli-release/apple-rag-cli-1.0.1.tgz --dry-run --json` returned the
+correct package/version and exit 0. No owner's npm session was used as a fallback.
+
 ## Coverage limits
 
 - The example.com fetch exercised a cached third-party result; it does not prove
