@@ -99,6 +99,31 @@ References: [npm metadata](https://docs.npmjs.com/cli/v11/configuring-npm/packag
 [Trusted Publishers](https://docs.npmjs.com/trusted-publishers/),
 [MCP structured output](https://ts.sdk.modelcontextprotocol.io/v2/clients/calling).
 
+## Release verification — 2026-11-03
+
+- Implementation commit: `501b79d93011963927c5996a72f1d70fb04a449c`;
+  [service release 5.4.0](https://github.com/BingoWon/apple-rag-mcp/releases/tag/v5.4.0).
+  Main push deployed through Cloudflare Workers Builds; no manual deployment.
+- [CI](https://github.com/BingoWon/apple-rag-mcp/actions/runs/41590038216) passed:
+  lint, types, 213 main tests, six CLI integration tests, production build and
+  isolated tarball install/discovery/retrieval. macOS/Node24 and Windows/Node26
+  passed too; the POSIX signal/refund test is intentionally skipped on Windows.
+- Production `https://mcp.apple-rag.com` reports 5.4.0. Anonymous account/status
+  and doctor succeeded with unchanged weekly quota. Real CLI search returned an
+  indexed Apple result with partial-document metadata; SwiftUI fetch returned
+  indexed Apple content. Legacy `initialize` with `2025-06-18` returned HTTP 200
+  and that protocol revision. Subscription lifecycle/paid quota changes were
+  tested with isolated fixture data, without real charges or subscription edits.
+- Tested owner publication artifact:
+  `/tmp/apple-rag-cli-release/apple-rag-cli-1.0.0.tgz`, SHA256
+  `b60d8af9ef784612fdb0777e9faae2f3ccea79fee31eb8ca162c888f67be60ba`.
+  Ten allowlisted client files only; no credentials, service config or private data.
+  CI also retains the verified package as the `apple-rag-cli` artifact.
+- npm registry returned E404; first publication and Trusted Publisher setup remain
+  owner-operated. The first CI correctly skipped publication. No npm login,
+  account creation, owner-identity authorization or npm publication was performed
+  by the agent.
+
 ## Scope limits
 
 Homebrew, standalone binaries, browser/device login, agent-config editing and bulk
