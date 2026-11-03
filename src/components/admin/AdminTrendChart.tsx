@@ -13,6 +13,7 @@ export const OUTCOME_COLORS = {
 	invalid: "#ec4899",
 	failed: "#ef4444",
 	limited: "#f59e0b",
+	cancelled: "#64748b",
 	unknown: "#94a3b8",
 };
 

@@ -49,6 +49,7 @@ const pointSchema = z.object({
 	invalid: z.number().optional(),
 	failed: z.number().optional(),
 	limited: z.number().optional(),
+	cancelled: z.number().optional(),
 	unknown: z.number().optional(),
 	registered: z.number().optional(),
 	anonymous: z.number().optional(),
@@ -64,6 +65,7 @@ const metricSchema = z.object({
 			invalid: z.number(),
 			failed: z.number(),
 			limited: z.number(),
+			cancelled: z.number(),
 			unknown: z.number(),
 		})
 		.optional(),
@@ -273,16 +275,9 @@ app.openapi(statsRoute, async (c) => {
 				const point = { date: new Date(timestamp).toISOString(), count: Number(row?.count) || 0 };
 				metric.total += point.count;
 				if (metric.outcomes) {
-					const outcomes = {
-						success: Number(row?.success) || 0,
-						degraded: Number(row?.degraded) || 0,
-						no_content: Number(row?.no_content) || 0,
-						invalid: Number(row?.invalid) || 0,
-						failed: Number(row?.failed) || 0,
-						limited: Number(row?.limited) || 0,
-						unknown: Number(row?.unknown) || 0,
-					};
+					const outcomes = emptyOutcomes();
 					for (const outcome of TOOL_OUTCOMES) {
+						outcomes[outcome] = Number(row?.[outcome]) || 0;
 						metric.outcomes[outcome] += outcomes[outcome];
 					}
 					metric.points.push({ ...point, ...outcomes });

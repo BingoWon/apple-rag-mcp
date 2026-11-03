@@ -32,7 +32,6 @@ export class FetchTool {
 		httpRequest: Request,
 		signal: AbortSignal = httpRequest.signal,
 	): Promise<CallToolResult> {
-		signal.throwIfAborted();
 		const start = Date.now();
 		const { ip, country } = extractClientInfo(httpRequest);
 		const log = (result: Pick<FetchLogEntry, "outcome" | "statusCode"> & Partial<FetchLogEntry>) =>
@@ -48,6 +47,7 @@ export class FetchTool {
 			});
 		let quota: RateLimitResult | undefined;
 		try {
+			signal.throwIfAborted();
 			quota = await this.services.rateLimit.checkLimits(ip, authContext);
 			signal.throwIfAborted();
 			if (!quota.allowed) {
@@ -71,7 +71,10 @@ export class FetchTool {
 			return createSuccessResult(response);
 		} catch (error) {
 			if (quota?.allowed) await this.services.rateLimit.refund(quota);
-			signal.throwIfAborted();
+			if (signal.aborted) {
+				log({ outcome: "cancelled", statusCode: 499, reason: "REQUEST_CANCELLED" });
+				signal.throwIfAborted();
+			}
 			if (error instanceof PageReadError) {
 				log({
 					outcome: error.outcome,

@@ -307,7 +307,78 @@ test("request-scoped services close after successful calls and auth failures", a
 				{ "MCP-Protocol-Version": MODERN_VERSION, "Mcp-Method": "tools/list" },
 			),
 		);
-		assert.equal(response.status, failAuth ? 500 : 200);
+		assert.equal(response.status, failAuth ? 503 : 200);
 		assert.equal(closed, 1);
 	}
+});
+
+for (const modern of [false, true]) {
+	test(`${modern ? "modern" : "legacy"} invalid tool arguments are logged once without reserving quota`, async () => {
+		for (const [name, args] of [
+			["search", { query: " \n\t " }],
+			["search", {}],
+			["search", { query: "Swift", result_count: 11 }],
+			["fetch", { url: null }],
+			["fetch", { url: "x".repeat(2049) }],
+		] as const) {
+			const services = createServices();
+			let calls = 0;
+			services.rateLimit.checkLimits = async () => {
+				throw new Error("Invalid input must not consume quota");
+			};
+			const logs: { outcome: string; reason?: string | null }[] = [];
+			services.logger.logSearch = (entry) => logs.push(entry);
+			services.logger.logFetch = (entry) => logs.push(entry);
+			services.rag.query = async () => {
+				calls++;
+				throw new Error("must not search");
+			};
+			services.pages.getPage = async () => {
+				calls++;
+				throw new Error("must not fetch");
+			};
+			const response = await new MCPProtocolHandler(() => services).handleRequest(
+				createRequest(
+					{
+						jsonrpc: "2.0",
+						id: "invalid",
+						method: "tools/call",
+						params: { name, arguments: args, ...(modern ? { _meta: modernMeta() } : {}) },
+					},
+					modern
+						? {
+								"MCP-Protocol-Version": MODERN_VERSION,
+								"Mcp-Method": "tools/call",
+								"Mcp-Name": name,
+							}
+						: {},
+				),
+			);
+			const payload = await readPayload<{ result: { isError: boolean } }>(response);
+			assert.equal(payload.result.isError, true);
+			assert.equal(calls, 0);
+			assert.equal(logs.length, 1);
+			assert.equal(logs[0].outcome, "invalid");
+			assert.equal(logs[0].reason, "INVALID_ARGUMENTS");
+		}
+	});
+}
+
+test("authentication rejection is HTTP 401 with a challenge, never an anonymous tool result", async () => {
+	const { MCPAuthenticationError } = await import("../mcp-auth/auth-middleware.js");
+	const services = createServices();
+	let closed = 0;
+	services.auth.optionalAuth = async () => {
+		throw new MCPAuthenticationError();
+	};
+	services.database.close = async () => {
+		closed++;
+	};
+	const response = await new MCPProtocolHandler(() => services).handleRequest(
+		createRequest({ jsonrpc: "2.0", id: "auth", method: "tools/list" }),
+	);
+	assert.equal(response.status, 401);
+	assert.match(response.headers.get("WWW-Authenticate") || "", /invalid_token/);
+	assert.equal(response.headers.get("Cache-Control"), "no-store");
+	assert.equal(closed, 1);
 });

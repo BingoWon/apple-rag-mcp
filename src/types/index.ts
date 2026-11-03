@@ -74,6 +74,7 @@ export interface AdminStatsPoint {
 	invalid?: number;
 	failed?: number;
 	limited?: number;
+	cancelled?: number;
 	unknown?: number;
 	registered?: number;
 	anonymous?: number;

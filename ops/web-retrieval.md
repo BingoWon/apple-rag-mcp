@@ -54,7 +54,7 @@ zero-data-retention agreement.
 ## Log outcomes
 
 Both tools persist an explicit outcome: `success`, `degraded`, `no_content`,
-`limited`, `invalid`, `failed`, or `unknown`. Admin charts aggregate that field.
+`limited`, `invalid`, `failed`, `cancelled`, or `unknown`. Admin charts aggregate that field.
 The admin API exposes `reason`; the existing D1 `error_code` column stores its
 machine-readable value. Search logs include retrieval/model fallback reasons.
 Fetch logs additionally include content origin, provider, upstream status and
@@ -66,9 +66,27 @@ Apply D1 migration `0006_tool_outcomes.sql` before publishing. Historical fetch
 404s become `no_content` with `INDEX_MISS`, never a claim about the original
 website's HTTP status. Historical 200 searches with zero results become
 `no_content`. Historical successful degradations cannot be reconstructed.
-SDK-rejected arguments and canceled calls are outside these persisted outcome
-counts. Tool errors on accepted calls refund the user's reserved quota; provider
-spending reservations are not refunded.
+Apply `0007_cancelled_tool_outcomes.sql` before 5.2.3. It preserves log rows and
+indexes while extending the SQLite outcome constraint. SDK input validation is
+observed through Standard Schema: invalid arguments (including whitespace-only
+searches) produce `invalid` / `INVALID_ARGUMENTS` without reserving quota. Invalid
+string inputs in these logs are capped at the tool's published length limit;
+missing or non-string fields are stored as empty strings.
+Accepted calls cancelled by the client produce `cancelled` / `REQUEST_CANCELLED`
+(status 499), refund reserved user quota, and are separate from service failures.
+Provider spending reservations are not refunded. Requests rejected before tool
+dispatch (authentication, malformed JSON/envelopes, unknown tools), and connections
+lost before dispatch, are not search/fetch attempts in these tables. Historical
+missing validation/cancellation events cannot be reconstructed.
+
+Missing Authorization still permits IP authentication or anonymous access.
+An explicit Authorization header must contain exactly one Bearer token; malformed,
+unknown or revoked tokens return HTTP 401 with a Bearer challenge and `no-store`.
+They never fall back to an IP or anonymous identity. Authentication infrastructure
+failures return 503; neither response consumes tool quota. Authentication rejection
+messages contain no raw header, token or database error. Existing provider logs
+are subject to their retention policy; the fix cannot erase previously exported
+logs. Never put real tokens in incident notes or test fixtures.
 
 The collector discovers child URLs even when parent text is unchanged. A 403 or
 unsupported JSON layout does not authorize deletion. A JSON 404/410 requires the

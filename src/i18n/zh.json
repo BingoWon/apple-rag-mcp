@@ -548,6 +548,7 @@
 		"stats_success": "成功",
 		"stats_failed": "失败",
 		"stats_limited": "限流",
+		"stats_cancelled": "已取消",
 		"stats_unknown": "状态未知",
 		"stats_view_details": "查看详情",
 		"stats_loading": "正在加载统计...",

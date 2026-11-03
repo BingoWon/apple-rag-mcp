@@ -169,6 +169,7 @@ test("global daily statistics handle SQLite/ISO dates, Singapore boundaries, out
 		invalid: 0,
 		failed: 2,
 		limited: 1,
+		cancelled: 0,
 		unknown: 1,
 	});
 	assert.deepEqual(data.metrics.fetches.outcomes, {
@@ -178,6 +179,7 @@ test("global daily statistics handle SQLite/ISO dates, Singapore boundaries, out
 		invalid: 0,
 		failed: 0,
 		limited: 0,
+		cancelled: 0,
 		unknown: 0,
 	});
 	assert.equal(data.metrics.searches.points[0].count, 1);
@@ -365,4 +367,21 @@ test("database failures return an error rather than fabricated zero statistics",
 	assert.equal(body.success, false);
 	assert.equal(body.data, undefined);
 	assert.doesNotMatch(JSON.stringify(body), /private database details/);
+});
+
+test("cancelled calls appear in their own admin outcome and bucket", async (t) => {
+	const { sqlite, request } = createDatabase();
+	t.after(() => sqlite.close());
+	sqlite.exec(
+		"INSERT INTO fetch_logs (user_id,requested_url,actual_url,status_code,outcome,error_code,created_at) VALUES ('reader','test','test',499,'cancelled','REQUEST_CANCELLED',datetime('now'))",
+	);
+	const response = await request("period=7d");
+	assert.equal(response.status, 200);
+	const { data } = (await response.json()) as { data: AdminDashboardStats };
+	assert.equal(data.metrics.fetches.outcomes?.cancelled, 1);
+	assert.equal(data.metrics.fetches.outcomes?.failed, 0);
+	assert.equal(
+		data.metrics.fetches.points.reduce((n, p) => n + (p.cancelled || 0), 0),
+		1,
+	);
 });

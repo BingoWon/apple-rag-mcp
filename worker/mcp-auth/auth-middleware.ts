@@ -6,6 +6,12 @@ import { logger } from "../mcp-utils/logger.js";
 import { extractClientInfo } from "../mcp-utils/request-info.js";
 import { TokenValidator, type UserTokenData } from "./token-validator.js";
 
+export class MCPAuthenticationError extends Error {
+	constructor() {
+		super("Invalid MCP token.");
+	}
+}
+
 export class AuthMiddleware {
 	private readonly tokenValidator: TokenValidator;
 	private readonly ipAuthService: IPAuthenticationService;
@@ -17,8 +23,8 @@ export class AuthMiddleware {
 
 	private extractBearerToken(authHeader?: string): string | null {
 		if (!authHeader) return null;
-		const token = authHeader.replace(/^(Bearer\s+)+/gi, "").trim();
-		return TOKEN_FORMAT.test(token) ? token : null;
+		const token = /^Bearer ([^\s]+)$/i.exec(authHeader)?.[1];
+		return token && TOKEN_FORMAT.test(token) ? token : null;
 	}
 
 	async optionalAuth(request: Request): Promise<AuthContext> {
@@ -26,8 +32,9 @@ export class AuthMiddleware {
 		const token = this.extractBearerToken(authHeader || undefined);
 		const { ip: clientIP } = extractClientInfo(request);
 
-		// Try token authentication first
-		if (token) {
+		// Explicit credentials must never fall back to another identity.
+		if (authHeader !== null) {
+			if (!token) throw new MCPAuthenticationError();
 			const validation = await this.tokenValidator.validateToken(token);
 
 			if (validation.valid) {
@@ -41,9 +48,8 @@ export class AuthMiddleware {
 				};
 			}
 
-			logger.warn(
-				`Token validation failed. Raw header: "${authHeader}", Extracted token: "${token}", IP: ${clientIP}, Error: ${validation.error}`,
-			);
+			logger.warn("MCP token authentication rejected.");
+			throw new MCPAuthenticationError();
 		}
 
 		// Try IP-based authentication

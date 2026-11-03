@@ -73,6 +73,7 @@ test("empty data shows real zero counts, status breakdown and the current paid s
 		invalid: 0,
 		failed: 0,
 		limited: 0,
+		cancelled: 0,
 		unknown: 0,
 	};
 	const stats: AdminDashboardStats = {

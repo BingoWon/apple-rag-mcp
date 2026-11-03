@@ -560,6 +560,7 @@
 		"stats_success": "Success",
 		"stats_failed": "Failed",
 		"stats_limited": "Rate limited",
+		"stats_cancelled": "Cancelled",
 		"stats_unknown": "Unknown status",
 		"stats_view_details": "View details",
 		"stats_loading": "Loading statistics...",

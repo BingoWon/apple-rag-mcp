@@ -16,6 +16,7 @@ export const SEARCH_TOOL_INPUT_SCHEMA = z.object({
 		.string()
 		.min(1)
 		.max(10000)
+		.regex(/\S/, "Search query must contain non-whitespace characters.")
 		.describe(
 			"Search query for Apple's official developer documentation and video content. Queries must be written in English and focus on technical concepts, APIs, frameworks, features, and version numbers rather than temporal information.",
 		),
@@ -40,7 +41,6 @@ export class SearchTool {
 		httpRequest: Request,
 		signal: AbortSignal = httpRequest.signal,
 	): Promise<CallToolResult> {
-		signal.throwIfAborted();
 		const startTime = Date.now();
 		const { query, result_count = 4 } = args;
 
@@ -54,6 +54,7 @@ export class SearchTool {
 		}
 
 		try {
+			signal.throwIfAborted();
 			rateLimitResult = await this.services.rateLimit.checkLimits(clientIP, authContext);
 			signal.throwIfAborted();
 
@@ -91,7 +92,20 @@ export class SearchTool {
 			if (rateLimitResult?.allowed) {
 				await this.services.rateLimit.refund(rateLimitResult);
 			}
-			signal.throwIfAborted();
+			if (signal.aborted) {
+				this.logSearch(
+					authContext,
+					requestedQuery,
+					actualQuery,
+					{ count: 0 },
+					Date.now() - startTime,
+					clientIP,
+					countryCode,
+					499,
+					"REQUEST_CANCELLED",
+				);
+				signal.throwIfAborted();
+			}
 			this.logSearch(
 				authContext,
 				requestedQuery,
@@ -164,15 +178,17 @@ export class SearchTool {
 			statusCode,
 			reason: reason ?? (ragResult.degradations?.join(",") || null),
 			outcome:
-				statusCode === 429
-					? "limited"
-					: statusCode >= 500
-						? "failed"
-						: ragResult.degradations?.length
-							? "degraded"
-							: ragResult.count
-								? "success"
-								: "no_content",
+				statusCode === 499
+					? "cancelled"
+					: statusCode === 429
+						? "limited"
+						: statusCode >= 500
+							? "failed"
+							: ragResult.degradations?.length
+								? "degraded"
+								: ragResult.count
+									? "success"
+									: "no_content",
 			mcpToken: authContext.token || null,
 		});
 	}

@@ -7,7 +7,7 @@ import { SearchTool } from "./tools/search-tool.js";
 
 for (const tool of ["search", "fetch"] as const) {
 	for (const stage of ["before-quota", "after-quota", "in-flight"] as const) {
-		test(`${tool} cancellation at ${stage} avoids failed-call logs and refunds only reserved quota`, async () => {
+		test(`${tool} cancellation at ${stage} records cancellation and refunds only reserved quota`, async () => {
 			const controller = new AbortController();
 			const reason = new Error("User cancelled");
 			let reserved = 0;
@@ -67,7 +67,9 @@ for (const tool of ["search", "fetch"] as const) {
 			assert.equal(reserved, stage === "before-quota" ? 0 : 1);
 			assert.equal(refunded, reserved);
 			assert.equal(calls, stage === "in-flight" ? 1 : 0);
-			assert.deepEqual(logs, []);
+			assert.equal(logs.length, 1);
+			assert.equal((logs[0] as { outcome: string }).outcome, "cancelled");
+			assert.equal((logs[0] as { reason: string }).reason, "REQUEST_CANCELLED");
 		});
 	}
 }
