@@ -63,3 +63,38 @@ This audit did not exhaust shared provider or account quota, stress production,
 simulate provider outages, or operate every advertised desktop client. Arbitrary
 third-party readability and DNS-rebinding protections at the cloud provider remain
 subject to the limits documented in [web retrieval](../web-retrieval.md).
+
+## Production verification completed
+
+Verified on 2026-11-03 at 10:10 Asia/Singapore against live 5.2.3, code commit
+`602adfd317af257128612f73640a5ed39f2bd84c`.
+
+- Local lint, type checks, build and all 204 tests passed, including isolated real
+  PostgreSQL tests (no skips). GitHub [CI](https://github.com/BingoWon/apple-rag-mcp/actions/runs/41564118077)
+  succeeded and [v5.2.3](https://github.com/BingoWon/apple-rag-mcp/releases/tag/v5.2.3)
+  was published automatically.
+- Production D1 migration completed. Before/after row counts and total lengths of
+  identifiers and request/canonical fields matched: search 18,687 rows and fetch
+  7,198 rows. All 10 indexes (including primary key autoindexes) remained present.
+  The local migration regression additionally compared every column value.
+- Unknown, malformed and repeated-Bearer synthetic credentials returned HTTP 401,
+  `WWW-Authenticate: Bearer ... error="invalid_token"` and `Cache-Control: no-store`.
+  A completely empty Authorization header was stripped on the production HTTP
+  path and behaved as an absent header; whitespace headers are not a way to force
+  authentication. The middleware rejects an empty header if the runtime receives it.
+- The official SDK connected with modern discovery and legacy initialize and read
+  indexed content. Valid-account search and anonymous reading also succeeded.
+- Three schema rejections were persisted as `invalid` / `INVALID_ARGUMENTS`:
+  whitespace-only query, missing URL, and result_count 11. Private-address rejection
+  remained `invalid` / `INVALID_URL`; real origin 404 remained `no_content` /
+  `PAGE_NOT_FOUND`. A controlled HTTP disconnect persisted one `cancelled` /
+  `REQUEST_CANCELLED` event with status 499, not a failed event.
+- Time-normalized D1 queries (`julianday(created_at)`) isolated exactly nine account
+  tool events: three successes, four invalid inputs, one 404 and one cancellation.
+  Weekly usage increased from 21 to 24, matching only the three successful calls.
+- Temporary test database was stopped and removed. Test credentials were passed
+  only through memory/stdin, excluded from reports and cleared from test state.
+
+No production stress/quota-exhaustion testing or per-client UI installation was
+performed. Previously exported runtime logs were not purged by this release;
+provider retention still applies as described above.
