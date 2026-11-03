@@ -28,6 +28,14 @@ arrow button, MacBook scroll and stickers. Brand or MCP / CLI copy changes must
 adapt this design, not replace its layout, typography or effects. A redesign
 requires an explicit owner request. See `ops/brand-agent-content-2026-11-03.md`.
 
+## Agent connection guide
+
+MCP is the recommended starting point for agents that support it; CLI is a fully
+supported option for shell-based agents. Keep MCP first in the connection guide
+and describe subscription, authorization and revocation for both in the FAQ.
+Use one 768px outer reading container (720px content with 24px side padding), with
+aligned section and FAQ edges. Keep CLI automation guidance inside the CLI section.
+
 ## MCP Protocol Compatibility
 
 Do not make the production MCP endpoint `2026-07-28`-only. Current clients, including Cursor 3.24, still open Streamable HTTP with the legacy `initialize` handshake. The server must keep `legacy: "stateless"` in `worker/mcp/protocol-handler.ts` so those clients work beside the modern per-request protocol.

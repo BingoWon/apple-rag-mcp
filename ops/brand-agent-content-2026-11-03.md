@@ -107,3 +107,21 @@ AGENTS.md now protects the entire homepage composition during future copy work.
 Two narrow-screen corrections preserve those effects: contain horizontal portrait
 rotation without clipping the vertical animation, and scale the typewriter text
 so its completed sentence remains visible at 320px. Desktop typography is unchanged.
+
+## Connection guide correction — 5.6.5
+
+The newly added /connect guide used a 1024px outer container, while its FAQ used
+another narrower container with additional horizontal padding. This caused a
+visible width jump and gave a reading page unnecessary horizontal spread.
+
+Use one 768px outer container with 24px side padding, giving 720px of content at
+full width. Header, setup cards, steps and FAQ share the same edges. Keep the
+existing setup cards and native disclosure components. MCP stays first and is
+explicitly recommended for agents that support it; CLI remains fully supported
+for shell-based agents. FAQ questions cover both subscriptions, authorization
+and revocation, with MCP described first. Put CLI automation guidance inside the
+CLI section instead of presenting it as general account guidance above the FAQ.
+
+Homepage composition and effects, setup prompts, credential handling, quotas and
+metadata are unchanged. Layout checks cover aligned edges, bounded width, both
+languages/themes, 320/390/768/1440px, both setup prompts, disclosures and deep links.
