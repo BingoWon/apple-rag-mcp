@@ -54,17 +54,25 @@ Portability checks cover Linux/Node22, macOS/Node24 and Windows/Node26.
 
 ## Owner-operated first npm publication
 
-The owner requested instructions instead of browser automation and has an npm
-account. The agent does not sign in to it or create a third-party account with the
-owner's identity. Perform these steps in your own authenticated terminal:
+The owner requested no browser automation, has an npm account, and explicitly
+chose to perform login/publication personally. The agent prepares and verifies
+the artifact but does not use the owner's npm identity. In the owner's terminal,
+paste this block; `&&` stops if a step fails. Complete npm login and any 2FA prompts
+personally. The final command configures future releases without a settings form:
 
 ```sh
-npm whoami
-# If necessary, npm login; complete its login/2FA prompts yourself.
-npm view apple-rag-cli name version maintainers
-# E404 means currently unregistered publicly. E401/network failures do not.
+npm login &&
+npm publish /tmp/apple-rag-cli-release/apple-rag-cli-1.0.0.tgz --access public --provenance=false &&
+npm trust github apple-rag-cli --repo BingoWon/apple-rag-mcp --file ci.yml --allow-publish --yes
+```
 
-npm publish /tmp/apple-rag-cli-release/apple-rag-cli-1.0.0.tgz --access public --provenance=false
+The installed npm 11.20.0 supports `npm trust` (requires 11.15.0+). Account-level
+2FA must be enabled for trusted publishing; if npm asks to enable it, that account
+security step remains owner-operated. No password/OTP/access token belongs in chat.
+After the owner completes these operations, the agent can verify public registry
+availability and a clean install without account access:
+
+```sh
 npm view apple-rag-cli@1.0.0 version dist.integrity
 npx --yes apple-rag-cli@1.0.0 --version
 ```
@@ -75,14 +83,11 @@ workflow first. Never overwrite/unpublish another release or bypass 2FA/legal ga
 
 ## Subsequent automatic publication
 
-In the npm package's Settings → Trusted publishing → GitHub Actions, enter:
-
-| Field | Value |
-| --- | --- |
-| Organization/user | `BingoWon` |
-| Repository | `apple-rag-mcp` |
-| Workflow filename | `ci.yml` |
-| Environment | leave empty |
+The `npm trust github` command above binds package `apple-rag-cli` to repository
+`BingoWon/apple-rag-mcp`, workflow `ci.yml`, with publish permission and no named
+environment. Its arguments were checked against the installed npm help and with
+`--dry-run --yes`; no authenticated registry mutation occurred. The equivalent npm
+Settings → Trusted publishing → GitHub Actions form remains an optional fallback.
 
 The CI publish job runs only on main pushes after checks/portability succeed.
 GitHub-hosted runners use OIDC (`id-token: write`), without a long-lived npm token.
