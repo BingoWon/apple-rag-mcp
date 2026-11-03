@@ -22,7 +22,7 @@
 
 Hybrid retrieval combines keyword and semantic search to find Apple sources. [Jev](https://typesafe.ai/) then ranks the merged candidates for relevance to your question, bringing the best matches to your agent.
 
-**Minimal footprint. Maximum signal.** Our MCP tools are designed to be lean—no bloated responses, no wasted tokens, no noise cluttering your agent's context. Just the information that matters.
+Agents can search for relevant excerpts, read source pages when they need more context, and cite the returned URLs. Choose MCP or CLI for the current environment.
 
 ### Powered by [<img src="./public/typesafe-logo.webp" alt="" width="22" height="22"> Jev](https://typesafe.ai/)
 
@@ -129,8 +129,8 @@ Use separate MCP and CLI credentials with shared account quotas and individually
 ### 📝 **Source References**
 Results include source URLs so agents can verify API details and cite their references.
 
-### 🔄 **Real-time Updates**
-Our documentation index is continuously updated for WWDC26, Xcode 27 beta, and the latest Apple developer resources.
+### 🔄 **Maintained Sources**
+Our collector checks Apple documentation and developer video transcripts on a regular schedule.
 
 ### 🆓 **Start Free**
 Try without an account: 30 tool calls/week and 3/minute. Register at [apple-rag.com](https://apple-rag.com/) for 50/week and 5/minute, shared by `search` and `fetch`.
@@ -144,17 +144,17 @@ Try without an account: 30 tool calls/week and 3/minute. Register at [apple-rag.
 - **🔍 Semantic Search** - Vector similarity with semantic understanding for intelligent retrieval
 - **🔎 Keyword Search** - Precise technical term matching for API names and specific terminology
 - **🎯 Hybrid Search** - Combines keyword and semantic retrieval
-- **📚 Complete Coverage** - iOS 27, iPadOS 27, macOS 27, watchOS 27, tvOS 27, and visionOS 27 documentation
-- **🎬 WWDC26 Videos** - Full transcripts from Apple Developer videos and WWDC26 sessions
+- **📚 Apple Developer Sources** - Search the indexed documentation corpus; coverage depends on collection and indexing.
+- **🎬 Developer Videos** - Search indexed WWDC and Apple developer video transcripts.
 - **⚡ Fast Response** - Optimized for speed across all content types
-- **🚀 High Performance** - Multi-instance cluster deployment for maximum throughput
-- **🔄 Always Current** - Synced with Apple's latest docs, WWDC26 sessions, and Xcode 27 beta references
+- **🔌 MCP / CLI** - Native MCP tools or shell commands for AI agents.
+- **🔄 Scheduled Collection** - Sources are collected and indexed regularly; updates are not guaranteed to appear immediately.
 - **🛡️ Secure & Private** - Your queries stay private
 - **🌐 MCP 2026 Native** - Stateless MCP `2026-07-28`, with legacy Streamable HTTP compatibility
 
 ## 📄 License
 
-This project is licensed under the [MIT License](LICENSE).
+The CLI client is distributed under the [MIT License](LICENSE). The application source repository is private.
 
 <div align="center">
 

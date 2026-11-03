@@ -40,6 +40,10 @@ apiApp.use(async (c, next) => {
 	return corsMiddleware(c, next);
 });
 apiApp.use(securityHeaders);
+apiApp.use("*", async (c, next) => {
+	c.header("X-Robots-Tag", "noindex, nofollow");
+	await next();
+});
 
 apiApp.use("*", async (c, next) => {
 	configureTelegram({
@@ -65,9 +69,14 @@ apiApp.get("/", (c) => c.json({ name: "Apple RAG API", version: packageJson.vers
 
 apiApp.doc("/doc", {
 	openapi: "3.0.0",
-	info: { version: packageJson.version, title: "Apple RAG API" },
+	info: {
+		version: packageJson.version,
+		title: "Apple RAG API",
+		description:
+			"Platform API for Apple RAG accounts, subscriptions, and agent access. MCP and CLI use separate credentials and share account usage limits.",
+	},
 });
 
-apiApp.get("/ui", swaggerUI({ url: "/api/doc" }));
+apiApp.get("/ui", swaggerUI({ url: "/api/doc", title: "Apple RAG API Reference" }));
 
 export { apiApp };

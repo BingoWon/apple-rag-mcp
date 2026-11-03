@@ -109,7 +109,7 @@
 		"pro_cta": "See plans"
 	},
 	"datasources": {
-		"eyebrow": "Comprehensive Knowledge Base",
+		"eyebrow": "Source library",
 		"title": "Official Apple sources, ready for your agent",
 		"subtitle": "Search developer documentation and WWDC transcripts through MCP / CLI. RAG retrieval and <jev>Jev</jev> relevance ranking are included.",
 		"docs_title": "Apple Developer Documentation",
@@ -249,7 +249,7 @@
 		"auth_failed": "Authentication failed. Please try again.",
 		"stats_status": "Status",
 		"stats_freshness": "Collection and indexing run on a regular schedule.",
-		"stats_heading": "Our most comprehensive Apple knowledge base for AI agents",
+		"stats_heading": "Apple sources indexed for your agents",
 		"stats_date": "Data as of {{date}}",
 		"stats_doc_pages": "Apple Doc Pages",
 		"stats_wwdc_videos": "WWDC Videos",
@@ -911,5 +911,16 @@
 		"faq_sources_a": "Search covers indexed Apple documentation and developer video transcripts; queries must be in English. Fetch reads supported pages by URL and may use live extraction outside the index. Deleted, blocked, or unsupported pages can fail. External content is labeled and is not added to Apple search.",
 		"faq_control_q": "How do I disconnect an agent?",
 		"faq_control_a": "For CLI, sign out on the device or revoke it in Settings. Revoke unattended automation keys separately. Manage MCP tokens and authorized IPs in their own account pages."
+	},
+	"forgot": {
+		"title": "Forgot your password?",
+		"description": "Enter your email address and we’ll send you a reset link.",
+		"sent_title": "Check your email",
+		"sent_description": "If an account exists for this address, you’ll receive a password reset link.",
+		"retry_note": "No email yet? Check your spam folder or try again.",
+		"send": "Send reset link",
+		"sent": "Check your email for password reset instructions.",
+		"failed": "Could not send the reset link",
+		"invalid_email": "Enter a valid email address"
 	}
 }

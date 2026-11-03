@@ -17,6 +17,7 @@ mode = "smart"
 [assets]
 directory = "./dist"
 binding = "ASSETS"
+not_found_handling = "none"
 run_worker_first = ["/", "/connect", "/connect/", "/api/*", "/mcp*", "/oauth/cli/*", "/.well-known/*"]
 
 [[d1_databases]]

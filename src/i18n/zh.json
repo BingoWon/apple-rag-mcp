@@ -109,7 +109,7 @@
 		"pro_cta": "查看套餐"
 	},
 	"datasources": {
-		"eyebrow": "全面的知识库",
+		"eyebrow": "资料来源",
 		"title": "为智能体准备的 Apple 官方资料",
 		"subtitle": "通过 MCP / CLI 搜索开发者文档与 WWDC 字幕，使用 RAG 检索与 <jev>Jev</jev> 相关性排序。",
 		"docs_title": "Apple 开发者文档",
@@ -238,7 +238,7 @@
 		"auth_failed": "登录失败，请重试。",
 		"stats_status": "状态",
 		"stats_freshness": "资料按计划持续采集与索引。",
-		"stats_heading": "为 AI Agent 打造的最全 Apple 知识库",
+		"stats_heading": "为智能体索引的 Apple 资料",
 		"stats_date": "数据截至 {{date}}",
 		"stats_doc_pages": "Apple 文档页",
 		"stats_wwdc_videos": "WWDC 视频",
@@ -911,5 +911,16 @@
 		"faq_sources_a": "搜索覆盖已索引的 Apple 文档与开发者视频字幕，查询需使用英文。读取工具按 URL 获取支持的页面，索引之外的内容可能通过实时提取获取。页面删除、访问受限或不受支持时可能失败；站外内容会标明来源，且不会加入 Apple 搜索库。",
 		"faq_control_q": "如何断开智能体的访问？",
 		"faq_control_a": "CLI 可在设备上退出登录，或在设置中撤销设备授权。自动化密钥需单独撤销。MCP 令牌与授权 IP 在各自的账号页面中管理。"
+	},
+	"forgot": {
+		"title": "忘记密码？",
+		"description": "输入邮箱地址，我们会发送密码重置链接。",
+		"sent_title": "请查看邮箱",
+		"sent_description": "如果此邮箱对应的账号存在，你会收到密码重置链接。",
+		"retry_note": "尚未收到邮件？请检查垃圾邮件，或重新尝试。",
+		"send": "发送重置链接",
+		"sent": "请查看邮箱中的密码重置说明。",
+		"failed": "重置链接发送失败",
+		"invalid_email": "请输入有效的邮箱地址"
 	}
 }

@@ -6,11 +6,11 @@
 import { MCP_PROTOCOL_VERSION, SERVER_NAME, SERVER_VERSION } from "./constants.js";
 
 export const SERVER_MANIFEST = {
-	name: "Apple RAG MCP Server",
-	title: "Apple Developer Documentation Search",
+	name: "Apple RAG",
+	title: "Apple RAG — Apple Developer Knowledge for AI Agents",
 	version: SERVER_VERSION,
 	description:
-		"Apple developer docs and WWDC transcripts with RAG retrieval and Jev relevance ranking.",
+		"Apple docs and WWDC transcripts for AI agents, with RAG retrieval and Jev relevance ranking.",
 	protocolVersion: MCP_PROTOCOL_VERSION,
 	supportedProtocolVersions: ["2026-07-28", "2025-11-25", "2025-06-18", "2025-03-26"],
 	capabilities: {

@@ -1,6 +1,6 @@
 interface:
-  display_name: "Apple Dev Docs"
-  short_description: "Search Apple developer documentation and WWDC content with semantic RAG"
+  display_name: "Apple RAG"
+  short_description: "Apple developer knowledge for AI agents via MCP / CLI"
   default_prompt: "Use available Apple RAG MCP tools or the apple-rag CLI to search official Apple documentation, fetch full content when needed, and answer with concise, cited guidance. Respect the server's account and quota state."
 
 dependencies:

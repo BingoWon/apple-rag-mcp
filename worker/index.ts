@@ -1,6 +1,7 @@
 import { originValidationResponse } from "@modelcontextprotocol/server";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
+import { siteSitemap } from "../shared/site.js";
 import { apiApp } from "./api/app.js";
 import { CLIAuthorization } from "./cli/authorization.js";
 import { authorizationMetadata, cliOAuthRoutes } from "./cli/routes.js";
@@ -12,7 +13,7 @@ import { AuthMiddleware } from "./mcp-auth/auth-middleware.js";
 import type { WaitUntilContext } from "./services/d1-utils.js";
 import { createServices } from "./services/index.js";
 import type { Env } from "./shared/types.js";
-import { connectionPage } from "./site-pages.js";
+import { sitePage } from "./site-pages.js";
 
 const MCP_HOSTNAME = "mcp.apple-rag.com";
 const MCP_ALLOWED_ORIGIN_HOSTNAMES = ["apple-rag.com", "www.apple-rag.com", MCP_HOSTNAME];
@@ -62,22 +63,13 @@ app.get("/health", (c) => c.json({ status: "ok" }));
 
 // ─── SEO ──────────────────────────────────────────────────────
 app.get("/robots.txt", (c) => {
+	// UI routes must remain crawlable for search engines to observe their noindex headers.
 	const body = [
 		"User-agent: *",
 		"Allow: /",
 		"",
 		"Disallow: /api/",
 		"Disallow: /oauth/",
-		"Disallow: /cli/authorize",
-		"Disallow: /admin/",
-		"Disallow: /overview",
-		"Disallow: /settings",
-		"Disallow: /messages",
-		"Disallow: /usage",
-		"Disallow: /authorized-ips",
-		"Disallow: /mcp-tokens",
-		"Disallow: /billing",
-		"Disallow: /success",
 		"",
 		"Sitemap: https://apple-rag.com/sitemap.xml",
 	].join("\n");
@@ -88,23 +80,7 @@ app.get("/robots.txt", (c) => {
 });
 
 app.get("/sitemap.xml", (c) => {
-	const base = "https://apple-rag.com";
-	const pages = [
-		{ loc: "/", priority: "1.0", changefreq: "daily" },
-		{ loc: "/connect", priority: "0.9", changefreq: "monthly" },
-		{ loc: "/register", priority: "0.6", changefreq: "monthly" },
-		{ loc: "/login", priority: "0.4", changefreq: "monthly" },
-		{ loc: "/privacy-policy", priority: "0.2", changefreq: "yearly" },
-		{ loc: "/terms-of-service", priority: "0.2", changefreq: "yearly" },
-	];
-	const today = new Date().toISOString().split("T")[0];
-	const urls = pages
-		.map(
-			(p) =>
-				`  <url>\n    <loc>${base}${p.loc}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>${p.changefreq}</changefreq>\n    <priority>${p.priority}</priority>\n  </url>`,
-		)
-		.join("\n");
-	const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>`;
+	const xml = siteSitemap();
 	return c.text(xml, 200, {
 		"Content-Type": "application/xml",
 		"Cache-Control": "public, max-age=86400",
@@ -156,13 +132,6 @@ app.post("/api/collector/trigger", async (c) => {
 	}
 });
 
-app.on("GET", ["/connect", "/connect/"], async (c) => {
-	const url = new URL(c.req.url);
-	url.pathname = "/";
-	const response = await c.env.ASSETS.fetch(new Request(url, c.req.raw));
-	return connectionPage(response);
-});
-
 app.notFound(async (c) => {
 	if (c.req.path.startsWith("/api/") || c.req.path === "/mcp" || c.req.path.startsWith("/mcp/")) {
 		return c.json({ error: { message: "Not Found" } }, 404);
@@ -170,11 +139,23 @@ app.notFound(async (c) => {
 	if (c.env.ASSETS) {
 		try {
 			const res = await c.env.ASSETS.fetch(c.req.raw);
-			if (res.status === 404) {
+			if (
+				res.status === 404 &&
+				["GET", "HEAD"].includes(c.req.method) &&
+				!/\.[a-z0-9]{1,8}$/i.test(c.req.path) &&
+				!c.req.path.startsWith("/assets/")
+			) {
 				const url = new URL(c.req.url);
 				url.pathname = "/";
-				return c.env.ASSETS.fetch(new Request(url.toString(), c.req.raw));
+				url.search = "";
+				const request = new Request(url.toString(), c.req.raw);
+				request.headers.delete("If-None-Match");
+				request.headers.delete("If-Modified-Since");
+				const shell = await c.env.ASSETS.fetch(request);
+				return shell.ok ? sitePage(shell, c.req.path) : shell;
 			}
+			if (res.ok && res.headers.get("Content-Type")?.includes("text/html"))
+				return sitePage(res, c.req.path);
 			return res;
 		} catch {}
 	}

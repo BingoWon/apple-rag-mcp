@@ -5,7 +5,7 @@ import { BrowserRouter, useLocation } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Providers } from "@/components/providers/Providers";
 import { CookieConsent } from "@/components/ui/CookieConsent";
-import { SITE_PAGES } from "../shared/site";
+import { getSiteMetadata, siteStructuredJSON } from "../shared/site";
 import { AppRouter } from "./router";
 import "./i18n";
 import "./styles/globals.css";
@@ -21,32 +21,51 @@ const UnreadReplyNotification = lazy(() =>
 
 function SiteMetadata() {
 	const { pathname } = useLocation();
-	const { t, i18n } = useTranslation();
+	const { i18n } = useTranslation();
 	useEffect(() => {
-		const path = pathname.replace(/\/$/, "") || "/";
-		const page = SITE_PAGES[path === "/connect" ? "/connect" : "/"];
-		const title = i18n.resolvedLanguage?.startsWith("zh")
-			? path === "/connect"
-				? "接入智能体 · MCP / CLI — Apple RAG"
-				: "Apple RAG — 面向智能体的 Apple 开发知识服务"
-			: page.title;
-		const description = i18n.resolvedLanguage?.startsWith("zh")
-			? t(path === "/connect" ? "connect.description" : "hero.description")
-			: page.description;
-		document.title = title;
-		document.documentElement.lang = i18n.resolvedLanguage?.startsWith("zh") ? "zh" : "en";
+		const page = getSiteMetadata(pathname, i18n.resolvedLanguage);
+		document.title = page.title;
+		document.documentElement.lang = page.language;
 		for (const selector of [
 			'meta[name="description"]',
 			'meta[property="og:description"]',
 			'meta[name="twitter:description"]',
 		])
-			document.querySelector(selector)?.setAttribute("content", description);
+			document.querySelector(selector)?.setAttribute("content", page.description);
 		for (const selector of ['meta[property="og:title"]', 'meta[name="twitter:title"]'])
-			document.querySelector(selector)?.setAttribute("content", title);
-		const canonical = `https://apple-rag.com${path === "/connect" ? "/connect" : ""}`;
-		document.querySelector('link[rel="canonical"]')?.setAttribute("href", canonical);
-		document.querySelector('meta[property="og:url"]')?.setAttribute("content", canonical);
-	}, [pathname, t, i18n.resolvedLanguage]);
+			document.querySelector(selector)?.setAttribute("content", page.title);
+		document.querySelector('meta[name="robots"]')?.setAttribute("content", page.robots);
+		document.querySelector('meta[property="og:locale"]')?.setAttribute("content", page.locale);
+		for (const [selector, attribute] of [
+			['link[rel="canonical"]', "href"],
+			['meta[property="og:url"]', "content"],
+		] as const) {
+			let element = document.querySelector(selector);
+			if (!page.canonical) {
+				element?.remove();
+				continue;
+			}
+			if (!element) {
+				element = document.createElement(attribute === "href" ? "link" : "meta");
+				element.setAttribute(
+					attribute === "href" ? "rel" : "property",
+					attribute === "href" ? "canonical" : "og:url",
+				);
+				document.head.append(element);
+			}
+			element.setAttribute(attribute, page.canonical);
+		}
+		let structured = document.querySelector('script[type="application/ld+json"]');
+		if (!page.structuredData) structured?.remove();
+		else {
+			if (!structured) {
+				structured = document.createElement("script");
+				structured.setAttribute("type", "application/ld+json");
+				document.head.append(structured);
+			}
+			structured.textContent = siteStructuredJSON(page.structuredData);
+		}
+	}, [pathname, i18n.resolvedLanguage]);
 	return null;
 }
 

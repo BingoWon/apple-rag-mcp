@@ -1,6 +1,15 @@
-import { SITE_PAGES } from "../shared/site.js";
-export function connectionPage(response: Response): Response {
-	const page = SITE_PAGES["/connect"];
+import { getSiteMetadata, siteStructuredJSON } from "../shared/site.js";
+
+export function sitePage(response: Response, pathname: string): Response {
+	const page = getSiteMetadata(pathname);
+	const output = new Response(response.body, {
+		status: response.ok ? page.status : response.status,
+		headers: response.headers,
+	});
+	output.headers.set("X-Robots-Tag", page.robots);
+	output.headers.set("Cache-Control", "no-cache");
+	output.headers.delete("ETag");
+	output.headers.delete("Last-Modified");
 	return new HTMLRewriter()
 		.on("title", {
 			element(e) {
@@ -22,13 +31,32 @@ export function connectionPage(response: Response): Response {
 		})
 		.on('link[rel="canonical"]', {
 			element(e) {
-				e.setAttribute("href", "https://apple-rag.com/connect");
+				if (page.canonical) e.setAttribute("href", page.canonical);
+				else e.remove();
 			},
 		})
 		.on('meta[property="og:url"]', {
 			element(e) {
-				e.setAttribute("content", "https://apple-rag.com/connect");
+				if (page.canonical) e.setAttribute("content", page.canonical);
+				else e.remove();
 			},
 		})
-		.transform(response);
+		.on('meta[name="robots"]', {
+			element(e) {
+				e.setAttribute("content", page.robots);
+			},
+		})
+		.on('meta[property="og:locale"]', {
+			element(e) {
+				e.setAttribute("content", page.locale);
+			},
+		})
+		.on('script[type="application/ld+json"]', {
+			element(e) {
+				if (page.structuredData)
+					e.setInnerContent(siteStructuredJSON(page.structuredData), { html: true });
+				else e.remove();
+			},
+		})
+		.transform(output);
 }
