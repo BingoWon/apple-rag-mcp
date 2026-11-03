@@ -16,6 +16,7 @@ export class AsyncEntry {
 		}
 	}
 	async setPassword(value) {
+		if (process.env.APPLE_RAG_TEST_VAULT_FAIL_WRITE) throw Error("Synthetic vault failure");
 		await mkdir(process.env.APPLE_RAG_TEST_VAULT, { recursive: true, mode: 0o700 });
 		await writeFile(this.path, value, { mode: 0o600 });
 	}

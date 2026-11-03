@@ -63,6 +63,10 @@
   --color-foreground: #ffffff;
   --color-card: #111111;
   --color-card-foreground: #ffffff;
+  --color-muted-foreground: #a0a6b2;
+  --color-brand-foreground: #0a0a0a;
+  --color-action: #60a5fa;
+  --color-action-foreground: #0a0a0a;
   --color-popover: #111111;
   --color-popover-foreground: #ffffff;
   --color-accent: #1a1a1a;
@@ -135,6 +139,10 @@
 	--color-foreground: #0f172a;
 	--color-card: #ffffff;
 	--color-card-foreground: #0f172a;
+	--color-muted-foreground: #64748b;
+	--color-brand-foreground: #0a0a0a;
+	--color-action: #2563eb;
+	--color-action-foreground: #ffffff;
 	--color-popover: #ffffff;
 	--color-popover-foreground: #0f172a;
 	--color-accent: #f1f5f9;

@@ -1,10 +1,19 @@
+import {
+	IconArrowRight,
+	IconCheck,
+	IconDeviceLaptop,
+	IconLock,
+	IconMail,
+	IconX,
+} from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { AuthShell } from "@/components/auth/AuthShell";
 import { Button } from "@/components/ui/Button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { useAuth } from "@/hooks/useAuth";
+import { useTheme } from "@/hooks/useTheme";
 import { api } from "@/lib/api";
 import { rememberAuthReturn } from "@/lib/auth-return";
 
@@ -17,7 +26,8 @@ interface Authorization {
 	scope: string;
 }
 export default function AuthorizePage() {
-	const { t } = useTranslation();
+	const { t, i18n } = useTranslation();
+	const { resolvedTheme } = useTheme();
 	const { isAuthenticated, isHydrated, user } = useAuth();
 	const location = useLocation(),
 		navigate = useNavigate();
@@ -40,6 +50,7 @@ export default function AuthorizePage() {
 		if (!isAuthenticated || (!request && !userCode)) return;
 		const controller = new AbortController();
 		setError(false);
+		setDone(null);
 		setData(null);
 		api
 			.get<Authorization>("/cli/authorization", {
@@ -76,6 +87,8 @@ export default function AuthorizePage() {
 					url.password
 				)
 					throw Error();
+				url.searchParams.set("lang", i18n.resolvedLanguage?.startsWith("zh") ? "zh" : "en");
+				url.searchParams.set("theme", resolvedTheme);
 				window.location.assign(url.href);
 			}
 			setDone(approve);
@@ -86,82 +99,156 @@ export default function AuthorizePage() {
 		}
 	};
 	return (
-		<main className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
-			<Card className="w-full max-w-lg">
-				<CardHeader>
-					<Link to="/" className="mb-5">
-						<img src="/logo-with-text.svg" alt="Apple RAG" className="h-9" />
-					</Link>
-					<CardTitle>{t("cli.authorize_title")}</CardTitle>
-				</CardHeader>
-				<CardContent className="space-y-5">
-					{done !== null ? (
-						<>
-							<p role="status">{t(done ? "cli.authorized" : "cli.declined")}</p>
-							<Link className="text-brand underline" to="/settings">
-								{t("cli.manage")}
-							</Link>
-						</>
-					) : error ? (
-						<p role="alert" className="text-destructive">
-							{t("cli.authorization_error")}
-						</p>
-					) : !request && !userCode ? (
-						<form
-							className="space-y-4"
-							onSubmit={(e) => {
-								e.preventDefault();
-								setParams({ user_code: code.trim() });
-							}}
-						>
-							<Input
-								label={t("cli.device_code")}
-								value={code}
-								onChange={(e) => setCode(e.target.value)}
-								maxLength={20}
-								required
-							/>
-							<Button type="submit">{t("common.continue")}</Button>
-						</form>
-					) : data ? (
-						<>
-							<p className="text-sm text-muted-foreground">{t("cli.authorize_description")}</p>
-							<dl className="space-y-3 rounded-lg border border-default p-4 text-sm">
-								<div>
-									<dt className="text-muted-foreground">{t("cli.account")}</dt>
-									<dd className="break-all">{user?.email}</dd>
-								</div>
-								<div>
-									<dt className="text-muted-foreground">{t("cli.device")}</dt>
-									<dd className="break-all">{data.device_name}</dd>
-								</div>
-								{userCode && (
-									<div>
-										<dt className="text-muted-foreground">{t("cli.device_code")}</dt>
-										<dd className="font-mono text-lg">{userCode}</dd>
-									</div>
-								)}
-							</dl>
-							<p className="text-sm">{t("cli.permissions")}</p>
-							<p className="text-sm text-muted-foreground">{t("cli.consent_check")}</p>
-							{data.status === "pending" ? (
-								<div className="flex gap-3">
-									<Button variant="outline" disabled={busy} onClick={() => decide(false)}>
-										{t("cli.deny")}
-									</Button>
-									<Button loading={busy} disabled={busy} onClick={() => decide(true)}>
-										{t("cli.allow")}
-									</Button>
-								</div>
-							) : (
-								<p>{t("cli.already_handled")}</p>
-							)}
-						</>
+		<AuthShell>
+			{done !== null || error || (data && data.status !== "pending") ? (
+				<div className="auth-status" role={error ? "alert" : "status"}>
+					<div
+						className="auth-status-icon"
+						data-tone={error ? "error" : done === true ? "success" : "neutral"}
+					>
+						{error || done === false ? (
+							<IconX aria-hidden="true" />
+						) : (
+							<IconCheck aria-hidden="true" />
+						)}
+					</div>
+					<h1 className="auth-title">
+						{t(
+							error
+								? "cli.error_title"
+								: done === true
+									? "cli.success_title"
+									: done === false
+										? "cli.denied_title"
+										: "cli.handled_title",
+						)}
+					</h1>
+					<p className="auth-description">
+						{t(
+							error
+								? "cli.authorization_error"
+								: done === true
+									? "cli.authorized"
+									: done === false
+										? "cli.declined"
+										: "cli.already_handled",
+						)}
+					</p>
+					{error ? (
+						<div className="auth-command">apple-rag auth login</div>
 					) : (
-						<p role="status">{t("common.loading")}</p>
+						<div className="auth-actions">
+							<Button asChild variant="outline" className="auth-secondary">
+								<Link to="/settings#cli-access">
+									{t("cli.manage")}
+									<IconArrowRight size={16} />
+								</Link>
+							</Button>
+						</div>
 					)}
-				</CardContent>
-			</Card>
-		</main>
+				</div>
+			) : !request && !userCode ? (
+				<>
+					<p className="auth-kicker">{t("cli.login_label")}</p>
+					<h1 className="auth-title">{t("cli.enter_code_title")}</h1>
+					<p className="auth-description">{t("cli.enter_code_description")}</p>
+					<form
+						onSubmit={(e) => {
+							e.preventDefault();
+							setParams({ user_code: code.trim() });
+						}}
+					>
+						<label className="auth-field-label" htmlFor="device-code">
+							{t("cli.device_code")}
+						</label>
+						<Input
+							id="device-code"
+							value={code}
+							onChange={(e) => setCode(e.target.value.toUpperCase())}
+							maxLength={20}
+							autoComplete="off"
+							spellCheck={false}
+							required
+							placeholder="XXXXX-XXXXX"
+							className="font-mono tracking-widest"
+						/>
+						<div className="auth-actions">
+							<Button type="submit" variant="primary" className="auth-primary">
+								{t("common.continue")}
+								<IconArrowRight size={16} />
+							</Button>
+						</div>
+					</form>
+				</>
+			) : data ? (
+				<>
+					<p className="auth-kicker">{t("cli.login_label")}</p>
+					<h1 className="auth-title">{t("cli.authorize_title")}</h1>
+					<p className="auth-description">{t("cli.authorize_description")}</p>
+					<dl className="auth-identity">
+						<div className="auth-identity-row">
+							<IconMail className="auth-row-icon" aria-hidden="true" />
+							<div>
+								<dt>{t("cli.account")}</dt>
+								<dd>{user?.email}</dd>
+							</div>
+						</div>
+						<div className="auth-identity-row">
+							<IconDeviceLaptop className="auth-row-icon" aria-hidden="true" />
+							<div>
+								<dt>{t("cli.device")}</dt>
+								<dd>{data.device_name}</dd>
+							</div>
+						</div>
+					</dl>
+					{userCode && (
+						<div className="auth-code">
+							<strong>{userCode}</strong>
+							<p>{t("cli.match_code")}</p>
+						</div>
+					)}
+					<ul className="auth-permissions">
+						<li>
+							<IconCheck className="auth-check" aria-hidden="true" />
+							{t("cli.search_permission")}
+						</li>
+						<li>
+							<IconCheck className="auth-check" aria-hidden="true" />
+							{t("cli.read_permission")}
+						</li>
+					</ul>
+					<p className="auth-note">{t("cli.quota_note")}</p>
+					<div className="auth-actions">
+						<Button
+							variant="outline"
+							className="auth-secondary"
+							disabled={busy}
+							onClick={() => decide(false)}
+						>
+							{t("cli.deny")}
+						</Button>
+						<Button
+							variant="primary"
+							className="auth-primary"
+							loading={busy}
+							disabled={busy}
+							onClick={() => decide(true)}
+						>
+							{t("cli.allow")}
+							<IconArrowRight size={16} aria-hidden="true" />
+						</Button>
+					</div>
+					<p className="auth-safety">
+						<IconLock aria-hidden="true" />
+						{t("cli.consent_check")}
+					</p>
+				</>
+			) : (
+				<div className="auth-loading" role="status">
+					<span className="auth-spinner" aria-hidden="true" />
+					{t("common.loading")}
+				</div>
+			)}
+		</AuthShell>
 	);
 }

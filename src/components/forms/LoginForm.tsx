@@ -117,7 +117,7 @@ export function LoginForm() {
 						{oauthLoading === "google" ? t("common.connecting") : "Google"}
 					</Button>
 					<Button
-						variant="ghost"
+						variant="outline"
 						onClick={() => handleOAuthLogin("github")}
 						disabled={oauthLoading !== null || isLoading}
 						className="w-full h-11"
@@ -140,7 +140,7 @@ export function LoginForm() {
 				</div>
 
 				{/* Email/Password Form */}
-				<form name="login" onSubmit={handleSubmit}>
+				<form name="login" onSubmit={handleSubmit} className="space-y-4">
 					{/* Error Message Display */}
 					{error && (
 						<div className="mb-4 p-3 rounded-md bg-destructive/10 border border-destructive/20">

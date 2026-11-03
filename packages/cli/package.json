@@ -1,6 +1,6 @@
 {
 	"name": "apple-rag-cli",
-	"version": "2.0.0",
+	"version": "2.0.1",
 	"description": "Apple developer documentation and WWDC search from your terminal and coding agent.",
 	"type": "module",
 	"license": "MIT",

@@ -19,7 +19,15 @@ const UnreadReplyNotification = lazy(() =>
 
 function CustomerOverlays() {
 	const { pathname } = useLocation();
-	if (pathname === "/admin" || pathname.startsWith("/admin/")) return null;
+	if (
+		pathname === "/admin" ||
+		pathname.startsWith("/admin/") ||
+		pathname.startsWith("/cli/") ||
+		["/login", "/register", "/forgot-password", "/reset-password"].includes(
+			pathname.replace(/\/$/, ""),
+		)
+	)
+		return null;
 	return (
 		<Suspense fallback={null}>
 			<FabButton />

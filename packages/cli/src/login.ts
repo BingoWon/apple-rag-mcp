@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
-import { createServer } from "node:http";
+import { createServer, type ServerResponse } from "node:http";
 import { hostname, platform } from "node:os";
 import { setTimeout as wait } from "node:timers/promises";
 import {
@@ -11,6 +11,7 @@ import {
 } from "../../../shared/contracts.js";
 import type { AppleRagClient } from "./client.js";
 import { CLIError } from "./errors.js";
+import { loginPage } from "./login-page.js";
 
 function openBrowser(url: string): void {
 	const [command, args] =
@@ -25,11 +26,7 @@ function openBrowser(url: string): void {
 	);
 	child.unref();
 }
-async function browserLogin(
-	client: AppleRagClient,
-	browser: boolean,
-	name: string,
-): Promise<CLICredentials> {
+async function browserLogin(client: AppleRagClient, browser: boolean, name: string): Promise<void> {
 	const state = randomBytes(32).toString("base64url"),
 		verifier = randomBytes(32).toString("base64url");
 	let complete!: (result: { code: string; redirect: string }) => void,
@@ -38,12 +35,28 @@ async function browserLogin(
 		complete = resolve;
 		fail = reject;
 	});
+	let pendingResponse: ServerResponse | undefined,
+		language = "en",
+		theme: string | undefined,
+		received = false;
+	const render = (
+		response: ServerResponse,
+		status: number,
+		state: "success" | "denied" | "error",
+	) => response.writeHead(status).end(loginPage(state, client.endpoint, language, theme));
 	const server = createServer((request, response) => {
-		response.setHeader("Content-Type", "text/plain; charset=utf-8");
+		response.setHeader("Content-Type", "text/html; charset=utf-8");
+		response.setHeader("Referrer-Policy", "no-referrer");
+		response.setHeader("X-Content-Type-Options", "nosniff");
+		response.setHeader(
+			"Content-Security-Policy",
+			"default-src 'none'; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; frame-ancestors 'none'; form-action 'none'",
+		);
+		language = request.headers["accept-language"]?.startsWith("zh") ? "zh" : "en";
 		response.setHeader("Cache-Control", "no-store");
 		const local = server.address();
 		if (!local || typeof local === "string") {
-			response.writeHead(400).end();
+			render(response, 400, "error");
 			return;
 		}
 		const host = local.family === "IPv6" ? "[::1]" : "127.0.0.1";
@@ -52,7 +65,7 @@ async function browserLogin(
 		try {
 			url = new URL(request.url ?? "/", redirect);
 		} catch {
-			response.writeHead(400).end("Invalid authorization callback.");
+			render(response, 400, "error");
 			return;
 		}
 		const returnedState = url.searchParams.get("state") ?? "";
@@ -64,20 +77,27 @@ async function browserLogin(
 			!timingSafeEqual(Buffer.from(returnedState), Buffer.from(state)) ||
 			url.searchParams.get("iss") !== client.endpoint
 		) {
-			response.writeHead(400).end("Invalid authorization callback.");
+			render(response, 400, "error");
+			return;
+		}
+		language = url.searchParams.get("lang") ?? language;
+		theme = url.searchParams.get("theme") ?? undefined;
+		if (received) {
+			render(response, 409, "error");
 			return;
 		}
 		if (url.searchParams.has("error")) {
-			response.writeHead(403).end("CLI authorization declined.");
+			render(response, 403, "denied");
 			fail(new CLIError("AUTH_DENIED", "CLI authorization was declined.", 3));
 			return;
 		}
 		const code = url.searchParams.get("code");
 		if (!code) {
-			response.writeHead(400).end("Missing authorization code.");
+			render(response, 400, "error");
 			return;
 		}
-		response.end("Apple RAG CLI authorized. You may close this tab and return to your terminal.");
+		received = true;
+		pendingResponse = response;
 		complete({ code, redirect });
 	});
 	server.headersTimeout = 5000;
@@ -119,12 +139,17 @@ async function browserLogin(
 		process.stderr.write(`Authorize this CLI device:\n${url.href}\n`);
 		if (browser) openBrowser(url.href);
 		const result = await callback;
-		return await client.exchange({
+		const credentials = await client.exchange({
 			grant_type: "authorization_code",
 			code: result.code,
 			redirect_uri: result.redirect,
 			code_verifier: verifier,
 		});
+		await saveCredentials(client, credentials);
+		if (pendingResponse) render(pendingResponse, 200, "success");
+	} catch (error) {
+		if (pendingResponse && !pendingResponse.writableEnded) render(pendingResponse, 500, "error");
+		throw error;
 	} finally {
 		client.signal.removeEventListener("abort", abort);
 		if (client.signal.aborted) server.closeAllConnections();
@@ -174,9 +199,11 @@ export async function login(
 		);
 	await client.store.prepare();
 	const name = `${hostname()} (${platform()})`.slice(0, 80);
-	const credentials = options.device
-		? await deviceLogin(client, options.browser, name)
-		: await browserLogin(client, options.browser, name);
+	if (options.device)
+		await saveCredentials(client, await deviceLogin(client, options.browser, name));
+	else await browserLogin(client, options.browser, name);
+}
+async function saveCredentials(client: AppleRagClient, credentials: CLICredentials): Promise<void> {
 	const previous = await client.store.read();
 	try {
 		await client.store.locked(client.signal, () => client.store.save(credentials));

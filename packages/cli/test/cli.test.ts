@@ -56,8 +56,11 @@ async function setup(t: test.TestContext) {
 	};
 	const run = (args: string[], overrides?: NodeJS.ProcessEnv, input?: string) =>
 		command(args, overrides, input).done;
-	const login = async (device = false, approve = true) => {
-		const task = command(["auth", "login", "--no-browser", ...(device ? ["--device"] : [])]);
+	const login = async (device = false, approve = true, overrides: NodeJS.ProcessEnv = {}) => {
+		const task = command(
+			["auth", "login", "--no-browser", ...(device ? ["--device"] : [])],
+			overrides,
+		);
 		const end = Date.now() + 10000;
 		while (!task.stderr.includes("http") && Date.now() < end)
 			await new Promise((r) => setTimeout(r, 20));
@@ -84,7 +87,29 @@ async function setup(t: test.TestContext) {
 			const bad = new URL(data.data.redirect_uri);
 			bad.searchParams.set("state", "é".repeat(43));
 			assert.equal((await fetch(bad)).status, 400);
-			await fetch(data.data.redirect_uri);
+			const callback = new URL(data.data.redirect_uri);
+			callback.searchParams.set("lang", "zh");
+			callback.searchParams.set("theme", "dark");
+			const page = await fetch(callback);
+			assert.match(page.headers.get("content-type") || "", /text\/html/);
+			assert.match(page.headers.get("content-security-policy") || "", /default-src 'none'/);
+			const html = await page.text();
+			assert(!html.includes(callback.searchParams.get("code") ?? "<no-code>"));
+			if (approve && !overrides.APPLE_RAG_TEST_VAULT_FAIL_WRITE) {
+				assert.equal(page.status, 200);
+				assert.match(html, /<h1[^>]*>终端已连接<\/h1>/);
+				assert.equal(
+					JSON.parse(await readFile(await metadata(), "utf8")).endpoint,
+					server.endpoint,
+				);
+			} else if (approve) {
+				assert.equal(page.status, 500);
+				assert.match(html, /暂时无法连接/);
+				assert(!html.includes("终端已连接"));
+			} else {
+				assert.equal(page.status, 403);
+				assert.match(html, /已取消连接/);
+			}
 		}
 		return task.done;
 	};
@@ -328,4 +353,16 @@ test("device grant requires explicit approval and can be revoked independently o
 	assert.equal(JSON.parse((await run(["auth", "status", "--json"])).stdout).auth_method, "oauth");
 	assert.equal((await run(["auth", "logout"])).code, 0);
 	assert.equal(server.sql.prepare("SELECT count(*) AS n FROM mcp_tokens").get()?.n, 2);
+});
+
+test("browser never reports success when credentials cannot be saved", async (t) => {
+	const { login, server } = await setup(t);
+	const r = await login(false, true, { APPLE_RAG_TEST_VAULT_FAIL_WRITE: "1" });
+	assert.equal(r.code, 1);
+	assert.equal(
+		server.sql
+			.prepare("SELECT count(*) AS n FROM cli_sessions WHERE kind='device' AND revoked_at IS NULL")
+			.get()?.n,
+		0,
+	);
 });
