@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { Route, Routes } from "react-router-dom";
 
+const CLIAuthorizePage = lazy(() => import("@/pages/cli/AuthorizePage"));
 const DashboardLayout = lazy(() => import("@/components/layout/DashboardLayout"));
 const HomePage = lazy(() => import("@/pages/HomePage"));
 const LoginPage = lazy(() => import("@/pages/auth/LoginPage"));
@@ -59,6 +60,8 @@ export function AppRouter() {
 					<Route path="/forgot-password" element={<ForgotPasswordPage />} />
 					<Route path="/reset-password" element={<ResetPasswordPage />} />
 				</Route>
+
+				<Route path="/cli/authorize" element={<CLIAuthorizePage />} />
 
 				{/* Dashboard (auth-protected) */}
 				<Route

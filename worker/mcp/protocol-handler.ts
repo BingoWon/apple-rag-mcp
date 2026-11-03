@@ -4,10 +4,10 @@ import {
 	McpServer,
 	preloadSchemas,
 } from "@modelcontextprotocol/server";
-import { fetchOutputSchema, searchOutputSchema } from "../../packages/cli/src/contracts.js";
+import { fetchOutputSchema, searchOutputSchema } from "../../shared/contracts.js";
 import { MCPAuthenticationError } from "../mcp-auth/auth-middleware.js";
-import type { AuthContext, Services } from "../mcp-types/index.js";
-import { logger } from "../mcp-utils/logger.js";
+import type { AuthContext, Services } from "../services/types.js";
+import { logger } from "../shared/logger.js";
 import { SERVER_NAME, SERVER_VERSION, TOOLS } from "./constants.js";
 import { loggedToolInput } from "./tool-input.js";
 import { FETCH_TOOL_INPUT_SCHEMA, FetchTool } from "./tools/fetch-tool.js";
@@ -19,7 +19,10 @@ const SERVER_INSTRUCTIONS =
 	"Search Apple's official developer documentation and WWDC video transcripts with search, then use fetch when complete page content is needed.";
 
 export class MCPProtocolHandler {
-	constructor(private servicesFactory: () => Services | Promise<Services>) {}
+	constructor(
+		private servicesFactory: () => Services | Promise<Services>,
+		private authenticate: (request: Request) => Promise<AuthContext>,
+	) {}
 
 	async handleRequest(request: Request): Promise<Response> {
 		let services: Services | undefined;
@@ -33,7 +36,7 @@ export class MCPProtocolHandler {
 			async () => {
 				try {
 					services = await this.servicesFactory();
-					const authContext = await services.auth.optionalAuth(request);
+					const authContext = await this.authenticate(request);
 					return this.createServer(services, request, authContext, trackTool);
 				} catch (error) {
 					authFailure =

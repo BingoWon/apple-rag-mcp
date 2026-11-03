@@ -63,7 +63,8 @@ apple-rag search "SwiftUI NavigationStack" --limit 3 --json
 ```
 
 The public client uses the same anonymous, free and Pro access as MCP, with shared
-account quotas. `auth status` shows the live plan and remaining quota; `upgrade`
+account quotas. CLI 2.x opens the website for independent device authorization;
+MCP Tokens are not CLI credentials. Manage CLI devices/keys in Settings. `auth status` shows the live plan and remaining quota; `upgrade`
 links to the existing subscription page. First npm publication is owner-operated;
 see [release operations](ops/cli.md) for its status and setup.
 

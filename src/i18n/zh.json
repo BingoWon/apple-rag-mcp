@@ -44,7 +44,8 @@
 		"error_loading": "加载失败",
 		"url_copied": "URL 已复制",
 		"copy_failed": "复制失败",
-		"copy_url": "复制 URL"
+		"copy_url": "复制 URL",
+		"continue": "继续"
 	},
 	"nav": {
 		"overview": "概览",
@@ -666,7 +667,17 @@
 		"more_filters": "更多筛选",
 		"logs_load_failed": "日志加载失败，请重试。",
 		"log_list_desc": "按条件查看全部日志，打开详情查看完整内容。时间统一为 UTC+8。",
-		"log_date_range_error": "结束日期不能早于开始日期。"
+		"log_date_range_error": "结束日期不能早于开始日期。",
+		"col_channel": "调用渠道",
+		"channel_mcp": "MCP",
+		"channel_cli": "CLI",
+		"channel_unknown": "未知",
+		"col_credential": "凭据 ID",
+		"col_session": "会话 ID",
+		"col_auth_method": "鉴权方式",
+		"col_request_id": "请求 ID",
+		"col_client": "客户端标记",
+		"col_client_version": "客户端版本"
 	},
 	"notfound": {
 		"title": "页面未找到",
@@ -825,5 +836,36 @@
 		"last_7d": "近 7 天",
 		"last_30d": "近 30 天",
 		"load_error": "加载使用统计失败：{{error}}"
+	},
+	"cli": {
+		"authorize_title": "授权 Apple RAG CLI",
+		"authorize_description": "允许这台 CLI 设备使用你的 Apple RAG 账号。",
+		"account": "账号",
+		"device": "设备",
+		"device_code": "验证码",
+		"permissions": "允许搜索和读取文档。调用计入账号共享额度。",
+		"consent_check": "仅在你主动发起登录时授权。使用设备授权时，请确认验证码与终端显示的一致。",
+		"allow": "授权 CLI",
+		"deny": "拒绝",
+		"authorized": "CLI 已获授权，请返回终端继续使用。",
+		"declined": "已拒绝授权，可以关闭此页面。",
+		"authorization_error": "授权请求无效、已过期或无法完成，请返回 CLI 重新发起登录。",
+		"already_handled": "此请求已处理，请返回终端查看结果。",
+		"manage": "管理 CLI 访问",
+		"access_title": "CLI 设备与 API 密钥",
+		"access_description": "独立管理 CLI 访问，与 MCP 连接分开。",
+		"login_hint": "在终端运行以下命令，授权当前设备：",
+		"no_sessions": "暂无有效的 CLI 设备或 API 密钥。",
+		"api_key": "API 密钥",
+		"expires": "有效期至 {{date}}",
+		"revoke": "撤销访问",
+		"revoke_description": "“{{name}}” 将无法继续使用。其他设备与 MCP 连接不受影响。",
+		"access_error": "无法更新 CLI 访问，请重试。",
+		"create_key": "创建 API 密钥",
+		"key_description": "用于 CI 和自动化，仅允许文档搜索与读取，使用账号共享额度。",
+		"key_name": "密钥名称",
+		"validity": "有效期",
+		"days": "{{count}} 天",
+		"key_once": "请立即复制并保存在密钥管理器中，关闭后不再显示。在自动化环境中通过 APPLE_RAG_TOKEN 使用。"
 	}
 }

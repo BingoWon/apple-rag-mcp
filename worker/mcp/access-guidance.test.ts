@@ -1,9 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { OAUTH_SUBSCRIPTION_QUOTAS } from "../api/types/permissions.js";
-import type { AuthContext, RateLimitResult, Services } from "../mcp-types/index.js";
-import { buildRateLimitMessage } from "../mcp-utils/request-info.js";
-import { FREE_ACCESS_GUIDANCE, MESSAGES, PRO_UPGRADE_GUIDANCE } from "./constants.js";
+import { FREE_ACCESS_GUIDANCE, PRO_UPGRADE_GUIDANCE } from "../services/access-guidance.js";
+import { accountStatus } from "../services/account.js";
+import { buildRateLimitMessage } from "../services/request-info.js";
+import { fetchOutput, searchOutput } from "../services/tool-results.js";
+import type { AuthContext, RateLimitResult, Services } from "../services/types.js";
+import { MESSAGES } from "./constants.js";
 import { formatFetchResponse, formatRAGResponse } from "./formatters/response-formatter.js";
 import { FetchTool } from "./tools/fetch-tool.js";
 import { SearchTool } from "./tools/search-tool.js";
@@ -126,7 +129,10 @@ test("anonymous successful results recommend free registration with concrete sha
 		additionalUrls: [],
 		degradations: [],
 	};
-	for (const message of [formatFetchResponse(fetched, false), formatRAGResponse(searched, false)]) {
+	const account = accountStatus({ isAuthenticated: false }, limitedQuota("anonymous", "weekly"));
+	const page = fetchOutput(fetched.url, fetched, account);
+	const results = searchOutput(searched, account);
+	for (const message of [formatFetchResponse(page, false), formatRAGResponse(results, false)]) {
 		assert.ok(message.includes(MESSAGES.ANONYMOUS_ACCESS));
 		assert.ok(message.includes(FREE_ACCESS_GUIDANCE));
 		assert.match(message, /50 tool calls\/week and 5 tool calls\/minute/);
@@ -135,6 +141,6 @@ test("anonymous successful results recommend free registration with concrete sha
 		assert.doesNotMatch(message, /https:\/\/apple-rag\.com\/(?:register|billing)\b/);
 		assert.doesNotMatch(message, /higher limit|upgrade|subscribe|enterprise/i);
 	}
-	assert.ok(!formatFetchResponse(fetched, true).includes(FREE_ACCESS_GUIDANCE));
-	assert.ok(!formatRAGResponse(searched, true).includes(FREE_ACCESS_GUIDANCE));
+	assert.ok(!formatFetchResponse(page, true).includes(FREE_ACCESS_GUIDANCE));
+	assert.ok(!formatRAGResponse(results, true).includes(FREE_ACCESS_GUIDANCE));
 });

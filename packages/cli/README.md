@@ -23,7 +23,7 @@ Search and fetch, all tokens and all MCP/CLI clients share the same account quot
 
 ## Sign in and subscribe
 
-Get an MCP Token at https://apple-rag.com/mcp-tokens, then:
+Authorize this CLI through your Apple RAG account:
 
 ```sh
 apple-rag auth login
@@ -32,24 +32,35 @@ apple-rag upgrade
 apple-rag auth logout
 ```
 
-Login hides input and verifies the token before saving. In automation inject
-`APPLE_RAG_TOKEN` from a secret manager, or pipe it to `auth login --token-stdin`.
-Tokens are never accepted as command arguments. No model/Firecrawl/Stripe key is
-needed. The server determines the plan on every request, including subscription
-changes and expired one-time purchases. A rejected explicit token is an error,
-never an anonymous fallback. `upgrade` prints the website pricing link.
+Login opens the website for sign-in and explicit device approval (OAuth PKCE).
+Use `auth login --no-browser` to open the printed URL yourself, or
+`auth login --device --no-browser` when a remote terminal cannot receive a local
+browser callback. Authorization expires after 10 minutes. No MCP Token is used.
 
-Status reads identity, plan, remaining quota and reset times without consuming
-retrieval quota. It can update credential last-used timestamps. Tool results also
-include the account snapshot without another status request.
+Access/rotating refresh credentials live in the OS credential store: macOS
+Keychain, Windows Credential Manager or Linux Secret Service. Unlock it before
+login. Only endpoint metadata is saved in `~/.config/apple-rag-cli` (POSIX 0700/
+0600). `APPLE_RAG_CONFIG_DIR` overrides that directory. Each device can be revoked
+individually in website **Settings → CLI access**; logout revokes the saved device
+server-side and removes its local state. MCP connections are independent.
 
-Saved tokens are bound to their exact endpoint in
-`$XDG_CONFIG_HOME/apple-rag/credentials.json` (default `~/.config/apple-rag/`).
-POSIX permissions: directory 0700, file 0600; Windows uses user-profile permissions.
-`APPLE_RAG_CONFIG_DIR` overrides this directory. `APPLE_RAG_TOKEN` takes precedence,
-even when empty/invalid. Logout removes the saved credential only: it does not
-unset environment variables, revoke the server token or remove authorized-IP
-access. Check `auth status` for the effective identity. Never share credentials.
+For headless automation, generate a dedicated, expiring CLI API key in those
+settings and inject `APPLE_RAG_TOKEN` through a secret manager. Keys are shown
+once, stored hashed server-side and expire within 90 days. Environment credentials
+override saved sessions even when invalid; unset the variable before interactive
+login. Logout does not unset environment variables or revoke their independent
+API key. Revoke that key in settings. Never pass secrets as command arguments.
+
+The server determines the plan on every request, including subscription changes
+and expired one-time purchases. Rejected explicit credentials are errors, never
+anonymous/IP fallback. `upgrade` prints the pricing link; payment stays on the
+website. No model/Firecrawl/Stripe key is needed. `auth status` reads identity,
+plan and remaining/reset quota without spending retrieval quota. Tool results
+include the same account snapshot.
+
+**Upgrading from 1.x:** run `npm install -g apple-rag-cli@latest`, remove any MCP
+Token from `APPLE_RAG_TOKEN`, then run `apple-rag auth login`. CLI 2.x deliberately
+does not import old plaintext MCP credentials. MCP itself continues to work.
 
 ## Search and read
 
@@ -71,7 +82,7 @@ diagnostics, account/quota and sign-in/upgrade links. `--output` saves successfu
 results only and refuses existing files. JSON comes from the server contract,
 never Markdown parsing. Empty search succeeds; a missing fetched page is an error.
 
-Commands have a 45-second deadline and no automatic tool retries. Ctrl+C cancels
+Retrieval commands have a 45-second deadline and no automatic tool retries. Ctrl+C cancels
 the request; retrieval failures/cancellation refund reserved server quota. A local
 file-write failure after successful retrieval still consumes that retrieval.
 
@@ -87,7 +98,7 @@ file-write failure after successful retrieval still consumes that retrieval.
 
 ## Connection checks and agents
 
-`apple-rag doctor --json` checks identity and MCP discovery without retrieval quota.
+`apple-rag doctor --json` checks identity and CLI API health without retrieval quota.
 It does not prove retrieval/database quota-write readiness. Verify those with one
 real search or fetch.
 
@@ -102,7 +113,7 @@ cp "$(npm root -g)/apple-rag-cli/skills/apple-dev-docs/SKILL.md" ~/.agents/skill
 The skill uses connected native MCP tools or an installed CLI. No agent config is
 edited automatically. Pin the npm package version/lockfile for repeatable CI runs.
 
-`APPLE_RAG_URL` selects a trusted custom MCP endpoint. HTTPS is required except on
+`APPLE_RAG_URL` selects a trusted custom platform origin. HTTPS is required except on
 loopback. Saved credentials for another endpoint are never forwarded; an explicit
 environment token applies to the configured endpoint. Redirects are rejected.
 

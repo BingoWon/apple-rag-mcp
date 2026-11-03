@@ -59,7 +59,8 @@ apple-rag auth login
 apple-rag search "SwiftUI NavigationStack" --limit 3 --json
 ```
 
-CLI 与 MCP 共用匿名、免费和 Pro 权益及账号额度。`auth status` 查询实时套餐和
+CLI 与 MCP 共用匿名、免费和 Pro 权益及账号额度。CLI 2.x 通过网站独立授权设备，
+不使用 MCP Token；设备和 API key 在设置中单独管理。`auth status` 查询实时套餐和
 剩余额度，`upgrade` 提供网站订阅入口。首次 npm 发布由包所有者操作，见
 [CLI 发布运维说明](ops/cli.md)。
 

@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
-import { fixture, TOKEN } from "../../packages/cli/test/fixture.ts";
+import { fixture } from "../../packages/cli/test/fixture.ts";
 
 const pkgDir = fileURLToPath(new URL("../../packages/cli/", import.meta.url));
 const manifest = JSON.parse(await readFile(join(pkgDir, "package.json"), "utf8"));
@@ -25,9 +25,7 @@ const expected = [
 	"README.md",
 	"LICENSE",
 	"skills/apple-dev-docs/SKILL.md",
-	...["cli", "client", "contracts", "credentials", "errors", "version"].map(
-		(name) => `dist/${name}.js`,
-	),
+	"dist/cli.js",
 ];
 assert.deepEqual(packed.files.map((file) => file.path).sort(), expected.sort());
 assert.equal(manifest.name, "apple-rag-cli");
@@ -73,7 +71,7 @@ try {
 		...process.env,
 		APPLE_RAG_URL: server.endpoint,
 		APPLE_RAG_CONFIG_DIR: join(consumer, "config"),
-		APPLE_RAG_TOKEN: TOKEN,
+		APPLE_RAG_TOKEN: server.cliKey,
 	};
 	const doctor = JSON.parse(
 		(await command(process.execPath, [cli, "doctor", "--json"], { env })).stdout,
@@ -88,7 +86,7 @@ try {
 	assert.equal(search.account.quota.week.remaining, 49);
 	assert.equal(search.results[0].complete, false);
 	console.log(
-		`Verified ${archive}\nSHA256 ${checksum}\n${expected.length} allowlisted files; isolated install, bin, version, discovery and MCP retrieval passed.`,
+		`Verified ${archive}\nSHA256 ${checksum}\n${expected.length} allowlisted files; isolated install, bin, version, CLI health and independent API retrieval passed.`,
 	);
 } finally {
 	await server?.close();

@@ -4,7 +4,7 @@ description: Use when verifying Apple API behavior, availability, deprecation or
 license: MIT
 compatibility: Requires Apple RAG remote MCP tools, or apple-rag-cli with Node.js 22.20+. Anonymous trial, signed-in free and Pro access share service quotas.
 metadata:
-  version: "1.1.0"
+  version: "2.0.0"
 ---
 
 # Apple Developer Documentation
@@ -36,14 +36,17 @@ Choose one connection per task; never replay errors through both automatically.
 Shared search+fetch limits: anonymous 30/week, 3/minute; signed-in free 50/week,
 5/minute; Pro 50,000/week, 50/minute. All tokens/clients for one account share quota.
 The server's plan/remaining/reset fields are authoritative. `auth status` consumes
-no retrieval quota; `doctor` verifies identity/discovery, not retrieval readiness.
+no retrieval quota; `doctor` verifies identity/API health, not retrieval readiness.
 
-`apple-rag auth login` hides and validates an MCP Token obtained from
-https://apple-rag.com/mcp-tokens. In automation inject `APPLE_RAG_TOKEN` from a secret
-manager. Never put tokens in commands/reports. Invalid/revoked explicit credentials
-must stop; never fall back to anonymous. Logout removes the saved token; environment
-and authorized-IP access may remain. `upgrade` prints https://apple-rag.com/#pricing;
-payment stays on the website.
+`apple-rag auth login` opens the website for explicit CLI device approval using
+OAuth PKCE; credentials stay in the OS vault. `--device --no-browser` supports
+remote terminals. Never approve a device on the user's behalf without their
+instruction. The CLI uses its own JSON API and does not accept MCP Tokens.
+For automation, inject a dedicated CLI API key from website Settings → CLI access
+via `APPLE_RAG_TOKEN`. Never include secrets in commands/reports. Invalid/revoked explicit credentials must stop; never fall back to anonymous or authorized-IP access.
+Logout revokes the saved CLI device; independent environment API keys remain and
+must be revoked in settings. MCP credentials and sessions are unaffected.
+`upgrade` prints https://apple-rag.com/#pricing; payment stays on the website.
 
 ## Retrieve, then answer
 

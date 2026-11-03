@@ -52,8 +52,6 @@ export const authMiddleware = async (c: Context<AppEnv>, next: Next) => {
 		c.set("userId", user.id); // Set userId for easy access
 		c.set("permissions", payload.permissions);
 		c.set("plan_type", payload.plan_type);
-
-		await next();
 	} catch (_error) {
 		return c.json(
 			{
@@ -63,6 +61,7 @@ export const authMiddleware = async (c: Context<AppEnv>, next: Next) => {
 			401,
 		);
 	}
+	await next();
 };
 
 /**

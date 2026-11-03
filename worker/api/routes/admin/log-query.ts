@@ -6,6 +6,7 @@ export const logQuerySchema = z
 		limit: z.coerce.number().int().min(1).max(100).default(50),
 		offset: z.coerce.number().int().min(0).default(0),
 		q: z.string().max(2048).optional(),
+		channel: z.enum(["mcp", "cli", "unknown"]).optional(),
 		outcome: z.enum(TOOL_OUTCOMES).optional(),
 		reason: z.string().max(100).optional(),
 		source: z.enum(["apple", "third_party"]).optional(),
@@ -28,6 +29,7 @@ export function logConditions(query: z.output<typeof logQuerySchema>, kind: "sea
 			values.push(value);
 		}
 	};
+	equal("channel", query.channel);
 	equal("outcome", query.outcome);
 	equal("error_code", query.reason);
 	if (kind === "fetch") {

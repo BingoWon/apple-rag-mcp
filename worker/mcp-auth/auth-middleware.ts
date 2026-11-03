@@ -1,9 +1,9 @@
 import { TOKEN_FORMAT } from "../mcp/constants.js";
-import { IPAuthenticationService } from "../mcp-services/ip-authentication.js";
-import type { AuthContext } from "../mcp-types/index.js";
-import type { WaitUntilContext } from "../mcp-utils/d1-utils.js";
-import { logger } from "../mcp-utils/logger.js";
-import { extractClientInfo } from "../mcp-utils/request-info.js";
+import type { WaitUntilContext } from "../services/d1-utils.js";
+import { IPAuthenticationService } from "../services/ip-authentication.js";
+import { extractClientInfo } from "../services/request-info.js";
+import type { AuthContext } from "../services/types.js";
+import { logger } from "../shared/logger.js";
 import { TokenValidator, type UserTokenData } from "./token-validator.js";
 
 export class MCPAuthenticationError extends Error {
@@ -44,7 +44,8 @@ export class AuthMiddleware {
 					isAuthenticated: true,
 					userId: validation.userData?.userId,
 					email: validation.userData?.email,
-					token: token,
+					credentialId: validation.userData?.credentialId,
+					authMethod: "token",
 				};
 			}
 
@@ -63,7 +64,7 @@ export class AuthMiddleware {
 				isAuthenticated: true,
 				userId: ipAuthResult.userId,
 				email: ipAuthResult.email,
-				token: "ip-based",
+				authMethod: "ip",
 			};
 		}
 
@@ -72,7 +73,7 @@ export class AuthMiddleware {
 			`No authentication provided - allowing unauthenticated access from IP: ${clientIP} (hasToken: ${!!token})`,
 		);
 
-		return { isAuthenticated: false };
+		return { isAuthenticated: false, authMethod: "anonymous" };
 	}
 
 	async getUserData(userId: string): Promise<UserTokenData> {

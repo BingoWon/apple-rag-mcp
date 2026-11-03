@@ -1,11 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import type { AuthContext, Services } from "../mcp-types/index.js";
+import type { AuthContext, Services } from "../services/types.js";
 import { MCPProtocolHandler } from "./protocol-handler.js";
 
 const MODERN_VERSION = "2026-07-28";
 
-function createServices(): Services {
+function createServices(): Services & {
+	auth: { optionalAuth: (request: Request) => Promise<AuthContext> };
+} {
 	return {
 		rag: {
 			query: async ({ query }) => ({
@@ -75,7 +77,7 @@ function createServices(): Services {
 			logSearch: () => {},
 			logFetch: () => {},
 		},
-	} as unknown as Services;
+	} as unknown as Services & { auth: { optionalAuth: (request: Request) => Promise<AuthContext> } };
 }
 
 function createRequest(
@@ -111,7 +113,10 @@ async function send(
 ) {
 	const services = createServices();
 	services.auth.optionalAuth = async () => authContext;
-	const handler = new MCPProtocolHandler(() => services);
+	const handler = new MCPProtocolHandler(
+		() => services,
+		(request) => services.auth.optionalAuth(request),
+	);
 	return handler.handleRequest(createRequest(body, headers));
 }
 
@@ -268,7 +273,8 @@ test("preserves authenticated tool behavior on a modern request", async () => {
 			isAuthenticated: true,
 			userId: "user-1",
 			email: "user@example.com",
-			token: "at_00000000000000000000000000000000",
+			credentialId: "credential-1",
+			authMethod: "token",
 		},
 	);
 
@@ -340,7 +346,10 @@ test("request-scoped services close after successful calls and auth failures", a
 				throw new Error("Auth unavailable");
 			};
 		}
-		const handler = new MCPProtocolHandler(() => services);
+		const handler = new MCPProtocolHandler(
+			() => services,
+			(request) => services.auth.optionalAuth(request),
+		);
 		const response = await handler.handleRequest(
 			createRequest(
 				{
@@ -382,7 +391,10 @@ for (const modern of [false, true]) {
 				calls++;
 				throw new Error("must not fetch");
 			};
-			const response = await new MCPProtocolHandler(() => services).handleRequest(
+			const response = await new MCPProtocolHandler(
+				() => services,
+				(request) => services.auth.optionalAuth(request),
+			).handleRequest(
 				createRequest(
 					{
 						jsonrpc: "2.0",
@@ -419,9 +431,10 @@ test("authentication rejection is HTTP 401 with a challenge, never an anonymous 
 	services.database.close = async () => {
 		closed++;
 	};
-	const response = await new MCPProtocolHandler(() => services).handleRequest(
-		createRequest({ jsonrpc: "2.0", id: "auth", method: "tools/list" }),
-	);
+	const response = await new MCPProtocolHandler(
+		() => services,
+		(request) => services.auth.optionalAuth(request),
+	).handleRequest(createRequest({ jsonrpc: "2.0", id: "auth", method: "tools/list" }));
 	assert.equal(response.status, 401);
 	assert.match(response.headers.get("WWW-Authenticate") || "", /invalid_token/);
 	assert.equal(response.headers.get("Cache-Control"), "no-store");

@@ -1,9 +1,10 @@
 import { lazy, Suspense, useEffect, useRef } from "react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import StatsCards from "@/components/dashboard/StatsCards";
 import { useAuth } from "@/hooks/useAuth";
+import { authReturnPath, clearAuthReturn } from "@/lib/auth-return";
 import { useDashboardStore } from "@/stores/dashboard";
 
 const MCPUsageGuide = lazy(() =>
@@ -22,6 +23,7 @@ function DashboardOverviewContent() {
 	const { toolCallsStats, refreshDashboard } = useDashboardStore();
 
 	const [searchParams] = useSearchParams();
+	const navigate = useNavigate();
 	const { loginWithToken } = useAuth();
 	const processedAuth = useRef(false);
 
@@ -43,6 +45,12 @@ function DashboardOverviewContent() {
 					const url = new URL(window.location.href);
 					url.searchParams.delete("auth");
 					window.history.replaceState({}, "", url.toString());
+					const returnPath = authReturnPath();
+					clearAuthReturn();
+					if (returnPath !== "/overview") {
+						navigate(returnPath, { replace: true });
+						return;
+					}
 				} catch (_error) {
 					toast.error(t("dashboard.auth_failed"));
 				}
@@ -55,6 +63,7 @@ function DashboardOverviewContent() {
 		handleOAuthAndLoadData();
 	}, [
 		searchParams,
+		navigate,
 		loginWithToken, // Load dashboard data
 		refreshDashboard,
 		t,

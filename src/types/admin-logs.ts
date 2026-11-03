@@ -3,7 +3,13 @@ export type AdminLogKind = "search" | "fetch";
 export interface AdminLog {
 	id: string;
 	user_id: string;
-	mcp_token: string | null;
+	channel: "unknown" | "mcp" | "cli";
+	credential_id: string | null;
+	session_id: string | null;
+	auth_method: string | null;
+	request_id: string | null;
+	client_name: string | null;
+	client_version: string | null;
 	requested_url?: string;
 	actual_url?: string;
 	requested_query?: string;
@@ -21,6 +27,7 @@ export interface AdminLog {
 	created_at: string;
 }
 export interface AdminLogFilters {
+	channel?: string;
 	q?: string;
 	outcome?: string;
 	reason?: string;

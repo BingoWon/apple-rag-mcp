@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
+import { CLIAccess } from "@/components/settings/CLIAccess";
 import { DeleteAccount } from "@/components/settings/DeleteAccount";
 import { PasswordManagement } from "@/components/settings/PasswordManagement";
 import { Button } from "@/components/ui/Button";
@@ -96,6 +97,8 @@ export default function SettingsPage() {
 					</form>
 				</CardContent>
 			</Card>
+
+			<CLIAccess />
 
 			{/* Password Management */}
 			<PasswordManagement />

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import type { Services } from "../mcp-types/index.js";
+import type { Services } from "../services/types.js";
 import { MCPProtocolHandler } from "./protocol-handler.js";
 import { FetchTool } from "./tools/fetch-tool.js";
 import { SearchTool } from "./tools/search-tool.js";
@@ -102,7 +102,10 @@ test("HTTP cancellation reaches the running tool through the SDK signal", async 
 			},
 		},
 	} as unknown as Services;
-	const response = await new MCPProtocolHandler(() => services).handleRequest(
+	const response = await new MCPProtocolHandler(
+		() => services,
+		async () => ({ isAuthenticated: false }),
+	).handleRequest(
 		new Request("https://mcp.apple-rag.com/", {
 			method: "POST",
 			signal: controller.signal,

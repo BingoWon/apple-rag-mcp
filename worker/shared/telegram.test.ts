@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { createModelAlertReporter } from "../mcp-utils/model-alerts.js";
+import { createModelAlertReporter } from "../services/model-alerts.js";
 import { sendTelegram } from "./telegram.js";
 import type { Env } from "./types.js";
 

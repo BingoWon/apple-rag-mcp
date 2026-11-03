@@ -1,6 +1,7 @@
 import { IconAdjustmentsHorizontal, IconRefresh, IconSearch } from "@tabler/icons-react";
 import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
@@ -50,6 +51,12 @@ export function AdminLogs({ kind }: { kind: AdminLogKind }) {
 						<span className="mt-1 block truncate text-xs text-muted-foreground">{row.user_id}</span>
 					</button>
 				),
+			},
+			{
+				key: "channel",
+				label: t("admin.col_channel"),
+				width: 100,
+				render: (_, row) => <Badge variant="outline">{t(`admin.channel_${row.channel}`)}</Badge>,
 			},
 			{
 				key: "outcome",
@@ -199,6 +206,7 @@ export function AdminLogs({ kind }: { kind: AdminLogKind }) {
 						!!(
 							filters.start ||
 							filters.end ||
+							filters.channel ||
 							filters.reason ||
 							filters.source ||
 							filters.provider ||
@@ -211,6 +219,14 @@ export function AdminLogs({ kind }: { kind: AdminLogKind }) {
 						{t("admin.more_filters")}
 					</summary>
 					<div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+						{select(
+							"channel",
+							t("admin.col_channel"),
+							["mcp", "cli", "unknown"].map((value) => ({
+								value,
+								label: t(`admin.channel_${value}`),
+							})),
+						)}
 						<label className="space-y-1 text-xs text-muted-foreground">
 							<span className="block">{t("admin.col_reason")}</span>
 							<input
@@ -298,7 +314,10 @@ export function AdminLogs({ kind }: { kind: AdminLogKind }) {
 										<span className="font-mono text-[11px] text-muted-foreground">
 											{formatAdminDateTime(row.created_at)}
 										</span>
-										<LogOutcome outcome={row.outcome} />
+										<span className="flex flex-wrap items-center gap-2">
+											<Badge variant="outline">{t(`admin.channel_${row.channel}`)}</Badge>
+											<LogOutcome outcome={row.outcome} />
+										</span>
 									</span>
 									<span className="block truncate text-sm text-brand">
 										{row.requested_url || row.requested_query || "—"}

@@ -160,3 +160,20 @@ test("search log details retain full queries and reject invalid input before que
 	}
 	assert.equal((await request("fetch", "", false)).status, 401);
 });
+
+test("both log views filter verified channel and expose references without raw credentials", async (t) => {
+	const { sql, request } = setup();
+	t.after(() => sql.close());
+	for (const kind of ["search", "fetch"]) {
+		const fields = kind === "search" ? "requested_query,actual_query" : "requested_url,actual_url";
+		sql.exec(
+			`INSERT INTO ${kind}_logs(user_id,${fields},channel,credential_id,request_id) VALUES('reader','test','test','cli','credential-id','request-id'),('reader','test','test','mcp','mcp-id','mcp-request')`,
+		);
+		const { data } = await (await request(kind, "channel=cli")).json();
+		assert.equal(data.total, 1);
+		assert.equal(data.logs[0].credential_id, "credential-id");
+		assert.equal(data.logs[0].request_id, "request-id");
+		assert(!("mcp_token" in data.logs[0]));
+		assert.equal((await request(kind, "channel=spoof")).status, 400);
+	}
+});

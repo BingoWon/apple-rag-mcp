@@ -14,7 +14,14 @@ function setup(tokenFound = false, ipFound = false) {
 					return {
 						success: true,
 						results: found
-							? [{ user_id: "reader", email: "test@example.com", name: "Reader" }]
+							? [
+									{
+										credential_id: "credential-1",
+										user_id: "reader",
+										email: "test@example.com",
+										name: "Reader",
+									},
+								]
 							: [],
 					};
 				},
@@ -65,7 +72,9 @@ test("valid token, missing-token IP authentication and anonymous access stay dis
 			}),
 		);
 		assert.equal(result.isAuthenticated, expected);
-		assert.equal(result.token, tokenFound ? header?.slice(7) : ipFound ? "ip-based" : undefined);
+		assert.equal(result.credentialId, tokenFound ? "credential-1" : undefined);
+		assert.equal(result.authMethod, tokenFound ? "token" : ipFound ? "ip" : "anonymous");
+		assert(!("token" in result));
 		assert.equal(lookups.length, 1);
 		await Promise.all(writes);
 	}

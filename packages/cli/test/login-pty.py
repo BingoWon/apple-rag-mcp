@@ -6,7 +6,6 @@ import pty
 import select
 import signal
 import sys
-import termios
 import time
 
 pid, terminal = pty.fork()
@@ -26,10 +25,9 @@ try:
                 if error.errno == errno.EIO:
                     break
                 raise
-        if not sent and b"MCP Token (hidden): " in output:
-            if not termios.tcgetattr(terminal)[3] & termios.ECHO:
-                os.write(terminal, b"\x03")
-                sent = True
+        if not sent and b"Authorize this CLI device:" in output:
+            os.write(terminal, b"\x03")
+            sent = True
         done, result = os.waitpid(pid, os.WNOHANG)
         if done:
             status = result

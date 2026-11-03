@@ -44,7 +44,8 @@
 		"error_loading": "Error Loading Data",
 		"url_copied": "URL copied to clipboard",
 		"copy_failed": "Failed to copy",
-		"copy_url": "Copy URL"
+		"copy_url": "Copy URL",
+		"continue": "Continue"
 	},
 	"nav": {
 		"overview": "Overview",
@@ -677,7 +678,17 @@
 		"more_filters": "More filters",
 		"logs_load_failed": "Could not load logs. Please retry.",
 		"log_list_desc": "Filter all records and open details for complete content. All times are UTC+8.",
-		"log_date_range_error": "End date must not be before start date."
+		"log_date_range_error": "End date must not be before start date.",
+		"col_channel": "Request channel",
+		"channel_mcp": "MCP",
+		"channel_cli": "CLI",
+		"channel_unknown": "Unknown",
+		"col_credential": "Credential ID",
+		"col_session": "Session ID",
+		"col_auth_method": "Authentication",
+		"col_request_id": "Request ID",
+		"col_client": "Client label",
+		"col_client_version": "Client version"
 	},
 	"notfound": {
 		"title": "Page Not Found",
@@ -825,5 +836,36 @@
 		"last_7d": "Last 7d",
 		"last_30d": "Last 30d",
 		"load_error": "Failed to load usage statistics: {{error}}"
+	},
+	"cli": {
+		"authorize_title": "Authorize Apple RAG CLI",
+		"authorize_description": "Allow this CLI device to use your Apple RAG account.",
+		"account": "Account",
+		"device": "Device",
+		"device_code": "Verification code",
+		"permissions": "Permission: search and read documentation. Usage counts toward your shared account quota.",
+		"consent_check": "Approve only if you started this sign-in. For device login, check that the code matches your terminal.",
+		"allow": "Authorize CLI",
+		"deny": "Decline",
+		"authorized": "CLI authorized. Return to your terminal to continue.",
+		"declined": "Authorization declined. You can close this page.",
+		"authorization_error": "This request is invalid, expired or could not be completed. Return to the CLI and start sign-in again.",
+		"already_handled": "This request has already been handled. Return to your terminal.",
+		"manage": "Manage CLI access",
+		"access_title": "CLI devices and API keys",
+		"access_description": "Manage CLI access separately from your MCP connections.",
+		"login_hint": "Sign in from your terminal to authorize a device:",
+		"no_sessions": "No active CLI devices or API keys.",
+		"api_key": "API key",
+		"expires": "Expires {{date}}",
+		"revoke": "Revoke access",
+		"revoke_description": "“{{name}}” will stop working. Your other devices and MCP connections keep their access.",
+		"access_error": "Could not update CLI access. Please retry.",
+		"create_key": "Create API key",
+		"key_description": "For CI and automation. Grants documentation search and fetch access using your account quota.",
+		"key_name": "Key name",
+		"validity": "Valid for",
+		"days": "{{count}} days",
+		"key_once": "Copy this key now. It will not be shown again. Store it in your secret manager and use APPLE_RAG_TOKEN."
 	}
 }

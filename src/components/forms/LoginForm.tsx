@@ -3,7 +3,7 @@ import type React from "react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
 import { FormContainer } from "@/components/ui/FormContainer";
 import { Input } from "@/components/ui/Input";
@@ -20,7 +20,6 @@ export function LoginForm() {
 	const [oauthLoading, setOauthLoading] = useState<string | null>(null);
 	const [error, setError] = useState<string | null>(null);
 
-	const navigate = useNavigate();
 	const [searchParams] = useSearchParams();
 	const { login } = useAuth();
 	const { handleError } = useErrorHandler();
@@ -51,47 +50,16 @@ export function LoginForm() {
 		const password = formData.get("password") as string;
 
 		try {
-			// Persistent debugging
-			const debugLog = (message: string, data?: unknown) => {
-				const timestamp = new Date().toISOString();
-				const logEntry = `[${timestamp}] LoginForm: ${message}`;
-				console.log(logEntry, data || "");
-
-				try {
-					// Store in localStorage for maximum persistence
-					const existingLogs = localStorage.getItem("debug_loginform") || "";
-					const newLog = `${logEntry} ${data ? JSON.stringify(data) : ""}\n`;
-					localStorage.setItem("debug_loginform", existingLogs + newLog);
-
-					// Also store in a combined debug log
-					const allLogs = localStorage.getItem("debug_all") || "";
-					localStorage.setItem("debug_all", allLogs + newLog);
-				} catch (e) {
-					console.error("Failed to store debug log:", e);
-				}
-			};
-
-			debugLog("Login attempt started", { email });
-
 			await login({
 				email,
 				password,
 			});
-
-			debugLog("Login completed successfully");
 
 			// Track successful login
 			trackEvent("USER_LOGIN", {
 				method: "email",
 				user_email: email,
 			});
-
-			// Wait for state synchronization before navigation
-			debugLog("Waiting for state synchronization (150ms)");
-			await new Promise((resolve) => setTimeout(resolve, 150));
-
-			debugLog("Navigating to overview page");
-			navigate("/overview/", { replace: true });
 		} catch (error) {
 			// Use unified error handling
 			const friendlyError = handleError(error, {

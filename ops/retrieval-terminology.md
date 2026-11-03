@@ -13,7 +13,7 @@ descriptions:
   [original RAG paper](https://arxiv.org/abs/2005.11401).
 
 The implementation runs both recall paths, merges their candidates, and then
-calls the relevance ranker in `worker/mcp-services/search-engine.ts`. The MCP
+calls the relevance ranker in `worker/services/search-engine.ts`. The MCP
 server returns source excerpts or complete pages; the calling agent writes the
 answer.
 

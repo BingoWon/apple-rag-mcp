@@ -14,7 +14,13 @@ const app = createOpenAPIApp();
 const AdminFetchLogSchema = z.object({
 	id: z.string(),
 	user_id: z.string(),
-	mcp_token: z.string().nullable(),
+	channel: z.enum(["unknown", "mcp", "cli"]),
+	credential_id: z.string().nullable(),
+	session_id: z.string().nullable(),
+	auth_method: z.string().nullable(),
+	request_id: z.string().nullable(),
+	client_name: z.string().nullable(),
+	client_version: z.string().nullable(),
 	requested_url: z.string(),
 	actual_url: z.string(),
 	page_id: z.string().nullable(),
@@ -86,7 +92,7 @@ app.openapi(getFetchLogsRoute, async (c) => {
 		const total = Number(countResult?.total) || 0;
 
 		const logsResult = await c.env.DB.prepare(`
-      SELECT id, user_id, mcp_token, requested_url, actual_url, page_id,
+      SELECT id, user_id, channel, credential_id, session_id, auth_method, request_id, client_name, client_version, requested_url, actual_url, page_id,
              response_time_ms, status_code, error_code AS reason, outcome, country_code, created_at, content_source, provider, upstream_status, cache_hit
       FROM fetch_logs${where}
       ORDER BY julianday(created_at) DESC, id DESC
@@ -101,7 +107,13 @@ app.openapi(getFetchLogsRoute, async (c) => {
 			return {
 				id: row.id as string,
 				user_id: row.user_id as string,
-				mcp_token: row.mcp_token ? `${String(row.mcp_token).substring(0, 12)}...` : null,
+				channel: row.channel as "unknown" | "mcp" | "cli",
+				credential_id: row.credential_id as string | null,
+				session_id: row.session_id as string | null,
+				auth_method: row.auth_method as string | null,
+				request_id: row.request_id as string | null,
+				client_name: row.client_name as string | null,
+				client_version: row.client_version as string | null,
 				requested_url: requestedUrl,
 				actual_url: actualUrl,
 				page_id: row.page_id as string | null,

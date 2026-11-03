@@ -2,13 +2,15 @@ import { originValidationResponse } from "@modelcontextprotocol/server";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { apiApp } from "./api/app.js";
+import { CLIAuthorization } from "./cli/authorization.js";
+import { authorizationMetadata, cliOAuthRoutes } from "./cli/routes.js";
 import { handleScheduled } from "./collector/handler.js";
 import { handleAccountRequest } from "./mcp/account.js";
 import { HEALTH_STATUS, SERVER_MANIFEST } from "./mcp/manifest.js";
 import { MCPProtocolHandler } from "./mcp/protocol-handler.js";
-import { createServices } from "./mcp-services/index.js";
-import type { WaitUntilContext } from "./mcp-utils/d1-utils.js";
-import { configureTelegram } from "./mcp-utils/telegram-notifier.js";
+import { AuthMiddleware } from "./mcp-auth/auth-middleware.js";
+import type { WaitUntilContext } from "./services/d1-utils.js";
+import { createServices } from "./services/index.js";
 import type { Env } from "./shared/types.js";
 
 const MCP_HOSTNAME = "mcp.apple-rag.com";
@@ -38,8 +40,10 @@ async function handleMCPRequest(c: {
 		return originRejection;
 	}
 
-	configureTelegram(c.env.TELEGRAM_DEFAULT_BOT_URL);
-	const handler = new MCPProtocolHandler(() => createServices(c.env, c.executionCtx));
+	const handler = new MCPProtocolHandler(
+		() => createServices(c.env, c.executionCtx),
+		(request) => new AuthMiddleware(c.env.DB, c.executionCtx).optionalAuth(request),
+	);
 	const response = handler.handleRequest(c.req.raw);
 	c.executionCtx.waitUntil(response);
 	return response;
@@ -62,6 +66,8 @@ app.get("/robots.txt", (c) => {
 		"Allow: /",
 		"",
 		"Disallow: /api/",
+		"Disallow: /oauth/",
+		"Disallow: /cli/authorize",
 		"Disallow: /admin/",
 		"Disallow: /overview",
 		"Disallow: /settings",
@@ -104,6 +110,10 @@ app.get("/sitemap.xml", (c) => {
 });
 
 app.route("/api", apiApp);
+app.route("/oauth/cli", cliOAuthRoutes);
+app.get("/.well-known/oauth-authorization-server", (c) =>
+	c.json(authorizationMetadata(new URL(c.req.url).origin)),
+);
 
 app.get("/mcp/health", (c) => c.json({ ...HEALTH_STATUS, timestamp: new Date().toISOString() }));
 
@@ -216,7 +226,12 @@ export default {
 		return app.fetch(request, env, ctx);
 	},
 
-	async scheduled(_event: ScheduledEvent, env: Env, _ctx: ExecutionContext): Promise<void> {
+	async scheduled(_event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
+		ctx.waitUntil(
+			new CLIAuthorization(env.DB, env.JWT_SECRET, "https://apple-rag.com")
+				.cleanup()
+				.catch(() => console.error("CLI authorization cleanup failed.")),
+		);
 		await handleScheduled(env);
 	},
 };

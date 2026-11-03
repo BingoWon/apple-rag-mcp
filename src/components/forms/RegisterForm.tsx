@@ -3,7 +3,7 @@ import type React from "react";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
 import { FormContainer } from "@/components/ui/FormContainer";
 import { Input } from "@/components/ui/Input";
@@ -21,7 +21,6 @@ export function RegisterForm() {
 
 	const [passwordError, setPasswordError] = useState("");
 	const [error, setError] = useState<string | null>(null);
-	const navigate = useNavigate();
 	const { register: registerUser } = useAuth();
 	const { t } = useTranslation();
 
@@ -56,8 +55,6 @@ export function RegisterForm() {
 				method: "email",
 				user_email: email,
 			});
-
-			navigate("/overview/", { replace: true });
 		} catch (error) {
 			// 提取错误码和消息
 			let errorCode: string | undefined;

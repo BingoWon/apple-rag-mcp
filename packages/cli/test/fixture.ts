@@ -1,13 +1,19 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { createServer } from "node:http";
 import { DatabaseSync } from "node:sqlite";
+import { Hono } from "hono";
+import type { AppEnv } from "../../../worker/api/types/hono.js";
+import type { User } from "../../../worker/api/types/index.js";
+import { generateAccessToken } from "../../../worker/api/utils/jwt-simple.js";
+import { CLIAuthorization } from "../../../worker/cli/authorization.js";
+import { cliOAuthRoutes, createCLIRoutes } from "../../../worker/cli/routes.js";
 import { handleAccountRequest } from "../../../worker/mcp/account.js";
 import { MCPProtocolHandler } from "../../../worker/mcp/protocol-handler.js";
 import { AuthMiddleware } from "../../../worker/mcp-auth/auth-middleware.js";
-import { PageReadError } from "../../../worker/mcp-services/page-reader.js";
-import { RateLimitService } from "../../../worker/mcp-services/rate-limit.js";
-import { ToolCallLogger } from "../../../worker/mcp-services/tool-call-logger.js";
-import type { Services } from "../../../worker/mcp-types/index.js";
+import { PageReadError } from "../../../worker/services/page-reader.js";
+import { RateLimitService } from "../../../worker/services/rate-limit.js";
+import { ToolCallLogger } from "../../../worker/services/tool-call-logger.js";
+import type { Services } from "../../../worker/services/types.js";
 import type { Env } from "../../../worker/shared/types.js";
 
 export const TOKEN = `at_${"0".repeat(32)}`;
@@ -50,20 +56,31 @@ export async function fixture() {
 					return { success: true, results: sql.prepare(query).all(...values) };
 				},
 				async run() {
-					return { success: true, meta: sql.prepare(query).run(...values) };
+					const statement = sql.prepare(query);
+					if (statement.columns().length)
+						return { success: true, results: statement.all(...values) };
+					return { success: true, results: [], meta: statement.run(...values) };
 				},
 			};
 		},
 		async batch(statements: { run: () => Promise<unknown> }[]) {
-			return Promise.all(statements.map((statement) => statement.run()));
+			sql.exec("BEGIN");
+			try {
+				const result = [];
+				for (const statement of statements) result.push(await statement.run());
+				sql.exec("COMMIT");
+				return result;
+			} catch (error) {
+				sql.exec("ROLLBACK");
+				throw error;
+			}
 		},
 	} as unknown as D1Database;
-	const env = { DB } as Env;
+	const env = { DB, JWT_SECRET: "fixture-secret-only-for-tests-32-bytes" } as Env;
 	const requests: { path: string; method: string; authorization: string | undefined }[] = [];
 	let retrieved = 0;
 	let cancelObserved = false;
 	const services = {
-		auth: new AuthMiddleware(DB, ctx),
 		rateLimit: new RateLimitService(DB),
 		logger: new ToolCallLogger(DB, ctx),
 		database: { close: async () => {} },
@@ -133,7 +150,16 @@ export async function fixture() {
 			},
 		},
 	} as unknown as Services;
-	const handler = new MCPProtocolHandler(() => services);
+	const handler = new MCPProtocolHandler(
+		() => services,
+		(request) => new AuthMiddleware(DB, ctx).optionalAuth(request),
+	);
+	const app = new Hono<AppEnv>()
+		.route(
+			"/api/cli",
+			createCLIRoutes(async () => services),
+		)
+		.route("/oauth/cli", cliOAuthRoutes);
 	const server = createServer(async (req, res) => {
 		requests.push({
 			path: req.url!,
@@ -147,16 +173,18 @@ export async function fixture() {
 		try {
 			const chunks: Buffer[] = [];
 			for await (const chunk of req) chunks.push(chunk);
-			const request = new Request(`http://127.0.0.1${req.url}`, {
+			const request = new Request(`${endpoint}${req.url}`, {
 				method: req.method,
 				headers: { ...req.headers, "cf-connecting-ip": "203.0.113.1" } as HeadersInit,
 				signal: controller.signal,
 				...(req.method === "POST" ? { body: Buffer.concat(chunks) } : {}),
 			});
 			const response =
-				req.url === "/account"
-					? await handleAccountRequest(request, env, ctx)
-					: await handler.handleRequest(request);
+				req.url?.startsWith("/api/") || req.url?.startsWith("/oauth/")
+					? await app.fetch(request, env, ctx as ExecutionContext)
+					: req.url === "/account"
+						? await handleAccountRequest(request, env, ctx)
+						: await handler.handleRequest(request);
 			res.writeHead(response.status, Object.fromEntries(response.headers));
 			res.end(Buffer.from(await response.arrayBuffer()));
 		} catch {
@@ -168,7 +196,23 @@ export async function fixture() {
 	});
 	await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
 	const endpoint = `http://127.0.0.1:${(server.address() as { port: number }).port}`;
+	const authorization = new CLIAuthorization(DB, env.JWT_SECRET, endpoint);
+	const cliKey = (await authorization.createKey("reader", "Fixture automation", 30)).token;
+	const webToken = await generateAccessToken(
+		{ id: "reader", email: "reader@example.com", name: "Reader", created_at: "2026-01-01" } as User,
+		"fixture",
+		"hobby",
+		[],
+		env.JWT_SECRET!,
+	);
 	return {
+		env,
+		authorization,
+		cliKey,
+		webToken,
+		async flush() {
+			await Promise.all(writes);
+		},
 		endpoint,
 		sql,
 		services,

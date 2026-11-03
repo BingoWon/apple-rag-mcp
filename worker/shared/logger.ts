@@ -27,3 +27,5 @@ export class Logger {
 		}
 	}
 }
+
+export const logger = new Logger("[Apple RAG]");

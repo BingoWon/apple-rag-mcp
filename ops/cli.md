@@ -1,61 +1,32 @@
-# CLI design, authentication and npm publication
+# CLI operations and npm publication
 
-Decision: 2026-11-03. Service 5.4.1; npm package `apple-rag-cli` 1.0.1;
-executable `apple-rag`. The owner completed first publication and Trusted Publisher
-setup. Public registry access and a clean installation have been independently
-verified. Package: https://www.npmjs.com/package/apple-rag-cli.
+Current implementation: service 5.5.0, independent npm `apple-rag-cli` 2.0.0;
+executable `apple-rag`, Node.js 22.20+. See [authorization architecture](cli-auth-architecture.md)
+and [acceptance](cli-auth-acceptance-2026-11-03.md). The CLI uses a versioned JSON
+API and independent OAuth/device/API-key credentials, with shared account billing
+and quotas. CLI 1.x MCP-token login is intentionally unsupported in 2.x.
 
-The current CLI uses MCP credentials and transport. A proposed separation of CLI
-authorization, API entry and request-channel logging is documented in
-[authorization boundaries](cli-auth-architecture.md); it is not implemented yet.
+TypeScript is bundled with the repository's existing Vite. Runtime dependencies
+are Zod and the native OS vault package; no MCP SDK, CLI framework or separate
+retrieval backend. Contracts live in `shared/contracts.ts`. Files in the npm
+archive are strictly limited to manifest, README, LICENSE, `dist/cli.js` and the
+agent skill. Service secrets/configuration and fixture adapters are excluded.
 
-## Architecture and authentication
-
-- TypeScript compiled to Node.js 22.20+ JavaScript; official MCP client 2.3.1, Zod
-  and Node built-ins. Independent public client package in the private monorepo;
-  root `private: true` remains. No CLI framework or separate retrieval backend.
-- Shared contracts in `packages/cli/src/contracts.ts` validate Worker and client
-  input, structured results and account status. MCP keeps readable text and
-  `legacy: "stateless"`; CLI opts into SDK auto negotiation. Object-root output
-  schemas work across both protocol eras. No Markdown parsing or corpus migration.
-- Search preserves completeness/chunks; fetch preserves requested/canonical URL,
-  source, provider, cache and upstream status. External pages never enter RAG
-  automatically. JSON errors distinguish invalid input, missing pages and limits.
-- Anonymous 30/week, 3/minute; free hobby 50/week, 5/minute; Pro 50,000/week,
-  50/minute. The client is free to install; cloud usage is the subscription product.
-  Every token and MCP/CLI client for one user shares the same usage counters.
-- `GET /account` on the MCP host (`/mcp/account` on the website) reuses MCP Token/IP
-  auth and reads existing subscriptions/counters. `Cache-Control: no-store`;
-  no retrieval quota consumed. Auth may update last-used timestamps. Responses
-  expose effective identity/method, plan, quota/reset times and login/upgrade URLs,
-  never tokens. Successful/limited tool results include the same quota snapshot.
-- Login validates before atomically replacing owner-only, endpoint-bound stored
-  credentials. Environment credentials take precedence. Invalid/revoked explicit
-  credentials never fall back to saved/IP/anonymous access. Logout removes the
-  local token, not environment credentials, server tokens or authorized-IP access.
-- Entitlements remain server-controlled, including upgrades, cancellation and
-  expired one-time purchases. Payment stays on the existing website. Status/login/
-  discovery cost no retrieval quota. Failures/cancellation keep current refunds.
-  No automatic tool retry. stdout is data; stderr is diagnostics/quota/guidance.
-
-## Build and inspect
+Build and validate before pushing main:
 
 ```sh
 pnpm install --frozen-lockfile
 pnpm build
-mkdir -p /tmp/apple-rag-cli-release
-cd packages/cli
-npm pack --ignore-scripts --pack-destination /tmp/apple-rag-cli-release
-tar -tzf /tmp/apple-rag-cli-release/apple-rag-cli-1.0.0.tgz
+node --import tsx ops/cli/verify-package.mjs
 ```
 
-Only manifest, README, LICENSE, `dist/*.js` and the skill are allowed. Never publish
-the root package. CI verifies this allowlist and clean-install help/version from
-the actual tarball. Fixture tests exercise actual HTTP, MCP SDK, Worker handlers
-and SQLite: three tiers, subscription upgrades/cancellation/expiry, quota sharing,
-credential rejection/priority/binding, no secret echo, status/discovery, provenance,
-empty results, HTTP-200 tool errors, refunds, no-clobber output and POSIX cancellation.
-Portability checks cover Linux/Node22, macOS/Node24 and Windows/Node26.
+`pnpm build` includes lint, types, PostgreSQL/unit checks and HTTP/SQLite CLI
+integration tests. Tests mock only the OS vault in child processes; authorization,
+PKCE/device consent, refresh/replay, quota, HTTP routing and SQL execute real code.
+The distributable check packs and clean-installs the actual archive, then invokes
+its real binary and independent CLI API. CI covers Linux/Node22, macOS/Node24 and
+Windows/Node26; POSIX signal tests are skipped on Windows. Production acceptance
+also uses a fresh public npm install and the real macOS vault.
 
 ## Owner-operated first npm publication
 
@@ -161,7 +132,7 @@ References: [npm metadata](https://docs.npmjs.com/cli/v11/configuring-npm/packag
 
 ## Scope limits
 
-Homebrew, standalone binaries, browser/device login, agent-config editing and bulk
+Homebrew, standalone binaries, agent-config editing and bulk
 crawls are deferred. The private repository's releases are not public binary
 downloads. No same-task token/performance/cost benefit over MCP is claimed.
 

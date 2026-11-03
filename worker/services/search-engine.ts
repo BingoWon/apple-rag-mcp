@@ -1,0 +1,327 @@
+/**
+ * Hybrid Search Engine for Apple Developer Documentation
+ *
+ * Advanced implementation combining Semantic Search for RAG with precise
+ * Keyword Search and Hybrid Search, optimized for developer documentation retrieval.
+ *
+ * Pipeline: Query → [Vector (4N) + Technical Term (4N)] → Merge → Title Merge → AI Rerank → Results
+ *
+ * Features:
+ * - 4N+4N hybrid candidate strategy
+ * - Semantic vector search with pgvector HNSW
+ * - Technical term search with PostgreSQL 'simple' configuration
+ * - Title-based content merging
+ * - AI reranking with Qwen3-Reranker-8B
+ */
+
+import type {
+	AdditionalUrl,
+	EmbeddingService,
+	SearchOptions,
+	SearchResult,
+} from "../services/types.js";
+import { logger } from "../shared/logger.js";
+import type { DatabaseService } from "./database.js";
+import type { RerankerService } from "./reranker.js";
+
+export interface ParsedChunk {
+	content: string;
+	title: string | null;
+}
+
+export interface ProcessedResult {
+	id: string;
+	url: string;
+	title: string | null;
+	content: string;
+	contentLength: number;
+	chunk_index: number;
+	total_chunks: number;
+	mergedChunkIndices?: number[];
+}
+
+export interface RankedSearchResult {
+	id: string;
+	url: string;
+	title: string | null;
+	content: string;
+	chunk_index: number;
+	total_chunks: number;
+	mergedChunkIndices?: number[];
+	original_index: number;
+}
+
+export interface SearchEngineResult {
+	results: RankedSearchResult[];
+	additionalUrls: AdditionalUrl[];
+	degradations: string[];
+}
+
+export class SearchEngine {
+	constructor(
+		private database: DatabaseService,
+		private embedding: EmbeddingService,
+		private reranker: RerankerService,
+	) {}
+
+	/**
+	 * Execute hybrid search optimized for Apple Developer Documentation
+	 */
+	async search(query: string, options: SearchOptions = {}): Promise<SearchEngineResult> {
+		const { resultCount = 4, signal } = options;
+		signal?.throwIfAborted();
+		return this.hybridSearchWithReranker(query, resultCount, signal);
+	}
+
+	/**
+	 * Hybrid search with 4N+4N candidate strategy
+	 *
+	 * 1. Parallel: Vector search (4N) + Technical term search (4N)
+	 * 2. Merge and deduplicate by ID
+	 * 3. Title-based content merging
+	 * 4. AI reranking for optimal results
+	 */
+	private async hybridSearchWithReranker(
+		query: string,
+		resultCount: number,
+		signal?: AbortSignal,
+	): Promise<SearchEngineResult> {
+		const candidateCount = resultCount * 4;
+		const degradations: string[] = [];
+		const onFallback = (reason: string) => {
+			degradations.push(reason);
+		};
+
+		const [semanticOutcome, keywordOutcome] = await Promise.allSettled([
+			this.getSemanticCandidates(query, candidateCount, signal, onFallback),
+			this.getKeywordCandidates(query, candidateCount),
+		]);
+		signal?.throwIfAborted();
+
+		if (semanticOutcome.status === "rejected" && keywordOutcome.status === "rejected") {
+			throw new AggregateError(
+				[semanticOutcome.reason, keywordOutcome.reason],
+				"Semantic and keyword retrieval both failed",
+			);
+		}
+
+		const semanticResults = semanticOutcome.status === "fulfilled" ? semanticOutcome.value : [];
+		const keywordResults = keywordOutcome.status === "fulfilled" ? keywordOutcome.value : [];
+
+		if (semanticOutcome.status === "rejected") {
+			degradations.push("SEMANTIC_UNAVAILABLE");
+			logger.warn(`Semantic retrieval unavailable: ${String(semanticOutcome.reason)}`);
+		}
+		if (keywordOutcome.status === "rejected") {
+			degradations.push("KEYWORD_UNAVAILABLE");
+			logger.warn(`Keyword retrieval unavailable: ${String(keywordOutcome.reason)}`);
+		}
+
+		const mergedCandidates = this.mergeCandidates(semanticResults, keywordResults);
+		const processedResults = this.processResults(mergedCandidates);
+
+		if (processedResults.length === 0) {
+			return { results: [], additionalUrls: [], degradations };
+		}
+
+		let finalResults: RankedSearchResult[];
+
+		try {
+			const rankedDocuments = await this.reranker.rerank(
+				query,
+				processedResults.map(({ content, title, url }) => ({ content, title, url })),
+				Math.min(resultCount, processedResults.length),
+				signal,
+				onFallback,
+			);
+			signal?.throwIfAborted();
+
+			// Step 5: Map back to final results
+			finalResults = rankedDocuments.map((doc) => {
+				const processed = processedResults[doc.originalIndex];
+				return {
+					id: processed.id,
+					url: processed.url,
+					title: processed.title,
+					content: processed.content,
+					chunk_index: processed.chunk_index,
+					total_chunks: processed.total_chunks,
+					mergedChunkIndices: processed.mergedChunkIndices,
+					original_index: doc.originalIndex,
+				};
+			});
+		} catch (error) {
+			signal?.throwIfAborted();
+			degradations.push("RERANKING_UNAVAILABLE");
+			logger.error(
+				`Reranking failed, falling back to original order (query_length: ${query.length}, candidates: ${processedResults.length}): ${error instanceof Error ? error.message : String(error)}`,
+			);
+
+			// Fallback: use original order, truncate to requested count
+			finalResults = processedResults.slice(0, resultCount).map((processed, index) => ({
+				id: processed.id,
+				url: processed.url,
+				title: processed.title,
+				content: processed.content,
+				chunk_index: processed.chunk_index,
+				total_chunks: processed.total_chunks,
+				mergedChunkIndices: processed.mergedChunkIndices,
+				original_index: index,
+			}));
+
+			logger.warn(`Reranking failed, using original order with ${finalResults.length} results`);
+		}
+
+		// Collect additional URLs
+		const additionalUrls = this.collectAdditionalUrls(processedResults, finalResults);
+
+		return { results: finalResults, additionalUrls, degradations: [...new Set(degradations)] };
+	}
+
+	/**
+	 * Retrieve semantic search candidates
+	 */
+	private async getSemanticCandidates(
+		query: string,
+		resultCount: number,
+		signal?: AbortSignal,
+		onFallback?: (reason: string) => void,
+	): Promise<SearchResult[]> {
+		const startTime = Date.now();
+
+		const queryEmbedding = await this.embedding.createEmbedding(query, signal, onFallback);
+		signal?.throwIfAborted();
+		const results = await this.database.semanticSearch(queryEmbedding, { resultCount });
+
+		logger.info(
+			`Semantic search completed (${((Date.now() - startTime) / 1000).toFixed(1)}s): ${results.length} results`,
+		);
+
+		return results;
+	}
+
+	/**
+	 * Retrieve keyword search candidates
+	 */
+	private async getKeywordCandidates(query: string, resultCount: number): Promise<SearchResult[]> {
+		const startTime = Date.now();
+
+		const results = await this.database.keywordSearch(query, { resultCount });
+
+		logger.info(
+			`Keyword search completed (${((Date.now() - startTime) / 1000).toFixed(1)}s): ${results.length} results`,
+		);
+
+		return results;
+	}
+
+	/**
+	 * Merge and deduplicate candidates from semantic and keyword search
+	 */
+	private mergeCandidates(
+		semanticResults: SearchResult[],
+		keywordResults: SearchResult[],
+	): SearchResult[] {
+		const seen = new Set<string>();
+
+		// Prioritize semantic results, then add unique keyword results
+		return [
+			...semanticResults.filter((result) => {
+				if (seen.has(result.id)) return false;
+				seen.add(result.id);
+				return true;
+			}),
+			...keywordResults.filter((result) => {
+				if (seen.has(result.id)) return false;
+				seen.add(result.id);
+				return true;
+			}),
+		];
+	}
+
+	/**
+	 * Collect additional URLs from processed results
+	 */
+	private collectAdditionalUrls(
+		processedResults: ProcessedResult[],
+		finalResults: RankedSearchResult[],
+	): AdditionalUrl[] {
+		const finalUrls = new Set(finalResults.map((r) => r.url));
+
+		return processedResults
+			.filter((r) => !finalUrls.has(r.url))
+			.reduce((urls, r) => {
+				if (!urls.some((u) => u.url === r.url)) {
+					urls.push({
+						url: r.url,
+						title: r.title,
+						characterCount: r.contentLength,
+					});
+				}
+				return urls;
+			}, [] as AdditionalUrl[])
+			.slice(0, 10);
+	}
+
+	/**
+	 * Process RAG candidates by document URL
+	 */
+	private processResults(candidates: SearchResult[]): ProcessedResult[] {
+		return this.mergeByUrl(candidates);
+	}
+
+	private parseChunk(content: string, title: string | null): ParsedChunk {
+		// Since data migration is complete, content is now plain text
+		// and title comes from the dedicated title field
+		return {
+			title: title || "",
+			content: content,
+		};
+	}
+
+	private mergeByUrl(results: SearchResult[]): ProcessedResult[] {
+		const urlGroups = new Map<string, SearchResult[]>();
+
+		for (const result of results) {
+			if (!urlGroups.has(result.url)) {
+				urlGroups.set(result.url, []);
+			}
+			urlGroups.get(result.url)!.push(result);
+		}
+
+		return Array.from(urlGroups.values()).map((group) => {
+			const primary = group[0];
+			const { title } = this.parseChunk(primary.content, primary.title);
+
+			// Sort and merge chunks by original index to maintain proper content order
+			const chunkIndices = group.map((r) => r.chunk_index).sort((a, b) => a - b);
+			const mergedContent = group
+				.sort((a, b) => a.chunk_index - b.chunk_index)
+				.map((r) => this.parseChunk(r.content, r.title).content)
+				.join("\n\n---\n\n");
+
+			// Detect complete document merging
+			const isCompleteDocument =
+				chunkIndices.length === primary.total_chunks && chunkIndices.every((idx, i) => idx === i);
+
+			// Determine final chunk representation
+			const [chunk_index, total_chunks] =
+				chunkIndices.length === 1
+					? [chunkIndices[0], primary.total_chunks]
+					: isCompleteDocument
+						? [0, 1]
+						: [Math.min(...chunkIndices), primary.total_chunks];
+
+			return {
+				id: primary.id,
+				url: primary.url,
+				title,
+				content: mergedContent,
+				mergedChunkIndices: chunkIndices.length > 1 ? chunkIndices : undefined,
+				contentLength: mergedContent.length,
+				chunk_index,
+				total_chunks,
+			};
+		});
+	}
+}

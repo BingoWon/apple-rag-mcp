@@ -4,6 +4,7 @@ import { prettyJSON } from "hono/pretty-json";
 import { requestId } from "hono/request-id";
 import { timing } from "hono/timing";
 import packageJson from "../../package.json";
+import { createCLIRoutes } from "../cli/routes.js";
 import { createCorsMiddleware, securityHeaders } from "./middleware/cors.js";
 import adminRoutes from "./routes/admin/index.js";
 import { authRoutes } from "./routes/auth.js";
@@ -49,6 +50,7 @@ apiApp.use("*", async (c, next) => {
 });
 
 apiApp.route("/auth", authRoutes);
+apiApp.route("/cli", createCLIRoutes());
 apiApp.route("/oauth", oauthRoutes);
 apiApp.route("/contact-messages", contactMessagesRoutes);
 apiApp.route("/users", userRoutes);

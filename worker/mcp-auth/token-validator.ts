@@ -1,5 +1,5 @@
 import { TOKEN_FORMAT } from "../mcp/constants.js";
-import { backgroundD1Write, type WaitUntilContext, withD1Timeout } from "../mcp-utils/d1-utils.js";
+import { backgroundD1Write, type WaitUntilContext, withD1Timeout } from "../services/d1-utils.js";
 
 export interface TokenValidationResult {
 	valid: boolean;
@@ -11,6 +11,7 @@ export interface UserTokenData {
 	userId: string;
 	email: string;
 	name: string;
+	credentialId?: string;
 }
 
 export class TokenValidator {
@@ -38,7 +39,7 @@ export class TokenValidator {
 	private async queryUserByToken(token: string): Promise<UserTokenData | null> {
 		const result = await this.d1
 			.prepare(
-				`SELECT u.id as user_id, u.email, u.name
+				`SELECT u.id as user_id, u.email, u.name, t.id as credential_id
          FROM mcp_tokens t JOIN users u ON t.user_id = u.id
          WHERE t.mcp_token = ?`,
 			)
@@ -52,6 +53,7 @@ export class TokenValidator {
 			userId: row.user_id as string,
 			email: (row.email as string) || "unknown",
 			name: (row.name as string) || "unknown",
+			credentialId: row.credential_id as string,
 		};
 	}
 
