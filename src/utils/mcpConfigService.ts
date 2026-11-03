@@ -47,7 +47,7 @@ export function generateInstallPrompt(
 					"传输方式：远程 HTTP",
 					token
 						? `认证请求头：Authorization: Bearer ${token}`
-						: "先使用匿名体验，不发送 Authorization 请求头。使用账号套餐时，从 https://apple-rag.com/overview 获取专属接入说明。",
+						: "先使用匿名体验，不发送 Authorization 请求头。使用账号套餐时，从 https://apple-rag.com/overview 获取专属接入提示词。",
 					"",
 					"使用当前客户端、当前版本支持的原生命令或配置格式，优先配置到个人用户范围，保留其他已有配置。",
 					"服务同时支持 MCP 2026-07-28 和客户端原有的 initialize 握手（2025-11-25、2025-06-18、2025-03-26）。不要因为客户端未发送 MCP-Protocol-Version 而判定不兼容。",
@@ -62,7 +62,7 @@ export function generateInstallPrompt(
 					"Transport: remote HTTP",
 					token
 						? `Authentication header: Authorization: Bearer ${token}`
-						: "Start with the anonymous trial and omit the Authorization header. For account access, get personalized setup instructions from https://apple-rag.com/overview.",
+						: "Start with the anonymous trial and omit the Authorization header. For account access, get a personalized setup prompt from https://apple-rag.com/overview.",
 					"",
 					"Use the native command or configuration format supported by this client version. Prefer user-level configuration and preserve other existing settings.",
 					"The server accepts both MCP 2026-07-28 and the client's existing initialize handshake (2025-11-25, 2025-06-18, and 2025-03-26). Do not treat a missing MCP-Protocol-Version header as incompatibility.",

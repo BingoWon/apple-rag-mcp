@@ -152,16 +152,9 @@ try {
 				await page.goto(base, { waitUntil: "networkidle" });
 				const quick = page.locator("#quickstart");
 				await quick.scrollIntoViewIfNeeded();
-				assert.equal(await quick.getByRole("button").count(), 3);
+				assert.equal(await quick.getByRole("button").count(), 2);
 				assert.equal(await page.locator("#faq").count(), 0);
 				for (const mode of ["MCP", "CLI"]) {
-					await quick.getByRole("button", { name: mode, exact: true }).click();
-					assert.equal(
-						await quick
-							.getByRole("button", { name: mode, exact: true })
-							.getAttribute("aria-pressed"),
-						"true",
-					);
 					const instructions =
 						mode === "MCP"
 							? generateInstallPrompt({}, language)
@@ -175,7 +168,7 @@ try {
 					);
 					await quick
 						.getByRole("button", {
-							name: language === "en" ? `Copy ${mode} setup instructions` : `复制 ${mode} 接入说明`,
+							name: language === "en" ? `Copy ${mode} prompt` : `复制 ${mode} 提示词`,
 							exact: true,
 						})
 						.click();
@@ -191,27 +184,39 @@ try {
 					),
 				);
 				const setupLayout = await quick.evaluate((section) => {
-					const selector = section.querySelector("fieldset");
-					const action = section.querySelector("button[aria-label]");
-					const grid = section.querySelector("ul");
+					const [mcp, cli] = section.querySelectorAll("button");
+					const clients = section.querySelector("ul");
+					const price = section.querySelector("strong");
 					return {
-						selectorTop: selector.getBoundingClientRect().top,
-						actionTop: action.getBoundingClientRect().top,
-						columns: getComputedStyle(grid).gridTemplateColumns.split(" ").length,
-						panelWidth: selector.closest(".rounded-2xl").getBoundingClientRect().width,
-						gridWidth: grid.getBoundingClientRect().width,
-						linksFit: [...grid.querySelectorAll("a")].every(
-							(link) =>
-								link.scrollWidth <= link.clientWidth + 1 &&
-								link.getBoundingClientRect().height >= 40,
+						mcpTop: mcp.getBoundingClientRect().top,
+						cliTop: cli.getBoundingClientRect().top,
+						mcpColor: getComputedStyle(mcp).backgroundColor,
+						cliColor: getComputedStyle(cli).backgroundColor,
+						buttonsFit: [mcp, cli].every(
+							(button) => button.scrollWidth <= button.clientWidth + 1 && button.clientHeight >= 46,
 						),
+						clientDisplay: getComputedStyle(clients).display,
+						clientWrap: getComputedStyle(clients).flexWrap,
+						clientGap: getComputedStyle(clients).columnGap,
+						linksFit: [...clients.querySelectorAll("a")].every(
+							(link) => link.scrollWidth <= link.clientWidth + 1,
+						),
+						priceSize: parseFloat(getComputedStyle(price).fontSize),
+						priceWeight: Number(getComputedStyle(price).fontWeight),
+						priceColor: getComputedStyle(price).color,
+						brandColor: getComputedStyle(section.querySelector("header > p")).color,
 					};
 				});
-				assert.equal(setupLayout.columns, width >= 640 ? 3 : 2);
-				assert(Math.abs(setupLayout.panelWidth - setupLayout.gridWidth) < 1);
-				assert(setupLayout.linksFit, "Client guides must remain readable and easy to select");
-				if (width >= 640) assert(Math.abs(setupLayout.selectorTop - setupLayout.actionTop) < 1);
-				else assert(setupLayout.actionTop > setupLayout.selectorTop);
+				assert.notEqual(setupLayout.mcpColor, setupLayout.cliColor);
+				assert(setupLayout.buttonsFit);
+				assert.equal(setupLayout.clientDisplay, "flex");
+				assert.equal(setupLayout.clientWrap, "wrap");
+				assert.equal(setupLayout.clientGap, "20px");
+				assert(setupLayout.linksFit);
+				assert(setupLayout.priceSize >= 20 && setupLayout.priceWeight >= 700);
+				assert.equal(setupLayout.priceColor, setupLayout.brandColor);
+				if (width >= 640) assert(Math.abs(setupLayout.mcpTop - setupLayout.cliTop) < 1);
+				else assert(setupLayout.cliTop > setupLayout.mcpTop);
 				await capture("connections");
 				await quick.screenshot({ path: `${results}/quickstart-${language}-${theme}-${width}.png` });
 				const testimonials = page.locator("#testimonials");
@@ -253,7 +258,7 @@ try {
 				for (const mode of ["MCP", "CLI"]) {
 					await page
 						.getByRole("button", {
-							name: language === "en" ? `Copy ${mode} setup instructions` : `复制 ${mode} 接入说明`,
+							name: language === "en" ? `Copy ${mode} prompt` : `复制 ${mode} 提示词`,
 							exact: true,
 						})
 						.click();
@@ -327,7 +332,7 @@ try {
 		await page.getByRole("button", { name: "CLI", exact: true }).click();
 		await page
 			.getByRole("button", {
-				name: language === "en" ? "Copy CLI setup instructions" : "复制 CLI 接入说明",
+				name: language === "en" ? "Copy CLI prompt" : "复制 CLI 提示词",
 				exact: true,
 			})
 			.waitFor();

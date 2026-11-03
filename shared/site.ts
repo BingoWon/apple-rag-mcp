@@ -20,12 +20,12 @@ export const SITE_PAGES: Record<string, SitePage> = {
 	"/connect": {
 		title: "Connect Your Agent via MCP or CLI — Apple RAG",
 		description:
-			"Set up Apple RAG for your AI agent with MCP or CLI. Get agent setup instructions, learn how account access works, and choose a connection for your environment.",
+			"Set up Apple RAG for your AI agent with MCP or CLI. Get setup prompts for your agent, learn how account access works, and choose a connection for your environment.",
 		indexable: true,
 		zh: {
 			title: "接入智能体 · MCP / CLI — Apple RAG",
 			description:
-				"查看 MCP / CLI 接入说明，根据智能体的运行环境选择接入方式，了解账号授权与共享额度。",
+				"获取 MCP / CLI 接入提示词，根据智能体的运行环境选择接入方式，了解账号授权与共享额度。",
 		},
 	},
 	"/privacy-policy": {

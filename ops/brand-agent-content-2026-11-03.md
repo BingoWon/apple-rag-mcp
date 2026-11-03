@@ -160,3 +160,24 @@ Validation: 13 focused unit checks, type checking, lint and the production build
 pass. The 150-case browser sweep covers both languages and themes at 320, 390 and
 1440px, exact clipboard contents, absent prompt markup, aligned panel/grid edges,
 responsive controls and client links that fit with at least 40px-high targets.
+
+## Direct copy actions and restored client strip — 5.6.8
+
+Replace the selector and shared copy action with two direct copy buttons: MCP
+first with the primary theme treatment, CLI with an outline. Both copy the full
+setup prompt immediately and use the existing accessible success/error toasts.
+Keep the compact panel and restore the previous client strip verbatim, including
+its wide container, wrapping horizontal layout, logos, typography and spacing.
+Emphasize the existing $1/week price in bold, larger theme-colored type.
+
+Refer to copied content consistently as a setup prompt / 提示词 in both languages,
+including the homepage, connection guide, dashboard actions, metadata, llms.txt
+and the account-setup reference inside the copied MCP prompt. Keep generic guide
+and permission instructions as such. No authentication, billing or protocol
+behavior changes. Browser checks cover direct clipboard actions, restored client
+layout, price emphasis and narrow-screen fit, alongside the existing regression
+coverage for other homepage sections and connection surfaces.
+
+Validation: 29 focused unit/metadata checks and 150 browser checks pass, along
+with lint, type checking and the production build. The client-strip subtree
+matches its pre-5.6.7 source exactly; no new dependencies were added.

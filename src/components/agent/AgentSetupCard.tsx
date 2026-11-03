@@ -28,7 +28,7 @@ export function AgentSetupCard({ mode }: { mode: "mcp" | "cli" }) {
 			<CardContent className="flex flex-1 flex-col items-start gap-5">
 				<p className="text-sm leading-relaxed text-muted">{t("connect.paste")}</p>
 				<Button
-					variant="primary"
+					variant={mode === "mcp" ? "primary" : "outline"}
 					className="mt-auto h-auto min-h-11 w-full whitespace-normal py-3"
 					onClick={async () => {
 						try {

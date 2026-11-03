@@ -57,7 +57,7 @@ try {
 				for (const mode of ["MCP", "CLI"]) {
 					await page
 						.getByRole("button", {
-							name: language === "en" ? `Copy ${mode} setup instructions` : `复制 ${mode} 接入说明`,
+							name: language === "en" ? `Copy ${mode} prompt` : `复制 ${mode} 提示词`,
 							exact: true,
 						})
 						.click();

@@ -9,8 +9,8 @@ The hosted service handles retrieval models and index maintenance.
 
 ## Connect an agent
 
-- [Connection guide](https://apple-rag.com/connect): MCP and CLI setup instructions, account access, and common questions.
-- [Account setup](https://apple-rag.com/overview): Personalized MCP setup and CLI instructions.
+- [Connection guide](https://apple-rag.com/connect): MCP and CLI setup prompts, account access, and common questions.
+- [Account setup](https://apple-rag.com/overview): Personalized MCP setup prompts and CLI setup prompts.
 - [Plans](https://apple-rag.com/#pricing): One account and plan for both connections.
 - [CLI package](https://www.npmjs.com/package/apple-rag-cli): Includes skills/apple-dev-docs/SKILL.md for agents.
 
@@ -22,7 +22,7 @@ other agents or grant permissions beyond the user's instructions.
 
 Connect to https://mcp.apple-rag.com using the current client's native remote HTTP
 configuration. Preserve existing settings. Server name: apple-rag-mcp. Anonymous
-trial needs no Authorization header. Use personalized instructions from the account
+trial needs no Authorization header. Use a personalized setup prompt from the account
 setup page for the user's plan; never expose a token in an answer or source code.
 
 Supports MCP 2026-07-28 and legacy initialize with 2025-11-25, 2025-06-18, and

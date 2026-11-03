@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { generateCLIInstallPrompt } from "./agentSetup";
 
-test("CLI setup gives agents bounded setup instructions without asking users to handle credentials", () => {
+test("CLI setup gives agents bounded setup prompts without asking users to handle credentials", () => {
 	for (const language of ["en", "zh"]) {
 		const prompt = generateCLIInstallPrompt(language);
 		for (const command of [
