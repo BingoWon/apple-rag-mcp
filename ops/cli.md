@@ -1,8 +1,9 @@
 # CLI design, authentication and npm publication
 
 Decision: 2026-11-03. Service 5.4.0; npm package `apple-rag-cli` 1.0.0;
-executable `apple-rag`. First publication is an owner action. Until it completes,
-use the tested local tarball; a local build is not proof of npm availability.
+executable `apple-rag`. The owner completed first publication and Trusted Publisher
+setup. Public registry access and a clean installation have been independently
+verified. Package: https://www.npmjs.com/package/apple-rag-cli.
 
 ## Architecture and authentication
 
@@ -86,7 +87,10 @@ workflow first. Never overwrite/unpublish another release or bypass 2FA/legal ga
 The `npm trust github` command above binds package `apple-rag-cli` to repository
 `BingoWon/apple-rag-mcp`, workflow `ci.yml`, with publish permission and no named
 environment. Its arguments were checked against the installed npm help and with
-`--dry-run --yes`; no authenticated registry mutation occurred. The equivalent npm
+`--dry-run --yes`; the owner then ran the real command personally and supplied its
+successful result. The returned permissions were `publish, stage publish`, even
+though only `--allow-publish` was passed. CI uses direct publish only. The agent did
+not read or change the owner's authenticated trust settings. The equivalent npm
 Settings → Trusted publishing → GitHub Actions form remains an optional fallback.
 
 The CI publish job runs only on main pushes after checks/portability succeed.
@@ -124,10 +128,32 @@ References: [npm metadata](https://docs.npmjs.com/cli/v11/configuring-npm/packag
   `b60d8af9ef784612fdb0777e9faae2f3ccea79fee31eb8ca162c888f67be60ba`.
   Ten allowlisted client files only; no credentials, service config or private data.
   CI also retains the verified package as the `apple-rag-cli` artifact.
-- npm registry returned E404; first publication and Trusted Publisher setup remain
-  owner-operated. The first CI correctly skipped publication. No npm login,
+- Before the owner's bootstrap, npm registry returned E404 and the first CI
+  correctly skipped publication. No npm login,
   account creation, owner-identity authorization or npm publication was performed
   by the agent.
+
+## Public npm verification — 2026-11-03
+
+- The owner supplied successful output for login, `+ apple-rag-cli@1.0.0`, and
+  GitHub trust creation for `BingoWon/apple-rag-mcp`, workflow `ci.yml`.
+- Anonymous registry lookup and tarball download succeeded. Registry SHA1 was
+  `589883fcda16532e2a7196bb8571d2f713d5493c`; SHA512 integrity was checked. The
+  downloaded tarball matched the previously tested artifact byte-for-byte
+  (SHA256 above).
+- Installed `apple-rag-cli@1.0.0` from the public registry in a temporary consumer
+  with empty user/global npm configs, a fresh cache, no npm token, no Apple RAG
+  token and no saved client credentials. Version/help, quota-free doctor and a
+  production SwiftUI fetch succeeded; fetch returned indexed Apple content.
+  Temporary installation/config/cache were removed. The owner's login was not
+  used or changed.
+- An npm organization is not required for the unscoped `apple-rag-cli` package.
+  Organizations provide team management and an organization namespace such as
+  `@apple-rag/cli`; this would be a distinct package name. Public client
+  distribution does not change cloud account/subscription enforcement.
+- Trusted Publisher creation is confirmed by owner output. An actual OIDC upload
+  remains to be verified on the next legitimate CLI version; no empty version bump
+  or duplicate publication was made merely to test it.
 
 ## Scope limits
 
