@@ -100,13 +100,14 @@
 	"quickstart": {
 		"eyebrow": "Get connected",
 		"title": "Two ways to connect your agent",
-		"subtitle": "Use MCP for native tool calls or CLI for agents that run shell commands. Both connect to the same Apple RAG service.",
+		"subtitle": "Connect your agent to a maintained Apple knowledge base through MCP or CLI, with RAG retrieval and <jev>Jev</jev> ranking. We handle collection, indexing, and ongoing upkeep.",
 		"shared": "Your account plan and usage allowance apply to both MCP and CLI.",
 		"free_access": "Try without an account: 30 calls per week, up to 3 per minute.",
 		"supported_clients": "MCP client setup guides",
 		"pro_weekly_calls": "50,000 calls per week",
 		"pro_minute_calls": "50 calls per minute",
-		"pro_cta": "See plans"
+		"pro_cta": "See plans",
+		"connection_label": "Connection method"
 	},
 	"datasources": {
 		"eyebrow": "Source library",
@@ -198,8 +199,12 @@
 		"back_home": "Back to Home"
 	},
 	"cta": {
-		"title": "Give your agent the right Apple references.",
-		"subtitle": "Connect Apple RAG through MCP or CLI. We maintain the knowledge base, retrieval, and <jev>Jev</jev> ranking."
+		"ready": "Ready",
+		"to": "to",
+		"empower": "empower",
+		"your": "your",
+		"ai_agents": "AI agents?",
+		"subtitle": "with Apple RAG: official sources, RAG retrieval, and <jev>Jev</jev> ranking through MCP or CLI."
 	},
 	"auth": {
 		"welcome_back": "Welcome back",
@@ -922,5 +927,20 @@
 		"sent": "Check your email for password reset instructions.",
 		"failed": "Could not send the reset link",
 		"invalid_email": "Enter a valid email address"
+	},
+	"testimonials": {
+		"eyebrow": "Happy Vibes",
+		"title": "Developers Are Loving This!",
+		"subtitle": "Built for Apple developers, powered by RAG + <jev>Jev</jev>, with MCP and CLI access.",
+		"quote1": "I went from zero iOS knowledge to shipping apps without writing a single line of code. This MCP is pure magic for non-developers like me!",
+		"quote2": "LLMs were decent, but never quite hit the mark for serious Apple development. This MCP changes everything - finally, AI that truly gets Apple's ecosystem.",
+		"quote3": "I've been looking for this kind of solution for a while and even evaluated building something similar internally. The execution here is solid and well-architected.",
+		"quote4": "Whoever designed these pricing tiers is brilliant. Perfect balance of accessibility and value - fits my workflow like a glove.",
+		"quote5": "Great to see quality commercial MCP products like this. It's good for the ecosystem and shows developers can actually make money doing this right.",
+		"designation_1": "Indie Developer",
+		"designation_2": "macOS Development Engineer",
+		"designation_3": "Senior iOS Architect",
+		"designation_4": "Freelance App Developer",
+		"designation_5": "MCP Platform Expert"
 	}
 }

@@ -130,8 +130,71 @@ try {
 				await page.goto(base, { waitUntil: "networkidle" });
 				const quick = page.locator("#quickstart");
 				await quick.scrollIntoViewIfNeeded();
-				assert.equal(await quick.getByRole("button").count(), 2);
+				assert.equal(await quick.getByRole("button").count(), 3);
+				assert.equal(await page.locator("#faq").count(), 0);
+				for (const mode of ["MCP", "CLI"]) {
+					await quick.getByRole("button", { name: mode, exact: true }).click();
+					assert.equal(
+						await quick
+							.getByRole("button", { name: mode, exact: true })
+							.getAttribute("aria-pressed"),
+						"true",
+					);
+					const instructions = await quick.locator("pre code").innerText();
+					assert(
+						instructions.includes(
+							mode === "MCP" ? "https://mcp.apple-rag.com" : "apple-rag auth login --no-browser",
+						),
+					);
+					await quick
+						.getByRole("button", {
+							name: language === "en" ? `Copy ${mode} setup instructions` : `复制 ${mode} 接入说明`,
+							exact: true,
+						})
+						.click();
+					await page.waitForFunction(
+						(text) => navigator.clipboard.readText().then((value) => value === text),
+						instructions,
+					);
+					checks.push({ name: `window-copy-${mode}`, language, theme, width });
+				}
+				assert(
+					(await quick.innerText()).includes(
+						language === "en" ? "50,000 calls per week" : "每周 50,000 次调用",
+					),
+				);
 				await capture("connections");
+				const testimonials = page.locator("#testimonials");
+				await testimonials.scrollIntoViewIfNeeded();
+				await expectCarouselName("Jake Mitchell");
+				await testimonials
+					.getByRole("button", { name: language === "en" ? "Next" : "下一页", exact: true })
+					.click();
+				await expectCarouselName("Emma O'Sullivan");
+				await testimonials
+					.getByRole("button", { name: language === "en" ? "Previous" : "上一页", exact: true })
+					.click();
+				await expectCarouselName("Jake Mitchell");
+				async function expectCarouselName(name) {
+					await testimonials.getByRole("heading", { name, exact: true }).waitFor();
+				}
+				await capture("testimonials");
+				const cta = page.locator("#cta");
+				await cta.scrollIntoViewIfNeeded();
+				await page.waitForFunction(() => {
+					const words = document.querySelector("#cta .overflow-hidden.pb-2");
+					return words && words.clientWidth > 100;
+				});
+				await page.waitForTimeout(3200);
+				assert(
+					await cta
+						.locator(".overflow-hidden.pb-2")
+						.evaluate((words) => words.scrollWidth <= words.clientWidth + 1),
+					"Typewriter text must remain fully visible on narrow screens",
+				);
+				assert.equal(await cta.locator(".arrow-button").count(), 1);
+				assert((await cta.innerText()).includes("Vibe Coding"));
+				await capture("typewriter-cta");
 				await page.goto(`${base}/connect`, { waitUntil: "networkidle" });
 				assert.equal(
 					await page.locator('link[rel="canonical"]').getAttribute("href"),
@@ -232,8 +295,8 @@ try {
 		assert.deepEqual(errors, []);
 		checks.push({ name: "dashboard-mcp", language });
 		await page.goto(base, { waitUntil: "networkidle" });
-		await page.locator('#cta a[href="/connect"]').click();
-		await page.waitForURL("**/connect");
+		await page.locator('#cta a[href="/register"]').click();
+		await page.waitForURL("**/register");
 		await page.waitForFunction(() => {
 			const h = document.querySelector("h1");
 			return h && h.getBoundingClientRect().top >= 0;

@@ -72,16 +72,20 @@ test("quick start presents both agent connections and current trial limits with 
 		for (const client of SUPPORTED_CLIENTS) {
 			assert.ok(list.includes(`href="${client.href}"`));
 			assert.ok(list.includes(`src="${client.logo}"`));
-			const index = list.indexOf(`${client.label}</a>`);
+			const index = list.indexOf(`${client.label}</span>`);
 			assert.ok(index > lastIndex, client.label);
 			lastIndex = index;
 		}
 		assert.doesNotMatch(html, /VS Code Insiders|vscode-insiders/);
 		assert.equal(list.match(/loading="lazy"/g)?.length, 9);
 		assert.match(html, /id="quickstart"/);
-		assert.match(html, /href="\/#pricing"/);
+		assert.match(html, /href="#pricing"/);
 		assert.ok(html.includes(i18n.t("connect.copy_mcp")));
-		assert.ok(html.includes(i18n.t("connect.copy_cli")));
+		assert.match(html, /aria-pressed="false"[^>]*>CLI<\/button>/);
+		assert.ok(html.includes("agent-setup.txt"));
+		assert.ok(html.includes("#ff5f57"));
+		assert.ok(html.includes(i18n.t("quickstart.pro_weekly_calls")));
+		assert.ok(html.includes(i18n.t("quickstart.pro_minute_calls")));
 		assert.ok(html.includes(i18n.t("quickstart.title")));
 		const anonymous = OAUTH_SUBSCRIPTION_QUOTAS.anonymous;
 		assert.ok(

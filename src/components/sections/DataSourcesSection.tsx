@@ -47,6 +47,13 @@ export function DataSourcesShowcase() {
 						<p className="mt-4 max-w-[26rem] text-left  text-base/6 text-neutral-200">
 							{t("datasources.source_desc")}
 						</p>
+						<img
+							src="/muscle-sticker.png"
+							width={60}
+							height={60}
+							alt="Muscle sticker"
+							className="absolute top-0 right-1 w-15 h-15 md:w-20 md:h-20 object-contain transform rotate-12 hover:rotate-[20deg] transition-transform duration-300"
+						/>
 					</WobbleCard>
 					<WobbleCard
 						containerClassName="col-span-1 lg:col-span-3 bg-brand-tertiary/80 min-h-[440px] xl:min-h-[250px] cursor-pointer"

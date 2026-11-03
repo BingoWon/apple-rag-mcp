@@ -16,7 +16,12 @@ Every code change ships with a release. A change to `worker/`, `src/`, `skills/`
 - Documentation-only changes may skip the bump.
 - Never push a version that already has a tag; the workflow skips it and no release is created.
 
-## Homepage Hero
+## Homepage design
+
+Copy updates must preserve existing homepage sections, their order, components,
+animations and visual treatments. Do not replace the testimonial carousel with
+an FAQ or the typewriter CTA with a generic section. Adapt MCP / CLI access inside
+the original quick-start window; keep its Pro banner and client-logo layout.
 
 Preserve the custom Hero design: colorful heading, Vibe Coders badge, rainbow CTA,
 arrow button, MacBook scroll and stickers. Brand or MCP / CLI copy changes must

@@ -1,12 +1,12 @@
 import { Profiler, type ProfilerOnRenderCallback, type ReactNode } from "react";
 import { Footer } from "@/components/layout/Footer";
-import { AgentFAQ } from "@/components/sections/AgentFAQ";
 import { CTASection } from "@/components/sections/CTASection";
 import { DataSourcesShowcase } from "@/components/sections/DataSourcesSection";
 import { FeaturesSection } from "@/components/sections/FeaturesSection";
 import { JevSection } from "@/components/sections/JevSection";
 import { PricingSection } from "@/components/sections/PricingSection";
 import { QuickStartSection } from "@/components/sections/QuickStartSection";
+import { TestimonialsSection } from "@/components/sections/TestimonialsSection";
 import { HeroSection } from "@/components/ui/hero-section";
 import { AppNavbar } from "@/components/ui/resizable-navbar";
 import { TracingBeam } from "@/components/ui/tracing-beam";
@@ -56,8 +56,8 @@ export default function HomePage() {
 					<ProfiledSection id="DataSourcesShowcase">
 						<DataSourcesShowcase />
 					</ProfiledSection>
-					<ProfiledSection id="AgentFAQ">
-						<AgentFAQ />
+					<ProfiledSection id="TestimonialsSection">
+						<TestimonialsSection />
 					</ProfiledSection>
 					<ProfiledSection id="PricingSection">
 						<PricingSection />

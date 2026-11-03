@@ -1,7 +1,7 @@
 import { IconArrowLeft, IconArrowRight } from "@tabler/icons-react";
 import { AnimatePresence, motion } from "motion/react";
-
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 const CJK_REGEX = /[\u2E80-\u9FFF\uF900-\uFAFF\uFE30-\uFE4F\u{20000}-\u{2FA1F}]/u;
 
@@ -56,6 +56,7 @@ export const AnimatedTestimonials = ({
 	testimonials: Testimonial[];
 	autoplay?: boolean;
 }) => {
+	const { t } = useTranslation();
 	const [active, setActive] = useState(0);
 
 	const handleNext = () => {
@@ -167,6 +168,7 @@ export const AnimatedTestimonials = ({
 						<button
 							type="button"
 							onClick={handlePrev}
+							aria-label={t("common.previous")}
 							className="group/button flex h-10 w-10 items-center justify-center rounded-xl bg-card border border-default hover:border-brand hover:bg-accent transition-all duration-200 shadow-button"
 						>
 							<IconArrowLeft className="h-5 w-5 text-light transition-all duration-200 group-hover/button:rotate-12 group-hover/button:text-brand" />
@@ -174,6 +176,7 @@ export const AnimatedTestimonials = ({
 						<button
 							type="button"
 							onClick={handleNext}
+							aria-label={t("common.next")}
 							className="group/button flex h-10 w-10 items-center justify-center rounded-xl bg-card border border-default hover:border-brand hover:bg-accent transition-all duration-200 shadow-button"
 						>
 							<IconArrowRight className="h-5 w-5 text-light transition-all duration-200 group-hover/button:-rotate-12 group-hover/button:text-brand" />

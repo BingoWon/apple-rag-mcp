@@ -40,7 +40,7 @@ and page reads. The CLI is not positioned as a manual research tool for people.
   and current repository introductions. Technical MCP identifiers, endpoint URLs,
   npm package name and historical incident records are retained.
 - Remove promotion of the private source repository and public-source claims.
-  Replace unattributed hardcoded testimonials with a factual FAQ. Replace an
+  Keep the original testimonial carousel and typewriter CTA. Replace an
   unrelated placeholder source card with provenance information.
 - Legal pages receive brand/service-description updates only. This does not change
   contractual rights, billing rules, retention, or account permissions.
@@ -86,3 +86,24 @@ browser checks cover both languages, themes, responsive layouts and setup links.
 
 5.6.3 follow-up: the Chinese Hero uses “智能体” in its title and subtitle, replacing
 “AI Agent” and “Agent” without changing the restored design.
+
+## Homepage section correction — 5.6.4
+
+The owner requested copy adaptation, not a new homepage layout. The earlier
+replacement of the testimonial carousel, typewriter CTA and quick-start window
+exceeded that scope. Restore their pre-refresh components, order, animations,
+gradient masks, badge, arrow CTA, Pro banner and client-logo treatment. The FAQ
+remains in the connection guide only. Restore the source card's decorative sticker.
+
+The original quick-start window gains an MCP / CLI selector for the existing agent
+setup instructions; visible instructions and clipboard contents agree. The original
+CTA leads to registration. Keep the current brand, route metadata, independent
+authorization flows and shared account quota. Baseline testimonial quotations,
+names and photographs are restored verbatim; this does not independently verify
+their attribution. No new testimonial statements were authored for this change.
+
+AGENTS.md now protects the entire homepage composition during future copy work.
+
+Two narrow-screen corrections preserve those effects: contain horizontal portrait
+rotation without clipping the vertical animation, and scale the typewriter text
+so its completed sentence remains visible at 320px. Desktop typography is unchanged.
