@@ -181,3 +181,5 @@ coverage for other homepage sections and connection surfaces.
 Validation: 29 focused unit/metadata checks and 150 browser checks pass, along
 with lint, type checking and the production build. The client-strip subtree
 matches its pre-5.6.7 source exactly; no new dependencies were added.
+The full verification also passes: 229 application tests and 16 CLI tests. The
+existing dashboard copy-button assertion now uses the updated English label.

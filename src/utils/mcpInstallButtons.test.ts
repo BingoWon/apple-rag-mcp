@@ -52,7 +52,7 @@ function renderButtons(language: string, token = "test-token", disabled = false)
 
 test("renders one copy-prompt button and three native install buttons in both languages", async () => {
 	for (const [language, label] of [
-		["en", "Copy Install Prompt"],
+		["en", "Copy setup prompt"],
 		["zh", "复制安装提示词"],
 	]) {
 		const html = await renderButtons(language);
