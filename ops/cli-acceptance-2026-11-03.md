@@ -72,14 +72,52 @@ uses Python 3 supplied by Linux/macOS CI runners; end users need only Node.js.
 Windows skips the POSIX terminal checks. Full local verification passes 213 main
 tests and seven CLI tests. Service 5.4.1 / CLI 1.0.1 carries the fix.
 
-Publication and a new npm-installed 1.0.1 terminal check must be verified after CI;
-a passing local source test alone is not acceptance of the published fix.
-
 The first real publish job also exposed a release-path bug: npm interpreted
 `cli-release/package.tgz` as GitHub shorthand and attempted a Git SSH lookup.
 The job now uses `./cli-release/*.tgz` to identify a local tarball. A real anonymous
 `npm publish ./cli-release/apple-rag-cli-1.0.1.tgz --dry-run --json` returned the
 correct package/version and exit 0. No owner's npm session was used as a fallback.
+
+## Published 1.0.1: verified after installation
+
+[CI run 41593015808](https://github.com/BingoWon/apple-rag-mcp/actions/runs/41593015808)
+passed all checks and actually published 1.0.1 using the configured GitHub OIDC
+publisher. npm returned a processing notice; acceptance waited until the public
+version endpoint returned HTTP 200 and `latest` became 1.0.1. The service reports
+5.4.1, [release v5.4.1](https://github.com/BingoWon/apple-rag-mcp/releases/tag/v5.4.1).
+
+The public tarball passed registry SHA512 integrity validation and matched the
+CI-tested artifact, SHA256
+`a4633334c1671633f9f2119f68a098c77d7e908f19588e4a7b4390dde9268158`.
+All ten file contents also matched the locally tested package; tarball hashes
+differed only because the bundled skill was mode 0600 locally and 0644 in Linux CI.
+
+Repeated official global installation in a **new** temporary prefix, with a fresh
+cache and empty npm configuration. All 17 checks below passed against this npm
+installation, not a source build:
+
+| Scenario | Exit | Observation |
+| --- | --- | --- |
+| `npm install --global ... apple-rag-cli@1.0.1` | 0 | 14 packages installed in 10.91s |
+| Global PATH version | 0 | `1.0.1` |
+| Global help | 0 | Commands documented |
+| `npx --package=apple-rag-cli@1.0.1 apple-rag --version` | 0 | `1.0.1` |
+| Production doctor | 0 | Search/fetch discovery succeeds |
+| Real hidden terminal login | 0 | 1.62s; no token echo, backspace works, saved mode 0600 |
+| **Keyboard Ctrl+C in login** | **130** | **0.19s; `CANCELLED: Request cancelled.`; no network error** |
+| Saved Pro account | 0 | Correct 50,000/week and 50/minute entitlement |
+| Bad login | 3 | Valid saved token retained |
+| Authenticated search | 0 | Two NavigationStack results in 3.65s |
+| Fetch the selected search result into a JSON file | 0 | 1.53s; 3,823 content characters, Apple/index provenance, 4,762-byte file |
+| Private IP URL | 2 | `INVALID_URL` |
+| Missing official page | 5 | `PAGE_NOT_FOUND`, upstream 404 |
+| Third-party fetch | 0 | Firecrawl provenance, cache hit, 959 characters |
+| Logout | 0 | Credential file removed |
+| Post-logout status | 0 | Anonymous |
+| **npx production search with no credential** | **0** | **One official result in 8.29s; anonymous quota applied** |
+
+Temporary installations, credential directories and npm caches were removed after
+verification. No owner npm session, real payment or subscription mutation was used.
 
 ## Coverage limits
 

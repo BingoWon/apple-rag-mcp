@@ -151,9 +151,9 @@ References: [npm metadata](https://docs.npmjs.com/cli/v11/configuring-npm/packag
   Organizations provide team management and an organization namespace such as
   `@apple-rag/cli`; this would be a distinct package name. Public client
   distribution does not change cloud account/subscription enforcement.
-- Trusted Publisher creation is confirmed by owner output. An actual OIDC upload
-  remains to be verified on the next legitimate CLI version; no empty version bump
-  or duplicate publication was made merely to test it.
+- Trusted Publisher creation was confirmed by owner output. A real OIDC upload
+  subsequently published the 1.0.1 cancellation fix through CI, followed by 17
+  successful npm-installed acceptance checks; see the detailed report below.
 
 ## Scope limits
 
