@@ -1,11 +1,12 @@
 import assert from "node:assert/strict";
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { chmod, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { AppleRagClient } from "../src/client.js";
+import { VERSION } from "../src/version.js";
 import { fixture, SECOND_TOKEN, TOKEN } from "./fixture.js";
 
 async function setup(t: test.TestContext) {
@@ -183,7 +184,7 @@ test("empty search, 404, failures/refunds, no-clobber output and invalid argumen
 test("doctor is quota-free, credential binding prevents cross-endpoint forwarding, permissions fail closed", async (t) => {
 	const { run, directory, server } = await setup(t);
 	assert.equal((await run(["--help"])).code, 0);
-	assert.equal((await run(["--version"])).stdout.trim(), "1.0.0");
+	assert.equal((await run(["--version"])).stdout.trim(), VERSION);
 	await run(["auth", "login", "--token-stdin"], {}, TOKEN);
 	const diagnosis = await run(["doctor", "--json"]);
 	assert.equal(diagnosis.code, 0, diagnosis.stderr);
@@ -231,4 +232,26 @@ test("SIGINT cancels a running SDK tool call and refunds its reservation", {
 			?.n,
 		0,
 	);
+});
+
+test("keyboard Ctrl+C in the real login terminal cancels without a network-error message", {
+	skip: process.platform === "win32",
+}, () => {
+	const env = { ...process.env };
+	delete env.APPLE_RAG_TOKEN;
+	const result = spawnSync(
+		"python3",
+		[
+			fileURLToPath(new URL("./login-pty.py", import.meta.url)),
+			process.execPath,
+			"--import",
+			"tsx",
+			fileURLToPath(new URL("../src/cli.ts", import.meta.url)),
+			"auth",
+			"login",
+		],
+		{ env, encoding: "utf8", timeout: 15000 },
+	);
+	assert.equal(result.status, 0, result.stderr);
+	assert.match(result.stdout, /Keyboard cancellation passed/);
 });

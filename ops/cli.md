@@ -1,6 +1,6 @@
 # CLI design, authentication and npm publication
 
-Decision: 2026-11-03. Service 5.4.0; npm package `apple-rag-cli` 1.0.0;
+Decision: 2026-11-03. Service 5.4.1; npm package `apple-rag-cli` 1.0.1;
 executable `apple-rag`. The owner completed first publication and Trusted Publisher
 setup. Public registry access and a clean installation have been independently
 verified. Package: https://www.npmjs.com/package/apple-rag-cli.
@@ -160,3 +160,7 @@ References: [npm metadata](https://docs.npmjs.com/cli/v11/configuring-npm/packag
 Homebrew, standalone binaries, browser/device login, agent-config editing and bulk
 crawls are deferred. The private repository's releases are not public binary
 downloads. No same-task token/performance/cost benefit over MCP is claimed.
+
+Detailed npm installation and production UX acceptance, including the keyboard
+cancellation bug found in 1.0.0 and the 1.0.1 fix, is recorded in
+[CLI acceptance](cli-acceptance-2026-11-03.md).

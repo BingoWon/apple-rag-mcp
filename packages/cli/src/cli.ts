@@ -69,6 +69,7 @@ async function loginToken(
 	fromStdin: boolean,
 	env: NodeJS.ProcessEnv,
 	signal: AbortSignal,
+	cancel: () => void,
 ): Promise<string> {
 	if (fromStdin) {
 		let value = "";
@@ -98,12 +99,10 @@ async function loginToken(
 		},
 	});
 	const input = createInterface({ input: process.stdin, output: silent, terminal: true });
-	const interrupt = () => input.close();
-	process.once("SIGINT", interrupt);
+	input.once("SIGINT", cancel);
 	try {
 		return parseToken(await input.question("", { signal }));
 	} finally {
-		process.removeListener("SIGINT", interrupt);
 		input.close();
 		process.stderr.write("\n");
 	}
@@ -185,7 +184,7 @@ async function run(argv: string[], env: NodeJS.ProcessEnv = process.env): Promis
 		}
 		const endpoint = endpointUrl(env.APPLE_RAG_URL);
 		if (auth === "login") {
-			const token = await loginToken(args.values["token-stdin"] === true, env, signal);
+			const token = await loginToken(args.values["token-stdin"] === true, env, signal, interrupt);
 			const account = await new AppleRagClient(endpoint, token, signal).account();
 			if (!account.authenticated || account.auth_method !== "token")
 				throw new CLIError("INVALID_TOKEN", "The server did not verify this token.", 3);
