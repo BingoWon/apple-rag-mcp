@@ -103,7 +103,7 @@ try {
 				await page.locator("#hero h1").waitFor();
 				assert(
 					(await page.locator("#hero").innerText()).includes(
-						language === "en" ? "into AI Agents via MCP / CLI" : "通过 MCP / CLI 注入 AI Agent",
+						language === "en" ? "into AI Agents via MCP / CLI" : "通过 MCP / CLI 注入智能体",
 					),
 				);
 				assert.equal(

@@ -47,6 +47,10 @@ test("hero stickers use local images, accessible labels and official links in bo
 			assert.ok(!html.includes('href="https://github.com/BingoWon/apple-rag-mcp"'));
 			assert.ok(html.includes('href="/connect"'));
 			assert.ok(html.includes(locale.hero.title_into));
+			if (language === "zh") {
+				assert.ok(html.includes("智能体"));
+				assert.doesNotMatch(html, /AI Agent|\bAgent\b/i);
+			}
 			assert.ok(html.includes("MCP / CLI"));
 			assert.ok(html.includes(locale.hero.subtitle_vibecoders));
 			assert.ok(html.includes("bg-clip-text text-transparent bg-gradient-to-b"));

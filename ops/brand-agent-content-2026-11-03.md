@@ -83,3 +83,6 @@ adding CLI alongside MCP. The rest of the brand, content and metadata work remai
 For future content changes, preserve this Hero design unless the owner explicitly
 requests a redesign. Regression assertions cover its distinctive visual elements;
 browser checks cover both languages, themes, responsive layouts and setup links.
+
+5.6.3 follow-up: the Chinese Hero uses “智能体” in its title and subtitle, replacing
+“AI Agent” and “Agent” without changing the restored design.
