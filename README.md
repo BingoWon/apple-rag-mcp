@@ -31,7 +31,7 @@ reranker takes over if the API call fails.
 
 ---
 
-## Open Source. Ready to Use.
+## Hosted and Ready to Use
 
 The [hosted service](https://apple-rag.com/) connects your agent to an Apple knowledge base that is already collected, cleaned, and indexed.
 
@@ -39,7 +39,7 @@ The [hosted service](https://apple-rag.com/) connects your agent to an Apple kno
 - **Retrieval model calls included:** Embeddings, [Jev](https://typesafe.ai/) ranking, and the backup reranker run on our service.
 - **Ongoing upkeep:** We handle content collection, index updates, database backups, and protocol compatibility.
 
-The source is public for inspection and self-hosting. Running your own instance means operating a database, building and refreshing your corpus, and managing your model API credentials.
+The hosted service operates the database, refreshes the corpus, and manages retrieval model credentials. The CLI is distributed separately; the application repository is private.
 
 `search` retrieves the indexed Apple corpus. `fetch` reads indexed pages first,
 resolves Apple redirects, and uses official document JSON or Firecrawl when content
@@ -53,6 +53,19 @@ for limits, setup, and log meanings.
 ---
 
 ## Start in Seconds
+
+**Terminal and coding agents:** use the [Apple RAG CLI](packages/cli/README.md):
+
+```sh
+npm install -g apple-rag-cli
+apple-rag auth login
+apple-rag search "SwiftUI NavigationStack" --limit 3 --json
+```
+
+The public client uses the same anonymous, free and Pro access as MCP, with shared
+account quotas. `auth status` shows the live plan and remaining quota; `upgrade`
+links to the existing subscription page. First npm publication is owner-operated;
+see [release operations](ops/cli.md) for its status and setup.
 
 **Configure with your agent:** In the [dashboard](https://apple-rag.com/overview),
 select a token and click **Copy Install Prompt**. Paste it into your current

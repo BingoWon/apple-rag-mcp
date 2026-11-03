@@ -33,7 +33,10 @@ export class PageReadError extends Error {
 		readonly reason: string,
 		message: string,
 		readonly status = 502,
-		readonly outcome: ToolOutcome = "failed",
+		readonly outcome: Extract<
+			ToolOutcome,
+			"invalid" | "limited" | "failed" | "no_content"
+		> = "failed",
 		readonly url?: string,
 		readonly provider?: string,
 		readonly upstreamStatus?: number,

@@ -1,0 +1,106 @@
+# CLI design, authentication and npm publication
+
+Decision: 2026-11-03. Service 5.4.0; npm package `apple-rag-cli` 1.0.0;
+executable `apple-rag`. First publication is an owner action. Until it completes,
+use the tested local tarball; a local build is not proof of npm availability.
+
+## Architecture and authentication
+
+- TypeScript compiled to Node.js 22.20+ JavaScript; official MCP client 2.3.1, Zod
+  and Node built-ins. Independent public client package in the private monorepo;
+  root `private: true` remains. No CLI framework or separate retrieval backend.
+- Shared contracts in `packages/cli/src/contracts.ts` validate Worker and client
+  input, structured results and account status. MCP keeps readable text and
+  `legacy: "stateless"`; CLI opts into SDK auto negotiation. Object-root output
+  schemas work across both protocol eras. No Markdown parsing or corpus migration.
+- Search preserves completeness/chunks; fetch preserves requested/canonical URL,
+  source, provider, cache and upstream status. External pages never enter RAG
+  automatically. JSON errors distinguish invalid input, missing pages and limits.
+- Anonymous 30/week, 3/minute; free hobby 50/week, 5/minute; Pro 50,000/week,
+  50/minute. The client is free to install; cloud usage is the subscription product.
+  Every token and MCP/CLI client for one user shares the same usage counters.
+- `GET /account` on the MCP host (`/mcp/account` on the website) reuses MCP Token/IP
+  auth and reads existing subscriptions/counters. `Cache-Control: no-store`;
+  no retrieval quota consumed. Auth may update last-used timestamps. Responses
+  expose effective identity/method, plan, quota/reset times and login/upgrade URLs,
+  never tokens. Successful/limited tool results include the same quota snapshot.
+- Login validates before atomically replacing owner-only, endpoint-bound stored
+  credentials. Environment credentials take precedence. Invalid/revoked explicit
+  credentials never fall back to saved/IP/anonymous access. Logout removes the
+  local token, not environment credentials, server tokens or authorized-IP access.
+- Entitlements remain server-controlled, including upgrades, cancellation and
+  expired one-time purchases. Payment stays on the existing website. Status/login/
+  discovery cost no retrieval quota. Failures/cancellation keep current refunds.
+  No automatic tool retry. stdout is data; stderr is diagnostics/quota/guidance.
+
+## Build and inspect
+
+```sh
+pnpm install --frozen-lockfile
+pnpm build
+mkdir -p /tmp/apple-rag-cli-release
+cd packages/cli
+npm pack --ignore-scripts --pack-destination /tmp/apple-rag-cli-release
+tar -tzf /tmp/apple-rag-cli-release/apple-rag-cli-1.0.0.tgz
+```
+
+Only manifest, README, LICENSE, `dist/*.js` and the skill are allowed. Never publish
+the root package. CI verifies this allowlist and clean-install help/version from
+the actual tarball. Fixture tests exercise actual HTTP, MCP SDK, Worker handlers
+and SQLite: three tiers, subscription upgrades/cancellation/expiry, quota sharing,
+credential rejection/priority/binding, no secret echo, status/discovery, provenance,
+empty results, HTTP-200 tool errors, refunds, no-clobber output and POSIX cancellation.
+Portability checks cover Linux/Node22, macOS/Node24 and Windows/Node26.
+
+## Owner-operated first npm publication
+
+The owner requested instructions instead of browser automation and has an npm
+account. The agent does not sign in to it or create a third-party account with the
+owner's identity. Perform these steps in your own authenticated terminal:
+
+```sh
+npm whoami
+# If necessary, npm login; complete its login/2FA prompts yourself.
+npm view apple-rag-cli name version maintainers
+# E404 means currently unregistered publicly. E401/network failures do not.
+
+npm publish /tmp/apple-rag-cli-release/apple-rag-cli-1.0.0.tgz --access public --provenance=false
+npm view apple-rag-cli@1.0.0 version dist.integrity
+npx --yes apple-rag-cli@1.0.0 --version
+```
+
+Publish only the inspected/tested tarball from the delivered commit. If the name
+belongs to someone else, stop and use an owned scope/name, updating metadata/docs/
+workflow first. Never overwrite/unpublish another release or bypass 2FA/legal gates.
+
+## Subsequent automatic publication
+
+In the npm package's Settings → Trusted publishing → GitHub Actions, enter:
+
+| Field | Value |
+| --- | --- |
+| Organization/user | `BingoWon` |
+| Repository | `apple-rag-mcp` |
+| Workflow filename | `ci.yml` |
+| Environment | leave empty |
+
+The CI publish job runs only on main pushes after checks/portability succeed.
+GitHub-hosted runners use OIDC (`id-token: write`), without a long-lived npm token.
+Missing package: record the owner bootstrap step and skip. Existing exact version:
+skip. New version of an existing package: publish through the trusted workflow.
+Registry/network/publish errors fail CI rather than masquerade as a missing package.
+
+Increment the independent CLI version for CLI/shared-contract/bundled-skill changes.
+Keep root/server versions synchronized under existing release rules. Server-only
+changes need no npm update or user reinstall. npm provenance is disabled because
+private GitHub repositories currently cannot generate it; OIDC still works.
+
+References: [npm metadata](https://docs.npmjs.com/cli/v11/configuring-npm/package-json/),
+[Trusted Publishers](https://docs.npmjs.com/trusted-publishers/),
+[MCP structured output](https://ts.sdk.modelcontextprotocol.io/v2/clients/calling).
+
+## Scope limits
+
+Homebrew, standalone binaries, browser/device login, agent-config editing and bulk
+crawls are deferred. The private repository's releases are not public binary
+downloads. No same-task token/performance/cost benefit over MCP is claimed.

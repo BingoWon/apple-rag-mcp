@@ -9,12 +9,48 @@ type Period = "weekly" | "minute";
 export class RateLimitService {
 	constructor(private d1: D1Database) {}
 
+	private async plan(auth: AuthContext): Promise<string> {
+		return auth.isAuthenticated && auth.userId
+			? withD1Timeout(() => getUserPlanType(auth.userId!, this.d1), "get_plan_type")
+			: "anonymous";
+	}
+
+	async getStatus(clientIP: string, auth: AuthContext): Promise<RateLimitResult> {
+		const planType = await this.plan(auth);
+		const quota = OAUTH_SUBSCRIPTION_QUOTAS[planType] || OAUTH_SUBSCRIPTION_QUOTAS.hobby;
+		const counts = await withD1Timeout(
+			() =>
+				this.d1
+					.prepare(
+						"SELECT period, count FROM usage_counters WHERE identifier = ? AND ((period = 'weekly' AND window_start = ?) OR (period = 'minute' AND window_start = ?))",
+					)
+					.bind(
+						auth.userId || `anon_${clientIP}`,
+						this.getWeekStartTime().toISOString(),
+						this.getMinuteStartTime().toISOString(),
+					)
+					.all<{ period: Period; count: number }>(),
+			"read_quota",
+		);
+		if (!counts.success) throw new Error("Quota status could not be read.");
+		const count = (period: Period) =>
+			Number(counts.results?.find((row) => row.period === period)?.count ?? 0);
+		const weekly = count("weekly"),
+			minute = count("minute");
+		const minuteLimited = quota.minute !== -1 && minute >= quota.minute;
+		return this.result(
+			(quota.week === -1 || weekly < quota.week) && !minuteLimited,
+			minuteLimited ? "minute" : "weekly",
+			planType,
+			quota,
+			weekly,
+			minute,
+		);
+	}
+
 	async checkLimits(clientIP: string, authContext: AuthContext): Promise<RateLimitResult> {
 		const identifier = authContext.userId || `anon_${clientIP}`;
-		const planType =
-			authContext.isAuthenticated && authContext.userId
-				? await withD1Timeout(() => getUserPlanType(authContext.userId!, this.d1), "get_plan_type")
-				: "anonymous";
+		const planType = await this.plan(authContext);
 		const quota = OAUTH_SUBSCRIPTION_QUOTAS[planType] || OAUTH_SUBSCRIPTION_QUOTAS.hobby;
 		const weeklyWindow = this.getWeekStartTime().toISOString();
 		const minuteWindow = this.getMinuteStartTime().toISOString();

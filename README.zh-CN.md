@@ -30,7 +30,7 @@
 
 ---
 
-## 开源透明，接入即用。
+## 云端服务，接入即用。
 
 使用[托管服务](https://apple-rag.com/)，让智能体直接连接已经采集、清洗并建立索引的 Apple 开发资料库。
 
@@ -38,7 +38,7 @@
 - **包含检索模型调用：** 向量生成、[Jev](https://typesafe.ai/) 排序与备用模型均由服务端处理。
 - **持续维护：** 内容采集、索引更新、数据库备份和协议适配由我们负责。
 
-源码公开，可供审查与自部署。自行运行需要维护数据库、构建并更新资料索引，以及配置自己的模型 API 凭证。
+托管服务负责数据库、资料索引更新和检索模型凭据。CLI 客户端独立分发，应用源码仓库保持私有。
 
 `search` 检索已建立索引的 Apple 资料。`fetch` 优先读取已有正文，处理 Apple
 链接跳转；缺少内容时读取官方文档 JSON，或通过 Firecrawl 提取网页正文。
@@ -50,6 +50,18 @@
 ---
 
 ## 秒速开始
+
+**终端和编程智能体：** 使用 [Apple RAG CLI](packages/cli/README.md)：
+
+```sh
+npm install -g apple-rag-cli
+apple-rag auth login
+apple-rag search "SwiftUI NavigationStack" --limit 3 --json
+```
+
+CLI 与 MCP 共用匿名、免费和 Pro 权益及账号额度。`auth status` 查询实时套餐和
+剩余额度，`upgrade` 提供网站订阅入口。首次 npm 发布由包所有者操作，见
+[CLI 发布运维说明](ops/cli.md)。
 
 **交给智能体配置：** 在[仪表盘](https://apple-rag.com/overview)选择令牌，
 点击 **复制安装提示词**，粘贴给你当前使用的智能体，由它配置连接并验证工具。
@@ -133,7 +145,7 @@ MCP 认证确保你的 AI agent 获得可信的访问权限，具备企业级安
 
 ## 📄 开源协议
 
-本项目基于 [MIT 协议](LICENSE) 开源。
+CLI 客户端以 [MIT 协议](LICENSE) 分发，应用源码仓库保持私有。
 
 <div align="center">
 

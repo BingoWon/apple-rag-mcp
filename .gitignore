@@ -1,5 +1,7 @@
 node_modules/
 dist/
+packages/cli/LICENSE
+packages/cli/skills/
 .wrangler/
 .dev.vars
 .env

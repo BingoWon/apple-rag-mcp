@@ -1,26 +1,21 @@
 import type { CallToolResult } from "@modelcontextprotocol/server";
-import { z } from "zod";
+import type { z } from "zod";
+import { fetchInputSchema } from "../../../packages/cli/src/contracts.js";
 import { PageReadError } from "../../mcp-services/page-reader.js";
 import type { FetchLogEntry } from "../../mcp-services/tool-call-logger.js";
 import type { AuthContext, RateLimitResult, Services } from "../../mcp-types/index.js";
 import { logger } from "../../mcp-utils/logger.js";
 import { buildRateLimitMessage, extractClientInfo } from "../../mcp-utils/request-info.js";
 import { isAppleUrl } from "../../shared/web-url.js";
+import { accountStatus } from "../account.js";
 import {
 	createSuccessResult,
 	createToolErrorResult,
+	fetchOutput,
 	formatFetchResponse,
 } from "../formatters/response-formatter.js";
 
-export const FETCH_TOOL_INPUT_SCHEMA = z.object({
-	url: z
-		.string()
-		.min(1)
-		.max(2048)
-		.describe(
-			"Public HTTP(S) page URL. Apple documentation and videos are served from the index when available; other readable pages are retrieved on demand.",
-		),
-});
+export const FETCH_TOOL_INPUT_SCHEMA = fetchInputSchema;
 export type FetchToolArgs = z.infer<typeof FETCH_TOOL_INPUT_SCHEMA>;
 
 export class FetchTool {
@@ -52,7 +47,16 @@ export class FetchTool {
 			signal.throwIfAborted();
 			if (!quota.allowed) {
 				log({ outcome: "limited", statusCode: 429, reason: "RATE_LIMIT_EXCEEDED" });
-				return createToolErrorResult(buildRateLimitMessage(quota, authContext));
+				return createToolErrorResult({
+					account: accountStatus(authContext, quota),
+					outcome: "limited",
+					error: {
+						code: "RATE_LIMIT_EXCEEDED",
+						message: buildRateLimitMessage(quota, authContext),
+						status: 429,
+						retry_at: quota.limitType === "minute" ? quota.minuteResetAt : quota.resetAt,
+					},
+				});
 			}
 			const page = await this.services.pages.getPage(args.url, signal);
 			signal.throwIfAborted();
@@ -68,7 +72,10 @@ export class FetchTool {
 				upstreamStatus: page.provider === "index" ? null : page.status,
 				cacheHit: page.cacheHit,
 			});
-			return createSuccessResult(response);
+			return createSuccessResult(
+				response,
+				fetchOutput(args.url, page, accountStatus(authContext, quota)),
+			);
 		} catch (error) {
 			if (quota?.allowed) await this.services.rateLimit.refund(quota);
 			if (signal.aborted) {
@@ -86,13 +93,28 @@ export class FetchTool {
 					cacheHit: error.cacheHit,
 					contentSource: error.url ? (isAppleUrl(error.url) ? "apple" : "third_party") : null,
 				});
-				return createToolErrorResult(error.message);
+				return createToolErrorResult({
+					outcome: error.outcome,
+					error: { code: error.reason, message: error.message, status: error.status },
+					url: error.url,
+					source: error.url ? (isAppleUrl(error.url) ? "apple" : "third_party") : undefined,
+					provider: error.provider,
+					upstream_status: error.upstreamStatus,
+					cache_hit: error.cacheHit,
+				});
 			}
 			log({ outcome: "failed", statusCode: 500, reason: "FETCH_FAILED" });
 			logger.error(
 				`Page reading failed: ${error instanceof Error ? error.message : String(error)}`,
 			);
-			return createToolErrorResult("Failed to retrieve the page. Please retry.");
+			return createToolErrorResult({
+				outcome: "failed",
+				error: {
+					code: "FETCH_FAILED",
+					message: "Failed to retrieve the page. Please retry.",
+					status: 500,
+				},
+			});
 		}
 	}
 }

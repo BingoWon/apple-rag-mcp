@@ -63,8 +63,11 @@ function createServices(): Services {
 				limit: 100,
 				remaining: 99,
 				resetAt: new Date(0).toISOString(),
-				planType: "test",
+				planType: "hobby",
 				limitType: "weekly",
+				minuteLimit: 5,
+				minuteRemaining: 4,
+				minuteResetAt: new Date(60000).toISOString(),
 			}),
 			refund: async () => {},
 		},
@@ -180,6 +183,7 @@ test("serves modern tools/list with cache metadata", async () => {
 			resultType: string;
 			tools: Array<{
 				name: string;
+				outputSchema: { type: string };
 				annotations: { readOnlyHint: boolean; destructiveHint: boolean };
 			}>;
 			ttlMs: number;
@@ -194,10 +198,51 @@ test("serves modern tools/list with cache metadata", async () => {
 	assert.equal(payload.result.ttlMs, 3_600_000);
 	assert.equal(payload.result.cacheScope, "public");
 	for (const tool of payload.result.tools) {
+		assert.equal(tool.outputSchema.type, "object");
 		assert.equal(tool.annotations.readOnlyHint, true);
 		assert.equal(tool.annotations.destructiveHint, false);
 	}
 });
+
+for (const modern of [false, true]) {
+	test(`${modern ? "modern" : "legacy"} tools preserve object-root structured output and account snapshots`, async () => {
+		const response = await send(
+			{
+				jsonrpc: "2.0",
+				id: "structured",
+				method: "tools/call",
+				params: {
+					name: "fetch",
+					arguments: { url: "https://developer.apple.com/documentation/swift" },
+					...(modern ? { _meta: modernMeta() } : {}),
+				},
+			},
+			modern
+				? {
+						"MCP-Protocol-Version": MODERN_VERSION,
+						"Mcp-Method": "tools/call",
+						"Mcp-Name": "fetch",
+					}
+				: {},
+			{ isAuthenticated: true, userId: "user-1" },
+		);
+		const payload = await readPayload<{
+			result: {
+				isError?: boolean;
+				structuredContent: {
+					ok: boolean;
+					source: string;
+					account: { plan: string; quota: { week: { remaining: number } } };
+				};
+			};
+		}>(response);
+		assert.notEqual(payload.result.isError, true);
+		assert.equal(payload.result.structuredContent.ok, true);
+		assert.equal(payload.result.structuredContent.source, "apple");
+		assert.equal(payload.result.structuredContent.account.plan, "hobby");
+		assert.equal(payload.result.structuredContent.account.quota.week.remaining, 99);
+	});
+}
 
 test("preserves authenticated tool behavior on a modern request", async () => {
 	const response = await send(

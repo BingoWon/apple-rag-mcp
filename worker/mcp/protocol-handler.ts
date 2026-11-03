@@ -4,6 +4,7 @@ import {
 	McpServer,
 	preloadSchemas,
 } from "@modelcontextprotocol/server";
+import { fetchOutputSchema, searchOutputSchema } from "../../packages/cli/src/contracts.js";
 import { MCPAuthenticationError } from "../mcp-auth/auth-middleware.js";
 import type { AuthContext, Services } from "../mcp-types/index.js";
 import { logger } from "../mcp-utils/logger.js";
@@ -109,6 +110,7 @@ export class MCPProtocolHandler {
 			TOOLS.SEARCH.NAME,
 			{
 				description: TOOLS.SEARCH.DESCRIPTION,
+				outputSchema: searchOutputSchema,
 				inputSchema: loggedToolInput(
 					"search",
 					SEARCH_TOOL_INPUT_SCHEMA,
@@ -125,6 +127,7 @@ export class MCPProtocolHandler {
 			TOOLS.FETCH.NAME,
 			{
 				description: TOOLS.FETCH.DESCRIPTION,
+				outputSchema: fetchOutputSchema,
 				inputSchema: loggedToolInput(
 					"fetch",
 					FETCH_TOOL_INPUT_SCHEMA,

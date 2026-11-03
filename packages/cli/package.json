@@ -1,0 +1,39 @@
+{
+	"name": "apple-rag-cli",
+	"version": "1.0.0",
+	"description": "Apple developer documentation and WWDC search from your terminal and coding agent.",
+	"type": "module",
+	"license": "MIT",
+	"bin": {
+		"apple-rag": "dist/cli.js"
+	},
+	"files": [
+		"dist",
+		"README.md",
+		"LICENSE",
+		"skills"
+	],
+	"engines": {
+		"node": ">=22.20.0"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/BingoWon/apple-rag-mcp.git",
+		"directory": "packages/cli"
+	},
+	"homepage": "https://apple-rag.com",
+	"publishConfig": {
+		"access": "public",
+		"provenance": false
+	},
+	"scripts": {
+		"build": "tsc -p tsconfig.json && node scripts/prepare-package.mjs",
+		"prepack": "pnpm run build",
+		"typecheck": "tsc --noEmit -p tsconfig.json",
+		"test": "tsx --test test/*.test.ts"
+	},
+	"dependencies": {
+		"@modelcontextprotocol/client": "2.3.1",
+		"zod": "^4.3.6"
+	}
+}

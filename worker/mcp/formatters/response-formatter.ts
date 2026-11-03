@@ -4,9 +4,72 @@
  */
 
 import type { CallToolResult } from "@modelcontextprotocol/server";
+import type {
+	AccountStatus,
+	FetchOutput,
+	SearchOutput,
+	ToolError,
+} from "../../../packages/cli/src/contracts.js";
 import type { ReadPage } from "../../mcp-services/page-reader.js";
-import type { RAGResult } from "../../mcp-types/index.js";
+import type { RAGResult, SearchResult } from "../../mcp-types/index.js";
 import { MESSAGES } from "../constants.js";
+
+function completeDocument(result: SearchResult): boolean {
+	const indices = new Set(result.mergedChunkIndices ?? [result.chunk_index]);
+	return (
+		indices.size === result.total_chunks &&
+		[...indices].every((i) => i >= 0 && i < result.total_chunks)
+	);
+}
+
+export function searchOutput(result: RAGResult, account: AccountStatus): SearchOutput {
+	return {
+		account,
+		ok: true,
+		outcome: result.degradations.length
+			? "degraded"
+			: result.results.length
+				? "success"
+				: "no_content",
+		query: result.query,
+		results: result.results.map((item) => ({
+			url: item.url,
+			title: item.title,
+			content: item.content,
+			source: "apple",
+			provider: "index",
+			complete: completeDocument(item),
+			total_chunks: item.total_chunks,
+			chunk_indices: item.mergedChunkIndices ?? [item.chunk_index],
+		})),
+		additional_urls: result.additionalUrls.map((item) => ({
+			url: item.url,
+			title: item.title,
+			character_count: item.characterCount,
+		})),
+		degradations: result.degradations,
+	};
+}
+
+export function fetchOutput(
+	requestedUrl: string,
+	page: ReadPage,
+	account: AccountStatus,
+): FetchOutput {
+	return {
+		account,
+		ok: true,
+		outcome: page.provider === "index" ? "success" : "degraded",
+		requested_url: requestedUrl,
+		url: page.url,
+		title: page.title,
+		content: page.content,
+		source: page.source,
+		provider: page.provider,
+		upstream_status: page.provider === "index" ? null : page.status,
+		cache_hit: page.cacheHit,
+	};
+}
 
 /**
  * Format RAG response with professional layout
@@ -32,7 +95,7 @@ export function formatRAGResponse(ragResult: RAGResult, isAuthenticated: boolean
 		// Add completeness indicator based on chunk information and merge status
 		const isMerged = result.mergedChunkIndices && result.mergedChunkIndices.length > 1;
 
-		if (result.total_chunks === 1) {
+		if (completeDocument(result)) {
 			title += ` ✅ Complete Document`;
 			response += `${title}\n\n`;
 		} else if (isMerged) {
@@ -94,8 +157,12 @@ export function formatFetchResponse(result: ReadPage, isAuthenticated: boolean):
 	return response;
 }
 
-export function createSuccessResult(content: string): CallToolResult {
+export function createSuccessResult(
+	content: string,
+	structuredContent: SearchOutput | FetchOutput,
+): CallToolResult {
 	return {
+		structuredContent,
 		content: [
 			{
 				type: "text",
@@ -105,13 +172,14 @@ export function createSuccessResult(content: string): CallToolResult {
 	};
 }
 
-export function createToolErrorResult(message: string): CallToolResult {
+export function createToolErrorResult(details: Omit<ToolError, "ok">): CallToolResult {
 	return {
 		isError: true,
+		structuredContent: { ok: false, ...details },
 		content: [
 			{
 				type: "text",
-				text: message,
+				text: details.error.message,
 			},
 		],
 	};

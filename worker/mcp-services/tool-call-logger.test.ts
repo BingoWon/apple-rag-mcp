@@ -32,7 +32,17 @@ test("tools persist distinct results, provenance, zero-result searches and refun
 			waitUntil: (write) => writes.push(write),
 		}),
 		rateLimit: {
-			checkLimits: async () => ({ allowed: true }),
+			checkLimits: async () => ({
+				allowed: true,
+				planType: "hobby",
+				limitType: "weekly",
+				limit: 50,
+				remaining: 49,
+				resetAt: "2026-11-08T00:00:00Z",
+				minuteLimit: 5,
+				minuteRemaining: 4,
+				minuteResetAt: "2026-11-03T06:00:00Z",
+			}),
 			refund: async () => {
 				refunds++;
 			},

@@ -51,11 +51,13 @@ test("skill stays a focused, portable instruction file", () => {
 	);
 });
 
-test("skill does not funnel readers to paid plans", () => {
-	assert.doesNotMatch(source, /\bPro\b|subscription|pricing|upgrade/);
-	assert.doesNotMatch(
-		source,
-		/(?<!mcp\.)apple-rag\.com/,
-		"Only the MCP endpoint may be referenced",
-	);
+test("skill explains tier-aware access without requiring a subscription for trial use", () => {
+	const text = source.replace(/\s+/g, " ");
+	assert.match(text, /anonymous 30\/week, 3\/minute/);
+	assert.match(text, /signed-in free 50\/week, 5\/minute/);
+	assert.match(text, /Pro 50,000\/week, 50\/minute/);
+	assert.match(text, /auth status/);
+	assert.match(text, /Invalid\/revoked explicit credentials must stop/);
+	assert.match(text, /Paid users at minute limits should wait/);
+	assert.doesNotMatch(text, /must subscribe|paid account required|unlimited free access/i);
 });

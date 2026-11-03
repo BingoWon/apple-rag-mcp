@@ -1,34 +1,20 @@
 import type { CallToolResult } from "@modelcontextprotocol/server";
-import { z } from "zod";
+import type { z } from "zod";
+import { searchInputSchema } from "../../../packages/cli/src/contracts.js";
 import type { AuthContext, RateLimitResult, Services } from "../../mcp-types/index.js";
 import { logger } from "../../mcp-utils/logger.js";
 import { cleanQuerySafely } from "../../mcp-utils/query-cleaner.js";
 import { buildRateLimitMessage, extractClientInfo } from "../../mcp-utils/request-info.js";
+import { accountStatus } from "../account.js";
 import { MESSAGES } from "../constants.js";
 import {
 	createSuccessResult,
 	createToolErrorResult,
 	formatRAGResponse,
+	searchOutput,
 } from "../formatters/response-formatter.js";
 
-export const SEARCH_TOOL_INPUT_SCHEMA = z.object({
-	query: z
-		.string()
-		.min(1)
-		.max(10000)
-		.regex(/\S/, "Search query must contain non-whitespace characters.")
-		.describe(
-			"Search query for Apple's official developer documentation and video content. Queries must be written in English and focus on technical concepts, APIs, frameworks, features, and version numbers rather than temporal information.",
-		),
-	result_count: z
-		.number()
-		.int()
-		.min(1)
-		.max(10)
-		.optional()
-		.default(4)
-		.describe("Number of results to return (1-10)"),
-});
+export const SEARCH_TOOL_INPUT_SCHEMA = searchInputSchema;
 
 export type SearchToolArgs = z.infer<typeof SEARCH_TOOL_INPUT_SCHEMA>;
 
@@ -71,7 +57,19 @@ export class SearchTool {
 					"RATE_LIMIT_EXCEEDED",
 				);
 
-				return createToolErrorResult(buildRateLimitMessage(rateLimitResult, authContext));
+				return createToolErrorResult({
+					account: accountStatus(authContext, rateLimitResult),
+					outcome: "limited",
+					error: {
+						code: "RATE_LIMIT_EXCEEDED",
+						message: buildRateLimitMessage(rateLimitResult, authContext),
+						status: 429,
+						retry_at:
+							rateLimitResult.limitType === "minute"
+								? rateLimitResult.minuteResetAt
+								: rateLimitResult.resetAt,
+					},
+				});
 			}
 
 			const ragResult = await this.processQuery(
@@ -87,7 +85,10 @@ export class SearchTool {
 
 			const formattedResponse = formatRAGResponse(ragResult, authContext.isAuthenticated);
 
-			return createSuccessResult(formattedResponse);
+			return createSuccessResult(
+				formattedResponse,
+				searchOutput(ragResult, accountStatus(authContext, rateLimitResult)),
+			);
 		} catch (error) {
 			if (rateLimitResult?.allowed) {
 				await this.services.rateLimit.refund(rateLimitResult);
@@ -122,7 +123,10 @@ export class SearchTool {
 				`RAG query failed for "${actualQuery}": ${error instanceof Error ? error.message : String(error)}`,
 			);
 
-			return createToolErrorResult(MESSAGES.SEARCH_FAILED);
+			return createToolErrorResult({
+				outcome: "failed",
+				error: { code: "SEARCH_FAILED", message: MESSAGES.SEARCH_FAILED, status: 500 },
+			});
 		}
 	}
 

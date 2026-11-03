@@ -1,6 +1,6 @@
 {
 	"name": "apple-rag-mcp",
-	"version": "5.3.0",
+	"version": "5.4.0",
 	"mcpName": "com.apple-rag/mcp-server",
 	"private": true,
 	"license": "MIT",
@@ -13,12 +13,12 @@
 	"scripts": {
 		"dev": "vite",
 		"prebuild": "pnpm verify",
-		"build": "vite build",
-		"test": "tsx --test src/utils/*.test.ts worker/api/routes/*.test.ts worker/collector/*.test.ts worker/mcp/*.test.ts worker/mcp-services/*.test.ts worker/shared/*.test.ts ops/collector/*.test.mjs ops/jev/*.test.mjs",
+		"build": "pnpm --filter apple-rag-cli build && vite build",
+		"test": "tsx --test src/utils/*.test.ts worker/api/routes/*.test.ts worker/collector/*.test.ts worker/mcp/*.test.ts worker/mcp-services/*.test.ts worker/shared/*.test.ts ops/collector/*.test.mjs ops/jev/*.test.mjs ops/cli/*.test.mjs",
 		"lint": "biome check .",
 		"lint:fix": "biome check --write .",
-		"typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p worker/tsconfig.json",
-		"verify": "pnpm lint && pnpm typecheck && pnpm test",
+		"typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p worker/tsconfig.json && pnpm --filter apple-rag-cli typecheck",
+		"verify": "pnpm lint && pnpm typecheck && pnpm test && pnpm --filter apple-rag-cli test",
 		"check": "pnpm verify",
 		"db:migrate": "wrangler d1 migrations apply apple-rag-db --remote",
 		"deploy": "pnpm build && pnpm db:migrate && wrangler deploy"

@@ -3,6 +3,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { apiApp } from "./api/app.js";
 import { handleScheduled } from "./collector/handler.js";
+import { handleAccountRequest } from "./mcp/account.js";
 import { HEALTH_STATUS, SERVER_MANIFEST } from "./mcp/manifest.js";
 import { MCPProtocolHandler } from "./mcp/protocol-handler.js";
 import { createServices } from "./mcp-services/index.js";
@@ -106,6 +107,8 @@ app.route("/api", apiApp);
 
 app.get("/mcp/health", (c) => c.json({ ...HEALTH_STATUS, timestamp: new Date().toISOString() }));
 
+app.get("/mcp/account", (c) => handleAccountRequest(c.req.raw, c.env, c.executionCtx));
+
 app.get("/mcp/manifest", (c) =>
 	c.json(SERVER_MANIFEST, 200, { "Cache-Control": "public, max-age=3600" }),
 );
@@ -184,6 +187,8 @@ mcpApp.use(
 );
 
 mcpApp.get("/health", (c) => c.json({ ...HEALTH_STATUS, timestamp: new Date().toISOString() }));
+
+mcpApp.get("/account", (c) => handleAccountRequest(c.req.raw, c.env, c.executionCtx));
 
 mcpApp.get("/manifest", (c) =>
 	c.json(SERVER_MANIFEST, 200, { "Cache-Control": "public, max-age=3600" }),

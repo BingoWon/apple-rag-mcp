@@ -43,3 +43,60 @@ jobs:
 
       - name: Verify and build
         run: pnpm build
+
+      - name: Verify distributable CLI in an isolated consumer
+        run: node --import tsx ops/cli/verify-package.mjs
+        env:
+          APPLE_RAG_RELEASE_DIR: ${{ runner.temp }}/apple-rag-cli-release
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: apple-rag-cli
+          path: ${{ runner.temp }}/apple-rag-cli-release/*
+          if-no-files-found: error
+
+  cli-portability:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            node: 24
+          - os: windows-latest
+            node: 26
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter apple-rag-cli build
+      - run: pnpm --filter apple-rag-cli test
+
+  publish-cli:
+    needs: [check, cli-portability]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.20.0
+          registry-url: https://registry.npmjs.org
+      - run: npm install -g npm@11.21.1
+      - uses: actions/download-artifact@v4
+        with:
+          name: apple-rag-cli
+          path: cli-release
+      - name: Check whether npm publication is needed
+        id: npm
+        run: node ops/cli/npm-release.mjs
+      - name: Publish verified artifact with OIDC
+        if: steps.npm.outputs.publish == 'true'
+        run: npm publish cli-release/*.tgz --access public --provenance=false
