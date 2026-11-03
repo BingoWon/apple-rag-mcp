@@ -1,8 +1,9 @@
-import { IconCopy, IconMail, IconMailOff, IconSend, IconX } from "@tabler/icons-react";
+import { IconCopy, IconMail, IconMailOff, IconSend } from "@tabler/icons-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/Button";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/Dialog";
 import { api } from "@/lib/api";
 import { formatDateCompact } from "@/lib/datetime";
 import { copyText } from "@/utils/clipboard";
@@ -22,10 +23,16 @@ interface ContactMessage {
 interface MessageReplyDialogProps {
 	message: ContactMessage;
 	onClose: () => void;
+	onReturnFocus: () => void;
 	onSuccess: () => void;
 }
 
-export function MessageReplyDialog({ message, onClose, onSuccess }: MessageReplyDialogProps) {
+export function MessageReplyDialog({
+	message,
+	onClose,
+	onReturnFocus,
+	onSuccess,
+}: MessageReplyDialogProps) {
 	const { t } = useTranslation();
 	const [reply, setReply] = useState(message.admin_reply || "");
 	const [sendEmail, setSendEmail] = useState(!!message.email); // Default to true if email available
@@ -80,23 +87,33 @@ export function MessageReplyDialog({ message, onClose, onSuccess }: MessageReply
 	};
 
 	return (
-		<div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay backdrop-blur-sm">
-			<div className="bg-elevated rounded-lg shadow-complex max-w-3xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col border border-default">
+		<Dialog
+			open
+			onOpenChange={(open) => {
+				if (!open && !isSubmitting) onClose();
+			}}
+		>
+			<DialogContent
+				onCloseAutoFocus={(event) => {
+					event.preventDefault();
+					onReturnFocus();
+				}}
+				className="max-w-3xl p-0"
+				onEscapeKeyDown={(event) => {
+					if (isSubmitting) event.preventDefault();
+				}}
+				onInteractOutside={(event) => {
+					if (isSubmitting) event.preventDefault();
+				}}
+			>
 				{/* Header */}
 				<div className="flex items-center justify-between p-6 border-b border-default">
-					<h2 className="text-xl font-bold text-light">
+					<DialogTitle className="text-xl font-bold text-light">
 						{isAlreadyReplied ? t("admin.reply_title") : t("admin.reply_to")}
-					</h2>
-					<button
-						type="button"
-						onClick={onClose}
-						className="p-2 hover:bg-tertiary rounded-lg transition-colors text-muted hover:text-light"
-						aria-label="Close"
-					>
-						<IconX className="w-5 h-5" />
-					</button>
+					</DialogTitle>
 				</div>
 
+				<DialogDescription className="sr-only">{t("admin.original_message")}</DialogDescription>
 				{/* Content */}
 				<div className="flex-1 overflow-y-auto p-6 space-y-6 bg-primary">
 					{/* User Info */}
@@ -249,7 +266,7 @@ export function MessageReplyDialog({ message, onClose, onSuccess }: MessageReply
 						</>
 					)}
 				</div>
-			</div>
-		</div>
+			</DialogContent>
+		</Dialog>
 	);
 }

@@ -30,32 +30,30 @@ export default function AdminUserSubscriptionsPage() {
 
 	const columns = useMemo(
 		() => [
-			{ key: "user_id", label: t("admin.col_user_id"), width: "w-16" },
-			{ key: "user_email", label: t("admin.col_email"), width: "w-48" },
-			{ key: "user_name", label: t("admin.col_name"), width: "w-40" },
-			{ key: "plan_type", label: t("admin.col_plan"), width: "w-24" },
-			{ key: "status", label: t("admin.col_status"), width: "w-28" },
-			{ key: "price", label: t("admin.col_price"), width: "w-24" },
-			{ key: "billing_interval", label: t("admin.col_billing"), width: "w-24" },
-			{ key: "stripe_customer_id", label: t("admin.col_stripe_customer"), width: "w-28" },
+			{ key: "user_id", label: t("admin.col_user_id"), width: 64 },
+			{ key: "user_email", label: t("admin.col_email"), width: 192 },
+			{ key: "user_name", label: t("admin.col_name"), width: 160 },
+			{ key: "plan_type", label: t("admin.col_plan"), width: 96 },
+			{ key: "status", label: t("admin.col_status"), width: 112 },
+			{ key: "price", label: t("admin.col_price"), width: 96 },
+			{ key: "billing_interval", label: t("admin.col_billing"), width: 96 },
+			{ key: "stripe_customer_id", label: t("admin.col_stripe_customer"), width: 112 },
 			{
 				key: "stripe_subscription_id",
 				label: t("admin.col_stripe_subscription"),
-				width: "w-28",
+				width: 112,
 			},
-			{ key: "stripe_price_id", label: t("admin.col_stripe_price_id"), width: "w-28" },
-			{ key: "current_period_start", label: t("admin.col_period_start"), width: "w-36" },
-			{ key: "current_period_end", label: t("admin.col_period_end"), width: "w-36" },
-			{ key: "cancel_at_period_end", label: t("admin.col_cancel_at_end"), width: "w-32" },
-			{ key: "updated_at", label: t("admin.col_updated"), width: "w-40" },
+			{ key: "stripe_price_id", label: t("admin.col_stripe_price_id"), width: 112 },
+			{ key: "current_period_start", label: t("admin.col_period_start"), width: 144 },
+			{ key: "current_period_end", label: t("admin.col_period_end"), width: 144 },
+			{ key: "cancel_at_period_end", label: t("admin.col_cancel_at_end"), width: 128 },
+			{ key: "updated_at", label: t("admin.col_updated"), width: 160 },
 		],
 		[t],
 	);
 	const [subscriptions, setSubscriptions] = useState<AdminUserSubscription[]>([]);
 	const [total, setTotal] = useState(0);
 	const [limit, setLimit] = useState(50);
-	const [offset, setOffset] = useState(0);
-	const [hasMore, setHasMore] = useState(false);
 	const [currentPage, setCurrentPage] = useState(1);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
@@ -79,8 +77,6 @@ export default function AdminUserSubscriptionsPage() {
 					setSubscriptions(data.subscriptions || []);
 					setTotal(data.total || 0);
 					setLimit(data.limit || 50);
-					setOffset(data.offset || 0);
-					setHasMore(data.hasMore || false);
 					setCurrentPage(page);
 				} else {
 					throw new Error("Failed to fetch user subscriptions data");
@@ -114,8 +110,6 @@ export default function AdminUserSubscriptionsPage() {
 				data={subscriptions}
 				total={total}
 				limit={limit}
-				offset={offset}
-				hasMore={hasMore}
 				currentPage={currentPage}
 				isLoading={isLoading}
 				error={error}

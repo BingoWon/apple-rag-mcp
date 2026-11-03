@@ -46,7 +46,6 @@
 		"copy_failed": "复制失败",
 		"copy_url": "复制 URL"
 	},
-
 	"nav": {
 		"overview": "概览",
 		"mcp_tokens": "MCP 令牌",
@@ -63,7 +62,6 @@
 		"logout_success": "已退出登录",
 		"logout_error": "退出失败，请重试。"
 	},
-
 	"hero": {
 		"model_team": "模型团队",
 		"model_logo": "模型标志",
@@ -74,12 +72,10 @@
 		"subtitle_vibecoders": "Vibe Coder",
 		"subtitle_desc": "，源自 Apple 基因。<combo><rag>RAG</rag> + <jev>Jev</jev></combo> 为你的 Agent 注入 WWDC26、iOS 27 与官方文档洞见。"
 	},
-
 	"jev": {
 		"title": "由 <jev>Jev</jev> 驱动",
 		"description": "它会根据问题中的 API、平台和版本要求，为 Apple 文档和视频字幕评分排序，优先呈现更相关的资料。"
 	},
-
 	"features": {
 		"eyebrow": "你需要的一切",
 		"title": "为开发者打造的强大功能",
@@ -95,7 +91,6 @@
 		"realtime_updates": "实时更新",
 		"realtime_updates_desc": "文档索引持续跟进 WWDC26、Xcode 27 beta 以及最新 Apple 开发资源。"
 	},
-
 	"quickstart": {
 		"eyebrow": "极速上手",
 		"title": "开源透明，接入即用。",
@@ -107,7 +102,6 @@
 		"pro_minute_calls": "每分钟 50 次调用",
 		"pro_cta": "查看方案"
 	},
-
 	"datasources": {
 		"eyebrow": "全面的知识库",
 		"title": "多源数据，一站搜索",
@@ -119,7 +113,6 @@
 		"videos_title": "WWDC26 视频与 Session",
 		"videos_desc": "WWDC26 与 Apple 开发者视频字幕，通过关键词与语义混合检索，再由 <jev>Jev</jev> 重排。"
 	},
-
 	"testimonials": {
 		"eyebrow": "用户好评",
 		"title": "开发者们用得顺手",
@@ -135,7 +128,6 @@
 		"designation_4": "自由应用开发者",
 		"designation_5": "MCP 平台专家"
 	},
-
 	"pricing": {
 		"eyebrow": "订阅价格",
 		"title": "选择适合你的方案",
@@ -178,7 +170,6 @@
 		"manage_subscription": "管理订阅",
 		"view_plan": "查看我的方案"
 	},
-
 	"plans": {
 		"hobby": "Hobby",
 		"hobby_desc": "适合入门和小型项目。",
@@ -204,7 +195,6 @@
 		"price_pro": "$1 / 周",
 		"price_custom": "定制"
 	},
-
 	"cta": {
 		"ready": "准备好",
 		"to": "为你的",
@@ -213,7 +203,6 @@
 		"ai_agents": "超能力了吗？",
 		"subtitle": "有了 RAG + <jev>Jev</jev>，让你的 AI Agent 读到更相关的 Apple 官方资料。"
 	},
-
 	"auth": {
 		"welcome_back": "欢迎回来",
 		"sign_in_subtitle": "选择你喜欢的登录方式",
@@ -252,7 +241,6 @@
 		"invalid_token": "重置链接无效或已过期\n正在跳转到忘记密码页面...",
 		"unexpected_error": "发生意外错误\n请稍后重试。"
 	},
-
 	"dashboard": {
 		"title": "概览面板",
 		"subtitle": "监控 MCP 使用情况，管理你的账号",
@@ -270,7 +258,6 @@
 		"stats_chunks": "向量分块",
 		"stats_embedded": "已嵌入"
 	},
-
 	"tokens": {
 		"title": "MCP 令牌",
 		"subtitle": "管理你的 MCP 令牌，用于向 Apple RAG MCP Server 发起认证请求",
@@ -295,7 +282,6 @@
 		"delete_title": "删除令牌",
 		"delete_error_full": "删除令牌失败"
 	},
-
 	"guide": {
 		"title": "MCP 使用指南",
 		"loading_config": "加载配置中",
@@ -349,7 +335,6 @@
 		"ip_auto_auth": "自动完成身份验证",
 		"section_install": "一键安装"
 	},
-
 	"ips": {
 		"title": "授权 IP 地址",
 		"subtitle": "配置免令牌自动认证的 IP 地址",
@@ -390,7 +375,6 @@
 		"detect_failed": "无法检测",
 		"update_error": "更新授权 IP 失败"
 	},
-
 	"usage": {
 		"title": "使用记录",
 		"subtitle": "查看 MCP 使用详情——搜索操作和页面抓取记录",
@@ -408,7 +392,6 @@
 		"time": "时间",
 		"no_url": "无 URL"
 	},
-
 	"billing": {
 		"title": "账单与订阅",
 		"subtitle": "管理订阅、查看用量和账单记录",
@@ -443,7 +426,6 @@
 		"upgrade_after_expiry": "到期后才可以切换为订阅方案",
 		"loading": "正在加载账单信息..."
 	},
-
 	"messages": {
 		"title": "消息",
 		"subtitle": "查看和管理你与我们的对话记录",
@@ -466,7 +448,6 @@
 		"mark_error": "标记失败",
 		"load_error": "加载消息失败"
 	},
-
 	"settings": {
 		"title": "账号设置",
 		"subtitle": "管理你的账号信息和偏好",
@@ -513,7 +494,6 @@
 		"password_changed": "密码修改成功！\n你的密码已更新。",
 		"password_change_error": "修改密码失败，请重试。"
 	},
-
 	"admin": {
 		"title": "管理后台",
 		"dashboard": "管理面板",
@@ -532,7 +512,7 @@
 		"stats_calls": "所选期间记录的调用",
 		"stats_paid_users": "有效付费用户",
 		"stats_current": "当前总数",
-		"stats_degraded": "降级成功",
+		"stats_degraded": "补读 / 降级成功",
 		"stats_no_content": "无内容",
 		"stats_invalid": "无效请求",
 		"col_outcome": "结果",
@@ -666,9 +646,28 @@
 		"col_period_start": "周期开始",
 		"col_period_end": "周期结束",
 		"col_cancel_at_end": "到期取消",
-		"col_message": "消息"
+		"col_message": "消息",
+		"log_details": "请求详情",
+		"log_details_desc": "完整请求、响应结果与读取来源。",
+		"requested_url": "请求 URL",
+		"actual_url": "最终 URL",
+		"requested_query": "原始查询",
+		"actual_query": "实际查询",
+		"copy_field": "复制{{field}}",
+		"country": "国家 / 地区",
+		"details": "详情",
+		"open_log": "查看请求详情：{{value}}",
+		"all": "全部",
+		"search_logs_label": "搜索记录",
+		"filter_url_placeholder": "URL 或用户 ID",
+		"filter_query_placeholder": "查询内容或用户 ID",
+		"apply_filters": "筛选",
+		"reset_filters": "重置",
+		"more_filters": "更多筛选",
+		"logs_load_failed": "日志加载失败，请重试。",
+		"log_list_desc": "按条件查看全部日志，打开详情查看完整内容。时间统一为 UTC+8。",
+		"log_date_range_error": "结束日期不能早于开始日期。"
 	},
-
 	"notfound": {
 		"title": "页面未找到",
 		"subtitle": "你要找的页面似乎走丢了。",
@@ -676,7 +675,6 @@
 		"back": "返回上页",
 		"is_error": "觉得这是个 Bug？"
 	},
-
 	"errorboundary": {
 		"title": "出了点问题",
 		"subtitle": "抱歉，发生了意外错误。请重试。",
@@ -684,13 +682,11 @@
 		"try_again": "重试",
 		"reload": "刷新页面"
 	},
-
 	"cookie": {
 		"message": "我们使用 Cookie 来优化你的浏览体验并分析流量。",
 		"decline": "拒绝",
 		"accept": "接受"
 	},
-
 	"fab": {
 		"label": "联系我们",
 		"email_placeholder": "你的邮箱（选填）",
@@ -701,7 +697,6 @@
 		"send_error": "发送失败",
 		"network_error": "网络错误\n请检查网络连接后重试。"
 	},
-
 	"notification": {
 		"got_reply": "你收到了回复！💙",
 		"unread_count": "{{count}} 条未读回复",
@@ -714,7 +709,6 @@
 		"view_all": "查看全部消息",
 		"unread_suffix": "（{{count}} 条未读）"
 	},
-
 	"footer": {
 		"tagline": "RAG 获取 Apple 开发知识，<jev>Jev</jev> 判断资料的相关性，再通过 MCP 交给你的 AI Agent。",
 		"copyright": "© 2026 Apple RAG MCP · 版权所有",
@@ -722,7 +716,6 @@
 		"terms": "服务条款",
 		"crafted": "由 Vibe Coding 打造 ✨"
 	},
-
 	"success": {
 		"title": "支付成功！",
 		"subtitle": "欢迎加入 Apple RAG MCP Pro！你的订阅已生效。",
@@ -734,7 +727,6 @@
 		"go_dashboard": "前往控制台",
 		"back_home": "回到首页"
 	},
-
 	"errors": {
 		"invalid_credentials_title": "登录失败",
 		"invalid_credentials": "邮箱或密码错误",
@@ -812,23 +804,19 @@
 		"generic": "出了点问题",
 		"generic_suggestion": "请重试或联系客服"
 	},
-
 	"delete_modal": {
 		"confirm_text": "确定要删除「{{name}}」吗？",
 		"warning": "此操作不可撤销。"
 	},
-
 	"pagination": {
 		"show": "每页",
 		"per_page": "条"
 	},
-
 	"table": {
 		"no_data": "暂无数据",
 		"loading": "正在加载...",
 		"error": "加载失败"
 	},
-
 	"chart": {
 		"usage_trends": "使用趋势",
 		"tool_calls": "工具调用",

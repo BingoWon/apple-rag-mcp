@@ -115,7 +115,7 @@ export function MCPTokensList({ tokens, onRefresh, isLoading = false }: MCPToken
 		];
 	};
 
-	const columns: DataTableColumn[] = [
+	const columns: DataTableColumn<MCPToken>[] = [
 		{
 			key: "name",
 			label: t("common.name"),

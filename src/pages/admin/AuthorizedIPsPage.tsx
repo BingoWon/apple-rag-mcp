@@ -23,21 +23,19 @@ export default function AdminAuthorizedIPsPage() {
 
 	const columns = useMemo(
 		() => [
-			{ key: "user_email", label: t("admin.col_user_email"), width: "w-64" },
-			{ key: "user_name", label: t("admin.col_user_name"), width: "w-48" },
-			{ key: "name", label: t("admin.col_ip_name"), width: "w-48" },
-			{ key: "ip_address", label: t("admin.col_ip_address"), width: "w-40" },
-			{ key: "last_used", label: t("admin.col_last_used"), width: "w-40" },
-			{ key: "created_at", label: t("admin.col_created"), width: "w-40" },
-			{ key: "updated_at", label: t("admin.col_updated"), width: "w-40" },
+			{ key: "user_email", label: t("admin.col_user_email"), width: 256 },
+			{ key: "user_name", label: t("admin.col_user_name"), width: 192 },
+			{ key: "name", label: t("admin.col_ip_name"), width: 192 },
+			{ key: "ip_address", label: t("admin.col_ip_address"), width: 160 },
+			{ key: "last_used", label: t("admin.col_last_used"), width: 160 },
+			{ key: "created_at", label: t("admin.col_created"), width: 160 },
+			{ key: "updated_at", label: t("admin.col_updated"), width: 160 },
 		],
 		[t],
 	);
 	const [ips, setIPs] = useState<AdminAuthorizedIP[]>([]);
 	const [total, setTotal] = useState(0);
 	const [limit, setLimit] = useState(50);
-	const [offset, setOffset] = useState(0);
-	const [hasMore, setHasMore] = useState(false);
 	const [currentPage, setCurrentPage] = useState(1);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
@@ -61,8 +59,6 @@ export default function AdminAuthorizedIPsPage() {
 					setIPs(data.ips || []);
 					setTotal(data.total || 0);
 					setLimit(data.limit || 50);
-					setOffset(data.offset || 0);
-					setHasMore(data.hasMore || false);
 					setCurrentPage(page);
 				} else {
 					setError(response.error?.message || "Failed to fetch authorized IPs");
@@ -95,8 +91,6 @@ export default function AdminAuthorizedIPsPage() {
 				data={ips}
 				total={total}
 				limit={limit}
-				offset={offset}
-				hasMore={hasMore}
 				currentPage={currentPage}
 				isLoading={isLoading}
 				error={error}

@@ -15,7 +15,8 @@ CREATE TABLE search_logs_new (
     outcome TEXT NOT NULL DEFAULT 'unknown' CHECK (outcome IN ('success','degraded','no_content','limited','invalid','failed','cancelled','unknown'))
 );
 
-INSERT INTO search_logs_new SELECT * FROM search_logs;
+INSERT INTO search_logs_new (id,user_id,mcp_token,requested_query,actual_query,result_count,response_time_ms,status_code,error_code,ip_address,country_code,created_at,outcome)
+SELECT id,user_id,mcp_token,requested_query,actual_query,result_count,response_time_ms,status_code,error_code,ip_address,country_code,created_at,outcome FROM search_logs;
 
 DROP TABLE search_logs;
 
@@ -48,7 +49,8 @@ CREATE TABLE fetch_logs_new (
     cache_hit INTEGER NOT NULL DEFAULT 0
 );
 
-INSERT INTO fetch_logs_new SELECT * FROM fetch_logs;
+INSERT INTO fetch_logs_new (id,user_id,mcp_token,requested_url,actual_url,page_id,response_time_ms,status_code,error_code,ip_address,country_code,created_at,outcome,content_source,provider,upstream_status,cache_hit)
+SELECT id,user_id,mcp_token,requested_url,actual_url,page_id,response_time_ms,status_code,error_code,ip_address,country_code,created_at,outcome,content_source,provider,upstream_status,cache_hit FROM fetch_logs;
 
 DROP TABLE fetch_logs;
 

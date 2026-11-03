@@ -1,4 +1,5 @@
 import i18n from "@/i18n";
+import { parseUTCDate } from "../../worker/shared/datetime";
 import {
 	DateTimeError,
 	type ParsedDateTime,
@@ -92,11 +93,7 @@ export function createTimeKey(date: Date | string | number, options: TimeKeyOpti
 	}
 }
 
-function toDate(input: string | Date | number): Date | null {
-	const date =
-		input instanceof Date ? input : new Date(typeof input === "string" ? input.trim() : input);
-	return Number.isNaN(date.getTime()) ? null : date;
-}
+const toDate = parseUTCDate;
 
 export function formatDate(input: string | Date | number): string {
 	const date = toDate(input);

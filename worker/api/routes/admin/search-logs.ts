@@ -7,6 +7,8 @@ import { TOOL_OUTCOMES, type ToolOutcome } from "../../../shared/tool-outcomes.j
 import { logger } from "../../utils/logger";
 import { createOpenAPIApp } from "../../utils/openapi";
 
+import { logConditions, logQuerySchema } from "./log-query.js";
+
 const app = createOpenAPIApp();
 
 const AdminSearchLogSchema = z.object({
@@ -30,10 +32,7 @@ const getSearchLogsRoute = createRoute({
 	summary: "Get search logs with pagination",
 	description: "Retrieve search logs with pagination support",
 	request: {
-		query: z.object({
-			limit: z.string().optional().default("50"),
-			offset: z.string().optional().default("0"),
-		}),
+		query: logQuerySchema,
 	},
 	responses: {
 		200: {
@@ -73,27 +72,24 @@ const getSearchLogsRoute = createRoute({
 
 app.openapi(getSearchLogsRoute, async (c) => {
 	try {
-		// Parse pagination parameters
-		const limit = Math.min(Number(c.req.query("limit")) || 50, 100); // Max 100 per page
-		const offset = Number(c.req.query("offset")) || 0;
-
-		// Get total count
-		const countResult = await c.env.DB.prepare("SELECT COUNT(*) as total FROM search_logs").first();
+		const query = c.req.valid("query");
+		const { limit, offset } = query;
+		const { where, values } = logConditions(query, "search");
+		const countResult = await c.env.DB.prepare(`SELECT COUNT(*) as total FROM search_logs${where}`)
+			.bind(...values)
+			.first();
 
 		const total = Number(countResult?.total) || 0;
 
 		const logsResult = await c.env.DB.prepare(`
       SELECT id, user_id, mcp_token, requested_query, actual_query, result_count,
              response_time_ms, status_code, error_code AS reason, outcome, country_code, created_at
-      FROM search_logs
-      ORDER BY created_at DESC
+      FROM search_logs${where}
+      ORDER BY julianday(created_at) DESC, id DESC
       LIMIT ? OFFSET ?
     `)
-			.bind(limit, offset)
+			.bind(...values, limit, offset)
 			.all();
-
-		const truncate = (s: string, max: number): string =>
-			s.length > max ? `${s.substring(0, max)}...` : s;
 
 		const logs = (logsResult.results || []).map((row: Record<string, unknown>) => {
 			const requestedQuery = (row.requested_query as string) || "";
@@ -102,10 +98,10 @@ app.openapi(getSearchLogsRoute, async (c) => {
 				id: row.id as string,
 				user_id: row.user_id as string,
 				mcp_token: row.mcp_token ? `${String(row.mcp_token).substring(0, 12)}...` : null,
-				requested_query: truncate(requestedQuery, 80),
-				actual_query: truncate(actualQuery, 80),
+				requested_query: requestedQuery,
+				actual_query: actualQuery,
 				result_count: Number(row.result_count) || 0,
-				response_time_ms: row.response_time_ms ? Number(row.response_time_ms) : null,
+				response_time_ms: row.response_time_ms == null ? null : Number(row.response_time_ms),
 				status_code: row.status_code ? Number(row.status_code) : null,
 				reason: row.reason as string | null,
 				outcome: row.outcome as ToolOutcome,

@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { AdminAuth } from "@/components/admin/AdminAuth";
 import { Button } from "@/components/ui/Button";
+import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { LoaderFive } from "@/components/ui/loader";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { ADMIN_SESSION_KEY } from "@/lib/constants";
@@ -79,6 +80,7 @@ export function AdminLayout() {
 						})}
 					</nav>
 					<div className="flex shrink-0 items-center gap-2">
+						<LanguageSwitcher />
 						<ThemeToggle />
 						<Button
 							onClick={handleLogout}

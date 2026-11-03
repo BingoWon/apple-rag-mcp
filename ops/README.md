@@ -23,8 +23,13 @@ systemctl enable --now apple-rag-postgres-backup-check.timer
 
 ## Deployment
 
-Application deployments must run `pnpm build` before `wrangler deploy`. The build command includes
-lint, type checking, and tests. Apply D1 migrations with `pnpm db:migrate`.
+Run `pnpm build` (lint, type checking, tests and build), then commit and push to
+`main`; Cloudflare Workers deploys that commit automatically. Do not run manual
+`wrangler deploy` for routine changes. Apply D1 migrations with `pnpm db:migrate`
+after inspecting the live schema, Time Travel point and write budget. Table copies
+must name columns explicitly. Rebuilds and index work can exhaust D1's free daily
+write allowance even on small databases. Verify real MCP tool results after release;
+`/health` only establishes liveness. See the [2026-11-03 incident](incidents/2026-11-03-admin-log-recovery.md).
 
 ## Releases
 

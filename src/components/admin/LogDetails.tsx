@@ -1,0 +1,131 @@
+import { IconCopy } from "@tabler/icons-react";
+import { useState } from "react";
+import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
+import { Button } from "@/components/ui/Button";
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogHeader,
+	DialogTitle,
+} from "@/components/ui/Dialog";
+import { formatAdminDateTime, formatAdminResponseTime, getCountryFlag } from "@/lib/admin-utils";
+import type { AdminLog, AdminLogKind } from "@/types/admin-logs";
+import { copyText } from "@/utils/clipboard";
+import { LogOutcome } from "./LogOutcome";
+
+export function LogDetails({
+	log,
+	kind,
+	onClose,
+	onReturnFocus,
+}: {
+	log: AdminLog | null;
+	kind: AdminLogKind;
+	onClose: () => void;
+	onReturnFocus: () => void;
+}) {
+	const { t } = useTranslation();
+	const [copying, setCopying] = useState(false);
+	const requested = log?.requested_url ?? log?.requested_query ?? "",
+		actual = log?.actual_url ?? log?.actual_query ?? "";
+	const copy = async (value: string) => {
+		setCopying(true);
+		try {
+			await copyText(value);
+			toast.success(t("common.copied"));
+		} catch {
+			toast.error(t("common.copy_failed"));
+		} finally {
+			setCopying(false);
+		}
+	};
+	const fields = log
+		? [
+				["admin.col_created", `${formatAdminDateTime(log.created_at)} UTC+8`],
+				["admin.col_time_s", formatAdminResponseTime(log.response_time_ms)],
+				["admin.col_status", log.status_code],
+				["admin.col_reason", log.reason],
+				["admin.col_source", log.content_source ? t(`admin.source_${log.content_source}`) : null],
+				["admin.col_provider", log.provider],
+				["admin.col_upstream", log.upstream_status],
+				[
+					"admin.col_cache",
+					kind === "fetch" ? t(log.cache_hit ? "admin.cache_hit" : "admin.cache_miss") : null,
+				],
+				["admin.col_results", log.result_count],
+				["admin.col_user_id", log.user_id],
+				["admin.col_token", log.mcp_token],
+				[
+					"admin.country",
+					log.country_code ? `${getCountryFlag(log.country_code)} ${log.country_code}` : null,
+				],
+				["admin.col_id", log.id],
+			]
+		: [];
+	return (
+		<Dialog
+			open={!!log}
+			onOpenChange={(open) => {
+				if (!open) onClose();
+			}}
+		>
+			<DialogContent
+				onCloseAutoFocus={(event) => {
+					event.preventDefault();
+					onReturnFocus();
+				}}
+				className="left-auto right-0 top-0 h-dvh max-h-dvh w-full max-w-xl translate-x-0 translate-y-0 rounded-none border-y-0 border-r-0 p-5 sm:p-6"
+			>
+				<DialogHeader>
+					<DialogTitle>{t("admin.log_details")}</DialogTitle>
+					<DialogDescription>{t("admin.log_details_desc")}</DialogDescription>
+				</DialogHeader>
+				{log && (
+					<div className="space-y-6">
+						<LogOutcome outcome={log.outcome} />
+						{[
+							[t(kind === "fetch" ? "admin.requested_url" : "admin.requested_query"), requested],
+							...(requested !== actual
+								? [[t(kind === "fetch" ? "admin.actual_url" : "admin.actual_query"), actual]]
+								: []),
+						].map(([label, value]) => (
+							<section key={label} className="min-w-0 space-y-2">
+								<div className="flex items-center justify-between gap-2">
+									<h3 className="text-sm font-medium">{label}</h3>
+									<Button
+										variant="ghost"
+										size="sm"
+										disabled={copying || !value}
+										onClick={() => copy(value)}
+										aria-label={t("admin.copy_field", { field: label })}
+									>
+										<IconCopy className="mr-1 h-3.5 w-3.5" />
+										{t("common.copy")}
+									</Button>
+								</div>
+								<pre className="max-h-64 overflow-auto whitespace-pre-wrap rounded-lg border border-default bg-background p-3 text-xs leading-relaxed [overflow-wrap:anywhere]">
+									{value || "—"}
+								</pre>
+							</section>
+						))}
+						<dl className="space-y-3">
+							{fields
+								.filter(([, v]) => v !== undefined)
+								.map(([label, value]) => (
+									<div
+										key={label}
+										className="grid grid-cols-[7rem_minmax(0,1fr)] gap-3 border-b border-border/50 pb-3 text-sm"
+									>
+										<dt className="text-muted-foreground">{t(String(label))}</dt>
+										<dd className="min-w-0 [overflow-wrap:anywhere]">{value ?? "—"}</dd>
+									</div>
+								))}
+						</dl>
+					</div>
+				)}
+			</DialogContent>
+		</Dialog>
+	);
+}

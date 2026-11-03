@@ -7,6 +7,8 @@ import { TOOL_OUTCOMES, type ToolOutcome } from "../../../shared/tool-outcomes.j
 import { logger } from "../../utils/logger";
 import { createOpenAPIApp } from "../../utils/openapi";
 
+import { logConditions, logQuerySchema } from "./log-query.js";
+
 const app = createOpenAPIApp();
 
 const AdminFetchLogSchema = z.object({
@@ -34,10 +36,7 @@ const getFetchLogsRoute = createRoute({
 	summary: "Get fetch logs with pagination",
 	description: "Retrieve fetch logs with pagination support",
 	request: {
-		query: z.object({
-			limit: z.string().optional().default("50"),
-			offset: z.string().optional().default("0"),
-		}),
+		query: logQuerySchema,
 	},
 	responses: {
 		200: {
@@ -77,23 +76,23 @@ const getFetchLogsRoute = createRoute({
 
 app.openapi(getFetchLogsRoute, async (c) => {
 	try {
-		// Parse pagination parameters
-		const limit = Math.min(Number(c.req.query("limit")) || 50, 100); // Max 100 per page
-		const offset = Number(c.req.query("offset")) || 0;
-
-		// Get total count
-		const countResult = await c.env.DB.prepare("SELECT COUNT(*) as total FROM fetch_logs").first();
+		const query = c.req.valid("query");
+		const { limit, offset } = query;
+		const { where, values } = logConditions(query, "fetch");
+		const countResult = await c.env.DB.prepare(`SELECT COUNT(*) as total FROM fetch_logs${where}`)
+			.bind(...values)
+			.first();
 
 		const total = Number(countResult?.total) || 0;
 
 		const logsResult = await c.env.DB.prepare(`
       SELECT id, user_id, mcp_token, requested_url, actual_url, page_id,
              response_time_ms, status_code, error_code AS reason, outcome, country_code, created_at, content_source, provider, upstream_status, cache_hit
-      FROM fetch_logs
-      ORDER BY created_at DESC
+      FROM fetch_logs${where}
+      ORDER BY julianday(created_at) DESC, id DESC
       LIMIT ? OFFSET ?
     `)
-			.bind(limit, offset)
+			.bind(...values, limit, offset)
 			.all();
 
 		const logs = (logsResult.results || []).map((row: Record<string, unknown>) => {
@@ -106,7 +105,7 @@ app.openapi(getFetchLogsRoute, async (c) => {
 				requested_url: requestedUrl,
 				actual_url: actualUrl,
 				page_id: row.page_id as string | null,
-				response_time_ms: row.response_time_ms ? Number(row.response_time_ms) : null,
+				response_time_ms: row.response_time_ms == null ? null : Number(row.response_time_ms),
 				status_code: row.status_code ? Number(row.status_code) : null,
 				reason: row.reason as string | null,
 				outcome: row.outcome as ToolOutcome,

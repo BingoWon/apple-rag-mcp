@@ -43,7 +43,7 @@ export function AuthorizedIPsList({
 	});
 
 	// Define columns for the DataTable
-	const columns: DataTableColumn[] = useMemo(
+	const columns: DataTableColumn<AuthorizedIP>[] = useMemo(
 		() => [
 			{
 				key: "name",

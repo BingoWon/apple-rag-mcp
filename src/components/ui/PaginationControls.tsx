@@ -7,9 +7,9 @@ export interface PaginationControlsProps {
 	totalPages: number;
 	pageSize: number;
 	total: number;
-	pageSizeOptions: number[];
+	pageSizeOptions?: number[];
 	onPageChange: (page: number) => void;
-	onPageSizeChange: (size: number) => void;
+	onPageSizeChange?: (size: number) => void;
 	isLoading?: boolean;
 	className?: string;
 	showPageSizeSelector?: boolean;
@@ -21,7 +21,7 @@ export function PaginationControls({
 	totalPages,
 	pageSize,
 	total,
-	pageSizeOptions,
+	pageSizeOptions = [20, 50, 100],
 	onPageChange,
 	onPageSizeChange,
 	isLoading = false,
@@ -70,11 +70,11 @@ export function PaginationControls({
 
 	return (
 		<div
-			className={`flex items-center justify-between px-6 py-4 border-t border-border ${className}`}
+			className={`flex flex-wrap items-center justify-between gap-3 px-4 py-4 border-t border-border ${className}`}
 		>
 			{/* Left side: Page size selector and info */}
-			<div className="flex items-center gap-4">
-				{showPageSizeSelector && (
+			<div className="flex flex-wrap items-center gap-3">
+				{showPageSizeSelector && onPageSizeChange && (
 					<div className="flex items-center gap-2">
 						<span className="text-sm text-muted-foreground">{t("pagination.show")}</span>
 						<div className="flex items-center gap-1">
@@ -112,7 +112,7 @@ export function PaginationControls({
 					variant="outline"
 					size="sm"
 					onClick={() => onPageChange(currentPage - 1)}
-					disabled={currentPage === 1 || isLoading}
+					disabled={currentPage <= 1 || isLoading}
 					className="flex items-center gap-1"
 				>
 					<IconChevronLeft className="h-4 w-4" />
@@ -124,6 +124,7 @@ export function PaginationControls({
 						<Button
 							key={pageNum}
 							variant={currentPage === pageNum ? "default" : "outline"}
+							aria-current={currentPage === pageNum ? "page" : undefined}
 							size="sm"
 							onClick={() => onPageChange(pageNum)}
 							disabled={isLoading}
@@ -138,7 +139,7 @@ export function PaginationControls({
 					variant="outline"
 					size="sm"
 					onClick={() => onPageChange(currentPage + 1)}
-					disabled={currentPage === totalPages || isLoading}
+					disabled={totalPages === 0 || currentPage >= totalPages || isLoading}
 					className="flex items-center gap-1"
 				>
 					{t("common.next")}

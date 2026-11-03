@@ -2,46 +2,35 @@
  * Admin Table Component
  * Reusable table component for displaying database records with pagination
  */
-import { IconChevronLeft, IconChevronRight, IconRefresh } from "@tabler/icons-react";
+import { IconRefresh } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
+import { PaginationControls } from "@/components/ui/PaginationControls";
 import { formatAdminDateTime, formatAdminResponseTime, getCountryFlag } from "@/lib/admin-utils";
 
-interface AdminTableColumn {
-	key: string;
-	label: string;
-	width?: string;
-	render?: (value: unknown, row: Record<string, unknown>) => React.ReactNode;
-}
-
-interface AdminTableProps<T = Record<string, unknown>> {
+interface AdminTableProps<T extends object> {
 	title: string;
 	description?: string;
-	columns: AdminTableColumn[];
+	columns: DataTableColumn<T>[];
 	data: T[];
 	total: number;
 	limit: number;
-	offset: number;
-	hasMore: boolean;
 	currentPage: number;
 	isLoading?: boolean;
 	error?: string | null;
-	note?: string;
 	onRefresh?: () => void;
 	onPageChange?: (page: number) => void;
 }
 
-export function AdminTable<T = Record<string, unknown>>({
+export function AdminTable<T extends object>({
 	title,
 	description,
 	columns,
 	data,
 	total,
 	limit,
-	offset,
-	hasMore: _hasMore,
 	currentPage,
 	isLoading = false,
 	error = null,
@@ -51,21 +40,19 @@ export function AdminTable<T = Record<string, unknown>>({
 	const { t } = useTranslation();
 	// Calculate pagination info
 	const totalPages = Math.ceil(total / limit);
-	const startIndex = offset + 1;
-	const endIndex = Math.min(offset + limit, total);
 	// Convert AdminTable columns to DataTable columns
-	const dataTableColumns: DataTableColumn[] = columns.map((col) => ({
+	const dataTableColumns: DataTableColumn<T>[] = columns.map((col) => ({
 		key: col.key,
 		label: col.label,
 		width: col.width,
-		render: (value: unknown, row: Record<string, unknown>) => {
+		render: (value: unknown, row: T) => {
 			// Use custom render if provided
 			if (col.render) {
 				return col.render(value, row);
 			}
 
 			if (value === null || value === undefined) {
-				return <span className="text-muted-foreground italic">null</span>;
+				return <span className="text-muted-foreground italic">—</span>;
 			}
 
 			if (col.key === "country_code") {
@@ -93,7 +80,7 @@ export function AdminTable<T = Record<string, unknown>>({
 			}
 
 			// Special formatting for ID fields - truncate with ellipsis and tooltip
-			if (col.key.includes("id") || col.key.includes("_id") || col.key === "mcp_token") {
+			if (col.key === "id" || col.key.endsWith("_id") || col.key === "mcp_token") {
 				const stringValue = String(value);
 				if (stringValue.length > 12) {
 					return (
@@ -130,7 +117,7 @@ export function AdminTable<T = Record<string, unknown>>({
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle className="flex items-center justify-between">
+				<CardTitle className="flex flex-wrap items-center justify-between gap-3">
 					<div>
 						<span>{title}</span>
 						{description && (
@@ -142,6 +129,7 @@ export function AdminTable<T = Record<string, unknown>>({
 							variant="outline"
 							size="sm"
 							onClick={onRefresh}
+							disabled={isLoading}
 							className="flex items-center gap-2"
 						>
 							<IconRefresh className="h-4 w-4" />
@@ -151,73 +139,17 @@ export function AdminTable<T = Record<string, unknown>>({
 				</CardTitle>
 			</CardHeader>
 			<CardContent className="p-0">
-				<DataTable
-					columns={dataTableColumns}
-					data={data as Array<Record<string, unknown>>}
+				<DataTable columns={dataTableColumns} data={data} isLoading={isLoading} error={error} />
+
+				<PaginationControls
+					currentPage={currentPage}
+					totalPages={totalPages}
+					pageSize={limit}
+					total={total}
+					showPageSizeSelector={false}
+					onPageChange={(page) => onPageChange?.(page)}
 					isLoading={isLoading}
-					error={error}
 				/>
-
-				{/* Server-side Pagination Controls */}
-				{total > limit && (
-					<div className="flex items-center justify-between px-6 py-4 border-t">
-						<div className="text-sm text-muted-foreground">
-							{t("common.showing_range", { from: startIndex, to: endIndex, total })}
-						</div>
-						<div className="flex items-center space-x-2">
-							<Button
-								variant="outline"
-								size="sm"
-								onClick={() => onPageChange?.(currentPage - 1)}
-								disabled={currentPage === 1 || isLoading}
-								className="flex items-center gap-1"
-							>
-								<IconChevronLeft className="h-4 w-4" />
-								{t("common.previous")}
-							</Button>
-
-							<div className="flex items-center space-x-1">
-								{/* Smart page numbers */}
-								{Array.from({ length: Math.min(5, totalPages) }, (_item, i) => {
-									let pageNum: number;
-									if (totalPages <= 5) {
-										pageNum = i + 1;
-									} else if (currentPage <= 3) {
-										pageNum = i + 1;
-									} else if (currentPage >= totalPages - 2) {
-										pageNum = totalPages - 4 + i;
-									} else {
-										pageNum = currentPage - 2 + i;
-									}
-
-									return (
-										<Button
-											key={pageNum}
-											variant={currentPage === pageNum ? "default" : "outline"}
-											size="sm"
-											onClick={() => onPageChange?.(pageNum)}
-											disabled={isLoading}
-											className="w-8 h-8 p-0"
-										>
-											{pageNum}
-										</Button>
-									);
-								})}
-							</div>
-
-							<Button
-								variant="outline"
-								size="sm"
-								onClick={() => onPageChange?.(currentPage + 1)}
-								disabled={currentPage === totalPages || isLoading}
-								className="flex items-center gap-1"
-							>
-								{t("common.next")}
-								<IconChevronRight className="h-4 w-4" />
-							</Button>
-						</div>
-					</div>
-				)}
 			</CardContent>
 		</Card>
 	);

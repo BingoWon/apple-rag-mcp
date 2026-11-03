@@ -2,6 +2,11 @@
 
 Recorded: 2026-11-03 (Asia/Singapore). Fix release: 5.2.3.
 
+Correction: the historical-field preservation claim below was insufficient.
+Migration 0007 swapped fetch timestamps/countries on the legacy production column
+order. See [recovery and root cause](2026-11-03-admin-log-recovery.md); 0008 repaired
+the affected records and 0007 now copies explicit named columns.
+
 ## Evidence
 
 The production 5.2.2 endpoint was exercised with official TypeScript MCP clients

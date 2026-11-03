@@ -1,182 +1,62 @@
-import * as React from "react";
-import { createPortal } from "react-dom";
-import { Button } from "@/components/ui/Button";
+import * as DialogPrimitive from "@radix-ui/react-dialog";
+import { IconX } from "@tabler/icons-react";
+import type { ComponentProps } from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
-interface DialogContextType {
-	open: boolean;
-	onOpenChange: (open: boolean) => void;
-}
+export const Dialog = DialogPrimitive.Root;
+export const DialogTrigger = DialogPrimitive.Trigger;
+export const DialogClose = DialogPrimitive.Close;
 
-const DialogContext = React.createContext<DialogContextType | null>(null);
-
-function useDialog() {
-	const context = React.useContext(DialogContext);
-	if (!context) {
-		throw new Error("Dialog components must be used within a Dialog");
-	}
-	return context;
-}
-
-interface DialogProps {
-	open?: boolean;
-	onOpenChange?: (open: boolean) => void;
-	children: React.ReactNode;
-}
-
-export function Dialog({ open = false, onOpenChange, children }: DialogProps) {
-	const [internalOpen, setInternalOpen] = React.useState(open);
-
-	const isControlled = onOpenChange !== undefined;
-	const isOpen = isControlled ? open : internalOpen;
-
-	const handleOpenChange = React.useCallback(
-		(newOpen: boolean) => {
-			if (isControlled) {
-				onOpenChange?.(newOpen);
-			} else {
-				setInternalOpen(newOpen);
-			}
-		},
-		[isControlled, onOpenChange],
-	);
-
-	React.useEffect(() => {
-		if (!isControlled) {
-			setInternalOpen(open);
-		}
-	}, [open, isControlled]);
-
+export function DialogContent({
+	className,
+	children,
+	...props
+}: ComponentProps<typeof DialogPrimitive.Content>) {
+	const { t } = useTranslation();
 	return (
-		<DialogContext.Provider value={{ open: isOpen, onOpenChange: handleOpenChange }}>
-			{children}
-		</DialogContext.Provider>
-	);
-}
-
-interface DialogTriggerProps {
-	asChild?: boolean;
-	children: React.ReactNode;
-}
-
-export function DialogTrigger({ asChild, children }: DialogTriggerProps) {
-	const { onOpenChange } = useDialog();
-
-	if (asChild && React.isValidElement(children)) {
-		return React.cloneElement(children as React.ReactElement<Record<string, unknown>>, {
-			onClick: (e: React.MouseEvent) => {
-				const originalOnClick = (children as React.ReactElement<Record<string, unknown>>).props
-					.onClick as ((e: React.MouseEvent) => void) | undefined;
-				originalOnClick?.(e);
-				onOpenChange(true);
-			},
-		});
-	}
-
-	return <Button onClick={() => onOpenChange(true)}>{children}</Button>;
-}
-
-interface DialogContentProps {
-	className?: string;
-	children: React.ReactNode;
-}
-
-export function DialogContent({ className, children }: DialogContentProps) {
-	const { open, onOpenChange } = useDialog();
-	const [mounted, setMounted] = React.useState(false);
-
-	React.useEffect(() => {
-		setMounted(true);
-	}, []);
-
-	React.useEffect(() => {
-		if (open) {
-			document.body.style.overflow = "hidden";
-		} else {
-			document.body.style.overflow = "unset";
-		}
-
-		return () => {
-			document.body.style.overflow = "unset";
-		};
-	}, [open]);
-
-	if (!mounted || !open) return null;
-
-	return createPortal(
-		<div className="fixed inset-0 z-50 flex items-center justify-center">
-			{/* Backdrop */}
-			{/* biome-ignore lint/a11y/noStaticElementInteractions: backdrop overlay to close dialog on click */}
-			<div
-				className="fixed inset-0 bg-background/80 backdrop-blur-sm"
-				onClick={() => onOpenChange(false)}
-			/>
-
-			{/* Content */}
-			{/* biome-ignore lint/a11y/noStaticElementInteractions: dialog content wrapper uses onClick to prevent backdrop close propagation */}
-			<div
+		<DialogPrimitive.Portal>
+			<DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" />
+			<DialogPrimitive.Content
 				className={cn(
-					"relative bg-card rounded-lg shadow-lg border border-border p-6 w-full max-w-md mx-4",
+					"fixed left-1/2 top-1/2 z-50 max-h-[90dvh] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-xl border border-default bg-card p-6 text-foreground shadow-xl focus:outline-none",
 					className,
 				)}
-				onClick={(e) => e.stopPropagation()}
+				{...props}
 			>
 				{children}
-			</div>
-		</div>,
-		document.body,
+				<DialogPrimitive.Close
+					aria-label={t("common.close")}
+					className="absolute right-4 top-4 rounded-md p-1 text-muted-foreground hover:bg-secondary focus-visible:outline-2 focus-visible:outline-brand"
+				>
+					<IconX className="h-4 w-4" />
+				</DialogPrimitive.Close>
+			</DialogPrimitive.Content>
+		</DialogPrimitive.Portal>
 	);
 }
-
-interface DialogHeaderProps {
-	className?: string;
-	children: React.ReactNode;
+export function DialogHeader({ className, ...props }: ComponentProps<"div">) {
+	return <div className={cn("mb-5 space-y-2 pr-8", className)} {...props} />;
 }
-
-export function DialogHeader({ className, children }: DialogHeaderProps) {
+export function DialogTitle({ className, ...props }: ComponentProps<typeof DialogPrimitive.Title>) {
 	return (
-		<div className={cn("flex flex-col space-y-1.5 text-center sm:text-left mb-4", className)}>
-			{children}
-		</div>
+		<DialogPrimitive.Title
+			className={cn("text-lg font-semibold tracking-tight", className)}
+			{...props}
+		/>
 	);
 }
-
-interface DialogTitleProps {
-	className?: string;
-	children: React.ReactNode;
-}
-
-export function DialogTitle({ className, children }: DialogTitleProps) {
+export function DialogDescription({
+	className,
+	...props
+}: ComponentProps<typeof DialogPrimitive.Description>) {
 	return (
-		<h3 className={cn("text-lg font-semibold leading-none tracking-tight", className)}>
-			{children}
-		</h3>
+		<DialogPrimitive.Description
+			className={cn("text-sm text-muted-foreground", className)}
+			{...props}
+		/>
 	);
 }
-
-interface DialogDescriptionProps {
-	className?: string;
-	children: React.ReactNode;
-}
-
-export function DialogDescription({ className, children }: DialogDescriptionProps) {
-	return <p className={cn("text-sm text-gray-600 dark:text-gray-400", className)}>{children}</p>;
-}
-
-interface DialogFooterProps {
-	className?: string;
-	children: React.ReactNode;
-}
-
-export function DialogFooter({ className, children }: DialogFooterProps) {
-	return (
-		<div
-			className={cn(
-				"flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 mt-4",
-				className,
-			)}
-		>
-			{children}
-		</div>
-	);
+export function DialogFooter({ className, ...props }: ComponentProps<"div">) {
+	return <div className={cn("mt-6 flex flex-wrap justify-end gap-2", className)} {...props} />;
 }

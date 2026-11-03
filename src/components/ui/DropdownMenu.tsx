@@ -1,165 +1,62 @@
-import { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import * as Menu from "@radix-ui/react-dropdown-menu";
+import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
-
 export interface DropdownMenuItem {
 	key: string;
 	label: string;
-	icon?: React.ReactNode;
+	icon?: ReactNode;
 	onClick?: () => void;
 	variant?: "default" | "destructive";
 	disabled?: boolean;
-	/** Set to 'separator' for a visual divider, 'label' for a group heading, or 'item' (default) for a normal item */
 	type?: "item" | "separator" | "label";
 }
-
 interface DropdownMenuProps {
-	trigger: React.ReactNode;
+	trigger: ReactNode;
 	items: DropdownMenuItem[];
 	align?: "left" | "right";
 	className?: string;
 }
-
 export function DropdownMenu({ trigger, items, align = "right", className }: DropdownMenuProps) {
-	const [isOpen, setIsOpen] = useState(false);
-	const [mounted, setMounted] = useState(false);
-	const [position, setPosition] = useState({ top: 0, left: 0, right: 0 });
-	const dropdownRef = useRef<HTMLDivElement>(null);
-	const triggerRef = useRef<HTMLDivElement>(null);
-	const menuRef = useRef<HTMLDivElement>(null);
-
-	// Set mounted state
-	useEffect(() => {
-		setMounted(true);
-	}, []);
-
-	// Calculate position when opening
-	const updatePosition = () => {
-		if (triggerRef.current) {
-			const rect = triggerRef.current.getBoundingClientRect();
-			setPosition({
-				top: rect.bottom + window.scrollY,
-				left: rect.left + window.scrollX,
-				right: window.innerWidth - rect.right - window.scrollX,
-			});
-		}
-	};
-
-	// Close dropdown when clicking outside
-	useEffect(() => {
-		const handleClickOutside = (event: MouseEvent) => {
-			const target = event.target as Node;
-			// Check if click is outside both trigger and menu
-			const isOutsideTrigger = triggerRef.current && !triggerRef.current.contains(target);
-			const isOutsideMenu = menuRef.current && !menuRef.current.contains(target);
-
-			if (isOutsideTrigger && isOutsideMenu) {
-				setIsOpen(false);
-			}
-		};
-
-		if (isOpen) {
-			document.addEventListener("mousedown", handleClickOutside);
-		}
-
-		return () => {
-			document.removeEventListener("mousedown", handleClickOutside);
-		};
-	}, [isOpen]);
-
-	const handleItemClick = (item: DropdownMenuItem) => {
-		if (!item.disabled && item.onClick) {
-			item.onClick();
-			setIsOpen(false);
-		}
-	};
-
-	const handleTriggerClick = () => {
-		if (!isOpen) {
-			updatePosition();
-		}
-		setIsOpen(!isOpen);
-	};
-
 	return (
-		<div className={cn("relative", className)} ref={dropdownRef}>
-			{/* Trigger */}
-			{/* biome-ignore lint/a11y/useSemanticElements: trigger wraps arbitrary children */}
-			<div
-				ref={triggerRef}
-				role="button"
-				tabIndex={0}
-				className="cursor-pointer"
-				onClick={handleTriggerClick}
-				onKeyDown={(e) => {
-					if (e.key === "Enter" || e.key === " ") {
-						e.preventDefault();
-						handleTriggerClick();
-					}
-				}}
-			>
-				{trigger}
-			</div>
-
-			{/* Dropdown Menu - Rendered in Portal */}
-			{mounted &&
-				isOpen &&
-				createPortal(
-					<div
-						ref={menuRef}
-						className={cn(
-							"fixed min-w-[160px] z-50",
-							"bg-tertiary border border-default rounded-md shadow-lg",
-							"py-1",
-						)}
-						style={{
-							top: position.top + 4, // mt-1 equivalent
-							[align === "right" ? "right" : "left"]:
-								align === "right" ? position.right : position.left,
-						}}
-					>
-						{items.map((item) => {
-							const itemType = item.type || "item";
-
-							if (itemType === "separator") {
-								return <div key={item.key} className="my-1 border-t border-default/60" />;
-							}
-
-							if (itemType === "label") {
-								return (
-									<div
-										key={item.key}
-										className="px-3 py-1.5 text-xs font-semibold text-muted uppercase tracking-wider select-none"
-									>
-										{item.label}
-									</div>
-								);
-							}
-
-							return (
-								<button
-									type="button"
-									key={item.key}
-									onClick={() => handleItemClick(item)}
-									disabled={item.disabled}
-									className={cn(
-										"w-full text-left px-3 py-2 text-sm transition-colors",
-										"flex items-center gap-2",
-										"disabled:opacity-50 disabled:cursor-not-allowed",
-										item.variant === "destructive"
-											? "text-error hover:bg-error/10 hover:text-error"
-											: "text-light hover:bg-secondary",
-										!item.disabled && "hover:bg-secondary",
-									)}
-								>
-									{item.icon && <span className="flex-shrink-0 w-4 h-4">{item.icon}</span>}
-									<span className="flex-1">{item.label}</span>
-								</button>
-							);
-						})}
-					</div>,
-					document.body,
-				)}
-		</div>
+		<Menu.Root>
+			<Menu.Trigger asChild>{trigger}</Menu.Trigger>
+			<Menu.Portal>
+				<Menu.Content
+					align={align === "right" ? "end" : "start"}
+					sideOffset={6}
+					collisionPadding={8}
+					className={cn(
+						"z-50 min-w-40 rounded-lg border border-default bg-card p-1 text-foreground shadow-lg",
+						className,
+					)}
+				>
+					{items.map((item) =>
+						item.type === "separator" ? (
+							<Menu.Separator key={item.key} className="my-1 h-px bg-border" />
+						) : item.type === "label" ? (
+							<Menu.Label
+								key={item.key}
+								className="px-3 py-2 text-xs font-medium text-muted-foreground"
+							>
+								{item.label}
+							</Menu.Label>
+						) : (
+							<Menu.Item
+								key={item.key}
+								disabled={item.disabled}
+								onSelect={item.onClick}
+								className={cn(
+									"flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm outline-none data-[highlighted]:bg-secondary data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+									item.variant === "destructive" && "text-error",
+								)}
+							>
+								{item.icon}
+								<span>{item.label}</span>
+							</Menu.Item>
+						),
+					)}
+				</Menu.Content>
+			</Menu.Portal>
+		</Menu.Root>
 	);
 }

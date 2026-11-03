@@ -3,7 +3,7 @@
  * Display and manage contact messages with reply functionality
  */
 import { IconEye, IconEyeCheck, IconLock, IconMessageCircle } from "@tabler/icons-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { MessageReplyDialog } from "@/components/admin/MessageReplyDialog";
 import { Button } from "@/components/ui/Button";
@@ -43,6 +43,8 @@ export default function AdminContactMessagesPage() {
 	const [currentPage, setCurrentPage] = useState(1);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
+	const replyTrigger = useRef<HTMLButtonElement | null>(null);
+	const refreshButton = useRef<HTMLButtonElement | null>(null);
 	const [selectedMessage, setSelectedMessage] = useState<AdminContactMessage | null>(null);
 
 	const fetchMessages = useCallback(
@@ -118,7 +120,10 @@ export default function AdminContactMessagesPage() {
 		if (!message.admin_reply) {
 			return (
 				<Button
-					onClick={() => setSelectedMessage(message)}
+					onClick={(event) => {
+						replyTrigger.current = event.currentTarget;
+						setSelectedMessage(message);
+					}}
 					size="sm"
 					className="bg-blue-600 text-white hover:bg-blue-700 whitespace-nowrap"
 				>
@@ -133,7 +138,10 @@ export default function AdminContactMessagesPage() {
 			return (
 				<div className="flex flex-col gap-1 items-start">
 					<Button
-						onClick={() => setSelectedMessage(message)}
+						onClick={(event) => {
+							replyTrigger.current = event.currentTarget;
+							setSelectedMessage(message);
+						}}
 						size="sm"
 						className="bg-green-600 text-white hover:bg-green-700 whitespace-nowrap"
 					>
@@ -151,7 +159,10 @@ export default function AdminContactMessagesPage() {
 		return (
 			<div className="flex flex-col gap-1 items-start">
 				<Button
-					onClick={() => setSelectedMessage(message)}
+					onClick={(event) => {
+						replyTrigger.current = event.currentTarget;
+						setSelectedMessage(message);
+					}}
 					size="sm"
 					className="bg-orange-600 text-white hover:bg-orange-700 whitespace-nowrap"
 				>
@@ -182,6 +193,7 @@ export default function AdminContactMessagesPage() {
 					</p>
 				</div>
 				<Button
+					ref={refreshButton}
 					onClick={() => fetchMessages(currentPage)}
 					disabled={isLoading}
 					loading={isLoading}
@@ -343,6 +355,12 @@ export default function AdminContactMessagesPage() {
 				<MessageReplyDialog
 					message={selectedMessage}
 					onClose={() => setSelectedMessage(null)}
+					onReturnFocus={() => {
+						(replyTrigger.current?.isConnected
+							? replyTrigger.current
+							: refreshButton.current
+						)?.focus();
+					}}
 					onSuccess={handleReplySuccess}
 				/>
 			)}

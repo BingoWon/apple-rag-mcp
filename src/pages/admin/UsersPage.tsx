@@ -25,23 +25,21 @@ export default function AdminUsersPage() {
 
 	const columns = useMemo(
 		() => [
-			{ key: "id", label: t("admin.col_id"), width: "w-16" },
-			{ key: "email", label: t("admin.col_email"), width: "w-64" },
-			{ key: "name", label: t("admin.col_name"), width: "w-48" },
-			{ key: "provider", label: t("admin.col_auth_provider"), width: "w-32" },
-			{ key: "plan_type", label: t("admin.col_plan"), width: "w-24" },
-			{ key: "subscription_status", label: t("admin.col_status"), width: "w-28" },
-			{ key: "last_login", label: t("admin.col_last_login"), width: "w-40" },
-			{ key: "created_at", label: t("admin.col_created"), width: "w-40" },
-			{ key: "updated_at", label: t("admin.col_updated"), width: "w-40" },
+			{ key: "id", label: t("admin.col_id"), width: 64 },
+			{ key: "email", label: t("admin.col_email"), width: 256 },
+			{ key: "name", label: t("admin.col_name"), width: 192 },
+			{ key: "provider", label: t("admin.col_auth_provider"), width: 128 },
+			{ key: "plan_type", label: t("admin.col_plan"), width: 96 },
+			{ key: "subscription_status", label: t("admin.col_status"), width: 112 },
+			{ key: "last_login", label: t("admin.col_last_login"), width: 160 },
+			{ key: "created_at", label: t("admin.col_created"), width: 160 },
+			{ key: "updated_at", label: t("admin.col_updated"), width: 160 },
 		],
 		[t],
 	);
 	const [users, setUsers] = useState<AdminUser[]>([]);
 	const [total, setTotal] = useState(0);
 	const [limit, setLimit] = useState(50);
-	const [offset, setOffset] = useState(0);
-	const [hasMore, setHasMore] = useState(false);
 	const [currentPage, setCurrentPage] = useState(1);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
@@ -65,8 +63,6 @@ export default function AdminUsersPage() {
 					setUsers(data.users || []);
 					setTotal(data.total || 0);
 					setLimit(data.limit || 50);
-					setOffset(data.offset || 0);
-					setHasMore(data.hasMore || false);
 					setCurrentPage(page);
 				} else {
 					throw new Error("Failed to fetch users data");
@@ -100,8 +96,6 @@ export default function AdminUsersPage() {
 				data={users}
 				total={total}
 				limit={limit}
-				offset={offset}
-				hasMore={hasMore}
 				currentPage={currentPage}
 				isLoading={isLoading}
 				error={error}

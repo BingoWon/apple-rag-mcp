@@ -21,20 +21,18 @@ export default function AdminMCPTokensPage() {
 
 	const columns = useMemo(
 		() => [
-			{ key: "user_id", label: t("admin.col_user_id"), width: "w-16" },
-			{ key: "name", label: t("admin.col_name"), width: "w-48" },
-			{ key: "mcp_token", label: t("admin.col_token"), width: "w-40" },
-			{ key: "last_used_at", label: t("admin.col_last_used"), width: "w-40" },
-			{ key: "created_at", label: t("admin.col_created"), width: "w-40" },
-			{ key: "updated_at", label: t("admin.col_updated"), width: "w-40" },
+			{ key: "user_id", label: t("admin.col_user_id"), width: 64 },
+			{ key: "name", label: t("admin.col_name"), width: 192 },
+			{ key: "mcp_token", label: t("admin.col_token"), width: 160 },
+			{ key: "last_used_at", label: t("admin.col_last_used"), width: 160 },
+			{ key: "created_at", label: t("admin.col_created"), width: 160 },
+			{ key: "updated_at", label: t("admin.col_updated"), width: 160 },
 		],
 		[t],
 	);
 	const [tokens, setTokens] = useState<AdminMCPToken[]>([]);
 	const [total, setTotal] = useState(0);
 	const [limit, setLimit] = useState(50);
-	const [offset, setOffset] = useState(0);
-	const [hasMore, setHasMore] = useState(false);
 	const [currentPage, setCurrentPage] = useState(1);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
@@ -58,8 +56,6 @@ export default function AdminMCPTokensPage() {
 					setTokens(data.tokens || []);
 					setTotal(data.total || 0);
 					setLimit(data.limit || 50);
-					setOffset(data.offset || 0);
-					setHasMore(data.hasMore || false);
 					setCurrentPage(page);
 				} else {
 					throw new Error("Failed to fetch MCP tokens data");
@@ -93,8 +89,6 @@ export default function AdminMCPTokensPage() {
 				data={tokens}
 				total={total}
 				limit={limit}
-				offset={offset}
-				hasMore={hasMore}
 				currentPage={currentPage}
 				isLoading={isLoading}
 				error={error}

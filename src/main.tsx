@@ -1,6 +1,6 @@
 import { lazy, StrictMode, Suspense } from "react";
 import { createRoot } from "react-dom/client";
-import { BrowserRouter } from "react-router-dom";
+import { BrowserRouter, useLocation } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Providers } from "@/components/providers/Providers";
 import { CookieConsent } from "@/components/ui/CookieConsent";
@@ -17,6 +17,17 @@ const UnreadReplyNotification = lazy(() =>
 	})),
 );
 
+function CustomerOverlays() {
+	const { pathname } = useLocation();
+	if (pathname === "/admin" || pathname.startsWith("/admin/")) return null;
+	return (
+		<Suspense fallback={null}>
+			<FabButton />
+			<UnreadReplyNotification />
+		</Suspense>
+	);
+}
+
 const root = document.getElementById("root");
 
 if (root) {
@@ -27,10 +38,7 @@ if (root) {
 					<Providers>
 						<AppRouter />
 					</Providers>
-					<Suspense fallback={null}>
-						<FabButton />
-						<UnreadReplyNotification />
-					</Suspense>
+					<CustomerOverlays />
 					<CookieConsent />
 				</ErrorBoundary>
 			</BrowserRouter>

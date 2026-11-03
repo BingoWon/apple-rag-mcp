@@ -5,37 +5,31 @@ import { Badge } from "@/components/ui/Badge";
 import { LoaderFive } from "@/components/ui/loader";
 import { formatDate } from "@/lib/datetime";
 
-export interface DataTableColumn {
+export interface DataTableColumn<T = Record<string, unknown>> {
+	width?: number;
 	key: string;
 	label: string;
-	// biome-ignore lint/suspicious/noExplicitAny: row type varies by consumer
-	render?: (value: unknown, row: any) => ReactNode;
+	render?: (value: unknown, row: T) => ReactNode;
 }
 
-export interface DataTableProps {
-	columns: DataTableColumn[];
-	// biome-ignore lint/suspicious/noExplicitAny: data rows are typed by consumer context
-	data: any[];
+export interface DataTableProps<T extends object> {
+	columns: DataTableColumn<T>[];
+	data: T[];
 	isLoading?: boolean;
 	error?: string | null;
 	className?: string;
 }
 
-export function DataTable({
+export function DataTable<T extends object>({
 	columns,
 	data,
 	isLoading = false,
 	error = null,
 	className = "",
-}: DataTableProps) {
+}: DataTableProps<T>) {
 	const { t } = useTranslation();
 
-	const formatValue = (
-		value: unknown,
-		column: DataTableColumn,
-		// biome-ignore lint/suspicious/noExplicitAny: row type varies
-		row: any,
-	): ReactNode => {
+	const formatValue = (value: unknown, column: DataTableColumn<T>, row: T): ReactNode => {
 		if (column.render) {
 			return column.render(value, row);
 		}
@@ -50,7 +44,7 @@ export function DataTable({
 	// Error state
 	if (error) {
 		return (
-			<div className={`text-center py-8 ${className}`}>
+			<div role="alert" className={`text-center py-8 ${className}`}>
 				<div className="mx-auto h-12 w-12 text-red-500 mb-4">
 					<IconXboxX className="h-12 w-12" />
 				</div>
@@ -61,7 +55,7 @@ export function DataTable({
 	}
 
 	return (
-		<div className={className}>
+		<div className={`min-w-0 ${className}`} aria-busy={isLoading}>
 			{isLoading ? (
 				<div className="flex items-center justify-center py-12">
 					<LoaderFive text={t("table.loading")} />
@@ -71,13 +65,22 @@ export function DataTable({
 					<p className="text-muted-foreground">{t("table.no_data")}</p>
 				</div>
 			) : (
-				<div className="overflow-x-auto overflow-y-visible">
-					<table className="w-full">
-						<thead className="bg-secondary/30">
+				<div className="max-h-[65dvh] overflow-auto overscroll-contain">
+					<table
+						className="w-full table-fixed"
+						style={{ minWidth: columns.reduce((sum, column) => sum + (column.width ?? 160), 0) }}
+					>
+						<colgroup>
+							{columns.map((column) => (
+								<col key={column.key} style={{ width: column.width }} />
+							))}
+						</colgroup>
+						<thead className="sticky top-0 z-10 bg-card">
 							<tr className="border-b border-border">
 								{columns.map((column) => (
 									<th
 										key={column.key}
+										scope="col"
 										className="text-left py-3 px-3 font-medium text-muted-foreground text-sm uppercase tracking-wider select-none"
 									>
 										{column.label}
@@ -88,15 +91,15 @@ export function DataTable({
 						<tbody className="bg-background divide-y divide-border">
 							{data.map((row, index) => (
 								<tr
-									key={(row.id as Key) || index}
+									key={(row as { id?: Key }).id ?? index}
 									className={`transition-colors duration-200 ${
 										index % 2 === 0 ? "bg-secondary/50" : "bg-background"
 									} hover:bg-secondary`}
 								>
 									{columns.map((column) => (
-										<td key={column.key} className="py-3 px-3">
-											<div className="text-sm text-foreground">
-												{formatValue(row[column.key], column, row)}
+										<td key={column.key} className="py-3 px-3 align-middle">
+											<div className="min-w-0 overflow-hidden text-sm text-foreground [overflow-wrap:anywhere]">
+												{formatValue(row[column.key as keyof T], column, row)}
 											</div>
 										</td>
 									))}

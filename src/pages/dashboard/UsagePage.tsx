@@ -53,7 +53,7 @@ export default function UsagePage() {
 	});
 
 	// Define columns for search logs
-	const searchColumns: DataTableColumn[] = [
+	const searchColumns: DataTableColumn<UsageLog>[] = [
 		{
 			key: "mcp_token",
 			label: t("usage.mcp_token"),
@@ -94,7 +94,7 @@ export default function UsagePage() {
 	];
 
 	// Define columns for fetch logs
-	const fetchColumns: DataTableColumn[] = [
+	const fetchColumns: DataTableColumn<UsageLog>[] = [
 		{
 			key: "mcp_token",
 			label: t("usage.mcp_token"),

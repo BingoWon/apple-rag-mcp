@@ -46,7 +46,6 @@
 		"copy_failed": "Failed to copy",
 		"copy_url": "Copy URL"
 	},
-
 	"nav": {
 		"overview": "Overview",
 		"mcp_tokens": "MCP Tokens",
@@ -63,7 +62,6 @@
 		"logout_success": "Successfully logged out",
 		"logout_error": "Failed to logout. Please try again."
 	},
-
 	"hero": {
 		"model_team": "Model team",
 		"model_logo": "Model logo",
@@ -74,12 +72,10 @@
 		"subtitle_vibecoders": "Vibe Coders",
 		"subtitle_desc": ". Born with Apple DNA. <combo><rag>RAG</rag> + <jev>Jev</jev></combo> bring WWDC26, iOS 27, and official documentation insights to your agents."
 	},
-
 	"jev": {
 		"title": "Powered by <jev>Jev</jev>",
 		"description": "It scores Apple sources against your API, platform, and version requirements, putting the most relevant results first."
 	},
-
 	"features": {
 		"eyebrow": "Everything you need",
 		"title": "Powerful features for developers",
@@ -95,7 +91,6 @@
 		"realtime_updates": "Real-time Updates",
 		"realtime_updates_desc": "Our documentation index tracks WWDC26, Xcode 27 beta, and the latest Apple developer resources."
 	},
-
 	"quickstart": {
 		"eyebrow": "Quick Start",
 		"title": "Open source. Ready to use.",
@@ -107,7 +102,6 @@
 		"pro_minute_calls": "50 tool calls/minute",
 		"pro_cta": "See plans"
 	},
-
 	"datasources": {
 		"eyebrow": "Comprehensive Knowledge Base",
 		"title": "Multiple data sources, one search",
@@ -119,7 +113,6 @@
 		"videos_title": "WWDC26 Videos & Sessions",
 		"videos_desc": "WWDC26 and Apple Developer transcripts, found with keyword and semantic search, then ranked by <jev>Jev</jev>."
 	},
-
 	"testimonials": {
 		"eyebrow": "Happy Vibes",
 		"title": "Developers Are Loving This!",
@@ -135,7 +128,6 @@
 		"designation_4": "Freelance App Developer",
 		"designation_5": "MCP Platform Expert"
 	},
-
 	"pricing": {
 		"eyebrow": "Pricing",
 		"title": "Choose the right plan for you",
@@ -178,7 +170,6 @@
 		"manage_subscription": "Manage Subscription",
 		"view_plan": "View My Plan"
 	},
-
 	"plans": {
 		"hobby": "Hobby",
 		"hobby_desc": "Perfect for getting started and small projects.",
@@ -204,7 +195,6 @@
 		"price_pro": "$1 / week",
 		"price_custom": "Custom"
 	},
-
 	"success": {
 		"title": "Payment Successful!",
 		"subtitle": "Welcome to Apple RAG MCP Pro! Your subscription is now active.",
@@ -216,7 +206,6 @@
 		"go_dashboard": "Go to Dashboard",
 		"back_home": "Back to Home"
 	},
-
 	"cta": {
 		"ready": "Ready",
 		"to": "to",
@@ -225,7 +214,6 @@
 		"ai_agents": "AI agents?",
 		"subtitle": "flows with RAG + <jev>Jev</jev>: official Apple knowledge, ranked for your agents."
 	},
-
 	"auth": {
 		"welcome_back": "Welcome back",
 		"sign_in_subtitle": "Choose your preferred way to sign in",
@@ -264,7 +252,6 @@
 		"invalid_token": "Invalid or missing reset token\nRedirecting to forgot password page...",
 		"unexpected_error": "An unexpected error occurred\nPlease try again later."
 	},
-
 	"dashboard": {
 		"title": "Dashboard Overview",
 		"subtitle": "Monitor your MCP usage and manage your account",
@@ -282,7 +269,6 @@
 		"stats_chunks": "Chunks",
 		"stats_embedded": "Embedded"
 	},
-
 	"tokens": {
 		"title": "MCP Tokens",
 		"subtitle": "Manage your MCP tokens to authenticate requests to the Apple RAG MCP Server",
@@ -307,7 +293,6 @@
 		"delete_title": "Delete MCP Token",
 		"delete_error_full": "Failed to delete MCP token"
 	},
-
 	"guide": {
 		"title": "MCP Usage Guide",
 		"loading_config": "Loading Configuration",
@@ -361,7 +346,6 @@
 		"ip_auto_auth": "for automatic authentication",
 		"section_install": "One-click Install"
 	},
-
 	"ips": {
 		"title": "Authorized IP Addresses",
 		"subtitle": "Configure IP addresses for automatic authentication with MCP without tokens",
@@ -402,7 +386,6 @@
 		"detect_failed": "Unable to detect",
 		"update_error": "Failed to update authorized IP"
 	},
-
 	"usage": {
 		"title": "Usage Logs",
 		"subtitle": "View detailed logs of your MCP usage - search operations and page fetches",
@@ -420,7 +403,6 @@
 		"time": "Time",
 		"no_url": "No URL"
 	},
-
 	"billing": {
 		"title": "Billing & Subscription",
 		"subtitle": "Manage your subscription, view usage, and billing history",
@@ -455,7 +437,6 @@
 		"upgrade_after_expiry": "You can switch to a subscription after your pass expires",
 		"loading": "Loading billing information..."
 	},
-
 	"messages": {
 		"title": "Messages",
 		"subtitle": "View and manage your conversation history with our support team",
@@ -478,7 +459,6 @@
 		"mark_error": "Failed to mark message as read",
 		"load_error": "Failed to load messages"
 	},
-
 	"settings": {
 		"title": "Account Settings",
 		"subtitle": "Manage your account information and preferences",
@@ -525,7 +505,6 @@
 		"password_changed": "Password changed successfully!\nYour password has been updated.",
 		"password_change_error": "Failed to update password. Please try again."
 	},
-
 	"admin": {
 		"title": "Admin Console",
 		"dashboard": "Admin Dashboard",
@@ -544,7 +523,7 @@
 		"stats_calls": "Recorded calls in selected period",
 		"stats_paid_users": "Active Paid Users",
 		"stats_current": "Current total",
-		"stats_degraded": "Recovered",
+		"stats_degraded": "Fallback success",
 		"stats_no_content": "No content",
 		"stats_invalid": "Invalid request",
 		"col_outcome": "Outcome",
@@ -678,9 +657,28 @@
 		"col_period_start": "Period Start",
 		"col_period_end": "Period End",
 		"col_cancel_at_end": "Cancel at End",
-		"col_message": "Message"
+		"col_message": "Message",
+		"log_details": "Request details",
+		"log_details_desc": "Full request, outcome and retrieval provenance.",
+		"requested_url": "Requested URL",
+		"actual_url": "Final URL",
+		"requested_query": "Requested query",
+		"actual_query": "Processed query",
+		"copy_field": "Copy {{field}}",
+		"country": "Country / region",
+		"details": "Details",
+		"open_log": "View request details: {{value}}",
+		"all": "All",
+		"search_logs_label": "Find records",
+		"filter_url_placeholder": "URL or user ID",
+		"filter_query_placeholder": "Query or user ID",
+		"apply_filters": "Apply filters",
+		"reset_filters": "Reset",
+		"more_filters": "More filters",
+		"logs_load_failed": "Could not load logs. Please retry.",
+		"log_list_desc": "Filter all records and open details for complete content. All times are UTC+8.",
+		"log_date_range_error": "End date must not be before start date."
 	},
-
 	"notfound": {
 		"title": "Page Not Found",
 		"subtitle": "The page you're looking for seems to have wandered off into the digital void.",
@@ -688,7 +686,6 @@
 		"back": "Go Back",
 		"is_error": "Think this is an error?"
 	},
-
 	"errorboundary": {
 		"title": "Something went wrong",
 		"subtitle": "We're sorry, but something unexpected happened. Please try again.",
@@ -696,13 +693,11 @@
 		"try_again": "Try Again",
 		"reload": "Reload Page"
 	},
-
 	"cookie": {
 		"message": "We use cookies to personalize your site experience and analyze the site traffic.",
 		"decline": "Decline",
 		"accept": "Accept"
 	},
-
 	"fab": {
 		"label": "Contact us",
 		"email_placeholder": "Your email (optional)",
@@ -713,7 +708,6 @@
 		"send_error": "Failed to send message",
 		"network_error": "Network error\nPlease check your connection and try again."
 	},
-
 	"notification": {
 		"got_reply": "You've got a reply! 💙",
 		"unread_count": "{{count}} unread reply",
@@ -726,7 +720,6 @@
 		"view_all": "View All Messages",
 		"unread_suffix": "({{count}} unread)"
 	},
-
 	"footer": {
 		"tagline": "RAG finds Apple knowledge. <jev>Jev</jev> ranks relevant sources. MCP brings them to your agents.",
 		"copyright": "© 2026 Apple RAG MCP • All rights reserved",
@@ -734,7 +727,6 @@
 		"terms": "Terms of Service",
 		"crafted": "Crafted with Vibe Coding ✨"
 	},
-
 	"errors": {
 		"invalid_credentials_title": "Login Failed",
 		"invalid_credentials": "Invalid email or password",
@@ -812,23 +804,19 @@
 		"generic": "Something went wrong",
 		"generic_suggestion": "Please try again or contact support"
 	},
-
 	"delete_modal": {
 		"confirm_text": "Are you sure you want to delete \"{{name}}\"?",
 		"warning": "This action cannot be undone."
 	},
-
 	"pagination": {
 		"show": "Show",
 		"per_page": "per page"
 	},
-
 	"table": {
 		"no_data": "No data available",
 		"loading": "Loading data...",
 		"error": "Error Loading Data"
 	},
-
 	"chart": {
 		"usage_trends": "Usage Trends",
 		"tool_calls": "Tool Calls",

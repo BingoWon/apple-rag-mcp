@@ -1,5 +1,6 @@
 import axios, { type AxiosError, type AxiosInstance, type AxiosResponse } from "axios";
 import type { AdminDashboardStats, AdminStatsQuery, ApiResponse } from "@/types";
+import type { AdminLogFilters, AdminLogKind, AdminLogsResponse } from "@/types/admin-logs";
 import { normalizeEmail } from "@/utils/email";
 import { ADMIN_PASSWORD_HEADER, ADMIN_SESSION_KEY } from "./constants";
 
@@ -260,14 +261,17 @@ class ApiClient {
 		return this.get(`/admin/mcp-tokens?limit=${limit}&offset=${offset}`);
 	}
 
-	async getAdminSearchLogs(page: number = 1, limit: number = 50) {
-		const offset = (page - 1) * limit;
-		return this.get(`/admin/search-logs?limit=${limit}&offset=${offset}`);
-	}
-
-	async getAdminFetchLogs(page: number = 1, limit: number = 50) {
-		const offset = (page - 1) * limit;
-		return this.get(`/admin/fetch-logs?limit=${limit}&offset=${offset}`);
+	async getAdminLogs(
+		kind: AdminLogKind,
+		page: number,
+		limit: number,
+		filters: AdminLogFilters,
+		signal: AbortSignal,
+	) {
+		return this.get<AdminLogsResponse>(`/admin/${kind}-logs`, {
+			params: { ...filters, limit, offset: (page - 1) * limit },
+			signal,
+		});
 	}
 
 	async getAdminUserSubscriptions(page: number = 1, limit: number = 50) {
