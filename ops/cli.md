@@ -5,6 +5,10 @@ executable `apple-rag`. The owner completed first publication and Trusted Publis
 setup. Public registry access and a clean installation have been independently
 verified. Package: https://www.npmjs.com/package/apple-rag-cli.
 
+The current CLI uses MCP credentials and transport. A proposed separation of CLI
+authorization, API entry and request-channel logging is documented in
+[authorization boundaries](cli-auth-architecture.md); it is not implemented yet.
+
 ## Architecture and authentication
 
 - TypeScript compiled to Node.js 22.20+ JavaScript; official MCP client 2.3.1, Zod
