@@ -125,3 +125,18 @@ CLI section instead of presenting it as general account guidance above the FAQ.
 Homepage composition and effects, setup prompts, credential handling, quotas and
 metadata are unchanged. Layout checks cover aligned edges, bounded width, both
 languages/themes, 320/390/768/1440px, both setup prompts, disclosures and deep links.
+
+## Homepage refinements — 5.6.6
+
+Owner-requested changes only: swap the horizontal sides of the Hero stickers,
+keeping their image orientation, existing rotations (-9deg for the person and
+11deg for the logo), sizes and effects. Lower the person by 32px on desktop and
+16px on smaller screens. The logo keeps its vertical position.
+
+Quick start retains MCP as the default selection and offers the corresponding
+copy button. Remove the terminal frame and rendered prompt text; use the same
+complete agent setup generators for the clipboard. Keep quota information, the
+Pro banner, client logos and the rest of the homepage composition. This explicit
+request supersedes the earlier requirement to retain the prompt window. Regression
+checks cover real clipboard contents, absent prompt markup, responsive sticker
+positions, unchanged rotation and positive transform determinants (no mirroring).

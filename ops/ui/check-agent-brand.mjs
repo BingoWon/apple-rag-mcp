@@ -1,10 +1,12 @@
-// Run after build with Playwright on NODE_PATH: node --import tsx ops/ui/check-cli-auth.mjs
+// Run after build with Playwright on NODE_PATH: node --import tsx ops/ui/check-agent-brand.mjs
 import assert from "node:assert/strict";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { createRequire } from "node:module";
 import { extname, resolve } from "node:path";
 import { loginPage } from "../../packages/cli/src/login-page.ts";
+import { generateCLIInstallPrompt } from "../../src/utils/agentSetup.ts";
+import { generateInstallPrompt } from "../../src/utils/mcpConfigService.ts";
 
 const { chromium } = createRequire(import.meta.url)("playwright");
 const root = resolve("dist/client"),
@@ -124,6 +126,26 @@ try {
 				assert.equal(await page.locator("#hero .arrow-button").count(), 1);
 				assert.equal(await page.locator('#hero a[href="/connect"]').count(), 1);
 				assert.equal(await page.locator('#hero a[href="/register"]').count(), 1);
+				const stickers = await page.locator(".hero-sticker").evaluateAll((items) =>
+					items.map((item) => {
+						const style = getComputedStyle(item),
+							matrix = new DOMMatrixReadOnly(style.transform);
+						return {
+							left: item.getBoundingClientRect().left,
+							top: parseFloat(style.top),
+							angle: (Math.atan2(matrix.b, matrix.a) * 180) / Math.PI,
+							determinant: matrix.a * matrix.d - matrix.b * matrix.c,
+						};
+					}),
+				);
+				assert(stickers[0].left > stickers[1].left, "Person sticker belongs on the right");
+				assert.equal(stickers[0].top, width >= 1280 ? 144 : -80);
+				assert(Math.abs(stickers[0].angle + 9) < 0.1);
+				assert(Math.abs(stickers[1].angle - 11) < 0.1);
+				assert(
+					stickers.every((item) => item.determinant > 0),
+					"Do not mirror either sticker",
+				);
 				await capture("home");
 				await page.locator('#hero a[href="/connect"]').click();
 				await page.waitForURL("**/connect");
@@ -140,7 +162,12 @@ try {
 							.getAttribute("aria-pressed"),
 						"true",
 					);
-					const instructions = await quick.locator("pre code").innerText();
+					const instructions =
+						mode === "MCP"
+							? generateInstallPrompt({}, language)
+							: generateCLIInstallPrompt(language);
+					assert.equal(await quick.locator("pre, code, textarea").count(), 0);
+					assert(!(await quick.innerText()).includes(instructions));
 					assert(
 						instructions.includes(
 							mode === "MCP" ? "https://mcp.apple-rag.com" : "apple-rag auth login --no-browser",

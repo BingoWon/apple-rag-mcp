@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 
@@ -35,6 +35,9 @@ try {
 		{ width: 390, height: 844 },
 	]) {
 		for (const language of ["en", "zh"]) {
+			const copy = JSON.parse(
+				readFileSync(new URL(`../../src/i18n/${language}.json`, import.meta.url), "utf8"),
+			);
 			for (const theme of ["light", "dark"]) {
 				const page = await browser.newPage({ viewport, colorScheme: theme });
 				const errors = [];
@@ -252,25 +255,17 @@ try {
 							overflow: element.scrollWidth > element.clientWidth,
 							promotionOverflow: promotion.scrollWidth > promotion.clientWidth,
 							logoLoaded: element.querySelector(".jev-brand img").naturalWidth > 0,
-							config: element.querySelector("pre").textContent,
+							promptVisible: element.querySelector("pre, code, textarea") !== null,
 						};
 					});
-					assert.ok(
-						result.quickstart.content.includes(
-							language === "en" ? "Open source. Ready to use." : "开源透明，接入即用。",
-						),
-					);
+					assert.ok(result.quickstart.content.includes(copy.quickstart.title));
 					assert.ok(result.quickstart.content.includes("50,000"));
 					assert.ok(result.quickstart.content.includes("$1"));
-					assert.ok(
-						result.quickstart.content.includes(
-							language === "en" ? "50 tool calls/minute" : "每分钟 50 次调用",
-						),
-					);
+					assert.ok(result.quickstart.content.includes(copy.quickstart.pro_minute_calls));
 					assert.ok(!result.quickstart.overflow);
 					assert.ok(!result.quickstart.promotionOverflow);
 					assert.ok(result.quickstart.logoLoaded);
-					assert.ok(result.quickstart.config.includes("https://mcp.apple-rag.com"));
+					assert.equal(result.quickstart.promptVisible, false);
 				}
 				assert.deepEqual(errors, []);
 				results.push(result);

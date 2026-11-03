@@ -3,6 +3,7 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/Button";
 import { JevText } from "@/components/ui/jev-brand";
 import { SUPPORTED_CLIENTS } from "@/constants/clients";
 import { generateCLIInstallPrompt } from "@/utils/agentSetup";
@@ -63,44 +64,19 @@ export function QuickStartSection() {
 							</button>
 						))}
 					</fieldset>
-					<div className="rounded-xl overflow-hidden shadow-2xl border border-black/10 dark:border-white/10 bg-[#1e1e1e]">
-						{/* Title Bar */}
-						<div className="flex items-center justify-between px-4 py-3 bg-[#2d2d2d] border-b border-white/5">
-							<div className="flex items-center gap-2">
-								<span className="w-3 h-3 rounded-full bg-[#ff5f57]" />
-								<span className="w-3 h-3 rounded-full bg-[#febc2e]" />
-								<span className="w-3 h-3 rounded-full bg-[#28c840]" />
-							</div>
-							<span className="text-xs text-[#8b8b8b] font-medium select-none">
-								{mode.toUpperCase()} · agent-setup.txt
-							</span>
-							<button
-								type="button"
-								onClick={handleCopy}
-								aria-label={t(`connect.copy_${mode}`)}
-								className="flex items-center gap-1.5 text-xs text-[#8b8b8b] hover:text-white transition-colors duration-200 px-2 py-1 rounded-md hover:bg-white/10"
-							>
-								{copied ? (
-									<>
-										<IconCheck className="w-3.5 h-3.5 text-[#28c840]" />
-										<span className="text-[#28c840]">{t("common.copied")}</span>
-									</>
-								) : (
-									<>
-										<IconCopy className="w-3.5 h-3.5" />
-										<span>{t("common.copy")}</span>
-									</>
-								)}
-							</button>
-						</div>
-
-						{/* Code Area */}
-						<div className="p-5 overflow-x-auto max-h-80 overflow-y-auto">
-							<pre className="whitespace-pre-wrap break-words text-sm leading-relaxed font-mono text-[#d4d4d4]">
-								<code>{instructions}</code>
-							</pre>
-						</div>
-					</div>
+					<Button
+						variant="primary"
+						onClick={handleCopy}
+						aria-label={t(`connect.copy_${mode}`)}
+						className="mx-auto flex h-auto min-h-12 w-fit max-w-full whitespace-normal px-6 py-3"
+					>
+						{copied ? (
+							<IconCheck className="size-4 shrink-0" aria-hidden="true" />
+						) : (
+							<IconCopy className="size-4 shrink-0" aria-hidden="true" />
+						)}
+						{copied ? t("common.copied") : t(`connect.copy_${mode}`)}
+					</Button>
 					<p className="mt-4 text-center text-sm text-muted">{t("quickstart.free_access")}</p>
 					<p className="mt-2 text-center text-sm text-muted">{t("quickstart.shared")}</p>
 					<p className="mt-3 text-center text-sm">

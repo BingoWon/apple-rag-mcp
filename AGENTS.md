@@ -21,7 +21,9 @@ Every code change ships with a release. A change to `worker/`, `src/`, `skills/`
 Copy updates must preserve existing homepage sections, their order, components,
 animations and visual treatments. Do not replace the testimonial carousel with
 an FAQ or the typewriter CTA with a generic section. Adapt MCP / CLI access inside
-the original quick-start window; keep its Pro banner and client-logo layout.
+the existing quick-start section; keep its Pro banner and client-logo layout.
+Show MCP / CLI selection and a copy button, without rendering setup prompts or
+a terminal preview. The agent receives the copied instructions in its conversation.
 
 Preserve the custom Hero design: colorful heading, Vibe Coders badge, rainbow CTA,
 arrow button, MacBook scroll and stickers. Brand or MCP / CLI copy changes must

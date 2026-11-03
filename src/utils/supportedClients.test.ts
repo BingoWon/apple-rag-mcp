@@ -82,8 +82,11 @@ test("quick start presents both agent connections and current trial limits with 
 		assert.match(html, /href="#pricing"/);
 		assert.ok(html.includes(i18n.t("connect.copy_mcp")));
 		assert.match(html, /aria-pressed="false"[^>]*>CLI<\/button>/);
-		assert.ok(html.includes("agent-setup.txt"));
-		assert.ok(html.includes("#ff5f57"));
+		assert.doesNotMatch(html, /<pre|<code|<textarea|agent-setup\.txt/);
+		assert.doesNotMatch(
+			html,
+			/Configure apple-rag-mcp|Connect this agent to Apple RAG|请为你当前使用的客户端配置/,
+		);
 		assert.ok(html.includes(i18n.t("quickstart.pro_weekly_calls")));
 		assert.ok(html.includes(i18n.t("quickstart.pro_minute_calls")));
 		assert.ok(html.includes(i18n.t("quickstart.title")));
