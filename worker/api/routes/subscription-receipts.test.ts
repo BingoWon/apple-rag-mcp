@@ -16,6 +16,7 @@ test("paid invoice ledger excludes free and unpaid invoices and is idempotent", 
 	);
 	const invoice = {
 		id: "in_test",
+		livemode: true,
 		status: "paid",
 		amount_paid: 100,
 		currency: "usd",
@@ -25,6 +26,7 @@ test("paid invoice ledger excludes free and unpaid invoices and is idempotent", 
 		parent: { subscription_details: { metadata: { userId: "reader" } } },
 	} as unknown as Stripe.Invoice;
 	assert.equal(subscriptionReceipt({ ...invoice, status: "open" }), null);
+	assert.equal(subscriptionReceipt({ ...invoice, livemode: false }), null);
 	assert.equal(subscriptionReceipt({ ...invoice, amount_paid: 0 }), null);
 	assert.equal(subscriptionReceipt({ ...invoice, parent: null }), null);
 	const db = {

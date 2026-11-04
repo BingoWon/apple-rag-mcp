@@ -3,6 +3,7 @@ import type Stripe from "stripe";
 export function subscriptionReceipt(invoice: Stripe.Invoice) {
 	const details = invoice.parent?.subscription_details;
 	if (
+		!invoice.livemode ||
 		invoice.status !== "paid" ||
 		invoice.amount_paid <= 0 ||
 		!details ||
