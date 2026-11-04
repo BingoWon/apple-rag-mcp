@@ -1,8 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-@custom-variant dark (&:where(.dark, .dark *));
-
 /*
  * ========================================
  * APPLE RAG DESIGN SYSTEM - TAILWIND V4 DUAL MODE

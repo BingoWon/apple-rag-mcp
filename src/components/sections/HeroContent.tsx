@@ -64,8 +64,8 @@ export const HeroContent: React.FC = () => {
 					{/* Preserve the original rainbow CTA for agent setup. */}
 					<Link to="/connect" className={rainbowButtonStyles}>
 						<div className="flex items-center">
-							<IconTerminal2 className="size-5 text-light" />
-							<span className="ml-2 text-light lg:inline p-1 text-base font-semibold">
+							<IconTerminal2 className="size-5 text-[#0f172a] dark:text-white" />
+							<span className="ml-2 text-[#0f172a] dark:text-white lg:inline p-1 text-base font-semibold">
 								{t("hero.setup")}
 							</span>
 						</div>

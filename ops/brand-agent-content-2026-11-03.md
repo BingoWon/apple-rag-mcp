@@ -193,3 +193,11 @@ query. Bind that variant to the existing `.dark` class so both use the theme
 resolved by ThemeProvider. Preserve the original button design and content.
 Verified the reproduced mismatch and both selected themes in the actual browser;
 build and lint pass. No permanent presentation assertions were added.
+
+## Preserve the original rainbow button appearance — 5.6.10
+
+The owner clarified that the original background and effects must remain exactly
+as before. Revert the global dark-variant override introduced in 5.6.9. Change
+only the setup button's icon/text colors to follow its existing background
+variant: dark text on its white background, white text on its dark background.
+This also keeps both readable when the selected site theme differs from the OS.
