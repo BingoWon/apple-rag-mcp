@@ -79,12 +79,12 @@ function ChannelUsageCard({
 	const { t, i18n } = useTranslation();
 	const total = stats ? TOOL_CHANNELS.reduce((sum, key) => sum + stats.channels[key].total, 0) : 0;
 	const visible = TOOL_CHANNELS.filter(
-		(key) => key !== "unknown" || !!stats?.channels.unknown.total,
+		(key) => key !== "unknown" || !!stats?.channels.unknown.total || channel === "unknown",
 	);
 	const format = (value: number) => value.toLocaleString(i18n.resolvedLanguage);
 	const percent = new Intl.NumberFormat(i18n.resolvedLanguage, {
 		style: "percent",
-		maximumFractionDigits: 1,
+		maximumFractionDigits: 2,
 	});
 	return (
 		<Card className="p-4 md:col-span-2 xl:col-span-4">
@@ -106,7 +106,7 @@ function ChannelUsageCard({
 						className="h-9 rounded-md border border-default bg-card px-3 text-sm text-light focus-visible:outline-2 focus-visible:outline-brand"
 					>
 						<option value="">{t("admin.all")}</option>
-						{TOOL_CHANNELS.map((key) => (
+						{visible.map((key) => (
 							<option key={key} value={key}>
 								{t(`admin.channel_${key}`)}
 							</option>
@@ -143,7 +143,7 @@ function ChannelUsageCard({
 							{t(`admin.channel_${key}`)}
 						</dt>
 						<dd className="mt-1 text-lg font-semibold tabular-nums text-light">
-							{stats ? format(stats.channels[key].total) : "--"}
+							{stats ? format(stats.channels[key].total) : "--"}{" "}
 							<span className="ml-2 text-xs font-normal text-muted">
 								{stats ? percent.format(total ? stats.channels[key].total / total : 0) : "--"}
 							</span>

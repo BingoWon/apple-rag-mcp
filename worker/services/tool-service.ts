@@ -166,7 +166,7 @@ function logOperation(
 	auth: AuthContext,
 	request: Request,
 	details: Partial<SearchLogEntry & FetchLogEntry> &
-		Pick<SearchLogEntry, "outcome" | "responseTimeMs">,
+		Pick<SearchLogEntry, "outcome" | "responseTimeMs" | "channel" | "authMethod" | "requestId">,
 ): void {
 	const { ip, country } = extractClientInfo(request);
 	const value = input && typeof input === "object" ? input : {};

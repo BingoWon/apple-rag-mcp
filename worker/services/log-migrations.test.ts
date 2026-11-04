@@ -119,3 +119,49 @@ test("CLI migration preserves rows, maps credential IDs and prevents old writers
 		db.close();
 	}
 });
+
+test("historical channel correction touches only legacy MCP rows and is idempotent", () => {
+	const db = new DatabaseSync(":memory:");
+	try {
+		for (const file of readdirSync(dir)
+			.filter((f) => f.endsWith(".sql") && f < "0012")
+			.sort())
+			db.exec(load(file));
+		for (const kind of ["search", "fetch"]) {
+			const column =
+				kind === "search" ? "requested_query,actual_query" : "requested_url,actual_url";
+			const insert = db.prepare(
+				`INSERT INTO ${kind}_logs(id,user_id,${column},channel,request_id,created_at) VALUES(?,'reader','fixture','fixture',?,?,?)`,
+			);
+			for (const [id, channel, request, date] of [
+				["old", "unknown", null, "2026-11-03 08:23:57"],
+				["cli", "cli", "cli-request", "2026-11-03T08:00:00Z"],
+				["new", "unknown", null, "2026-11-03T08:39:15Z"],
+				["tracked", "unknown", "request", "2026-11-02T00:00:00Z"],
+				["invalid-date", "unknown", null, "invalid"],
+				["mcp", "mcp", null, "2026-11-02T00:00:00Z"],
+			])
+				insert.run(id, channel, request, date);
+		}
+		const before = ["search", "fetch"].map((kind) =>
+			db.prepare(`SELECT * FROM ${kind}_logs WHERE id!='old' ORDER BY id`).all(),
+		);
+		db.exec(load("0012_backfill_legacy_mcp_channels.sql"));
+		for (const kind of ["search", "fetch"])
+			assert.equal(
+				db.prepare(`SELECT channel FROM ${kind}_logs WHERE id='old'`).get()?.channel,
+				"mcp",
+			);
+		assert.deepEqual(
+			["search", "fetch"].map((kind) =>
+				db.prepare(`SELECT * FROM ${kind}_logs WHERE id!='old' ORDER BY id`).all(),
+			),
+			before,
+		);
+		const after = db.prepare("SELECT * FROM search_logs ORDER BY id").all();
+		db.exec(load("0012_backfill_legacy_mcp_channels.sql"));
+		assert.deepEqual(db.prepare("SELECT * FROM search_logs ORDER BY id").all(), after);
+	} finally {
+		db.close();
+	}
+});

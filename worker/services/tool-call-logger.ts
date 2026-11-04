@@ -2,7 +2,7 @@ import { backgroundD1Write, type WaitUntilContext } from "../services/d1-utils.j
 import type { ToolOutcome } from "../shared/tool-outcomes.js";
 import type { OperationContext } from "./operation-context.js";
 
-interface LogEntry extends Partial<OperationContext> {
+interface LogEntry extends OperationContext {
 	userId: string;
 	responseTimeMs: number;
 	statusCode?: number;
@@ -56,7 +56,7 @@ export class ToolCallLogger {
 	): void {
 		const values = {
 			user_id: entry.userId,
-			channel: entry.channel ?? "unknown",
+			channel: entry.channel,
 			credential_id: entry.credentialId ?? null,
 			session_id: entry.sessionId ?? null,
 			auth_method: entry.authMethod ?? null,

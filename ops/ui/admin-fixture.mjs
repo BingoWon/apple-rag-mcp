@@ -14,7 +14,7 @@ for (const file of readdirSync(new URL("../../migrations/", import.meta.url))
 	.sort())
 	sql.exec(readFileSync(new URL(`../../migrations/${file}`, import.meta.url), "utf8"));
 const insert = sql.prepare(
-	"INSERT INTO fetch_logs(id,user_id,requested_url,actual_url,response_time_ms,status_code,outcome,error_code,created_at,country_code,content_source,provider,upstream_status,cache_hit) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+	"INSERT INTO fetch_logs(id,user_id,requested_url,actual_url,response_time_ms,status_code,outcome,error_code,created_at,country_code,content_source,provider,upstream_status,cache_hit,channel) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,'mcp')",
 );
 const longUrl = `https://developer.apple.com/documentation/${"x".repeat(2048)}`.slice(0, 2048);
 insert.run(
@@ -85,7 +85,7 @@ for (let i = 0; i < 53; i++)
 const query = `SwiftUI ${"navigation ".repeat(900)}`;
 sql
 	.prepare(
-		"INSERT INTO search_logs(id,user_id,requested_query,actual_query,result_count,response_time_ms,status_code,outcome,created_at,country_code) VALUES(?,?,?,?,?,?,?,?,?,?)",
+		"INSERT INTO search_logs(id,user_id,requested_query,actual_query,result_count,response_time_ms,status_code,outcome,created_at,country_code,channel) VALUES(?,?,?,?,?,?,?,?,?,?,'mcp')",
 	)
 	.run(
 		"long-query",
@@ -157,7 +157,9 @@ for (let day = 0; day < 7; day++) {
 			);
 }
 sql
-	.prepare("INSERT INTO fetch_logs(user_id,requested_url,actual_url,outcome) VALUES(?,?,?,?)")
+	.prepare(
+		"INSERT INTO fetch_logs(user_id,requested_url,actual_url,outcome,channel) VALUES(?,?,?,?,'mcp')",
+	)
 	.run(
 		"anon_203.0.113.17",
 		"https://developer.apple.com/documentation/swiftui",

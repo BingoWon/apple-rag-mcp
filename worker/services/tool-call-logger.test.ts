@@ -105,6 +105,15 @@ test("tools persist distinct results, provenance, zero-result searches and refun
 		true,
 	);
 	await Promise.all(writes);
+	for (const table of ["search_logs", "fetch_logs"])
+		assert.equal(
+			sqlite
+				.prepare(
+					`SELECT COUNT(*) AS count FROM ${table} WHERE channel!='mcp' OR request_id IS NULL OR auth_method IS NULL`,
+				)
+				.get()?.count,
+			0,
+		);
 	assert.equal(refunds, 1);
 	assert.deepEqual(
 		sqlite
