@@ -138,6 +138,14 @@ export function AdminLogs({ kind }: { kind: AdminLogKind }) {
 				<div>
 					<h1 className="text-xl font-semibold tracking-tight">{t(`admin.${kind}_logs`)}</h1>
 					<p className="mt-1 text-sm text-muted-foreground">{t("admin.log_list_desc")}</p>
+					{(filters.from || filters.to) && (
+						<p className="mt-1 text-xs text-muted-foreground">
+							{t("admin.stats_exact_range", {
+								start: filters.from ? formatAdminDateTime(filters.from) : "—",
+								end: filters.to ? formatAdminDateTime(filters.to) : "—",
+							})}
+						</p>
+					)}
 				</div>
 				<Button onClick={logs.refresh} disabled={logs.loading} variant="secondary" size="sm">
 					<IconRefresh className="mr-1.5 h-4 w-4" />
@@ -160,6 +168,10 @@ export function AdminLogs({ kind }: { kind: AdminLogKind }) {
 						return;
 					}
 					setRangeError(false);
+					if (!values.start && !values.end) {
+						if (filters.from) values.from = filters.from;
+						if (filters.to) values.to = filters.to;
+					}
 					logs.apply(values);
 				}}
 			>

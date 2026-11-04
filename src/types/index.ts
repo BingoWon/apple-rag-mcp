@@ -1,3 +1,4 @@
+import type { ToolChannel } from "../../worker/shared/tool-channels";
 import type { ToolOutcome } from "../../worker/shared/tool-outcomes";
 export interface User {
 	id: string;
@@ -61,6 +62,7 @@ export interface ToolCallsStats {
 
 export interface AdminStatsQuery {
 	period: "24h" | "7d" | "30d" | "custom";
+	channel?: ToolChannel;
 	start?: string;
 	end?: string;
 }
@@ -91,6 +93,7 @@ export interface AdminMetricStats {
 }
 
 export interface AdminDashboardStats {
+	channels: Record<ToolChannel, AdminMetricStats>;
 	start: string;
 	end: string;
 	timezone: string;

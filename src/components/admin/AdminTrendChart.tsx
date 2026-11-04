@@ -35,6 +35,7 @@ export const AdminTrendChart = memo(function AdminTrendChart({
 	height: heightProp,
 	seriesName,
 	fitScale = false,
+	comparison,
 }: {
 	metric: AdminMetricStats;
 	bucket: "hour" | "day";
@@ -42,6 +43,7 @@ export const AdminTrendChart = memo(function AdminTrendChart({
 	height?: number;
 	seriesName?: string;
 	fitScale?: boolean;
+	comparison?: { name: string; color: string; metric: AdminMetricStats }[];
 }) {
 	const { t, i18n } = useTranslation();
 	const { resolvedTheme } = useTheme();
@@ -62,7 +64,7 @@ export const AdminTrendChart = memo(function AdminTrendChart({
 		return {
 			theme: { mode: resolvedTheme },
 			chart: {
-				type: isRequest ? "bar" : fitScale ? "line" : "area",
+				type: comparison ? "line" : isRequest ? "bar" : fitScale ? "line" : "area",
 				stacked: isRequest || hasBreakdown,
 				animations: { enabled: false },
 				sparkline: { enabled: false },
@@ -83,16 +85,18 @@ export const AdminTrendChart = memo(function AdminTrendChart({
 			},
 			plotOptions: { bar: { columnWidth: "65%", borderRadius: 2 } },
 			stroke: { width: isRequest ? 0 : fitScale ? 3 : 2, curve: "straight" },
-			fill: { opacity: isRequest ? 1 : 0.2, type: "solid" },
-			colors: isRequest
-				? TOOL_OUTCOMES.filter(
-						(outcome) => outcome === "success" || metric.outcomes?.[outcome],
-					).map((outcome) => OUTCOME_COLORS[outcome])
-				: hasBreakdown
-					? [color, "#f59e0b"]
-					: [color],
+			fill: { opacity: comparison || isRequest ? 1 : 0.2, type: "solid" },
+			colors: comparison
+				? comparison.map((item) => item.color)
+				: isRequest
+					? TOOL_OUTCOMES.filter(
+							(outcome) => outcome === "success" || metric.outcomes?.[outcome],
+						).map((outcome) => OUTCOME_COLORS[outcome])
+					: hasBreakdown
+						? [color, "#f59e0b"]
+						: [color],
 			dataLabels: { enabled: false },
-			legend: { show: hasBreakdown, position: "bottom" },
+			legend: { show: !!comparison || hasBreakdown, position: "bottom" },
 			grid: {
 				borderColor: resolvedTheme === "dark" ? "#334155" : "#e2e8f0",
 				strokeDashArray: 3,
@@ -133,31 +137,37 @@ export const AdminTrendChart = memo(function AdminTrendChart({
 		fitScale,
 		fitted?.min,
 		fitted?.max,
+		comparison,
 	]);
-	const series = hasBreakdown
-		? [
-				{
-					name: t("admin.stats_registered"),
-					data: metric.points.map((point) => [Date.parse(point.date), point.registered ?? 0]),
-				},
-				{
-					name: t("admin.stats_anonymous"),
-					data: metric.points.map((point) => [Date.parse(point.date), point.anonymous ?? 0]),
-				},
-			]
-		: isRequest
-			? TOOL_OUTCOMES.filter((outcome) => outcome === "success" || metric.outcomes?.[outcome]).map(
-					(outcome) => ({
+	const series = comparison
+		? comparison.map((item) => ({
+				name: item.name,
+				data: item.metric.points.map((point) => [Date.parse(point.date), point.count]),
+			}))
+		: hasBreakdown
+			? [
+					{
+						name: t("admin.stats_registered"),
+						data: metric.points.map((point) => [Date.parse(point.date), point.registered ?? 0]),
+					},
+					{
+						name: t("admin.stats_anonymous"),
+						data: metric.points.map((point) => [Date.parse(point.date), point.anonymous ?? 0]),
+					},
+				]
+			: isRequest
+				? TOOL_OUTCOMES.filter(
+						(outcome) => outcome === "success" || metric.outcomes?.[outcome],
+					).map((outcome) => ({
 						name: t(`admin.stats_${outcome}`),
 						data: metric.points.map((point) => [Date.parse(point.date), point[outcome] ?? 0]),
-					}),
-				)
-			: [
-					{
-						name: seriesName ?? t("admin.stats_new_records"),
-						data: metric.points.map((point) => [Date.parse(point.date), point.count]),
-					},
-				];
+					}))
+				: [
+						{
+							name: seriesName ?? t("admin.stats_new_records"),
+							data: metric.points.map((point) => [Date.parse(point.date), point.count]),
+						},
+					];
 
 	if (metric.total === 0) {
 		return (
@@ -178,7 +188,7 @@ export const AdminTrendChart = memo(function AdminTrendChart({
 				<ApexChart
 					options={options}
 					series={series}
-					type={isRequest ? "bar" : fitScale ? "line" : "area"}
+					type={comparison ? "line" : isRequest ? "bar" : fitScale ? "line" : "area"}
 					height={height}
 				/>
 			</Suspense>

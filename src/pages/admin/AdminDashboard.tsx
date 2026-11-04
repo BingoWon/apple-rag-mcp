@@ -60,7 +60,7 @@ export default function AdminDashboard() {
 					onTimeRangeChange={(period) => {
 						setCustomOpen(false);
 						setRangeError(false);
-						setQuery({ period });
+						setQuery((value) => ({ period, channel: value.channel }));
 					}}
 				/>
 				<Button
@@ -110,7 +110,12 @@ export default function AdminDashboard() {
 							return;
 						}
 						setRangeError(false);
-						setQuery({ period: "custom", start: customStart, end: customEnd });
+						setQuery((value) => ({
+							period: "custom",
+							start: customStart,
+							end: customEnd,
+							channel: value.channel,
+						}));
 					}}
 				>
 					<label className="space-y-1 text-xs text-muted">
@@ -163,7 +168,12 @@ export default function AdminDashboard() {
 					</Button>
 				</div>
 			)}
-			<AdminStatsCards stats={stats} loading={loading} />
+			<AdminStatsCards
+				stats={stats}
+				loading={loading}
+				query={query}
+				onChannelChange={(channel) => setQuery((value) => ({ ...value, channel }))}
+			/>
 		</div>
 	);
 }

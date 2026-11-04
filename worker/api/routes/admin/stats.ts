@@ -1,5 +1,6 @@
 import { createRoute, z } from "@hono/zod-openapi";
 import type { AdminDashboardStats, AdminMetricStats, AdminStatsQuery } from "../../../../src/types";
+import { TOOL_CHANNELS, type ToolChannel } from "../../../shared/tool-channels.js";
 import { emptyOutcomes, TOOL_OUTCOMES } from "../../../shared/tool-outcomes.js";
 import { logger } from "../../utils/logger";
 import { createOpenAPIApp } from "../../utils/openapi";
@@ -89,6 +90,7 @@ const statsRoute = createRoute({
 			period: z.enum(["24h", "7d", "30d", "custom"]).optional().default("7d"),
 			start: z.iso.date().optional(),
 			end: z.iso.date().optional(),
+			channel: z.enum(TOOL_CHANNELS).optional(),
 		}),
 	},
 	responses: {
@@ -104,6 +106,7 @@ const statsRoute = createRoute({
 							timezone: z.string(),
 							bucket: z.enum(["hour", "day"]),
 							generated_at: z.string(),
+							channels: z.object({ mcp: metricSchema, cli: metricSchema, unknown: metricSchema }),
 							metrics: z.object({
 								users: metricSchema,
 								tokens: metricSchema,
@@ -140,9 +143,10 @@ const statsRoute = createRoute({
 app.openapi(statsRoute, async (c) => {
 	c.header("Cache-Control", "no-store");
 	const now = Date.now();
+	const query = c.req.valid("query");
 	let range: ReturnType<typeof getRange>;
 	try {
-		range = getRange(c.req.valid("query"), now);
+		range = getRange(query, now);
 	} catch (error) {
 		return c.json(
 			{
@@ -160,6 +164,7 @@ app.openapi(statsRoute, async (c) => {
 		const end = new Date(range.end).toISOString();
 		const format = range.bucket === "hour" ? "%Y-%m-%dT%H" : "%Y-%m-%d";
 		const statements = METRICS.map(({ key, table }) => {
+			const isRequest = key === "searches" || key === "fetches";
 			const statuses =
 				key === "searches" || key === "fetches"
 					? TOOL_OUTCOMES.map(
@@ -169,11 +174,11 @@ app.openapi(statsRoute, async (c) => {
 					: "";
 			// Date-prefix bounds retain index use; julianday handles both ISO and SQLite timestamps.
 			return c.env.DB.prepare(
-				`SELECT strftime('${format}', created_at, '+8 hours') AS bucket, COUNT(*) AS count ${statuses}
+				`SELECT strftime('${format}', created_at, '+8 hours') AS bucket, COUNT(*) AS count ${statuses}${isRequest ? ", channel" : ""}
 				 FROM ${table}
 				 WHERE created_at >= ? AND created_at < ?
 				   AND julianday(created_at) >= julianday(?) AND julianday(created_at) < julianday(?)
-				 GROUP BY bucket ORDER BY bucket`,
+				 GROUP BY bucket${isRequest ? ", channel" : ""} ORDER BY bucket`,
 			).bind(start.slice(0, 10), new Date(range.end + DAY).toISOString().slice(0, 10), start, end);
 		});
 		const newAnonymousQuery = c.env.DB.prepare(
@@ -255,13 +260,38 @@ app.openapi(statsRoute, async (c) => {
 		);
 		const results = await c.env.DB.batch<Record<string, unknown>>(statements);
 		const metrics = {} as AdminDashboardStats["metrics"];
+		const channels: AdminDashboardStats["channels"] = {
+			mcp: { total: 0, points: [] },
+			cli: { total: 0, points: [] },
+			unknown: { total: 0, points: [] },
+		};
+		const channelBuckets = new Map<string, Record<ToolChannel, number>>();
 		const lastBucket =
 			range.bucket === "day" && range.end === now
 				? Math.floor((now + OFFSET) / DAY) * DAY - OFFSET
 				: range.end - 1;
 		METRICS.forEach(({ key }, index) => {
 			const hasStatus = key === "searches" || key === "fetches";
-			const rows = new Map(results[index].results.map((row) => [String(row.bucket), row]));
+			const rows = new Map<string, Record<string, unknown>>();
+			for (const row of results[index].results) {
+				const bucket = String(row.bucket);
+				if (hasStatus) {
+					const channel = TOOL_CHANNELS.includes(row.channel as ToolChannel)
+						? (row.channel as ToolChannel)
+						: "unknown";
+					const count = Number(row.count) || 0;
+					const counts = channelBuckets.get(bucket) ?? { mcp: 0, cli: 0, unknown: 0 };
+					counts[channel] += count;
+					channelBuckets.set(bucket, counts);
+					channels[channel].total += count;
+					if (query.channel && channel !== query.channel) continue;
+				}
+				const totals = rows.get(bucket) ?? {};
+				for (const field of hasStatus ? ["count", ...TOOL_OUTCOMES] : ["count"]) {
+					totals[field] = Number(totals[field] ?? 0) + Number(row[field] ?? 0);
+				}
+				rows.set(bucket, totals);
+			}
 			const metric: AdminMetricStats = {
 				total: 0,
 				points: [],
@@ -289,6 +319,12 @@ app.openapi(statsRoute, async (c) => {
 		});
 		const pointBucket = (date: string) =>
 			new Date(Date.parse(date) + OFFSET).toISOString().slice(0, range.bucket === "hour" ? 13 : 10);
+		for (const channel of TOOL_CHANNELS) {
+			channels[channel].points = metrics.searches.points.map((point) => ({
+				date: point.date,
+				count: channelBuckets.get(pointBucket(point.date))?.[channel] ?? 0,
+			}));
+		}
 		const newAnonymousRows = new Map(
 			results[METRICS.length].results.map((row) => [String(row.bucket), row]),
 		);
@@ -372,6 +408,7 @@ app.openapi(statsRoute, async (c) => {
 			bucket: range.bucket,
 			generated_at: new Date(now).toISOString(),
 			metrics,
+			channels,
 			subscriptions,
 		};
 		return c.json({ success: true, data }, 200);

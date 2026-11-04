@@ -98,6 +98,49 @@ sql
 		"2026-11-03T02:15:00Z",
 		"SG",
 	);
+// Recent source-labelled activity for the dashboard and its log drill-downs.
+const fixtureNow = Date.now();
+for (const id of ["channel-reader", "channel-reader-two"]) {
+	sql
+		.prepare("INSERT INTO users(id,email,name,created_at,updated_at) VALUES(?,?,?,?,?)")
+		.run(
+			id,
+			`${id}@example.invalid`,
+			id,
+			new Date(fixtureNow - 5 * 86400000).toISOString(),
+			new Date(fixtureNow).toISOString(),
+		);
+}
+sql.exec(
+	"INSERT INTO user_subscriptions(user_id,plan_type,status) VALUES('channel-reader','pro','active')",
+);
+for (let day = 0; day < 7; day++) {
+	const created = new Date(fixtureNow - day * 86400000 - 60000).toISOString();
+	for (const channel of ["mcp", "cli"]) {
+		for (let call = 0; call < (7 - day) * (channel === "mcp" ? 3 : 1); call++) {
+			const kind = call % 2 ? "fetch" : "search";
+			const columns =
+				kind === "fetch" ? "requested_url,actual_url" : "requested_query,actual_query";
+			const value =
+				kind === "fetch"
+					? "https://developer.apple.com/documentation/swiftui"
+					: "SwiftUI navigation";
+			sql
+				.prepare(
+					`INSERT INTO ${kind}_logs(user_id,${columns},channel,outcome,response_time_ms,created_at) VALUES(?,?,?,?,?,?,?)`,
+				)
+				.run(
+					call % 3 ? "channel-reader" : "channel-reader-two",
+					value,
+					value,
+					channel,
+					call % 13 === 0 ? "limited" : "success",
+					120 + call,
+					created,
+				);
+		}
+	}
+}
 const DB = {
 	prepare(text) {
 		let values = [];
@@ -160,8 +203,9 @@ const server = createServer(async (req, res) => {
 		res.end("Fixture request failed");
 	}
 });
-server.listen(4399, "127.0.0.1", () =>
-	console.log("Admin fixture: http://127.0.0.1:4399/admin/fetch-logs; password: local-admin-test"),
+const port = Number(process.env.ADMIN_FIXTURE_PORT || 4399);
+server.listen(port, "127.0.0.1", () =>
+	console.log(`Admin fixture: http://127.0.0.1:${port}/admin; password: local-admin-test`),
 );
 for (const signal of ["SIGINT", "SIGTERM"])
 	process.on(signal, () =>

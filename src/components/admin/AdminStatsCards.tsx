@@ -14,7 +14,8 @@ import {
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/Card";
-import type { AdminDashboardStats, AdminMetricStats } from "@/types";
+import type { AdminDashboardStats, AdminMetricStats, AdminStatsQuery } from "@/types";
+import { TOOL_CHANNELS, type ToolChannel } from "../../../worker/shared/tool-channels";
 import { TOOL_OUTCOMES } from "../../../worker/shared/tool-outcomes";
 import { AdminTrendChart, OUTCOME_COLORS } from "./AdminTrendChart";
 
@@ -61,6 +62,98 @@ const CUMULATIVE_SIDES = [
 	{ key: "registered", label: "admin.stats_registered", color: "#7c3aed" },
 	{ key: "anonymous", label: "admin.stats_anonymous", color: "#f59e0b" },
 ] as const;
+
+const CHANNEL_COLORS = { mcp: "#3b82f6", cli: "#0d9488", unknown: "#94a3b8" };
+
+function ChannelUsageCard({
+	stats,
+	loading,
+	channel,
+	onChannelChange,
+}: {
+	stats: AdminDashboardStats | null;
+	loading: boolean;
+	channel?: ToolChannel;
+	onChannelChange: (channel?: ToolChannel) => void;
+}) {
+	const { t, i18n } = useTranslation();
+	const total = stats ? TOOL_CHANNELS.reduce((sum, key) => sum + stats.channels[key].total, 0) : 0;
+	const visible = TOOL_CHANNELS.filter(
+		(key) => key !== "unknown" || !!stats?.channels.unknown.total,
+	);
+	const format = (value: number) => value.toLocaleString(i18n.resolvedLanguage);
+	const percent = new Intl.NumberFormat(i18n.resolvedLanguage, {
+		style: "percent",
+		maximumFractionDigits: 1,
+	});
+	return (
+		<Card className="p-4 md:col-span-2 xl:col-span-4">
+			<div className="flex flex-wrap items-center justify-between gap-3">
+				<h3 className="flex items-center gap-2 text-sm font-medium text-light">
+					<IconActivity className="h-4 w-4 text-brand" />
+					{t("admin.stats_channels")}
+					<span className="ml-1 text-xl font-semibold tabular-nums">
+						{stats ? format(total) : "--"}
+					</span>
+				</h3>
+				<label className="flex items-center gap-2 text-xs text-muted">
+					{t("admin.col_channel")}
+					<select
+						value={channel ?? ""}
+						onChange={(event) =>
+							onChannelChange((event.target.value || undefined) as ToolChannel | undefined)
+						}
+						className="h-9 rounded-md border border-default bg-card px-3 text-sm text-light focus-visible:outline-2 focus-visible:outline-brand"
+					>
+						<option value="">{t("admin.all")}</option>
+						{TOOL_CHANNELS.map((key) => (
+							<option key={key} value={key}>
+								{t(`admin.channel_${key}`)}
+							</option>
+						))}
+					</select>
+				</label>
+			</div>
+			<p className="mt-2 text-xs leading-5 text-muted">{t("admin.stats_channels_note")}</p>
+			{stats ? (
+				<AdminTrendChart
+					metric={{ total, points: [] }}
+					bucket={stats.bucket}
+					color={CHANNEL_COLORS.mcp}
+					height={220}
+					comparison={visible.map((key) => ({
+						name: t(`admin.channel_${key}`),
+						color: CHANNEL_COLORS[key],
+						metric: stats.channels[key],
+					}))}
+				/>
+			) : (
+				<div className="flex h-55 items-center justify-center text-xs text-muted">
+					{t(loading ? "admin.stats_loading" : "admin.stats_unavailable")}
+				</div>
+			)}
+			<dl className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3">
+				{visible.map((key) => (
+					<div key={key} className="min-w-0">
+						<dt className="flex items-center gap-1.5 text-xs text-muted">
+							<span
+								className="size-2 rounded-full"
+								style={{ backgroundColor: CHANNEL_COLORS[key] }}
+							/>
+							{t(`admin.channel_${key}`)}
+						</dt>
+						<dd className="mt-1 text-lg font-semibold tabular-nums text-light">
+							{stats ? format(stats.channels[key].total) : "--"}
+							<span className="ml-2 text-xs font-normal text-muted">
+								{stats ? percent.format(total ? stats.channels[key].total / total : 0) : "--"}
+							</span>
+						</dd>
+					</div>
+				))}
+			</dl>
+		</Card>
+	);
+}
 
 function cumulativeSeries(
 	metric: AdminMetricStats,
@@ -226,11 +319,19 @@ function AudienceCard({
 export function AdminStatsCards({
 	stats,
 	loading,
+	query,
+	onChannelChange,
 }: {
 	stats: AdminDashboardStats | null;
 	loading: boolean;
+	query: AdminStatsQuery;
+	onChannelChange: (channel?: ToolChannel) => void;
 }) {
 	const { t, i18n } = useTranslation();
+	const detailQuery = new URLSearchParams({
+		...(stats ? { from: stats.start, to: stats.end } : {}),
+		...(query.channel ? { channel: query.channel } : {}),
+	}).toString();
 	return (
 		<div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4" aria-busy={loading}>
 			<CumulativeUsersCard
@@ -249,6 +350,12 @@ export function AdminStatsCards({
 				metric={stats?.metrics.active_users}
 				bucket={stats?.bucket ?? "day"}
 				loading={loading}
+			/>
+			<ChannelUsageCard
+				stats={stats}
+				loading={loading}
+				channel={query.channel}
+				onChannelChange={onChannelChange}
 			/>
 			{METRICS.map((section) => {
 				const metric = stats?.metrics[section.key];
@@ -272,7 +379,7 @@ export function AdminStatsCards({
 								{metric ? metric.total.toLocaleString(i18n.resolvedLanguage) : "--"}
 							</span>
 							<Link
-								to={section.href}
+								to={isRequest && detailQuery ? `${section.href}?${detailQuery}` : section.href}
 								title={t("admin.stats_view_details")}
 								aria-label={`${t(section.title)}: ${t("admin.stats_view_details")}`}
 								className="shrink-0 rounded p-1 text-muted hover:text-light focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"

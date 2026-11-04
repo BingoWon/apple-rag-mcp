@@ -177,3 +177,36 @@ test("both log views filter verified channel and expose references without raw c
 		assert.equal((await request(kind, "channel=spoof")).status, 400);
 	}
 });
+
+test("dashboard drill-down preserves exact half-open time windows and source", async (t) => {
+	const { sql, request } = setup();
+	t.after(() => sql.close());
+	for (const kind of ["search", "fetch"]) {
+		const columns = kind === "search" ? "requested_query,actual_query" : "requested_url,actual_url";
+		const insert = sql.prepare(
+			`INSERT INTO ${kind}_logs(user_id,${columns},channel,created_at) VALUES ('reader','test','test',?,?)`,
+		);
+		for (const [channel, date] of [
+			["cli", "2026-11-02T04:14:59Z"],
+			["cli", "2026-11-02T04:15:00Z"],
+			["mcp", "2026-11-02 05:00:00"],
+			["cli", "2026-11-03T04:15:00Z"],
+		])
+			insert.run(channel, date);
+		const range = new URLSearchParams({
+			from: "2026-11-02T04:15:00.000Z",
+			to: "2026-11-03T04:15:00.000Z",
+			channel: "cli",
+		});
+		const { data } = await (await request(kind, range.toString())).json();
+		assert.equal(data.total, 1);
+		assert.equal(data.logs[0].created_at, "2026-11-02T04:15:00Z");
+		assert.equal(data.logs[0].channel, "cli");
+		assert.equal((await request(kind, `${range}&start=2026-11-02`)).status, 400);
+		assert.equal(
+			(await request(kind, "from=2026-11-03T00:00:00Z&to=2026-11-02T00:00:00Z")).status,
+			400,
+		);
+		assert.equal((await request(kind, "from=bad")).status, 400);
+	}
+});

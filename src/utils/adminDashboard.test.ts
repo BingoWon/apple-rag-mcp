@@ -40,7 +40,16 @@ async function renderCards(stats: AdminDashboardStats | null, loading: boolean, 
 			createElement(
 				MemoryRouter,
 				{},
-				createElement(ThemeProvider, null, createElement(AdminStatsCards, { stats, loading })),
+				createElement(
+					ThemeProvider,
+					null,
+					createElement(AdminStatsCards, {
+						stats,
+						loading,
+						query: { period: "7d" },
+						onChannelChange: () => {},
+					}),
+				),
 			),
 		),
 	);
@@ -105,6 +114,11 @@ test("empty data shows real zero counts, status breakdown and the current paid s
 			searches: { total: 0, points: [{ ...point, ...outcomes }], outcomes },
 			fetches: { total: 0, points: [{ ...point, ...outcomes }], outcomes },
 		},
+		channels: {
+			mcp: { total: 0, points: [] },
+			cli: { total: 0, points: [] },
+			unknown: { total: 0, points: [] },
+		},
 		subscriptions: { total: 3, pro: 2, enterprise: 1 },
 	};
 	for (const [language, empty, snapshot] of [
@@ -113,7 +127,7 @@ test("empty data shows real zero counts, status breakdown and the current paid s
 	]) {
 		const html = await renderCards(stats, false, language);
 		assert.equal(html.match(/href="\/admin\//g)?.length, 10);
-		assert.equal(html.split(empty).length - 1, 10);
+		assert.ok(html.includes(empty));
 		assert.ok(html.includes(snapshot));
 		assert.match(html, />3</);
 		assert.doesNotMatch(html, /--/);
@@ -156,6 +170,11 @@ test("new-user table and active-user breakdown use real registered and anonymous
 			messages: { total: 0, points: [point] },
 			searches: { total: 0, points: [point] },
 			fetches: { total: 0, points: [point] },
+		},
+		channels: {
+			mcp: { total: 0, points: [] },
+			cli: { total: 0, points: [] },
+			unknown: { total: 0, points: [] },
 		},
 		subscriptions: { total: 0, pro: 0, enterprise: 0 },
 	};

@@ -27,6 +27,8 @@ export interface AdminLog {
 	created_at: string;
 }
 export interface AdminLogFilters {
+	from?: string;
+	to?: string;
 	channel?: string;
 	q?: string;
 	outcome?: string;

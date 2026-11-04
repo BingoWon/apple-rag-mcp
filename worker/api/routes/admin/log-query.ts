@@ -1,4 +1,5 @@
 import { z } from "@hono/zod-openapi";
+import { TOOL_CHANNELS } from "../../../shared/tool-channels.js";
 import { TOOL_OUTCOMES } from "../../../shared/tool-outcomes.js";
 
 export const logQuerySchema = z
@@ -6,7 +7,7 @@ export const logQuerySchema = z
 		limit: z.coerce.number().int().min(1).max(100).default(50),
 		offset: z.coerce.number().int().min(0).default(0),
 		q: z.string().max(2048).optional(),
-		channel: z.enum(["mcp", "cli", "unknown"]).optional(),
+		channel: z.enum(TOOL_CHANNELS).optional(),
 		outcome: z.enum(TOOL_OUTCOMES).optional(),
 		reason: z.string().max(100).optional(),
 		source: z.enum(["apple", "third_party"]).optional(),
@@ -14,10 +15,20 @@ export const logQuerySchema = z
 		cache: z.enum(["hit", "miss"]).optional(),
 		start: z.iso.date().optional(),
 		end: z.iso.date().optional(),
+		from: z.iso.datetime({ offset: true }).optional(),
+		to: z.iso.datetime({ offset: true }).optional(),
 	})
 	.refine((q) => !q.start || !q.end || q.start <= q.end, {
 		message: "Start date must not be after end date",
 		path: ["end"],
+	})
+	.refine((q) => !q.from || !q.to || Date.parse(q.from) < Date.parse(q.to), {
+		message: "From must be before to",
+		path: ["to"],
+	})
+	.refine((q) => !(q.from || q.to) || !(q.start || q.end), {
+		message: "Use either exact timestamps or calendar dates",
+		path: ["from"],
 	});
 
 export function logConditions(query: z.output<typeof logQuerySchema>, kind: "search" | "fetch") {
@@ -32,6 +43,14 @@ export function logConditions(query: z.output<typeof logQuerySchema>, kind: "sea
 	equal("channel", query.channel);
 	equal("outcome", query.outcome);
 	equal("error_code", query.reason);
+	if (query.from) {
+		clauses.push("julianday(created_at) >= julianday(?)");
+		values.push(query.from);
+	}
+	if (query.to) {
+		clauses.push("julianday(created_at) < julianday(?)");
+		values.push(query.to);
+	}
 	if (kind === "fetch") {
 		equal("content_source", query.source);
 		equal("provider", query.provider);

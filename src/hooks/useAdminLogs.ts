@@ -1,12 +1,34 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { api } from "@/lib/api";
 import type { AdminLogFilters, AdminLogKind, AdminLogsResponse } from "@/types/admin-logs";
 
 export function useAdminLogs(kind: AdminLogKind) {
+	const [searchParams, setSearchParams] = useSearchParams();
+	const filters = useMemo<AdminLogFilters>(
+		() =>
+			Object.fromEntries(
+				[...searchParams].filter(([key]) =>
+					[
+						"channel",
+						"q",
+						"outcome",
+						"reason",
+						"source",
+						"provider",
+						"cache",
+						"start",
+						"end",
+						"from",
+						"to",
+					].includes(key),
+				),
+			),
+		[searchParams],
+	);
 	const [query, setQuery] = useState({
 		page: 1,
 		limit: 50,
-		filters: {} as AdminLogFilters,
 		revision: 0,
 	});
 	const [data, setData] = useState<AdminLogsResponse | null>(null);
@@ -17,7 +39,7 @@ export function useAdminLogs(kind: AdminLogKind) {
 		setLoading(true);
 		setError(false);
 		api
-			.getAdminLogs(kind, query.page, query.limit, query.filters, controller.signal)
+			.getAdminLogs(kind, query.page, query.limit, filters, controller.signal)
 			.then((response) => {
 				if (!response.success || !response.data) throw Error("Logs unavailable");
 				if (!controller.signal.aborted) {
@@ -36,13 +58,18 @@ export function useAdminLogs(kind: AdminLogKind) {
 				if (!controller.signal.aborted) setLoading(false);
 			});
 		return () => controller.abort();
-	}, [kind, query]);
+	}, [kind, query, filters]);
 	return {
 		data,
 		loading,
 		error,
-		query,
-		apply: (filters: AdminLogFilters) => setQuery((q) => ({ ...q, filters, page: 1 })),
+		query: { ...query, filters },
+		apply: (values: AdminLogFilters) => {
+			const params = new URLSearchParams();
+			for (const [key, value] of Object.entries(values)) if (value) params.set(key, value);
+			setQuery((q) => ({ ...q, page: 1 }));
+			setSearchParams(params);
+		},
 		goToPage: (page: number) => setQuery((q) => ({ ...q, page })),
 		changeLimit: (limit: number) => setQuery((q) => ({ ...q, limit, page: 1 })),
 		refresh: () => setQuery((q) => ({ ...q, revision: q.revision + 1 })),

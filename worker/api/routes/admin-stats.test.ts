@@ -58,12 +58,13 @@ function insertLog(
 	createdAt: string,
 	status: number | null,
 	userId = "anon_203.0.113.10",
+	channel = "unknown",
 ) {
 	const columns =
 		table === "search_logs" ? "requested_query, actual_query" : "requested_url, actual_url";
 	sqlite
 		.prepare(
-			`INSERT INTO ${table} (user_id, ${columns}, status_code, outcome, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
+			`INSERT INTO ${table} (user_id, ${columns}, status_code, outcome, created_at, channel) VALUES (?, ?, ?, ?, ?, ?, ?)`,
 		)
 		.run(
 			userId,
@@ -80,6 +81,7 @@ function insertLog(
 							? "unknown"
 							: "failed",
 			createdAt,
+			channel,
 		);
 }
 
@@ -298,6 +300,7 @@ test("invalid, reversed, future and oversized ranges are rejected before queryin
 		"period=custom&start=2026-01-01&end=2026-10-08",
 		"period=custom&start=2026-02-30&end=2026-03-01",
 		"period=custom&start=malformed&end=2026-10-09",
+		"period=7d&channel=spoof",
 	]) {
 		const response = await request(query);
 		assert.equal(response.status, 400, query);
@@ -384,4 +387,70 @@ test("cancelled calls appear in their own admin outcome and bucket", async (t) =
 		data.metrics.fetches.points.reduce((n, p) => n + (p.cancelled || 0), 0),
 		1,
 	);
+});
+
+test("channel comparison retains all sources while request filters preserve shared account totals", async (t) => {
+	t.mock.method(Date, "now", () => NOW);
+	const { sqlite, request } = createDatabase();
+	t.after(() => sqlite.close());
+	insertUser(sqlite, "reader", "2026-10-08T05:00:00Z");
+	sqlite.exec(
+		"INSERT INTO user_subscriptions(user_id,plan_type,status) VALUES('reader','pro','active')",
+	);
+	for (const [table, date, status, channel] of [
+		["search_logs", "2026-10-08T04:15:00Z", 200, "mcp"],
+		["fetch_logs", "2026-10-09T03:30:00Z", 500, "mcp"],
+		["search_logs", "2026-10-08 17:00:00", 429, "cli"],
+		["fetch_logs", "2026-10-09T01:30:00Z", 404, "cli"],
+		["search_logs", "2026-10-09T01:00:00Z", 200, "unknown"],
+		["search_logs", "2026-10-08T04:14:59.999Z", 200, "mcp"],
+		["search_logs", "2026-10-09T04:15:00Z", 200, "cli"],
+	] as const)
+		insertLog(sqlite, table, date, status, "reader", channel);
+	const { data: all } = (await (await request("period=24h")).json()) as {
+		data: AdminDashboardStats;
+	};
+	assert.deepEqual(
+		Object.fromEntries(Object.entries(all.channels).map(([key, metric]) => [key, metric.total])),
+		{ mcp: 2, cli: 2, unknown: 1 },
+	);
+	assert.equal(all.metrics.searches.total + all.metrics.fetches.total, 5);
+	assert.equal(all.metrics.active_users.total, 1);
+	for (const [channel, searches, fetches] of [
+		["mcp", 1, 1],
+		["cli", 1, 1],
+		["unknown", 1, 0],
+	] as const) {
+		const { data } = (await (await request(`period=24h&channel=${channel}`)).json()) as {
+			data: AdminDashboardStats;
+		};
+		assert.equal(data.metrics.searches.total, searches);
+		assert.equal(data.metrics.fetches.total, fetches);
+		assert.deepEqual(data.channels, all.channels);
+		for (const metric of ["users", "active_users", "new_users", "cumulative_users"] as const)
+			assert.deepEqual(data.metrics[metric], all.metrics[metric]);
+		assert.deepEqual(data.subscriptions, all.subscriptions);
+		for (const metric of Object.values(data.channels)) {
+			assert.equal(
+				metric.points.reduce((sum, point) => sum + point.count, 0),
+				metric.total,
+			);
+			assert.deepEqual(
+				metric.points.map((point) => point.date),
+				data.metrics.searches.points.map((point) => point.date),
+			);
+		}
+		if (channel === "cli") {
+			assert.equal(data.metrics.searches.outcomes?.limited, 1);
+			assert.equal(data.metrics.fetches.outcomes?.no_content, 1);
+			assert.equal(data.metrics.fetches.outcomes?.failed, 0);
+		}
+	}
+	const { data: custom } = (await (
+		await request("period=custom&start=2026-10-09&end=2026-10-09&channel=mcp")
+	).json()) as { data: AdminDashboardStats };
+	assert.equal(custom.metrics.searches.total, 0);
+	assert.equal(custom.metrics.fetches.total, 1);
+	assert.equal(custom.channels.mcp.total, 1);
+	assert.equal(custom.channels.cli.total, 2);
 });
