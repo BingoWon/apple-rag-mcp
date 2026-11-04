@@ -183,3 +183,13 @@ with lint, type checking and the production build. The client-strip subtree
 matches its pre-5.6.7 source exactly; no new dependencies were added.
 The full verification also passes: 229 application tests and 16 CLI tests. The
 existing dashboard copy-button assertion now uses the updated English label.
+
+## Hero theme contrast — 5.6.9
+
+The rainbow setup button retained a dark background when the OS preferred dark
+mode but the user selected the site's light theme. Semantic text colors followed
+the root class, while Tailwind's default `dark:` variant followed the OS media
+query. Bind that variant to the existing `.dark` class so both use the theme
+resolved by ThemeProvider. Preserve the original button design and content.
+Verified the reproduced mismatch and both selected themes in the actual browser;
+build and lint pass. No permanent presentation assertions were added.
