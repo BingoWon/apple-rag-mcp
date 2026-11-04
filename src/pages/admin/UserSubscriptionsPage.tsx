@@ -5,12 +5,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AdminTable } from "@/components/admin/AdminTable";
+import { adminUserName } from "@/lib/admin-user";
 import { api } from "@/lib/api";
+import type { AdminUserIdentity } from "../../../worker/shared/admin-user";
 
 interface AdminUserSubscription {
-	user_id: string;
-	stripe_customer_id: string | null;
-	stripe_subscription_id: string | null;
+	user: AdminUserIdentity;
 	plan_type: string;
 	status: string;
 	current_period_start: string | null;
@@ -18,11 +18,7 @@ interface AdminUserSubscription {
 	cancel_at_period_end: boolean;
 	price: number;
 	billing_interval: string;
-	stripe_price_id: string | null;
 	updated_at: string;
-	// Joined user data for display
-	user_email?: string;
-	user_name?: string;
 }
 
 export default function AdminUserSubscriptionsPage() {
@@ -30,20 +26,16 @@ export default function AdminUserSubscriptionsPage() {
 
 	const columns = useMemo(
 		() => [
-			{ key: "user_id", label: t("admin.col_user_id"), width: 64 },
-			{ key: "user_email", label: t("admin.col_email"), width: 192 },
-			{ key: "user_name", label: t("admin.col_name"), width: 160 },
+			{
+				key: "user",
+				label: t("admin.col_user_name"),
+				width: 224,
+				render: (_value: unknown, row: AdminUserSubscription) => adminUserName(row.user, t),
+			},
 			{ key: "plan_type", label: t("admin.col_plan"), width: 96 },
 			{ key: "status", label: t("admin.col_status"), width: 112 },
 			{ key: "price", label: t("admin.col_price"), width: 96 },
 			{ key: "billing_interval", label: t("admin.col_billing"), width: 96 },
-			{ key: "stripe_customer_id", label: t("admin.col_stripe_customer"), width: 112 },
-			{
-				key: "stripe_subscription_id",
-				label: t("admin.col_stripe_subscription"),
-				width: 112,
-			},
-			{ key: "stripe_price_id", label: t("admin.col_stripe_price_id"), width: 112 },
 			{ key: "current_period_start", label: t("admin.col_period_start"), width: 144 },
 			{ key: "current_period_end", label: t("admin.col_period_end"), width: 144 },
 			{ key: "cancel_at_period_end", label: t("admin.col_cancel_at_end"), width: 128 },

@@ -1,3 +1,4 @@
+import { withAdminUsers } from "./user-identity";
 /**
  * Admin Contact Messages Routes
  * Admin endpoints for managing contact messages with reply functionality
@@ -63,7 +64,13 @@ app.get("/", async (c) => {
 		return c.json({
 			success: true,
 			data: {
-				messages: messages.results || [],
+				messages: await withAdminUsers(
+					c.env.DB,
+					(messages.results || []).map((row) => {
+						const { email, ...rest } = row;
+						return { ...rest, can_reply: !!row.user_id, has_email: !!email };
+					}),
+				),
 				total,
 				stats,
 				limit,

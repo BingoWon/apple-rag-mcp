@@ -7,20 +7,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { MessageReplyDialog } from "@/components/admin/MessageReplyDialog";
 import { Button } from "@/components/ui/Button";
+import { adminUserName } from "@/lib/admin-user";
 import { api } from "@/lib/api";
 import { formatDateCompact } from "@/lib/datetime";
-
-interface AdminContactMessage {
-	id: string;
-	user_id: string | null;
-	email: string | null;
-	message: string;
-	ip_address: string | null;
-	admin_reply: string | null;
-	replied_at: string | null;
-	user_read_at: string | null;
-	created_at: string;
-}
+import type { AdminContactMessage } from "@/types/admin-contact";
 
 interface MessageStats {
 	pending: number;
@@ -103,7 +93,7 @@ export default function AdminContactMessagesPage() {
 	// Pure button design - button as status
 	const getActionButton = (message: AdminContactMessage) => {
 		// Anonymous message
-		if (!message.user_id) {
+		if (!message.can_reply) {
 			return (
 				<Button
 					disabled
@@ -237,7 +227,7 @@ export default function AdminContactMessagesPage() {
 						<thead className="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
 							<tr>
 								<th className="w-1/5 px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-									{t("admin.col_email")}
+									{t("admin.col_user_name")}
 								</th>
 								<th className="w-2/5 px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
 									{t("admin.col_message")}
@@ -276,25 +266,14 @@ export default function AdminContactMessagesPage() {
 									>
 										<td className="px-6 py-4">
 											<div className="text-sm">
-												{message.user_id ? (
-													<>
-														<p className="font-medium text-gray-900 dark:text-white break-words">
-															{message.email || t("admin.no_email")}
-														</p>
-														<p className="text-blue-600 dark:text-blue-400 text-xs whitespace-nowrap">
-															{t("admin.logged_in_user")}
-														</p>
-													</>
-												) : (
-													<>
-														<p className="font-medium text-gray-500 dark:text-gray-400 break-words">
-															{message.email || t("admin.anonymous")}
-														</p>
-														<p className="text-amber-600 dark:text-amber-400 text-xs whitespace-nowrap">
-															{t("admin.anonymous_feedback")}
-														</p>
-													</>
-												)}
+												<p className="font-medium text-gray-900 dark:text-white break-words">
+													{adminUserName(message.user, t)}
+												</p>
+												<p className="text-xs text-muted">
+													{t(
+														message.can_reply ? "admin.logged_in_user" : "admin.anonymous_feedback",
+													)}
+												</p>
 											</div>
 										</td>
 										<td className="px-6 py-4 max-w-md">

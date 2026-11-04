@@ -1,3 +1,4 @@
+import { withAdminUsers } from "./user-identity";
 /**
  * Admin Authorized IPs Routes
  * Admin endpoints for managing authorized IP addresses across all users
@@ -34,11 +35,8 @@ app.get("/", async (c) => {
         ai.ip_address,
         ai.created_at,
         ai.updated_at,
-        ai.last_used_at as last_used,
-        u.email as user_email,
-        u.name as user_name
+        ai.last_used_at as last_used
       FROM user_authorized_ips ai
-      LEFT JOIN users u ON ai.user_id = u.id
       ORDER BY ai.created_at DESC
       LIMIT ? OFFSET ?
     `;
@@ -48,7 +46,7 @@ app.get("/", async (c) => {
 		return c.json({
 			success: true,
 			data: {
-				ips: result.results || [],
+				ips: await withAdminUsers(c.env.DB, result.results || []),
 				total,
 				limit,
 				offset,

@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/Card";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import { PaginationControls } from "@/components/ui/PaginationControls";
 import { useAdminLogs } from "@/hooks/useAdminLogs";
+import { adminUserName } from "@/lib/admin-user";
 import { formatAdminDateTime, formatAdminResponseTime } from "@/lib/admin-utils";
 import type { AdminLog, AdminLogFilters, AdminLogKind } from "@/types/admin-logs";
 import { TOOL_OUTCOMES } from "../../../worker/shared/tool-outcomes";
@@ -48,7 +49,9 @@ export function AdminLogs({ kind }: { kind: AdminLogKind }) {
 						aria-label={t("admin.open_log", { value: String(value || "—").slice(0, 120) })}
 					>
 						<span className="block truncate">{String(value || "—")}</span>
-						<span className="mt-1 block truncate text-xs text-muted-foreground">{row.user_id}</span>
+						<span className="mt-1 block truncate text-xs text-muted-foreground">
+							{adminUserName(row.user, t)}
+						</span>
 					</button>
 				),
 			},

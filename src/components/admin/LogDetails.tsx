@@ -10,6 +10,7 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/Dialog";
+import { adminUserName } from "@/lib/admin-user";
 import { formatAdminDateTime, formatAdminResponseTime, getCountryFlag } from "@/lib/admin-utils";
 import type { AdminLog, AdminLogKind } from "@/types/admin-logs";
 import { copyText } from "@/utils/clipboard";
@@ -55,7 +56,7 @@ export function LogDetails({
 					kind === "fetch" ? t(log.cache_hit ? "admin.cache_hit" : "admin.cache_miss") : null,
 				],
 				["admin.col_results", log.result_count],
-				["admin.col_user_id", log.user_id],
+				["admin.col_user_name", adminUserName(log.user, t)],
 				["admin.col_channel", t(`admin.channel_${log.channel}`)],
 				["admin.col_credential", log.credential_id],
 				["admin.col_session", log.session_id],

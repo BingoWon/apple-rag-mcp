@@ -6,14 +6,14 @@ import { createRoute, z } from "@hono/zod-openapi";
 import { TOOL_OUTCOMES, type ToolOutcome } from "../../../shared/tool-outcomes.js";
 import { logger } from "../../utils/logger";
 import { createOpenAPIApp } from "../../utils/openapi";
-
 import { logConditions, logQuerySchema } from "./log-query.js";
+import { adminUserSchema, withAdminUsers } from "./user-identity";
 
 const app = createOpenAPIApp();
 
 const AdminFetchLogSchema = z.object({
 	id: z.string(),
-	user_id: z.string(),
+	user: adminUserSchema,
 	channel: z.enum(["unknown", "mcp", "cli"]),
 	credential_id: z.string().nullable(),
 	session_id: z.string().nullable(),
@@ -134,7 +134,7 @@ app.openapi(getFetchLogsRoute, async (c) => {
 			{
 				success: true,
 				data: {
-					logs,
+					logs: await withAdminUsers(c.env.DB, logs),
 					total,
 					limit,
 					offset,

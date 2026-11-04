@@ -106,7 +106,7 @@ for (const id of ["channel-reader", "channel-reader-two"]) {
 		.run(
 			id,
 			`${id}@example.invalid`,
-			id,
+			id === "channel-reader" ? "林舟" : "Maya Chen",
 			new Date(fixtureNow - 5 * 86400000).toISOString(),
 			new Date(fixtureNow).toISOString(),
 		);
@@ -155,6 +155,14 @@ for (let day = 0; day < 7; day++) {
 				new Date(fixtureNow - day * 86400000 - 60000).toISOString(),
 			);
 }
+sql
+	.prepare("INSERT INTO fetch_logs(user_id,requested_url,actual_url,outcome) VALUES(?,?,?,?)")
+	.run(
+		"anon_203.0.113.17",
+		"https://developer.apple.com/documentation/swiftui",
+		"https://developer.apple.com/documentation/swiftui",
+		"success",
+	);
 const DB = {
 	prepare(text) {
 		let values = [];

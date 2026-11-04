@@ -5,12 +5,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AdminTable } from "@/components/admin/AdminTable";
+import { adminUserName } from "@/lib/admin-user";
 import { api } from "@/lib/api";
+import type { AdminUserIdentity } from "../../../worker/shared/admin-user";
 
 interface AdminAuthorizedIP {
-	user_id: string;
-	user_email: string;
-	user_name: string;
+	user: AdminUserIdentity;
 	name: string;
 	ip_address: string;
 	created_at: string;
@@ -23,8 +23,12 @@ export default function AdminAuthorizedIPsPage() {
 
 	const columns = useMemo(
 		() => [
-			{ key: "user_email", label: t("admin.col_user_email"), width: 256 },
-			{ key: "user_name", label: t("admin.col_user_name"), width: 192 },
+			{
+				key: "user",
+				label: t("admin.col_user_name"),
+				width: 224,
+				render: (_value: unknown, row: AdminAuthorizedIP) => adminUserName(row.user, t),
+			},
 			{ key: "name", label: t("admin.col_ip_name"), width: 192 },
 			{ key: "ip_address", label: t("admin.col_ip_address"), width: 160 },
 			{ key: "last_used", label: t("admin.col_last_used"), width: 160 },

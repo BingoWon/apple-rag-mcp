@@ -4,24 +4,14 @@ import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/Button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/Dialog";
+import { adminUserName } from "@/lib/admin-user";
 import { api } from "@/lib/api";
 import { formatDateCompact } from "@/lib/datetime";
+import type { AdminContactMessage } from "@/types/admin-contact";
 import { copyText } from "@/utils/clipboard";
 
-interface ContactMessage {
-	id: string;
-	user_id: string | null;
-	email: string | null;
-	message: string;
-	ip_address: string | null;
-	admin_reply: string | null;
-	replied_at: string | null;
-	user_read_at: string | null;
-	created_at: string;
-}
-
 interface MessageReplyDialogProps {
-	message: ContactMessage;
+	message: AdminContactMessage;
 	onClose: () => void;
 	onReturnFocus: () => void;
 	onSuccess: () => void;
@@ -35,7 +25,7 @@ export function MessageReplyDialog({
 }: MessageReplyDialogProps) {
 	const { t } = useTranslation();
 	const [reply, setReply] = useState(message.admin_reply || "");
-	const [sendEmail, setSendEmail] = useState(!!message.email); // Default to true if email available
+	const [sendEmail, setSendEmail] = useState(message.has_email); // Default to true if email available
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	// Check if message has already been replied to
@@ -58,7 +48,7 @@ export function MessageReplyDialog({
 			return;
 		}
 
-		if (sendEmail && !message.email) {
+		if (sendEmail && !message.has_email) {
 			toast.error(t("admin.reply_no_email"));
 			return;
 		}
@@ -121,7 +111,7 @@ export function MessageReplyDialog({
 						<div className="flex items-center justify-between">
 							<div>
 								<p className="text-sm text-muted">{t("admin.from")}</p>
-								<p className="font-medium text-light">{message.email || t("admin.anonymous")}</p>
+								<p className="font-medium text-light">{adminUserName(message.user, t)}</p>
 							</div>
 							<div className="text-right">
 								<p className="text-sm text-muted">{t("admin.date")}</p>
@@ -132,12 +122,6 @@ export function MessageReplyDialog({
 							<div>
 								<p className="text-sm text-muted">{t("admin.ip_address")}</p>
 								<p className="font-mono text-sm text-light">{message.ip_address}</p>
-							</div>
-						)}
-						{message.user_id && (
-							<div>
-								<p className="text-sm text-muted">{t("admin.user_id")}</p>
-								<p className="font-mono text-sm text-light">{message.user_id}</p>
 							</div>
 						)}
 					</div>
@@ -192,7 +176,7 @@ export function MessageReplyDialog({
 							</div>
 
 							{/* Email Notification Toggle */}
-							{message.email ? (
+							{message.has_email ? (
 								<div className="flex items-center justify-between p-4 bg-brand/10 rounded-lg border border-brand/30">
 									<div className="flex items-center gap-3">
 										{sendEmail ? (
@@ -205,7 +189,7 @@ export function MessageReplyDialog({
 												{sendEmail ? t("admin.email_sent") : t("admin.in_app_only")}
 											</p>
 											<p className="text-xs text-muted">
-												{sendEmail ? <>To: {message.email}</> : t("admin.in_app_desc")}
+												{sendEmail ? adminUserName(message.user, t) : t("admin.in_app_desc")}
 											</p>
 										</div>
 									</div>

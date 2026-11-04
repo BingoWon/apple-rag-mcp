@@ -5,13 +5,14 @@
 import { createRoute, z } from "@hono/zod-openapi";
 import { logger } from "../../utils/logger";
 import { createOpenAPIApp } from "../../utils/openapi";
+import { adminUserSchema, withAdminUsers } from "./user-identity";
 
 const app = createOpenAPIApp();
 
 // MCP token schema for admin view (with sensitive data masked)
 const AdminMCPTokenSchema = z.object({
 	id: z.string(),
-	user_id: z.string(),
+	user: adminUserSchema,
 	name: z.string(),
 	mcp_token: z.string(), // Masked for security
 	last_used_at: z.string().nullable(),
@@ -108,7 +109,7 @@ app.openapi(getMCPTokensRoute, async (c) => {
 			{
 				success: true,
 				data: {
-					tokens,
+					tokens: await withAdminUsers(c.env.DB, tokens),
 					total,
 					limit,
 					offset,

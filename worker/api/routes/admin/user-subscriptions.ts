@@ -5,14 +5,13 @@
 import { createRoute, z } from "@hono/zod-openapi";
 import { logger } from "../../utils/logger";
 import { createOpenAPIApp } from "../../utils/openapi";
+import { adminUserSchema, withAdminUsers } from "./user-identity";
 
 const app = createOpenAPIApp();
 
 // User subscription schema for admin view
 const AdminUserSubscriptionSchema = z.object({
-	user_id: z.string(),
-	stripe_customer_id: z.string().nullable(),
-	stripe_subscription_id: z.string().nullable(),
+	user: adminUserSchema,
 	plan_type: z.string(),
 	status: z.string(),
 	current_period_start: z.string().nullable(),
@@ -20,12 +19,8 @@ const AdminUserSubscriptionSchema = z.object({
 	cancel_at_period_end: z.boolean(),
 	price: z.number(),
 	billing_interval: z.string(),
-	stripe_price_id: z.string().nullable(),
 	payment_type: z.string(),
 	updated_at: z.string(),
-	// Joined user data for display
-	user_email: z.string().optional(),
-	user_name: z.string().optional(),
 });
 
 const getUserSubscriptionsRoute = createRoute({
@@ -92,8 +87,6 @@ app.openapi(getUserSubscriptionsRoute, async (c) => {
 		const subscriptionsResult = await c.env.DB.prepare(`
       SELECT
         us.user_id,
-        us.stripe_customer_id,
-        us.stripe_subscription_id,
         us.plan_type,
         us.status,
         us.current_period_start,
@@ -101,13 +94,9 @@ app.openapi(getUserSubscriptionsRoute, async (c) => {
         us.cancel_at_period_end,
         us.price,
         us.billing_interval,
-        us.stripe_price_id,
         us.payment_type,
-        us.updated_at,
-        u.email as user_email,
-        u.name as user_name
+        us.updated_at
       FROM user_subscriptions us
-      LEFT JOIN users u ON us.user_id = u.id
       ORDER BY us.updated_at DESC
       LIMIT ? OFFSET ?
     `)
@@ -117,10 +106,6 @@ app.openapi(getUserSubscriptionsRoute, async (c) => {
 		const subscriptions = (subscriptionsResult.results || []).map(
 			(row: Record<string, unknown>) => ({
 				user_id: String(row.user_id),
-				stripe_customer_id: row.stripe_customer_id ? String(row.stripe_customer_id) : null,
-				stripe_subscription_id: row.stripe_subscription_id
-					? String(row.stripe_subscription_id)
-					: null,
 				plan_type: String(row.plan_type || "hobby"),
 				status: String(row.status || "active"),
 				current_period_start: row.current_period_start ? String(row.current_period_start) : null,
@@ -128,11 +113,8 @@ app.openapi(getUserSubscriptionsRoute, async (c) => {
 				cancel_at_period_end: Boolean(row.cancel_at_period_end),
 				price: Number(row.price) || 0,
 				billing_interval: String(row.billing_interval || "month"),
-				stripe_price_id: row.stripe_price_id ? String(row.stripe_price_id) : null,
 				payment_type: String(row.payment_type || "subscription"),
 				updated_at: String(row.updated_at),
-				user_email: String(row.user_email || "N/A"),
-				user_name: String(row.user_name || "N/A"),
 			}),
 		);
 
@@ -140,7 +122,7 @@ app.openapi(getUserSubscriptionsRoute, async (c) => {
 			{
 				success: true,
 				data: {
-					subscriptions,
+					subscriptions: await withAdminUsers(c.env.DB, subscriptions),
 					total,
 					limit,
 					offset,

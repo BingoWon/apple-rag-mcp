@@ -2,7 +2,7 @@ import type { ToolOutcome } from "../../worker/shared/tool-outcomes";
 export type AdminLogKind = "search" | "fetch";
 export interface AdminLog {
 	id: string;
-	user_id: string;
+	user: import("../../worker/shared/admin-user").AdminUserIdentity;
 	channel: "unknown" | "mcp" | "cli";
 	credential_id: string | null;
 	session_id: string | null;

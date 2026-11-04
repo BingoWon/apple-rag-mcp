@@ -5,10 +5,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AdminTable } from "@/components/admin/AdminTable";
+import { adminUserName } from "@/lib/admin-user";
 import { api } from "@/lib/api";
+import type { AdminUserIdentity } from "../../../worker/shared/admin-user";
 
 interface AdminMCPToken {
-	user_id: string;
+	user: AdminUserIdentity;
 	name: string;
 	mcp_token: string;
 	last_used_at: string | null;
@@ -21,7 +23,12 @@ export default function AdminMCPTokensPage() {
 
 	const columns = useMemo(
 		() => [
-			{ key: "user_id", label: t("admin.col_user_id"), width: 64 },
+			{
+				key: "user",
+				label: t("admin.col_user_name"),
+				width: 224,
+				render: (_value: unknown, row: AdminMCPToken) => adminUserName(row.user, t),
+			},
 			{ key: "name", label: t("admin.col_name"), width: 192 },
 			{ key: "mcp_token", label: t("admin.col_token"), width: 160 },
 			{ key: "last_used_at", label: t("admin.col_last_used"), width: 160 },
