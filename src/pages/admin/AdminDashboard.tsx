@@ -54,10 +54,6 @@ export default function AdminDashboard() {
 
 	return (
 		<div className="mx-auto max-w-[1440px] space-y-6">
-			<header>
-				<h1 className="text-2xl font-semibold text-light">{t("admin.overview_title")}</h1>
-				<p className="mt-1 text-sm text-muted">{t("admin.overview_description")}</p>
-			</header>
 			<div className="flex flex-wrap items-center gap-2">
 				<TimeRangeSelector
 					timeRange={query.period === "custom" ? undefined : query.period}

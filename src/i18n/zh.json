@@ -665,8 +665,6 @@
 		"col_request_id": "请求 ID",
 		"col_client": "客户端标记",
 		"col_client_version": "客户端版本",
-		"overview_title": "经营概览",
-		"overview_description": "订阅收入、用户增长与智能体使用情况",
 		"billing_title": "订阅与收款",
 		"billing_scope": "按支付时间统计自动续订账单，金额为退款及手续费扣除前的收款，不含一次性通行证；不同币种分别展示。",
 		"billing_receipts": "订阅收款金额",

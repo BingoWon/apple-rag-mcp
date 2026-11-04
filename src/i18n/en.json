@@ -676,8 +676,6 @@
 		"col_request_id": "Request ID",
 		"col_client": "Client label",
 		"col_client_version": "Client version",
-		"overview_title": "Business overview",
-		"overview_description": "Subscriptions, audience growth, and agent activity",
 		"billing_title": "Subscriptions & receipts",
 		"billing_scope": "Paid recurring-subscription invoices, by payment date. Gross receipts before refunds and fees; one-time passes excluded. Currencies are never combined.",
 		"billing_receipts": "Subscription receipts",
