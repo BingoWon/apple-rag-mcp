@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
 import test from "node:test";
+import type { TFunction } from "i18next";
+import { adminUserName } from "../../../src/lib/admin-user";
 import app from "./admin/index";
 
 test("admin tables resolve names without exposing user identifiers, emails or Stripe identifiers", async (t) => {
@@ -19,11 +21,23 @@ test("admin tables resolve names without exposing user identifiers, emails or St
  INSERT INTO contact_messages(user_id,email,message) VALUES('reader','private@example.com','Hello');`);
 	for (const kind of ["search", "fetch"]) {
 		const fields = kind === "search" ? "requested_query,actual_query" : "requested_url,actual_url";
-		for (const id of ["reader", "anon_203.0.113.17", "anon_203.0.113.18", "deleted-reader"])
+		for (const id of [
+			"reader",
+			"anon_203.0.113.17",
+			"anon_203.0.113.18",
+			"anon_2001:db8::1234:ABCD",
+			"anon_unknown",
+			"anon_missing",
+			"deleted-reader",
+		])
 			sql
 				.prepare(`INSERT INTO ${kind}_logs(user_id,${fields}) VALUES(?,'SwiftUI','SwiftUI')`)
 				.run(id);
 	}
+	for (const kind of ["search", "fetch"])
+		sql
+			.prepare(`UPDATE ${kind}_logs SET ip_address='198.51.100.23' WHERE user_id='anon_unknown'`)
+			.run();
 	const db = {
 		prepare: (query: string) => {
 			let args: unknown[] = [];
@@ -74,18 +88,21 @@ test("admin tables resolve names without exposing user identifiers, emails or St
 	const anonymous = search.logs.filter(
 		(row: { user: { kind: string } }) => row.user.kind === "anonymous",
 	);
-	assert.equal(anonymous.length, 2);
-	assert.notEqual(anonymous[0].user.alias, anonymous[1].user.alias);
+	assert.equal(anonymous.length, 5);
 	assert.deepEqual(
-		search.logs
-			.map((row: { user: unknown }) => row.user)
-			.sort((a: { alias: string }, b: { alias: string }) => a.alias.localeCompare(b.alias)),
-		fetch.logs
-			.map((row: { user: unknown }) => row.user)
-			.sort((a: { alias: string }, b: { alias: string }) => a.alias.localeCompare(b.alias)),
+		anonymous.map((row: { user: { ip_suffix: string | null } }) => row.user.ip_suffix).sort(),
+		[null, "011317", "011318", "34abcd", "110023"].sort(),
+	);
+	const tName = ((key: string) => ({ "admin.identity_anonymous": "匿名用户" })[key]) as TFunction;
+	for (const row of anonymous)
+		assert.equal(adminUserName(row.user, tName), `匿名用户${row.user.ip_suffix ?? ""}`);
+	assert.deepEqual(
+		search.logs.map((row: { user: unknown }) => JSON.stringify(row.user)).sort(),
+		fetch.logs.map((row: { user: unknown }) => JSON.stringify(row.user)).sort(),
 	);
 	assert.ok(search.logs.some((row: { user: { kind: string } }) => row.user.kind === "deleted"));
 	assert.ok(!JSON.stringify(search).includes("anon_203.0.113"));
+	assert.ok(!JSON.stringify(search).includes('"user_ip"'));
 	assert.equal((await request(`/search-logs?q=${encodeURIComponent("林舟")}`)).total, 1);
 	const users = await request("/users");
 	assert.equal(users.users[0].email, "private@example.com");

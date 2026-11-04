@@ -92,7 +92,7 @@ app.openapi(getFetchLogsRoute, async (c) => {
 		const total = Number(countResult?.total) || 0;
 
 		const logsResult = await c.env.DB.prepare(`
-      SELECT id, user_id, channel, credential_id, session_id, auth_method, request_id, client_name, client_version, requested_url, actual_url, page_id,
+      SELECT id, user_id, ip_address AS user_ip, channel, credential_id, session_id, auth_method, request_id, client_name, client_version, requested_url, actual_url, page_id,
              response_time_ms, status_code, error_code AS reason, outcome, country_code, created_at, content_source, provider, upstream_status, cache_hit
       FROM fetch_logs${where}
       ORDER BY julianday(created_at) DESC, id DESC
@@ -107,6 +107,7 @@ app.openapi(getFetchLogsRoute, async (c) => {
 			return {
 				id: row.id as string,
 				user_id: row.user_id as string,
+				user_ip: row.user_ip,
 				channel: row.channel as "unknown" | "mcp" | "cli",
 				credential_id: row.credential_id as string | null,
 				session_id: row.session_id as string | null,

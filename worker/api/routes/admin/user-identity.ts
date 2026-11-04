@@ -3,8 +3,10 @@ import type { AdminUserIdentity } from "../../../shared/admin-user";
 export const adminUserSchema = z.object({
 	name: z.string().nullable(),
 	kind: z.enum(["registered", "anonymous", "deleted"]),
-	alias: z.string(),
+	ip_suffix: z.string().nullable(),
 });
+
+const ipSchema = z.union([z.ipv4(), z.ipv6()]);
 
 // Resolve one page in one query; internal identifiers never become display names.
 export async function withAdminUsers<T extends Record<string, unknown>>(db: D1Database, rows: T[]) {
@@ -24,26 +26,29 @@ export async function withAdminUsers<T extends Record<string, unknown>>(db: D1Da
 			).results
 		: [];
 	const names = new Map(users.map((user) => [user.id, user.name]));
-	return Promise.all(
-		rows.map(async (row) => {
-			const { user_id, ...data } = row;
-			const id = typeof user_id === "string" ? user_id : "";
-			const kind: AdminUserIdentity["kind"] =
-				!id || id.startsWith("anon_") ? "anonymous" : names.has(id) ? "registered" : "deleted";
-			const name = names.get(id)?.trim();
-			const seed = id || String(row.ip_address || row.id);
-			const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(seed));
-			const alias = Array.from(new Uint8Array(digest).slice(0, 6), (byte) =>
-				byte.toString(16).padStart(2, "0"),
-			).join("");
-			return {
-				...data,
-				user: {
-					name: name && !name.includes("@") ? name : null,
-					kind,
-					alias,
-				} satisfies AdminUserIdentity,
-			};
-		}),
-	);
+	return rows.map((row) => {
+		const { user_id, user_ip, ...data } = row;
+		const id = typeof user_id === "string" ? user_id : "";
+		const kind: AdminUserIdentity["kind"] =
+			!id || id.startsWith("anon_") ? "anonymous" : names.has(id) ? "registered" : "deleted";
+		const name = names.get(id)?.trim();
+		const ip = [user_ip, row.ip_address, id.startsWith("anon_") ? id.slice(5) : null]
+			.filter((value): value is string => typeof value === "string")
+			.map((value) => value.split(",")[0].trim())
+			.find((value) => ipSchema.safeParse(value).success);
+		return {
+			...data,
+			user: {
+				name: name && !name.includes("@") ? name : null,
+				kind,
+				ip_suffix:
+					kind === "anonymous" && ip
+						? ip
+								.replace(/[^a-z0-9]/gi, "")
+								.toLowerCase()
+								.slice(-6)
+						: null,
+			} satisfies AdminUserIdentity,
+		};
+	});
 }

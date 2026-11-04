@@ -88,7 +88,7 @@ app.openapi(getSearchLogsRoute, async (c) => {
 		const total = Number(countResult?.total) || 0;
 
 		const logsResult = await c.env.DB.prepare(`
-      SELECT id, user_id, channel, credential_id, session_id, auth_method, request_id, client_name, client_version, requested_query, actual_query, result_count,
+      SELECT id, user_id, ip_address AS user_ip, channel, credential_id, session_id, auth_method, request_id, client_name, client_version, requested_query, actual_query, result_count,
              response_time_ms, status_code, error_code AS reason, outcome, country_code, created_at
       FROM search_logs${where}
       ORDER BY julianday(created_at) DESC, id DESC
@@ -103,6 +103,7 @@ app.openapi(getSearchLogsRoute, async (c) => {
 			return {
 				id: row.id as string,
 				user_id: row.user_id as string,
+				user_ip: row.user_ip,
 				channel: row.channel as "unknown" | "mcp" | "cli",
 				credential_id: row.credential_id as string | null,
 				session_id: row.session_id as string | null,
