@@ -1,7 +1,6 @@
 import {
 	IconActivity,
 	IconArrowUpRight,
-	IconCreditCard,
 	IconDownload,
 	IconKey,
 	IconMessageCircle,
@@ -17,6 +16,7 @@ import { Card } from "@/components/ui/Card";
 import type { AdminDashboardStats, AdminMetricStats, AdminStatsQuery } from "@/types";
 import { TOOL_CHANNELS, type ToolChannel } from "../../../worker/shared/tool-channels";
 import { TOOL_OUTCOMES } from "../../../worker/shared/tool-outcomes";
+import { AdminBilling } from "./AdminBilling";
 import { AdminTrendChart, OUTCOME_COLORS } from "./AdminTrendChart";
 
 const METRICS = [
@@ -321,11 +321,13 @@ export function AdminStatsCards({
 	loading,
 	query,
 	onChannelChange,
+	onBillingSynced,
 }: {
 	stats: AdminDashboardStats | null;
 	loading: boolean;
 	query: AdminStatsQuery;
 	onChannelChange: (channel?: ToolChannel) => void;
+	onBillingSynced: () => void;
 }) {
 	const { t, i18n } = useTranslation();
 	const detailQuery = new URLSearchParams({
@@ -333,123 +335,131 @@ export function AdminStatsCards({
 		...(query.channel ? { channel: query.channel } : {}),
 	}).toString();
 	return (
-		<div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4" aria-busy={loading}>
-			<CumulativeUsersCard
-				metric={stats?.metrics.cumulative_users}
-				bucket={stats?.bucket ?? "day"}
-				loading={loading}
-			/>
-			<AudienceCard
-				kind="new_users"
-				metric={stats?.metrics.new_users}
-				bucket={stats?.bucket ?? "day"}
-				loading={loading}
-			/>
-			<AudienceCard
-				kind="active_users"
-				metric={stats?.metrics.active_users}
-				bucket={stats?.bucket ?? "day"}
-				loading={loading}
-			/>
-			<ChannelUsageCard
-				stats={stats}
-				loading={loading}
-				channel={query.channel}
-				onChannelChange={onChannelChange}
-			/>
-			{METRICS.map((section) => {
-				const metric = stats?.metrics[section.key];
-				const outcomes = metric?.outcomes;
-				const isRequest = section.key === "searches" || section.key === "fetches";
-				const Icon = section.icon;
-				return (
-					<Card key={section.key} className={`p-4 ${isRequest ? "xl:col-span-2" : ""}`}>
-						<div className="flex items-center gap-2">
-							<Icon className="h-4 w-4 shrink-0" style={{ color: section.color }} />
-							<h3
-								className="min-w-0 flex-1 truncate text-sm font-medium text-light"
-								title={t(section.title)}
-							>
-								{t(section.title)}
-							</h3>
-							<span
-								className="shrink-0 text-xl font-semibold tabular-nums text-light"
-								title={t(isRequest ? "admin.stats_calls" : "admin.stats_new_records")}
-							>
-								{metric ? metric.total.toLocaleString(i18n.resolvedLanguage) : "--"}
-							</span>
-							<Link
-								to={isRequest && detailQuery ? `${section.href}?${detailQuery}` : section.href}
-								title={t("admin.stats_view_details")}
-								aria-label={`${t(section.title)}: ${t("admin.stats_view_details")}`}
-								className="shrink-0 rounded p-1 text-muted hover:text-light focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-							>
-								<IconArrowUpRight className="h-4 w-4" />
-							</Link>
-						</div>
-						{metric && stats ? (
-							<AdminTrendChart metric={metric} bucket={stats.bucket} color={section.color} />
-						) : (
-							<div
-								className="flex items-center justify-center text-xs text-muted"
-								style={{ height: isRequest ? 180 : 120 }}
-							>
-								{t(loading ? "admin.stats_loading" : "admin.stats_unavailable")}
-							</div>
-						)}
-						{outcomes && (
-							<ul className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted">
-								{TOOL_OUTCOMES.filter((outcome) => outcome === "success" || outcomes[outcome]).map(
-									(outcome) => (
-										<li key={outcome} className="inline-flex items-center gap-1.5">
-											<span
-												className="h-2 w-2 rounded-full"
-												style={{ backgroundColor: OUTCOME_COLORS[outcome] }}
-											/>
-											{t(`admin.stats_${outcome}`)}
-											<span className="font-medium tabular-nums text-light">
-												{outcomes[outcome].toLocaleString(i18n.resolvedLanguage)}
-											</span>
-										</li>
-									),
+		<div className="space-y-8" aria-busy={loading}>
+			<AdminBilling stats={stats} loading={loading} onSynced={onBillingSynced} />
+			<section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+				<h2 className="text-lg font-semibold text-light md:col-span-2 xl:col-span-4">
+					{t("admin.audience_title")}
+				</h2>
+				<CumulativeUsersCard
+					metric={stats?.metrics.cumulative_users}
+					bucket={stats?.bucket ?? "day"}
+					loading={loading}
+				/>
+				<AudienceCard
+					kind="new_users"
+					metric={stats?.metrics.new_users}
+					bucket={stats?.bucket ?? "day"}
+					loading={loading}
+				/>
+				<AudienceCard
+					kind="active_users"
+					metric={stats?.metrics.active_users}
+					bucket={stats?.bucket ?? "day"}
+					loading={loading}
+				/>
+			</section>
+			<section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+				<h2 className="text-lg font-semibold text-light md:col-span-2 xl:col-span-4">
+					{t("admin.usage_title")}
+				</h2>
+				<ChannelUsageCard
+					stats={stats}
+					loading={loading}
+					channel={query.channel}
+					onChannelChange={onChannelChange}
+				/>
+				{METRICS.filter((section) => section.key === "searches" || section.key === "fetches").map(
+					(section) => {
+						const metric = stats?.metrics[section.key];
+						const outcomes = metric?.outcomes;
+						const isRequest = section.key === "searches" || section.key === "fetches";
+						const Icon = section.icon;
+						return (
+							<Card key={section.key} className={`p-4 ${isRequest ? "xl:col-span-2" : ""}`}>
+								<div className="flex items-center gap-2">
+									<Icon className="h-4 w-4 shrink-0" style={{ color: section.color }} />
+									<h3
+										className="min-w-0 flex-1 truncate text-sm font-medium text-light"
+										title={t(section.title)}
+									>
+										{t(section.title)}
+									</h3>
+									<span
+										className="shrink-0 text-xl font-semibold tabular-nums text-light"
+										title={t(isRequest ? "admin.stats_calls" : "admin.stats_new_records")}
+									>
+										{metric ? metric.total.toLocaleString(i18n.resolvedLanguage) : "--"}
+									</span>
+									<Link
+										to={isRequest && detailQuery ? `${section.href}?${detailQuery}` : section.href}
+										title={t("admin.stats_view_details")}
+										aria-label={`${t(section.title)}: ${t("admin.stats_view_details")}`}
+										className="shrink-0 rounded p-1 text-muted hover:text-light focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+									>
+										<IconArrowUpRight className="h-4 w-4" />
+									</Link>
+								</div>
+								{metric && stats ? (
+									<AdminTrendChart metric={metric} bucket={stats.bucket} color={section.color} />
+								) : (
+									<div
+										className="flex items-center justify-center text-xs text-muted"
+										style={{ height: isRequest ? 180 : 120 }}
+									>
+										{t(loading ? "admin.stats_loading" : "admin.stats_unavailable")}
+									</div>
 								)}
-							</ul>
-						)}
-					</Card>
-				);
-			})}
-			<Card className="flex flex-wrap items-center gap-x-4 gap-y-2 p-4 md:col-span-2 xl:col-span-4">
-				<h3 className="flex items-center gap-2 text-sm font-semibold text-light">
-					<IconCreditCard className="h-4 w-4 text-success" />
-					{t("admin.stats_paid_users")}
-					<span className="text-xs font-normal text-muted">{t("admin.stats_current")}</span>
-				</h3>
-				<span className="text-xl font-semibold tabular-nums text-light">
-					{stats ? stats.subscriptions.total.toLocaleString(i18n.resolvedLanguage) : "--"}
-				</span>
-				<div className="ml-auto flex gap-4 text-xs text-muted">
-					<span>
-						Pro{" "}
-						<strong className="ml-1 tabular-nums text-light">
-							{stats?.subscriptions.pro ?? "--"}
-						</strong>
-					</span>
-					<span>
-						Enterprise{" "}
-						<strong className="ml-1 tabular-nums text-light">
-							{stats?.subscriptions.enterprise ?? "--"}
-						</strong>
-					</span>
-				</div>
-				<Link
-					to="/admin/user-subscriptions"
-					title={t("admin.stats_view_details")}
-					aria-label={`${t("admin.subscriptions")}: ${t("admin.stats_view_details")}`}
-					className="rounded p-1 text-muted hover:text-light focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-				>
-					<IconArrowUpRight className="h-4 w-4" />
-				</Link>
-			</Card>
+								{outcomes && (
+									<ul className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted">
+										{TOOL_OUTCOMES.filter(
+											(outcome) => outcome === "success" || outcomes[outcome],
+										).map((outcome) => (
+											<li key={outcome} className="inline-flex items-center gap-1.5">
+												<span
+													className="h-2 w-2 rounded-full"
+													style={{ backgroundColor: OUTCOME_COLORS[outcome] }}
+												/>
+												{t(`admin.stats_${outcome}`)}
+												<span className="font-medium tabular-nums text-light">
+													{outcomes[outcome].toLocaleString(i18n.resolvedLanguage)}
+												</span>
+											</li>
+										))}
+									</ul>
+								)}
+							</Card>
+						);
+					},
+				)}
+			</section>
+			<section>
+				<h2 className="mb-4 text-lg font-semibold text-light">{t("admin.operations_title")}</h2>
+				<Card className="grid divide-y divide-default sm:grid-cols-2 lg:grid-cols-5 lg:divide-x lg:divide-y-0">
+					{[
+						...METRICS.filter((section) => section.key !== "searches" && section.key !== "fetches"),
+						{
+							key: "subscriptions",
+							title: "admin.subscriptions",
+							href: "/admin/user-subscriptions",
+						},
+					].map((item) => (
+						<Link key={item.key} to={item.href} className="p-5 transition-colors hover:bg-hover">
+							<span className="text-xs text-muted">{t(item.title)}</span>
+							<p className="mt-2 text-2xl font-semibold tabular-nums text-light">
+								{item.key === "subscriptions"
+									? (stats?.subscriptions.total ?? "—")
+									: (stats?.metrics[item.key as keyof AdminDashboardStats["metrics"]].total ?? "—")}
+							</p>
+							<p className="mt-1 text-xs text-muted">
+								{t(
+									item.key === "subscriptions" ? "admin.stats_current" : "admin.stats_new_records",
+								)}
+							</p>
+						</Link>
+					))}
+				</Card>
+			</section>
 		</div>
 	);
 }

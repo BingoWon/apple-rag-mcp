@@ -106,6 +106,13 @@ const statsRoute = createRoute({
 							timezone: z.string(),
 							bucket: z.enum(["hour", "day"]),
 							generated_at: z.string(),
+							billing: z.object({
+								history_complete: z.boolean(),
+								synced_at: z.string().nullable(),
+								new_subscribers: metricSchema,
+								renewing_subscribers: metricSchema,
+								receipts: z.record(z.string(), metricSchema),
+							}),
 							channels: z.object({ mcp: metricSchema, cli: metricSchema, unknown: metricSchema }),
 							metrics: z.object({
 								users: metricSchema,
@@ -401,7 +408,57 @@ app.openapi(statsRoute, async (c) => {
 				subscriptions.total += Number(row.count) || 0;
 			}
 		}
+		const billingRows = await c.env.DB.batch<Record<string, unknown>>([
+			c.env.DB.prepare(
+				`SELECT strftime('${format}',paid_at,'+8 hours') AS bucket, currency, SUM(amount_paid) AS amount FROM subscription_receipts WHERE paid_at >= ? AND paid_at < ? GROUP BY bucket,currency`,
+			).bind(start, end),
+			c.env.DB.prepare(
+				`SELECT strftime('${format}',paid_at,'+8 hours') AS bucket, billing_reason, COUNT(DISTINCT customer_key) AS count FROM subscription_receipts WHERE paid_at >= ? AND paid_at < ? GROUP BY bucket,billing_reason`,
+			).bind(start, end),
+			c.env.DB.prepare(
+				`SELECT billing_reason,COUNT(DISTINCT customer_key) AS count FROM subscription_receipts WHERE paid_at >= ? AND paid_at < ? GROUP BY billing_reason`,
+			).bind(start, end),
+			c.env.DB.prepare("SELECT completed_at FROM billing_history_sync WHERE id=1"),
+		]);
+		const billing: AdminDashboardStats["billing"] = {
+			history_complete: billingRows[3].results.length > 0,
+			synced_at: billingRows[3].results[0]?.completed_at
+				? String(billingRows[3].results[0].completed_at)
+				: null,
+			new_subscribers: { total: 0, points: [] },
+			renewing_subscribers: { total: 0, points: [] },
+			receipts: {},
+		};
+		for (const [key, reason] of [
+			["new_subscribers", "subscription_create"],
+			["renewing_subscribers", "subscription_cycle"],
+		] as const) {
+			billing[key].total = Number(
+				billingRows[2].results.find((row) => row.billing_reason === reason)?.count ?? 0,
+			);
+			billing[key].points = metrics.searches.points.map((point) => ({
+				date: point.date,
+				count: Number(
+					billingRows[1].results.find(
+						(row) => row.bucket === pointBucket(point.date) && row.billing_reason === reason,
+					)?.count ?? 0,
+				),
+			}));
+		}
+		for (const row of billingRows[0].results) {
+			const currency = String(row.currency);
+			billing.receipts[currency] ??= {
+				total: 0,
+				points: metrics.searches.points.map((point) => ({ date: point.date, count: 0 })),
+			};
+			billing.receipts[currency].total += Number(row.amount);
+			const point = billing.receipts[currency].points.find(
+				(point) => pointBucket(point.date) === row.bucket,
+			);
+			if (point) point.count += Number(row.amount);
+		}
 		const data: AdminDashboardStats = {
+			billing,
 			start,
 			end,
 			timezone: "Asia/Singapore",

@@ -141,6 +141,20 @@ for (let day = 0; day < 7; day++) {
 		}
 	}
 }
+sql.prepare("INSERT INTO billing_history_sync VALUES(1,?)").run(new Date().toISOString());
+for (let day = 0; day < 7; day++) {
+	for (let receipt = 0; receipt < 8 - day; receipt++)
+		sql
+			.prepare("INSERT INTO subscription_receipts VALUES(?,?,?,?,?,?)")
+			.run(
+				`invoice-${day}-${receipt}`,
+				`user:reader-${receipt}`,
+				receipt % 3 === 0 ? "subscription_create" : "subscription_cycle",
+				"USD",
+				receipt % 2 ? 100 : 400,
+				new Date(fixtureNow - day * 86400000 - 60000).toISOString(),
+			);
+}
 const DB = {
 	prepare(text) {
 		let values = [];

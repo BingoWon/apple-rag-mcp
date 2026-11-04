@@ -8,6 +8,7 @@ import { OAUTH_SUBSCRIPTION_QUOTAS } from "../types/permissions";
 import { logger } from "../utils/logger.js";
 import { createOpenAPIApp } from "../utils/openapi";
 import { createStripeClient } from "../utils/stripe-client";
+import { recordSubscriptionReceipt } from "../utils/subscription-receipts";
 import { notifyTelegram } from "../utils/telegram-notifier";
 
 const stripe = createOpenAPIApp();
@@ -645,6 +646,9 @@ async function processWebhookEvent(
 	db: D1Database,
 ): Promise<{ success: boolean; message: string }> {
 	switch (event.type) {
+		case "invoice.paid":
+			await recordSubscriptionReceipt(db, event.data.object as Stripe.Invoice);
+			return { success: true, message: "Subscription receipt recorded" };
 		case "customer.subscription.created":
 		case "customer.subscription.updated":
 			return await handleSubscriptionEvent(event, stripeClient, db);

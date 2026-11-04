@@ -92,7 +92,16 @@ export interface AdminMetricStats {
 	};
 }
 
+export interface AdminBillingStats {
+	history_complete: boolean;
+	synced_at: string | null;
+	new_subscribers: AdminMetricStats;
+	renewing_subscribers: AdminMetricStats;
+	receipts: Record<string, AdminMetricStats>;
+}
+
 export interface AdminDashboardStats {
+	billing: AdminBillingStats;
 	channels: Record<ToolChannel, AdminMetricStats>;
 	start: string;
 	end: string;

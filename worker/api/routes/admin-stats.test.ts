@@ -196,7 +196,7 @@ test("global daily statistics handle SQLite/ISO dates, Singapore boundaries, out
 			);
 		}
 	}
-	assert.equal(queries.length, 11);
+	assert.equal(queries.length, 15);
 	for (const table of ["search_logs", "fetch_logs"]) {
 		const sql = queries.find((query) => query.includes(`FROM ${table}`))!;
 		const plan = sqlite
@@ -453,4 +453,39 @@ test("channel comparison retains all sources while request filters preserve shar
 	assert.equal(custom.metrics.fetches.total, 1);
 	assert.equal(custom.channels.mcp.total, 1);
 	assert.equal(custom.channels.cli.total, 2);
+});
+
+test("billing counts distinct payers, preserves currency and exact payment windows", async (t) => {
+	t.mock.method(Date, "now", () => NOW);
+	const { sqlite, request } = createDatabase();
+	t.after(() => sqlite.close());
+	const insert = sqlite.prepare("INSERT INTO subscription_receipts VALUES(?,?,?,?,?,?)");
+	insert.run("in_new", "user:a", "subscription_create", "USD", 100, "2026-10-08T04:15:00.000Z");
+	insert.run("in_renew1", "user:a", "subscription_cycle", "USD", 100, "2026-10-08T05:15:00.000Z");
+	insert.run("in_renew2", "user:a", "subscription_cycle", "USD", 100, "2026-10-09T03:15:00.000Z");
+	insert.run("in_cny", "user:b", "subscription_create", "CNY", 700, "2026-10-09T03:15:00.000Z");
+	insert.run(
+		"in_boundary",
+		"user:c",
+		"subscription_create",
+		"USD",
+		999,
+		"2026-10-09T04:15:00.000Z",
+	);
+	let { data } = await (await request("period=24h&channel=cli")).json();
+	assert.equal(data.billing.history_complete, false);
+	assert.equal(data.billing.new_subscribers.total, 2);
+	assert.equal(data.billing.renewing_subscribers.total, 1);
+	assert.equal(data.billing.receipts.USD.total, 300);
+	assert.equal(data.billing.receipts.CNY.total, 700);
+	assert.equal(
+		data.billing.receipts.USD.points.reduce(
+			(sum: number, p: { count: number }) => sum + p.count,
+			0,
+		),
+		300,
+	);
+	sqlite.exec("INSERT INTO billing_history_sync VALUES(1,datetime('now'))");
+	({ data } = await (await request("period=24h")).json());
+	assert.equal(data.billing.history_complete, true);
 });

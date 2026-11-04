@@ -53,7 +53,11 @@ export default function AdminDashboard() {
 		}).format(new Date(value));
 
 	return (
-		<div className="space-y-4">
+		<div className="mx-auto max-w-[1440px] space-y-6">
+			<header>
+				<h1 className="text-2xl font-semibold text-light">{t("admin.overview_title")}</h1>
+				<p className="mt-1 text-sm text-muted">{t("admin.overview_description")}</p>
+			</header>
 			<div className="flex flex-wrap items-center gap-2">
 				<TimeRangeSelector
 					timeRange={query.period === "custom" ? undefined : query.period}
@@ -172,6 +176,7 @@ export default function AdminDashboard() {
 				stats={stats}
 				loading={loading}
 				query={query}
+				onBillingSynced={() => setQuery((value) => ({ ...value }))}
 				onChannelChange={(channel) => setQuery((value) => ({ ...value, channel }))}
 			/>
 		</div>

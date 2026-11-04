@@ -36,6 +36,7 @@ export const AdminTrendChart = memo(function AdminTrendChart({
 	seriesName,
 	fitScale = false,
 	comparison,
+	formatValue,
 }: {
 	metric: AdminMetricStats;
 	bucket: "hour" | "day";
@@ -43,6 +44,7 @@ export const AdminTrendChart = memo(function AdminTrendChart({
 	height?: number;
 	seriesName?: string;
 	fitScale?: boolean;
+	formatValue?: (value: number) => string;
 	comparison?: { name: string; color: string; metric: AdminMetricStats }[];
 }) {
 	const { t, i18n } = useTranslation();
@@ -64,6 +66,7 @@ export const AdminTrendChart = memo(function AdminTrendChart({
 		return {
 			theme: { mode: resolvedTheme },
 			chart: {
+				background: "transparent",
 				type: comparison ? "line" : isRequest ? "bar" : fitScale ? "line" : "area",
 				stacked: isRequest || hasBreakdown,
 				animations: { enabled: false },
@@ -116,14 +119,14 @@ export const AdminTrendChart = memo(function AdminTrendChart({
 				max: fitted?.max,
 				forceNiceScale: !fitScale,
 				decimalsInFloat: 0,
-				labels: { formatter: (value) => Math.round(value).toLocaleString(locale) },
+				labels: { formatter: formatValue ?? ((value) => Math.round(value).toLocaleString(locale)) },
 			},
 			tooltip: {
 				shared: true,
 				intersect: false,
 				theme: resolvedTheme,
 				x: { formatter: (value) => formatter.format(Number(value)) },
-				y: { formatter: (value) => value.toLocaleString(locale) },
+				y: { formatter: formatValue ?? ((value) => value.toLocaleString(locale)) },
 			},
 		};
 	}, [
@@ -138,6 +141,7 @@ export const AdminTrendChart = memo(function AdminTrendChart({
 		fitted?.min,
 		fitted?.max,
 		comparison,
+		formatValue,
 	]);
 	const series = comparison
 		? comparison.map((item) => ({
