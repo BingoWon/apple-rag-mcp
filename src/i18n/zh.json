@@ -685,7 +685,8 @@
 		"identity_anonymous": "匿名用户",
 		"identity_registered": "未命名用户",
 		"identity_deleted": "已删除用户",
-		"billing_configuration_error": "服务器尚未配置 Stripe 生产环境访问凭据，暂时无法读取付款账单。"
+		"billing_configuration_error": "服务器尚未配置 Stripe 生产环境访问凭据，暂时无法读取付款账单。",
+		"current_user_plan": "当前实际套餐（历史日志也显示当前套餐）"
 	},
 	"notfound": {
 		"title": "页面未找到",

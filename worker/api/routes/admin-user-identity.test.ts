@@ -4,6 +4,7 @@ import { DatabaseSync } from "node:sqlite";
 import test from "node:test";
 import type { TFunction } from "i18next";
 import { adminUserName } from "../../../src/lib/admin-user";
+import { getUserPlanType } from "../utils/subscription";
 import app from "./admin/index";
 
 test("admin tables resolve names without exposing user identifiers, emails or Stripe identifiers", async (t) => {
@@ -15,7 +16,7 @@ test("admin tables resolve names without exposing user identifiers, emails or St
 		.sort())
 		sql.exec(readFileSync(new URL(file, dir), "utf8"));
 	sql.exec(`INSERT INTO users(id,email,name,created_at,updated_at) VALUES('reader','private@example.com','林舟',datetime('now'),datetime('now'));
- INSERT INTO user_subscriptions(user_id,stripe_customer_id,stripe_subscription_id,stripe_price_id) VALUES('reader','cus_private','sub_private','price_private');
+ INSERT INTO user_subscriptions(user_id,stripe_customer_id,stripe_subscription_id,stripe_price_id,plan_type,status,billing_interval) VALUES('reader','cus_private','sub_private','price_private','pro','active','week');
  INSERT INTO mcp_tokens(id,user_id,name,mcp_token) VALUES('token','reader','Editor','fixture-token');
  INSERT INTO user_authorized_ips(user_id,name,ip_address) VALUES('reader','Office','203.0.113.1');
  INSERT INTO contact_messages(user_id,email,message) VALUES('reader','private@example.com','Hello');`);
@@ -72,6 +73,11 @@ test("admin tables resolve names without exposing user identifiers, emails or St
 	]) {
 		const data = await request(path);
 		assert.equal(data[key][0].user.name, "林舟");
+		assert.deepEqual(data[key][0].user.subscription, {
+			plan: "pro",
+			billing_interval: "week",
+			payment_type: "subscription",
+		});
 		const serialized = JSON.stringify(data);
 		for (const secret of [
 			"private@example.com",
@@ -109,4 +115,27 @@ test("admin tables resolve names without exposing user identifiers, emails or St
 	const messages = await request("/contact-messages");
 	assert.equal(messages.messages[0].can_reply, true);
 	assert.equal(messages.messages[0].has_email, true);
+	for (const [status, type, end, expected, cancel] of [
+		["active", "one_time", "2000-01-01T00:00:00Z", "hobby", 0],
+		["active", "one_time", "2099-01-01T00:00:00Z", "pro", 0],
+		["past_due", "subscription", null, "hobby", 0],
+		["canceled", "subscription", null, "hobby", 0],
+		["active", "subscription", null, "pro", 1],
+	] as const) {
+		sql
+			.prepare(
+				"UPDATE user_subscriptions SET status=?,payment_type=?,current_period_end=?,cancel_at_period_end=? WHERE user_id='reader'",
+			)
+			.run(status, type, end, cancel);
+		const logs = await request("/search-logs");
+		const subscription = logs.logs.find(
+			(row: { user: { name: string | null } }) => row.user.name === "林舟",
+		).user.subscription;
+		assert.equal(subscription.plan, expected);
+		assert.equal(await getUserPlanType("reader", db), expected);
+		assert.equal((await request("/users")).users[0].subscription.plan, expected);
+		if (expected === "hobby")
+			assert.deepEqual(subscription, { plan: "hobby", billing_interval: null, payment_type: null });
+	}
+	assert.equal(anonymous[0].user.subscription.plan, "hobby");
 });

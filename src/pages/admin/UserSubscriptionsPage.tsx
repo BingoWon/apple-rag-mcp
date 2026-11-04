@@ -5,7 +5,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AdminTable } from "@/components/admin/AdminTable";
-import { adminUserName } from "@/lib/admin-user";
+import { AdminUserLabel } from "@/components/admin/AdminUserLabel";
 import { api } from "@/lib/api";
 import type { AdminUserIdentity } from "../../../worker/shared/admin-user";
 
@@ -30,7 +30,7 @@ export default function AdminUserSubscriptionsPage() {
 				key: "user",
 				label: t("admin.col_user_name"),
 				width: 224,
-				render: (_value: unknown, row: AdminUserSubscription) => adminUserName(row.user, t),
+				render: (_value: unknown, row: AdminUserSubscription) => <AdminUserLabel user={row.user} />,
 			},
 			{ key: "plan_type", label: t("admin.col_plan"), width: 96 },
 			{ key: "status", label: t("admin.col_status"), width: 112 },

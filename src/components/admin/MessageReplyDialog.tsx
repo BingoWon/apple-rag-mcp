@@ -9,6 +9,7 @@ import { api } from "@/lib/api";
 import { formatDateCompact } from "@/lib/datetime";
 import type { AdminContactMessage } from "@/types/admin-contact";
 import { copyText } from "@/utils/clipboard";
+import { AdminUserLabel } from "./AdminUserLabel";
 
 interface MessageReplyDialogProps {
 	message: AdminContactMessage;
@@ -111,7 +112,9 @@ export function MessageReplyDialog({
 						<div className="flex items-center justify-between">
 							<div>
 								<p className="text-sm text-muted">{t("admin.from")}</p>
-								<p className="font-medium text-light">{adminUserName(message.user, t)}</p>
+								<div className="font-medium text-light">
+									<AdminUserLabel user={message.user} />
+								</div>
 							</div>
 							<div className="text-right">
 								<p className="text-sm text-muted">{t("admin.date")}</p>

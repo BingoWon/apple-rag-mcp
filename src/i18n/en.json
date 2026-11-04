@@ -696,7 +696,8 @@
 		"identity_anonymous": "Anonymous user",
 		"identity_registered": "Unnamed user",
 		"identity_deleted": "Deleted user",
-		"billing_configuration_error": "Live Stripe credentials are not configured on the server. Payment history is unavailable."
+		"billing_configuration_error": "Live Stripe credentials are not configured on the server. Payment history is unavailable.",
+		"current_user_plan": "Current access plan, including on historical logs"
 	},
 	"notfound": {
 		"title": "Page Not Found",

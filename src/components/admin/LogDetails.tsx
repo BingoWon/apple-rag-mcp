@@ -1,5 +1,5 @@
 import { IconCopy } from "@tabler/icons-react";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/Button";
@@ -10,10 +10,10 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/Dialog";
-import { adminUserName } from "@/lib/admin-user";
 import { formatAdminDateTime, formatAdminResponseTime, getCountryFlag } from "@/lib/admin-utils";
 import type { AdminLog, AdminLogKind } from "@/types/admin-logs";
 import { copyText } from "@/utils/clipboard";
+import { AdminUserLabel } from "./AdminUserLabel";
 import { LogOutcome } from "./LogOutcome";
 
 export function LogDetails({
@@ -42,7 +42,7 @@ export function LogDetails({
 			setCopying(false);
 		}
 	};
-	const fields = log
+	const fields: [string, ReactNode][] = log
 		? [
 				["admin.col_created", `${formatAdminDateTime(log.created_at)} UTC+8`],
 				["admin.col_time_s", formatAdminResponseTime(log.response_time_ms)],
@@ -56,7 +56,7 @@ export function LogDetails({
 					kind === "fetch" ? t(log.cache_hit ? "admin.cache_hit" : "admin.cache_miss") : null,
 				],
 				["admin.col_results", log.result_count],
-				["admin.col_user_name", adminUserName(log.user, t)],
+				["admin.col_user_name", <AdminUserLabel key="user" user={log.user} />],
 				["admin.col_channel", t(`admin.channel_${log.channel}`)],
 				["admin.col_credential", log.credential_id],
 				["admin.col_session", log.session_id],

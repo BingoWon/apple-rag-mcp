@@ -5,9 +5,9 @@
 import { IconEye, IconEyeCheck, IconLock, IconMessageCircle } from "@tabler/icons-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { AdminUserLabel } from "@/components/admin/AdminUserLabel";
 import { MessageReplyDialog } from "@/components/admin/MessageReplyDialog";
 import { Button } from "@/components/ui/Button";
-import { adminUserName } from "@/lib/admin-user";
 import { api } from "@/lib/api";
 import { formatDateCompact } from "@/lib/datetime";
 import type { AdminContactMessage } from "@/types/admin-contact";
@@ -266,9 +266,9 @@ export default function AdminContactMessagesPage() {
 									>
 										<td className="px-6 py-4">
 											<div className="text-sm">
-												<p className="font-medium text-gray-900 dark:text-white break-words">
-													{adminUserName(message.user, t)}
-												</p>
+												<div className="font-medium text-gray-900 dark:text-white">
+													<AdminUserLabel user={message.user} />
+												</div>
 												<p className="text-xs text-muted">
 													{t(
 														message.can_reply ? "admin.logged_in_user" : "admin.anonymous_feedback",

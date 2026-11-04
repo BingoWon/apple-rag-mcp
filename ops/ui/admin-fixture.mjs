@@ -113,7 +113,7 @@ for (const id of ["channel-reader", "channel-reader-two"]) {
 		);
 }
 sql.exec(
-	"INSERT INTO user_subscriptions(user_id,plan_type,status) VALUES('channel-reader','pro','active')",
+	"INSERT INTO user_subscriptions(user_id,plan_type,status,billing_interval) VALUES('channel-reader','pro','active','week')",
 );
 for (let day = 0; day < 7; day++) {
 	const created = new Date(fixtureNow - day * 86400000 - 60000).toISOString();

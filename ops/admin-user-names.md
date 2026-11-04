@@ -26,3 +26,17 @@ Removed obsolete columns, translations, name joins, duplicated contact-message t
 and duplicate contact-name rendering. No migration is required. SQL-backed route
 checks cover all affected lists, IPv4/IPv6 suffixes, deleted accounts, name filtering,
 reply availability, and retained account details on Users.
+
+## Current plan badges
+
+A compact badge next to each account name shows Free, Pro, or Enterprise, plus the
+billing interval for paid plans. Recurring plans use Weekly / Monthly / Semi-annual /
+Annual labels; one-time access uses the existing Pass labels (周卡 / 月卡 / 半年卡 / 年卡).
+Anonymous users show Free; deleted accounts have no current-plan badge.
+
+Badges on historical logs describe the account's **current** access, not its plan at
+request time. The page-level identity query joins subscription metadata once, and
+uses the same effective-plan calculation as quota checks. Expired one-time passes
+and non-active subscriptions show Free. Cancel-at-period-end subscriptions remain
+paid while active. No payment behavior or permission rule changed. Users shares the
+same badge and drops its redundant plan column; its account identifiers remain.

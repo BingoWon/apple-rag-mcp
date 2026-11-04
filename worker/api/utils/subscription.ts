@@ -30,18 +30,20 @@ export async function getUserPlanType(userId: string, db: D1Database): Promise<P
 		.bind(userId)
 		.first();
 
-	if (result?.status !== "active") {
-		return "hobby";
-	}
+	return effectivePlanType(result);
+}
 
+export function effectivePlanType(
+	result: Record<string, unknown> | null,
+	now = Date.now(),
+): PlanType {
+	if (result?.status !== "active") return "hobby";
 	if (
 		result.payment_type === "one_time" &&
 		result.current_period_end &&
-		new Date(result.current_period_end as string) < new Date()
-	) {
+		Date.parse(String(result.current_period_end)) < now
+	)
 		return "hobby";
-	}
-
 	return (result.plan_type as PlanType) || "hobby";
 }
 

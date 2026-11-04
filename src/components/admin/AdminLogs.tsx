@@ -7,10 +7,10 @@ import { Card } from "@/components/ui/Card";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import { PaginationControls } from "@/components/ui/PaginationControls";
 import { useAdminLogs } from "@/hooks/useAdminLogs";
-import { adminUserName } from "@/lib/admin-user";
 import { formatAdminDateTime, formatAdminResponseTime } from "@/lib/admin-utils";
 import type { AdminLog, AdminLogFilters, AdminLogKind } from "@/types/admin-logs";
 import { TOOL_OUTCOMES } from "../../../worker/shared/tool-outcomes";
+import { AdminUserLabel } from "./AdminUserLabel";
 import { LogDetails } from "./LogDetails";
 import { LogOutcome } from "./LogOutcome";
 
@@ -39,20 +39,22 @@ export function AdminLogs({ kind }: { kind: AdminLogKind }) {
 				label: t(kind === "fetch" ? "admin.col_url" : "admin.col_query"),
 				width: 400,
 				render: (value, row) => (
-					<button
-						type="button"
-						onClick={(event) => {
-							detailTrigger.current = event.currentTarget;
-							setSelected(row);
-						}}
-						className="block w-full min-w-0 rounded text-left text-sm text-brand hover:underline focus-visible:outline-2 focus-visible:outline-brand"
-						aria-label={t("admin.open_log", { value: String(value || "—").slice(0, 120) })}
-					>
-						<span className="block truncate">{String(value || "—")}</span>
-						<span className="mt-1 block truncate text-xs text-muted-foreground">
-							{adminUserName(row.user, t)}
-						</span>
-					</button>
+					<div>
+						<button
+							type="button"
+							onClick={(event) => {
+								detailTrigger.current = event.currentTarget;
+								setSelected(row);
+							}}
+							className="block w-full min-w-0 rounded text-left text-sm text-brand hover:underline focus-visible:outline-2 focus-visible:outline-brand"
+							aria-label={t("admin.open_log", { value: String(value || "—").slice(0, 120) })}
+						>
+							<span className="block truncate">{String(value || "—")}</span>
+						</button>
+						<div className="mt-1 text-xs text-muted-foreground">
+							<AdminUserLabel user={row.user} />
+						</div>
+					</div>
 				),
 			},
 			{

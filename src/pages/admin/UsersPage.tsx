@@ -5,7 +5,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AdminTable } from "@/components/admin/AdminTable";
+import { AdminPlanBadge } from "@/components/admin/AdminUserLabel";
 import { api } from "@/lib/api";
+import type { AdminSubscription } from "../../../worker/shared/admin-user";
 
 interface AdminUser {
 	id: string;
@@ -15,6 +17,7 @@ interface AdminUser {
 	avatar?: string;
 	plan_type: string;
 	subscription_status: string;
+	subscription: AdminSubscription;
 	last_login?: string;
 	created_at: string;
 	updated_at: string;
@@ -27,9 +30,18 @@ export default function AdminUsersPage() {
 		() => [
 			{ key: "id", label: t("admin.col_id"), width: 64 },
 			{ key: "email", label: t("admin.col_email"), width: 256 },
-			{ key: "name", label: t("admin.col_name"), width: 192 },
+			{
+				key: "name",
+				label: t("admin.col_name"),
+				width: 256,
+				render: (_value: unknown, row: AdminUser) => (
+					<div className="inline-flex flex-wrap items-center gap-1.5">
+						<span>{row.name}</span>
+						<AdminPlanBadge subscription={row.subscription} />
+					</div>
+				),
+			},
 			{ key: "provider", label: t("admin.col_auth_provider"), width: 128 },
-			{ key: "plan_type", label: t("admin.col_plan"), width: 96 },
 			{ key: "subscription_status", label: t("admin.col_status"), width: 112 },
 			{ key: "last_login", label: t("admin.col_last_login"), width: 160 },
 			{ key: "created_at", label: t("admin.col_created"), width: 160 },

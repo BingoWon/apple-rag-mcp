@@ -6,6 +6,8 @@ import { createRoute, z } from "@hono/zod-openapi";
 import { logger } from "../../utils/logger";
 import { createOpenAPIApp } from "../../utils/openapi";
 
+import { adminSubscription, adminSubscriptionSchema } from "./user-identity";
+
 const app = createOpenAPIApp();
 
 // User schema for admin view (with sensitive data masked)
@@ -17,6 +19,7 @@ const AdminUserSchema = z.object({
 	avatar: z.string().optional(),
 	plan_type: z.string(),
 	subscription_status: z.string(),
+	subscription: adminSubscriptionSchema,
 	last_login: z.string().optional(),
 	created_at: z.string(),
 	updated_at: z.string(),
@@ -93,7 +96,11 @@ app.openapi(getUsersRoute, async (c) => {
         u.created_at,
         u.updated_at,
         COALESCE(us.plan_type, 'hobby') as plan_type,
-        COALESCE(us.status, 'active') as subscription_status
+        COALESCE(us.status, 'active') as subscription_status,
+        us.status,
+        us.payment_type,
+        us.billing_interval,
+        us.current_period_end
       FROM users u
       LEFT JOIN user_subscriptions us ON u.id = us.user_id
       ORDER BY u.created_at DESC
@@ -103,6 +110,7 @@ app.openapi(getUsersRoute, async (c) => {
 			.all();
 
 		const users = (usersResult.results || []).map((row: Record<string, unknown>) => ({
+			subscription: adminSubscription(row),
 			id: String(row.id),
 			email: String(row.email),
 			name: String(row.name || "N/A"),
