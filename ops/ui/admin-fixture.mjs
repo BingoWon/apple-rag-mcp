@@ -5,6 +5,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { createServer } from "node:http";
 import { extname, resolve } from "node:path";
 import { DatabaseSync } from "node:sqlite";
+import Stripe from "stripe";
 import app from "../../worker/api/routes/admin/index.ts";
 
 const sql = new DatabaseSync(":memory:");
@@ -163,6 +164,13 @@ sql
 		"https://developer.apple.com/documentation/swiftui",
 		"success",
 	);
+if (process.env.ADMIN_FIXTURE_BILLING_PENDING) sql.exec("DELETE FROM billing_history_sync");
+Stripe.resources.Invoices.prototype.list = async () => {
+	console.log("Fixture: Stripe invoice import requested");
+	if (process.env.ADMIN_FIXTURE_BILLING_PENDING === "error")
+		throw new Error("Fixture Stripe unavailable");
+	return { data: [], has_more: false };
+};
 const DB = {
 	prepare(text) {
 		let values = [];
@@ -170,6 +178,10 @@ const DB = {
 			bind(...args) {
 				values = args;
 				return this;
+			},
+			async run() {
+				sql.prepare(text).run(...values);
+				return { success: true };
 			},
 			async first() {
 				return sql.prepare(text).get(...values) ?? null;
@@ -198,10 +210,16 @@ const server = createServer(async (req, res) => {
 		const url = new URL(req.url, "http://127.0.0.1");
 		if (url.pathname.startsWith("/api/admin")) {
 			if (url.searchParams.get("q") === "slow") await new Promise((r) => setTimeout(r, 500));
+			const chunks = [];
+			for await (const chunk of req) chunks.push(chunk);
 			const response = await app.request(
 				url.pathname.replace("/api/admin", "") + url.search,
-				{ method: req.method, headers: req.headers },
-				{ DB, ADMIN_PASSWORD: "local-admin-test" },
+				{
+					method: req.method,
+					headers: req.headers,
+					...(chunks.length ? { body: Buffer.concat(chunks).toString() } : {}),
+				},
+				{ DB, ADMIN_PASSWORD: "local-admin-test", STRIPE_SECRET_KEY: "sk_live_local_fixture" },
 			);
 			res.writeHead(response.status, Object.fromEntries(response.headers));
 			res.end(Buffer.from(await response.arrayBuffer()));

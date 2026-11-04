@@ -336,7 +336,6 @@ export function AdminStatsCards({
 	}).toString();
 	return (
 		<div className="space-y-8" aria-busy={loading}>
-			<AdminBilling stats={stats} loading={loading} onSynced={onBillingSynced} />
 			<section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
 				<h2 className="text-lg font-semibold text-light md:col-span-2 xl:col-span-4">
 					{t("admin.audience_title")}
@@ -433,6 +432,7 @@ export function AdminStatsCards({
 					},
 				)}
 			</section>
+			<AdminBilling stats={stats} loading={loading} onSynced={onBillingSynced} />
 			<section>
 				<h2 className="mb-4 text-lg font-semibold text-light">{t("admin.operations_title")}</h2>
 				<Card className="grid divide-y divide-default sm:grid-cols-2 lg:grid-cols-5 lg:divide-x lg:divide-y-0">

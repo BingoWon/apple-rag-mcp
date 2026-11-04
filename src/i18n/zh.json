@@ -671,7 +671,7 @@
 		"billing_scope": "按支付时间统计自动续订账单，金额为退款及手续费扣除前的收款，不含一次性通行证；不同币种分别展示。",
 		"billing_receipts": "订阅收款金额",
 		"billing_currency": "币种",
-		"billing_pending": "支付历史尚未完成核对，完成后展示财务统计。",
+		"billing_pending": "正在从 Stripe 导入历史付款账单，完成后会自动显示统计。",
 		"billing_new_subscribers": "新订阅用户",
 		"billing_renewing_subscribers": "续费用户",
 		"billing_people_note": "所选期间支付成功的去重用户。新订阅与周期续费分别计数，同一用户可能同时属于两类；不计零金额账单。",
@@ -681,9 +681,9 @@
 		"operations_title": "管理指标",
 		"billing_sync": "同步 Stripe 账单",
 		"billing_syncing": "正在同步…",
-		"billing_sync_error": "同步未完成，请重试。原有统计仍可查看。",
-		"billing_synced": "上次核对：{{date}} · UTC+8",
-		"billing_not_synced": "支付历史尚未核对",
+		"billing_sync_error": "未能从 Stripe 完成账单同步，请点击“同步 Stripe 账单”重试。",
+		"billing_synced": "最近同步：{{date}} · UTC+8",
+		"billing_not_synced": "首次加载付款记录",
 		"identity_anonymous": "匿名访客",
 		"identity_registered": "未命名用户",
 		"identity_deleted": "已删除用户",
@@ -722,7 +722,8 @@
 			"松鼠",
 			"小鹿",
 			"企鹅"
-		]
+		],
+		"billing_configuration_error": "服务器尚未配置 Stripe 生产环境访问凭据，暂时无法读取付款账单。"
 	},
 	"notfound": {
 		"title": "页面未找到",

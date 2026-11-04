@@ -15,9 +15,18 @@ app.post("/", async (c) => {
 		.safeParse(await c.req.json().catch(() => null));
 	if (!body.success)
 		return c.json({ success: false, error: { message: "Invalid sync cursor" } }, 400);
+	if (!/^(sk|rk)_live_/.test(c.env.STRIPE_SECRET_KEY ?? ""))
+		return c.json(
+			{
+				success: false,
+				error: {
+					code: "BILLING_NOT_CONFIGURED",
+					message: "Live Stripe billing is not configured.",
+				},
+			},
+			503,
+		);
 	try {
-		if (!/^(sk|rk)_live_/.test(c.env.STRIPE_SECRET_KEY ?? ""))
-			throw new Error("Live Stripe configuration required");
 		const stripe = createStripeClient(c.env.STRIPE_SECRET_KEY);
 		const page = await stripe.invoices.list({
 			status: "paid",

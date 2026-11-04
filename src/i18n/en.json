@@ -682,7 +682,7 @@
 		"billing_scope": "Paid recurring-subscription invoices, by payment date. Gross receipts before refunds and fees; one-time passes excluded. Currencies are never combined.",
 		"billing_receipts": "Subscription receipts",
 		"billing_currency": "Currency",
-		"billing_pending": "Payment history has not been reconciled yet. Financial figures will appear after reconciliation.",
+		"billing_pending": "Importing payment history from Stripe. Figures will appear automatically when the import finishes.",
 		"billing_new_subscribers": "New subscribers",
 		"billing_renewing_subscribers": "Renewing subscribers",
 		"billing_people_note": "Distinct paying users in this period. New subscription invoices and renewal invoices are counted separately; a user may appear in both. Zero-payment invoices are excluded.",
@@ -692,9 +692,9 @@
 		"operations_title": "Administration",
 		"billing_sync": "Sync from Stripe",
 		"billing_syncing": "Syncing…",
-		"billing_sync_error": "Could not complete the sync. Previous figures remain available; please retry.",
-		"billing_synced": "Last reconciled {{date}} · UTC+8",
-		"billing_not_synced": "Payment history not yet reconciled",
+		"billing_sync_error": "Could not finish importing Stripe invoices. Select “Sync from Stripe” to retry.",
+		"billing_synced": "Last synced {{date}} · UTC+8",
+		"billing_not_synced": "Loading payment history for the first time",
 		"identity_anonymous": "Guest",
 		"identity_registered": "Unnamed user",
 		"identity_deleted": "Deleted user",
@@ -733,7 +733,8 @@
 			"Squirrel",
 			"Deer",
 			"Penguin"
-		]
+		],
+		"billing_configuration_error": "Live Stripe credentials are not configured on the server. Payment history is unavailable."
 	},
 	"notfound": {
 		"title": "Page Not Found",

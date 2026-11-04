@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -17,26 +17,38 @@ export function AdminBilling({
 }) {
 	const { t, i18n } = useTranslation();
 	const [syncing, setSyncing] = useState(false);
-	const [syncError, setSyncError] = useState(false);
-	const sync = async () => {
+	const [syncError, setSyncError] = useState<string | null>(null);
+	const attempted = useRef(false);
+	const sync = useCallback(async () => {
+		attempted.current = true;
 		setSyncing(true);
-		setSyncError(false);
+		setSyncError(null);
 		try {
 			let cursor: string | undefined;
 			do {
 				const result = await api.syncAdminBilling(cursor);
-				if (!result.success || !result.data) throw Error();
+				if (!result.success || !result.data) {
+					setSyncError(
+						result.error?.code === "BILLING_NOT_CONFIGURED"
+							? "admin.billing_configuration_error"
+							: "admin.billing_sync_error",
+					);
+					return;
+				}
 				cursor = result.data.cursor ?? undefined;
 			} while (cursor);
 			onSynced();
 		} catch {
-			setSyncError(true);
+			setSyncError("admin.billing_sync_error");
 		} finally {
 			setSyncing(false);
 		}
-	};
+	}, [onSynced]);
 	const [selected, setSelected] = useState("USD");
 	const billing = stats?.billing;
+	useEffect(() => {
+		if (billing && !billing.history_complete && !attempted.current) void sync();
+	}, [billing, sync]);
 	const currencies = Object.keys(billing?.receipts ?? {}).sort();
 	const currency = currencies.includes(selected) ? selected : (currencies[0] ?? "USD");
 	const money = new Intl.NumberFormat(i18n.resolvedLanguage, { style: "currency", currency });
@@ -59,20 +71,20 @@ export function AdminBilling({
 							})
 						: t("admin.billing_not_synced")}
 				</span>
-				<Button size="sm" variant="secondary" disabled={syncing} onClick={sync}>
+				<Button size="sm" variant="secondary" disabled={loading || syncing} onClick={sync}>
 					{t(syncing ? "admin.billing_syncing" : "admin.billing_sync")}
 				</Button>
 			</div>
 			{syncError && (
 				<p role="alert" className="text-sm text-error">
-					{t("admin.billing_sync_error")}
+					{t(syncError)}
 				</p>
 			)}
 			<div>
 				<h2 className="text-lg font-semibold text-light">{t("admin.billing_title")}</h2>
 				<p className="mt-1 text-xs leading-5 text-muted">{t("admin.billing_scope")}</p>
 			</div>
-			{!ready && (
+			{!ready && !syncError && (
 				<p role="status" className="rounded-lg border border-default px-4 py-3 text-sm text-muted">
 					{t(
 						loading

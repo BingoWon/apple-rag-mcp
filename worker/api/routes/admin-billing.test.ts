@@ -57,10 +57,12 @@ test("billing reconciliation requires admin access and live data, and completes 
 		);
 	assert.equal((await request({}, {})).status, 401);
 	assert.equal((await request({ cursor: "bad" })).status, 400);
-	assert.equal(
-		(await request({}, undefined, { ...env, STRIPE_SECRET_KEY: "sk_test_fixture" })).status,
-		502,
-	);
+	const notConfigured = await request({}, undefined, {
+		...env,
+		STRIPE_SECRET_KEY: "sk_test_fixture",
+	});
+	assert.equal(notConfigured.status, 503);
+	assert.equal((await notConfigured.json()).error.code, "BILLING_NOT_CONFIGURED");
 	assert.equal(list.mock.callCount(), 0);
 	const first = await (await request()).json();
 	assert.equal(first.data.cursor, "in_A");

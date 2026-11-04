@@ -1,7 +1,7 @@
 # Admin business overview (5.8.0)
 
-The overview is organized into subscriptions and receipts, audience growth, agent
-activity, and compact administrative counts. Existing MCP/CLI filtering remains
+The overview is organized into audience growth, agent activity, subscriptions and receipts,
+and compact administrative counts. Existing MCP/CLI filtering remains
 limited to request statistics. Charts share transparent surfaces and consistent
 number formatting; the homepage is outside this change.
 
@@ -26,7 +26,9 @@ The existing entitlement and checkout flows remain the source of access decision
   refunds and Stripe fees are not deducted. Currencies are never added together.
 - UTC+8 buckets and half-open `[start,end)` payment windows match the overview.
 
-The browser's **Sync from Stripe** action uses the deployed Worker's existing secret
+On the first overview visit with no completed import, the browser automatically
+starts one reconciliation attempt. Failures stop and offer a manual retry; changing
+the date or channel does not start a retry loop. **Sync from Stripe** also uses the deployed Worker's existing secret
 key through the admin-authenticated `/api/admin/billing-sync` endpoint. Keys never
 reach the browser. Each request imports at most 100 paid invoices, and the browser
 continues through every page. Completion is recorded only after the final page.
@@ -47,6 +49,7 @@ SQL-backed checks cover payer deduplication, currencies, boundary times, and inc
 history. Reconciliation tests cover admin authentication, test-mode rejection,
 pagination completion, and idempotence. No layout or button-copy locks were added.
 
-Production migration applied successfully. Production history has not yet been
-reconciled: the local key is test-only. Use the admin sync action with the Worker's
-production Stripe configuration; no owner key needs to be sent or installed locally.
+Production migration applied successfully. Production history had not yet been imported at the 5.8.3 investigation (zero receipts
+and no completion marker). The first authenticated overview visit starts the import
+using the Worker's production Stripe configuration. No owner key needs to be sent or
+installed locally. A missing live key now returns a distinct configuration error.
