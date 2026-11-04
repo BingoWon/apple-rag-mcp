@@ -201,3 +201,14 @@ as before. Revert the global dark-variant override introduced in 5.6.9. Change
 only the setup button's icon/text colors to follow its existing background
 variant: dark text on its white background, white text on its dark background.
 This also keeps both readable when the selected site theme differs from the OS.
+
+## Restore the GitHub Star action — 5.6.11
+
+The rainbow Hero button was incorrectly repurposed as an agent-setup link during
+the MCP/CLI content refresh. Restore the original action from commit 965d539:
+GitHub icon, “Star on GitHub” / “GitHub 加星”, the repository URL and safe new-tab
+behavior. Keep its original rainbow design and the narrow foreground contrast fix.
+Remove the obsolete setup label and assertions that prohibited the GitHub link or
+required this button to navigate to /connect. Do not add new presentation locks.
+The existing quick-start actions and connection guide continue to provide setup.
+Repository visibility remains private; restoring its link does not grant access.

@@ -59,6 +59,7 @@
 		"pricing": "价格方案",
 		"contact": "联系我们",
 		"product": "产品",
+		"star_github": "GitHub 加星",
 		"logout_success": "已退出登录",
 		"logout_error": "退出失败，请重试。",
 		"connect": "接入智能体",
@@ -75,7 +76,6 @@
 		"subtitle_heres": "致敬每一位",
 		"subtitle_vibecoders": "Vibe Coder",
 		"subtitle_desc": "，源自 Apple 基因。<combo><rag>RAG</rag> + <jev>Jev</jev></combo> 为你的智能体注入 WWDC26、iOS 27 与官方文档洞见。",
-		"setup": "MCP / CLI 接入",
 		"cta": "接入你的智能体"
 	},
 	"jev": {

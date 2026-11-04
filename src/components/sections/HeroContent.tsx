@@ -1,7 +1,6 @@
-import { IconTerminal2 } from "@tabler/icons-react";
+import { IconBrandGithub } from "@tabler/icons-react";
 import type React from "react";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
 import { ArrowButton } from "@/components/ui/arrow-button";
 import ColourfulText from "@/components/ui/colourful-text";
 import { JevText } from "@/components/ui/jev-brand";
@@ -61,15 +60,20 @@ export const HeroContent: React.FC = () => {
 
 				{/* CTA Buttons */}
 				<div className="flex flex-col sm:flex-row items-center justify-center gap-8 sm:gap-12 mt-8">
-					{/* Preserve the original rainbow CTA for agent setup. */}
-					<Link to="/connect" className={rainbowButtonStyles}>
+					{/* GitHub Button */}
+					<a
+						href="https://github.com/BingoWon/apple-rag-mcp"
+						target="_blank"
+						rel="noopener noreferrer"
+						className={rainbowButtonStyles}
+					>
 						<div className="flex items-center">
-							<IconTerminal2 className="size-5 text-[#0f172a] dark:text-white" />
+							<IconBrandGithub className="size-5 text-[#0f172a] dark:text-white" />
 							<span className="ml-2 text-[#0f172a] dark:text-white lg:inline p-1 text-base font-semibold">
-								{t("hero.setup")}
+								{t("nav.star_github")}
 							</span>
 						</div>
-					</Link>
+					</a>
 
 					{/* Get Started Button */}
 					<ArrowButton />

@@ -44,8 +44,6 @@ test("hero stickers use local images, accessible labels and official links in bo
 				assert.ok(html.includes(`class="hero-sticker ${className}"`));
 			}
 			assert.equal(html.split('href="https://typesafe.ai/"').length - 1, 3);
-			assert.ok(!html.includes('href="https://github.com/BingoWon/apple-rag-mcp"'));
-			assert.ok(html.includes('href="/connect"'));
 			assert.ok(html.includes(locale.hero.title_into));
 			if (language === "zh") {
 				assert.ok(html.includes("智能体"));
