@@ -25,6 +25,16 @@ async function loadCards() {
 	}
 }
 const { AdminStatsCards } = await loadCards();
+const emptyModelCosts: AdminDashboardStats["model_costs"] = {
+	first_recorded_at: null,
+	exchange_rate: null,
+	categories: {
+		jev: { attempts: 0, unpriced_attempts: 0 },
+		embedding: { attempts: 0, unpriced_attempts: 0 },
+		reranking: { attempts: 0, unpriced_attempts: 0 },
+	},
+	currencies: {},
+};
 
 async function renderCards(stats: AdminDashboardStats | null, loading: boolean, language = "en") {
 	const i18n = i18next.createInstance();
@@ -87,6 +97,7 @@ test("empty data shows real zero counts, status breakdown and the current paid s
 		unknown: 0,
 	};
 	const stats: AdminDashboardStats = {
+		model_costs: emptyModelCosts,
 		start: point.date,
 		end: "2026-10-09T04:15:00Z",
 		generated_at: "2026-10-09T04:15:00Z",
@@ -151,6 +162,7 @@ test("empty data shows real zero counts, status breakdown and the current paid s
 test("new-user table and active-user breakdown use real registered and anonymous counts", async () => {
 	const point = { date: "2026-10-08T16:00:00Z", count: 0 };
 	const stats: AdminDashboardStats = {
+		model_costs: emptyModelCosts,
 		start: point.date,
 		end: "2026-10-09T04:15:00Z",
 		generated_at: "2026-10-09T04:15:00Z",

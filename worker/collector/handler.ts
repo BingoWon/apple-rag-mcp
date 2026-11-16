@@ -1,4 +1,5 @@
 import postgres from "postgres";
+import { createModelUsageRecorder, type ModelUsageRecorder } from "../services/model-usage.js";
 import type { Env } from "../shared/types.js";
 import { AppleDocCollector } from "./AppleDocCollector.js";
 import { COLLECTOR_CONNECTION_PARAMETERS, PostgreSQLManager } from "./PostgreSQLManager.js";
@@ -7,6 +8,7 @@ import { logger } from "./utils/logger.js";
 import { configureTelegram, notifyStats } from "./utils/telegram-notifier.js";
 
 export async function handleScheduled(env: Env): Promise<void> {
+	const modelUsage = createModelUsageRecorder(env.DB);
 	configureTelegram(env.TELEGRAM_STATS_BOT_URL, env.TELEGRAM_ALERT_BOT_URL);
 	logger.setAlertUrl(env.TELEGRAM_ALERT_BOT_URL);
 	const shouldRunHourlyMaintenance = new Date().getUTCMinutes() < 5;
@@ -19,16 +21,22 @@ export async function handleScheduled(env: Env): Promise<void> {
 				    OR (period = 'weekly' AND window_start < datetime('now', '-14 days'))`,
 			).run();
 		}
-		await processAppleContent(env, shouldRunHourlyMaintenance);
+		await processAppleContent(env, shouldRunHourlyMaintenance, modelUsage.record);
 	} catch (error) {
 		await logger.error(
 			`Worker execution failed: ${error instanceof Error ? error.message : String(error)}`,
 		);
 		throw error;
+	} finally {
+		await modelUsage.flush();
 	}
 }
 
-async function processAppleContent(env: Env, shouldDiscoverVideos: boolean): Promise<void> {
+async function processAppleContent(
+	env: Env,
+	shouldDiscoverVideos: boolean,
+	recordUsage: ModelUsageRecorder,
+): Promise<void> {
 	const config: BatchConfig = {
 		batchSize: Number.parseInt(env.BATCH_SIZE || "30", 10),
 		forceUpdateAll: env.FORCE_UPDATE_ALL === "true",
@@ -55,7 +63,7 @@ async function processAppleContent(env: Env, shouldDiscoverVideos: boolean): Pro
 		});
 
 	const dbManager = new PostgreSQLManager(createClient);
-	const collector = new AppleDocCollector(dbManager, env.DEEPINFRA_API_KEY, config);
+	const collector = new AppleDocCollector(dbManager, env.DEEPINFRA_API_KEY, config, recordUsage);
 
 	try {
 		if (shouldDiscoverVideos) {

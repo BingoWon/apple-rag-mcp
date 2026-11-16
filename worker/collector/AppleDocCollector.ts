@@ -1,3 +1,4 @@
+import type { ModelUsageRecorder } from "../services/model-usage.js";
 import { AppleAPIClient } from "./AppleAPIClient.js";
 import { Chunker } from "./Chunker.js";
 import { ContentProcessor } from "./ContentProcessor.js";
@@ -41,7 +42,12 @@ class AppleDocCollector {
 	private readonly apiKey: string;
 	private readonly config: BatchConfig;
 
-	constructor(dbManager: PostgreSQLManager, apiKey: string, config: BatchConfig) {
+	constructor(
+		dbManager: PostgreSQLManager,
+		apiKey: string,
+		config: BatchConfig,
+		private readonly recordUsage?: ModelUsageRecorder,
+	) {
 		this.dbManager = dbManager;
 		this.apiKey = apiKey;
 		this.config = config;
@@ -425,8 +431,7 @@ class AppleDocCollector {
 			return c.chunk.title ? `${c.chunk.title}\n\n${c.chunk.content}` : c.chunk.content;
 		});
 
-		const embeddings =
-			embeddingTexts.length > 0 ? await createEmbeddings(embeddingTexts, this.apiKey) : [];
+		const embeddings = await createEmbeddings(embeddingTexts, this.apiKey, this.recordUsage);
 
 		return { allChunks, embeddings };
 	}

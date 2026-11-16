@@ -6,6 +6,7 @@
 import packageJson from "../../package.json";
 import type { ModelAlertReporter } from "../services/model-alerts.js";
 import { logger } from "../shared/logger.js";
+import type { ModelUsageRecorder } from "./model-usage.js";
 
 export const DEEPINFRA_CONFIG = {
 	BASE_URL: "https://api.deepinfra.com",
@@ -34,6 +35,7 @@ export abstract class DeepInfraService<TRequest, TResponse, TResult> {
 	constructor(
 		apiKey: string,
 		protected readonly reportFailure: ModelAlertReporter,
+		protected readonly recordUsage?: ModelUsageRecorder,
 	) {
 		this.apiKey = apiKey;
 	}

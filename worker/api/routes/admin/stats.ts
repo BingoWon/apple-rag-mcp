@@ -1,5 +1,12 @@
 import { createRoute, z } from "@hono/zod-openapi";
-import type { AdminDashboardStats, AdminMetricStats, AdminStatsQuery } from "../../../../src/types";
+import type {
+	AdminDashboardStats,
+	AdminMetricStats,
+	AdminModelCosts,
+	AdminStatsQuery,
+	ModelCostCategory,
+	ModelCostCurrency,
+} from "../../../../src/types";
 import { TOOL_CHANNELS, type ToolChannel } from "../../../shared/tool-channels.js";
 import { emptyOutcomes, TOOL_OUTCOMES } from "../../../shared/tool-outcomes.js";
 import { logger } from "../../utils/logger";
@@ -77,6 +84,30 @@ const metricSchema = z.object({
 		})
 		.optional(),
 });
+const modelCostCategory = z.enum(["jev", "embedding", "reranking"]);
+const modelCostCurrency = z.enum(["USD", "CNY"]);
+const modelCostsSchema = z.object({
+	first_recorded_at: z.string().nullable(),
+	exchange_rate: z.number().nullable(),
+	categories: z.record(
+		modelCostCategory,
+		z.object({ attempts: z.number(), unpriced_attempts: z.number() }),
+	),
+	currencies: z.partialRecord(
+		modelCostCurrency,
+		z.object({
+			total_nanos: z.number(),
+			categories: z.record(
+				modelCostCategory,
+				z.object({
+					total_nanos: z.number(),
+					priced_attempts: z.number(),
+					points: z.array(z.object({ date: z.string(), count: z.number().nullable() })),
+				}),
+			),
+		}),
+	),
+});
 const errorSchema = z.object({
 	success: z.boolean(),
 	error: z.object({ code: z.string(), message: z.string() }),
@@ -106,6 +137,7 @@ const statsRoute = createRoute({
 							timezone: z.string(),
 							bucket: z.enum(["hour", "day"]),
 							generated_at: z.string(),
+							model_costs: modelCostsSchema,
 							billing: z.object({
 								history_complete: z.boolean(),
 								synced_at: z.string().nullable(),
@@ -408,22 +440,40 @@ app.openapi(statsRoute, async (c) => {
 				subscriptions.total += Number(row.count) || 0;
 			}
 		}
-		const billingRows = await c.env.DB.batch<Record<string, unknown>>([
-			c.env.DB.prepare(
-				`SELECT strftime('${format}',paid_at,'+8 hours') AS bucket, currency, SUM(amount_paid) AS amount FROM subscription_receipts WHERE paid_at >= ? AND paid_at < ? GROUP BY bucket,currency`,
-			).bind(start, end),
-			c.env.DB.prepare(
-				`SELECT strftime('${format}',paid_at,'+8 hours') AS bucket, billing_reason, COUNT(DISTINCT customer_key) AS count FROM subscription_receipts WHERE paid_at >= ? AND paid_at < ? GROUP BY bucket,billing_reason`,
-			).bind(start, end),
-			c.env.DB.prepare(
-				`SELECT billing_reason,COUNT(DISTINCT customer_key) AS count FROM subscription_receipts WHERE paid_at >= ? AND paid_at < ? GROUP BY billing_reason`,
-			).bind(start, end),
-			c.env.DB.prepare("SELECT completed_at FROM billing_history_sync WHERE id=1"),
-		]);
+		const modelCostQuery = c.env.DB.prepare(
+			`SELECT strftime('${format}', created_at, '+8 hours') AS bucket,
+			        category, currency, COUNT(*) AS attempts, COUNT(cost_nanos) AS priced_attempts,
+			        SUM(cost_nanos) AS cost_nanos
+			 FROM model_usage_events WHERE created_at >= ? AND created_at < ?
+			 ${query.channel ? "AND channel = ?" : ""}
+			 GROUP BY bucket, category, currency`,
+		).bind(start, end, ...(query.channel ? [query.channel] : []));
+		const [receipts, billingPeople, billingTotals, billingSync, modelRows, modelCoverage] =
+			await c.env.DB.batch<Record<string, unknown>>([
+				c.env.DB.prepare(
+					`SELECT strftime('${format}',paid_at,'+8 hours') AS bucket, currency, SUM(amount_paid) AS amount FROM subscription_receipts WHERE paid_at >= ? AND paid_at < ? GROUP BY bucket,currency`,
+				).bind(start, end),
+				c.env.DB.prepare(
+					`SELECT strftime('${format}',paid_at,'+8 hours') AS bucket, billing_reason, COUNT(DISTINCT customer_key) AS count FROM subscription_receipts WHERE paid_at >= ? AND paid_at < ? GROUP BY bucket,billing_reason`,
+				).bind(start, end),
+				c.env.DB.prepare(
+					`SELECT billing_reason,COUNT(DISTINCT customer_key) AS count FROM subscription_receipts WHERE paid_at >= ? AND paid_at < ? GROUP BY billing_reason`,
+				).bind(start, end),
+				c.env.DB.prepare("SELECT completed_at FROM billing_history_sync WHERE id=1"),
+				modelCostQuery,
+				c.env.DB.prepare("SELECT MIN(created_at) AS first_recorded_at FROM model_usage_events"),
+			]);
+		const modelCosts = summarizeModelCosts(
+			modelRows.results,
+			modelCoverage.results[0]?.first_recorded_at,
+			metrics.searches.points.map(({ date }) => date),
+			pointBucket,
+			Number(c.env.MODEL_COST_CNY_PER_USD),
+		);
 		const billing: AdminDashboardStats["billing"] = {
-			history_complete: billingRows[3].results.length > 0,
-			synced_at: billingRows[3].results[0]?.completed_at
-				? String(billingRows[3].results[0].completed_at)
+			history_complete: billingSync.results.length > 0,
+			synced_at: billingSync.results[0]?.completed_at
+				? String(billingSync.results[0].completed_at)
 				: null,
 			new_subscribers: { total: 0, points: [] },
 			renewing_subscribers: { total: 0, points: [] },
@@ -434,18 +484,18 @@ app.openapi(statsRoute, async (c) => {
 			["renewing_subscribers", "subscription_cycle"],
 		] as const) {
 			billing[key].total = Number(
-				billingRows[2].results.find((row) => row.billing_reason === reason)?.count ?? 0,
+				billingTotals.results.find((row) => row.billing_reason === reason)?.count ?? 0,
 			);
 			billing[key].points = metrics.searches.points.map((point) => ({
 				date: point.date,
 				count: Number(
-					billingRows[1].results.find(
+					billingPeople.results.find(
 						(row) => row.bucket === pointBucket(point.date) && row.billing_reason === reason,
 					)?.count ?? 0,
 				),
 			}));
 		}
-		for (const row of billingRows[0].results) {
+		for (const row of receipts.results) {
 			const currency = String(row.currency);
 			billing.receipts[currency] ??= {
 				total: 0,
@@ -459,6 +509,7 @@ app.openapi(statsRoute, async (c) => {
 		}
 		const data: AdminDashboardStats = {
 			billing,
+			model_costs: modelCosts,
 			start,
 			end,
 			timezone: "Asia/Singapore",
@@ -482,5 +533,58 @@ app.openapi(statsRoute, async (c) => {
 		);
 	}
 });
+
+function summarizeModelCosts(
+	rows: Record<string, unknown>[],
+	firstRecordedAt: unknown,
+	dates: string[],
+	pointBucket: (date: string) => string,
+	exchangeRate: number,
+): AdminModelCosts {
+	const categories: AdminModelCosts["categories"] = {
+		jev: { attempts: 0, unpriced_attempts: 0 },
+		embedding: { attempts: 0, unpriced_attempts: 0 },
+		reranking: { attempts: 0, unpriced_attempts: 0 },
+	};
+	const currencies: AdminModelCosts["currencies"] = {};
+	const firstRecorded = typeof firstRecordedAt === "string" ? firstRecordedAt : null;
+	const firstBucket = firstRecorded ? pointBucket(firstRecorded) : null;
+	const bucketIndices = new Map(dates.map((date, index) => [pointBucket(date), index]));
+	const series = () => ({
+		total_nanos: 0,
+		priced_attempts: 0,
+		points: dates.map((date) => ({
+			date,
+			count: firstBucket && pointBucket(date) >= firstBucket ? 0 : null,
+		})),
+	});
+	for (const row of rows) {
+		const category = row.category as ModelCostCategory;
+		const attempts = Number(row.attempts);
+		const pricedAttempts = Number(row.priced_attempts);
+		categories[category].attempts += attempts;
+		categories[category].unpriced_attempts += attempts - pricedAttempts;
+		if (row.cost_nanos == null) continue;
+		const currency = row.currency as ModelCostCurrency;
+		currencies[currency] ??= {
+			total_nanos: 0,
+			categories: { jev: series(), embedding: series(), reranking: series() },
+		};
+		const totals = currencies[currency];
+		const cost = Number(row.cost_nanos);
+		const metric = totals.categories[category];
+		totals.total_nanos += cost;
+		metric.total_nanos += cost;
+		metric.priced_attempts += pricedAttempts;
+		const index = bucketIndices.get(String(row.bucket));
+		if (index !== undefined) metric.points[index].count = cost;
+	}
+	return {
+		first_recorded_at: firstRecorded,
+		exchange_rate: Number.isFinite(exchangeRate) && exchangeRate > 0 ? exchangeRate : null,
+		categories,
+		currencies,
+	};
+}
 
 export default app;

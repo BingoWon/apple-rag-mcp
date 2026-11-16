@@ -43,7 +43,7 @@ async function handleMCPRequest(c: {
 	}
 
 	const handler = new MCPProtocolHandler(
-		() => createServices(c.env, c.executionCtx),
+		() => createServices(c.env, c.executionCtx, "mcp"),
 		(request) => new AuthMiddleware(c.env.DB, c.executionCtx).optionalAuth(request),
 	);
 	const response = handler.handleRequest(c.req.raw);

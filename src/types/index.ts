@@ -100,8 +100,34 @@ export interface AdminBillingStats {
 	receipts: Record<string, AdminMetricStats>;
 }
 
+export type ModelCostCategory = "jev" | "embedding" | "reranking";
+export type ModelCostCurrency = "USD" | "CNY";
+
+export interface AdminModelCosts {
+	first_recorded_at: string | null;
+	exchange_rate: number | null;
+	categories: Record<ModelCostCategory, { attempts: number; unpriced_attempts: number }>;
+	currencies: Partial<
+		Record<
+			ModelCostCurrency,
+			{
+				total_nanos: number;
+				categories: Record<
+					ModelCostCategory,
+					{
+						total_nanos: number;
+						priced_attempts: number;
+						points: { date: string; count: number | null }[];
+					}
+				>;
+			}
+		>
+	>;
+}
+
 export interface AdminDashboardStats {
 	billing: AdminBillingStats;
+	model_costs: AdminModelCosts;
 	channels: Record<ToolChannel, AdminMetricStats>;
 	start: string;
 	end: string;

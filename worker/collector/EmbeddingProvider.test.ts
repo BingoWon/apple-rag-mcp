@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import type { ModelUsageEvent } from "../services/model-usage.js";
 import { BatchEmbeddingProvider, createEmbeddings } from "./EmbeddingProvider.js";
 
 test("embeds large inputs in bounded batches while preserving order", async () => {
@@ -39,6 +40,7 @@ test("embeds large inputs in bounded batches while preserving order", async () =
 
 test("retries an overloaded model and succeeds", async () => {
 	const originalFetch = globalThis.fetch;
+	const usage: ModelUsageEvent[] = [];
 	let calls = 0;
 
 	globalThis.fetch = (async (_input, init) => {
@@ -61,13 +63,20 @@ test("retries an overloaded model and succeeds", async () => {
 				index,
 				embedding: Array.from({ length: 2560 }, (_, dimension) => (dimension === 0 ? 1 : 0)),
 			})),
+			usage: { prompt_tokens: 5 },
 		});
 	}) as typeof fetch;
 
 	try {
-		const result = await new BatchEmbeddingProvider("test-key").encodeBatch(["retry me"]);
+		const result = await new BatchEmbeddingProvider("test-key", (event) =>
+			usage.push(event),
+		).encodeBatch(["retry me"]);
 		assert.equal(calls, 3);
 		assert.equal(result.length, 1);
+		assert.deepEqual(
+			usage.map((event) => event.costNanos),
+			[undefined, undefined, 100],
+		);
 	} finally {
 		globalThis.fetch = originalFetch;
 	}

@@ -11,7 +11,7 @@ const sentAlerts = new Map<string, number>();
 export function createModelAlertReporter(env: Env, ctx: WaitUntilContext): ModelAlertReporter {
 	return (key, message) => {
 		let safeMessage = message;
-		for (const secret of [env.TYPESAFE_API_KEY, env.DEEPINFRA_API_KEY]) {
+		for (const secret of [env.TYPESAFE_API_KEY, env.ZENMUX_API_KEY, env.DEEPINFRA_API_KEY]) {
 			if (secret) safeMessage = safeMessage.replaceAll(secret, "[REDACTED]");
 		}
 		console.warn(`[MCP][MODEL] ${safeMessage}`);

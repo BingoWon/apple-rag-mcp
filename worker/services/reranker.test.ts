@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test, { type TestContext } from "node:test";
 import { EmbeddingService } from "./embedding.js";
+import type { ModelUsageEvent } from "./model-usage.js";
 import { type RerankDocument, RerankerService } from "./reranker.js";
 
 const documents: RerankDocument[] = [
@@ -42,6 +43,80 @@ function service(
 		alerts,
 	};
 }
+
+test("ZenMux Jev recovers before Qwen and records both Jev attempts under one category", async (t) => {
+	const zenmuxKey = "private-zenmux-test-key";
+	const setup = service(t, (url, body, init) => {
+		if (url === "https://api.typesafe.ai/v1/systemone") {
+			return Response.json({ error: "unavailable" }, { status: 503 });
+		}
+		assert.equal(url, "https://zenmux.ai/api/v1/systemone");
+		assert.equal(new Headers(init?.headers).get("authorization"), `Bearer ${zenmuxKey}`);
+		assert.equal(body.model, "typesafe/jev-1.14");
+		assert.deepEqual(Object.keys(body.questions as object), ["d0", "d1"]);
+		return Response.json({
+			model: body.model,
+			answers: { d0: { type: "score", score: 0 }, d1: { type: "score", score: 2.93 } },
+			usage: { input_tokens: 459 },
+		});
+	});
+	const usage: ModelUsageEvent[] = [];
+	const reranker = new RerankerService(
+		{ ...keys, ZENMUX_API_KEY: zenmuxKey },
+		(_key, message) => setup.alerts.push(message),
+		(event) => usage.push(event),
+	);
+	const ranked = await reranker.rerank("NavigationStack", documents, 1);
+	assert.equal(ranked[0].originalIndex, 1);
+	assert.equal(setup.calls.length, 2);
+	assert.deepEqual(usage, [
+		{ category: "jev" },
+		{
+			category: "jev",
+			inputTokens: 459,
+			currency: "USD",
+			costNanos: 19278,
+			costSource: "estimated",
+		},
+	]);
+});
+
+test("unusable ZenMux scores go to Qwen and keep both providers' metered costs", async (t) => {
+	const setup = service(t, (url) => {
+		if (url.includes("api.typesafe.ai")) return new Response("unavailable", { status: 503 });
+		if (url.includes("zenmux.ai")) {
+			return Response.json({
+				model: "typesafe/jev-1.14",
+				answers: { d0: { type: "score", score: 0 } },
+				usage: { input_tokens: 200 },
+			});
+		}
+		return Response.json({
+			scores: [0.3, 0.9],
+			input_tokens: 100,
+			inference_status: { cost: 0.000006 },
+		});
+	});
+	const usage: ModelUsageEvent[] = [];
+	const reranker = new RerankerService(
+		{ ...keys, ZENMUX_API_KEY: "private-zenmux-test-key" },
+		(_key, message) => setup.alerts.push(message),
+		(event) => usage.push(event),
+	);
+	assert.equal((await reranker.rerank("NavigationStack", documents, 1))[0].originalIndex, 1);
+	assert.deepEqual(
+		setup.calls.map((url) => new URL(url).hostname),
+		["api.typesafe.ai", "zenmux.ai", "api.deepinfra.com"],
+	);
+	assert.deepEqual(
+		usage.map(({ category, costNanos }) => [category, costNanos]),
+		[
+			["jev", undefined],
+			["jev", 8400],
+			["reranking", 6000],
+		],
+	);
+});
 
 for (const cancelBackup of [false, true]) {
 	test(`cancelling ${cancelBackup ? "backup" : "Jev"} aborts the request without fallback or alerts`, async (t) => {

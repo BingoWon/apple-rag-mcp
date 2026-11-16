@@ -2,6 +2,7 @@ import type { ModelAlertReporter } from "../services/model-alerts.js";
 import { logger } from "../shared/logger.js";
 import type { Env } from "../shared/types.js";
 import { DEEPINFRA_CONFIG, DeepInfraService, ModelRequestError } from "./deepinfra-base.js";
+import { type ModelUsageRecorder, pricedModelUsage } from "./model-usage.js";
 
 export interface RerankDocument {
 	content: string;
@@ -18,6 +19,14 @@ interface RerankerInput {
 
 interface RerankerResponse {
 	scores: number[];
+	input_tokens?: number;
+	inference_status?: { cost?: number; tokens_input?: number };
+}
+
+interface JevResponse {
+	model?: string;
+	answers?: Record<string, { type?: string; score?: number }>;
+	usage?: { input_tokens?: number };
 }
 
 export interface RankedDocument {
@@ -26,8 +35,21 @@ export interface RankedDocument {
 	relevanceScore: number;
 }
 
-const JEV_MODEL = "jev-latest";
-const JEV_ENDPOINT = "https://api.typesafe.ai/v1/systemone";
+const JEV_PROVIDERS = [
+	{
+		name: "typesafe",
+		key: "TYPESAFE_API_KEY",
+		model: "jev-latest",
+		endpoint: "https://api.typesafe.ai/v1/systemone",
+	},
+	{
+		name: "zenmux",
+		key: "ZENMUX_API_KEY",
+		model: "typesafe/jev-1.14",
+		endpoint: "https://zenmux.ai/api/v1/systemone",
+	},
+] as const;
+type JevProvider = (typeof JEV_PROVIDERS)[number];
 const MAX_STATE_BYTES = 64_000;
 const encoder = new TextEncoder();
 
@@ -67,10 +89,11 @@ export class RerankerService extends DeepInfraService<
 	protected readonly endpoint = `/v1/inference/${DEEPINFRA_CONFIG.RERANKER_MODEL}`;
 
 	constructor(
-		private readonly env: Pick<Env, "DEEPINFRA_API_KEY" | "TYPESAFE_API_KEY">,
+		private readonly env: Pick<Env, "DEEPINFRA_API_KEY" | "TYPESAFE_API_KEY" | "ZENMUX_API_KEY">,
 		reportFailure: ModelAlertReporter,
+		recordUsage?: ModelUsageRecorder,
 	) {
-		super(env.DEEPINFRA_API_KEY, reportFailure);
+		super(env.DEEPINFRA_API_KEY, reportFailure, recordUsage);
 	}
 
 	async rerank(
@@ -97,27 +120,49 @@ export class RerankerService extends DeepInfraService<
 	): Promise<RankedDocument[]> {
 		signal?.throwIfAborted();
 		const started = Date.now();
-		let primaryError: Error;
-		try {
-			const response = await this.jevScores(input, signal);
-			signal?.throwIfAborted();
-			logger.info(
-				`[RERANK] provider=typesafe model=${response.model} candidates=${input.documents.length} elapsed_ms=${Date.now() - started}`,
-			);
-			return this.processResponse(response, input);
-		} catch (error) {
-			signal?.throwIfAborted();
-			primaryError = this.safeError(error);
-			logger.warn(`[RERANK] Jev failed: ${primaryError.message}; switching to Qwen3-Reranker-8B`);
+		const failures: Array<{ provider: JevProvider["name"]; error: Error }> = [];
+		let payload: ReturnType<RerankerService["buildJevPayload"]> | undefined;
+		for (const provider of JEV_PROVIDERS) {
+			const key = this.env[provider.key];
+			if (provider.name === "zenmux" && !key) continue;
+			try {
+				if (!key) throw new ModelRequestError(`${provider.key} is not configured`, false);
+				payload ??= this.buildJevPayload(input);
+				const response = await this.jevScores(provider, key, payload, signal);
+				signal?.throwIfAborted();
+				const ranked = this.processResponse(response, input);
+				const primary = failures[0]?.error;
+				if (primary) {
+					this.reportFailure(
+						`rerank:jev:${this.signature(primary)}:zenmux`,
+						`TypeSafe Jev failed: ${primary.message}\nZenMux Jev recovered the search.`,
+					);
+				}
+				logger.info(
+					`[RERANK] provider=${provider.name} model=${response.model} candidates=${input.documents.length} elapsed_ms=${Date.now() - started}`,
+				);
+				return ranked;
+			} catch (error) {
+				signal?.throwIfAborted();
+				const failure = this.safeError(error);
+				failures.push({ provider: provider.name, error: failure });
+				logger.warn(`[RERANK] ${provider.name} Jev failed: ${failure.message}`);
+			}
 		}
 
+		const failureSummary = failures
+			.map(({ provider, error }) => `${provider}: ${error.message}`)
+			.join("\n");
+		const failureKey = failures
+			.map(({ provider, error }) => `${provider}:${this.signature(error)}`)
+			.join(":");
 		try {
-			const response = await this.singleRequest(this.endpoint, this.buildPayload(input), signal);
+			const response = await this.qwenScores(input, signal);
 			signal?.throwIfAborted();
 			const ranked = this.processResponse(response, input);
 			this.reportFailure(
-				`rerank:jev:${this.signature(primaryError)}:recovered`,
-				`Jev (${JEV_MODEL}) failed: ${primaryError.message}\nFallback Qwen3-Reranker-8B succeeded. Search remains available.`,
+				`rerank:jev:${failureKey}:recovered`,
+				`Jev failed: ${failureSummary}\nFallback Qwen3-Reranker-8B succeeded. Search remains available.`,
 			);
 			logger.info(
 				`[RERANK] provider=deepinfra model=${DEEPINFRA_CONFIG.RERANKER_MODEL} fallback=true elapsed_ms=${Date.now() - started}`,
@@ -127,11 +172,8 @@ export class RerankerService extends DeepInfraService<
 		} catch (error) {
 			signal?.throwIfAborted();
 			const backupError = this.safeError(error);
-			const message = `Jev (${JEV_MODEL}) failed: ${primaryError.message}\nFallback Qwen3-Reranker-8B failed: ${backupError.message}\nBoth rerankers failed. Search will return the original candidate order.`;
-			this.reportFailure(
-				`rerank:jev:${this.signature(primaryError)}:qwen:${this.signature(backupError)}`,
-				message,
-			);
+			const message = `Jev failed: ${failureSummary}\nFallback Qwen3-Reranker-8B failed: ${backupError.message}\nBoth rerankers failed. Search will return the original candidate order.`;
+			this.reportFailure(`rerank:jev:${failureKey}:qwen:${this.signature(backupError)}`, message);
 			throw new Error(`${operationName}: ${message}`);
 		}
 	}
@@ -139,7 +181,11 @@ export class RerankerService extends DeepInfraService<
 	private safeError(error: unknown): Error {
 		const original = error instanceof Error ? error : new Error(String(error));
 		let message = original.message;
-		for (const secret of [this.env.TYPESAFE_API_KEY, this.env.DEEPINFRA_API_KEY]) {
+		for (const secret of [
+			this.env.TYPESAFE_API_KEY,
+			this.env.ZENMUX_API_KEY,
+			this.env.DEEPINFRA_API_KEY,
+		]) {
 			if (secret) message = message.replaceAll(secret, "[REDACTED]");
 		}
 		if (original instanceof ModelRequestError) {
@@ -154,12 +200,7 @@ export class RerankerService extends DeepInfraService<
 		return `${error instanceof ModelRequestError ? (error.status ?? "config") : error.name}:${error.message.slice(0, 120)}`;
 	}
 
-	private async jevScores(
-		input: RerankerInput,
-		signal?: AbortSignal,
-	): Promise<RerankerResponse & { model: string }> {
-		const key = this.env.TYPESAFE_API_KEY;
-		if (!key) throw new ModelRequestError("TYPESAFE_API_KEY is not configured", false);
+	private buildJevPayload(input: RerankerInput) {
 		if (input.documents.length > 128) throw new Error("Too many candidates for Jev");
 
 		const state = {
@@ -171,7 +212,7 @@ export class RerankerService extends DeepInfraService<
 				content: "",
 			})),
 		};
-		// ponytail: byte-bound instead of a tokenizer; provider context rejection uses the 8B fallback.
+		// shortcut: The state is byte-bounded. Use a tokenizer if providers regularly reject this budget.
 		const available = MAX_STATE_BYTES - encoder.encode(JSON.stringify(state)).length;
 		if (available < input.documents.length * 128)
 			throw new Error("Jev context metadata exceeds budget");
@@ -197,38 +238,81 @@ export class RerankerService extends DeepInfraService<
 				},
 			]),
 		);
-		const response = await fetch(JEV_ENDPOINT, {
-			method: "POST",
-			headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-			body: JSON.stringify({ model: JEV_MODEL, state, questions }),
-			signal: signal
-				? AbortSignal.any([signal, AbortSignal.timeout(DEEPINFRA_CONFIG.TIMEOUT_MS)])
-				: AbortSignal.timeout(DEEPINFRA_CONFIG.TIMEOUT_MS),
-		});
-		if (!response.ok) {
-			const reason = (await response.text().catch(() => ""))
-				.replaceAll(key, "[REDACTED]")
-				.slice(0, 500);
-			throw new ModelRequestError(`HTTP ${response.status}: ${reason}`, false, response.status);
+		return { state, questions };
+	}
+
+	private async jevScores(
+		provider: JevProvider,
+		key: string,
+		payload: ReturnType<RerankerService["buildJevPayload"]>,
+		signal?: AbortSignal,
+	): Promise<RerankerResponse & { model: string }> {
+		signal?.throwIfAborted();
+		let data: JevResponse | null = null;
+		try {
+			const timeout = AbortSignal.timeout(DEEPINFRA_CONFIG.TIMEOUT_MS);
+			const response = await fetch(provider.endpoint, {
+				method: "POST",
+				headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+				body: JSON.stringify({ model: provider.model, ...payload }),
+				signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
+			});
+			if (!response.ok) {
+				const reason = (await response.text().catch(() => ""))
+					.replaceAll(key, "[REDACTED]")
+					.slice(0, 500);
+				throw new ModelRequestError(`HTTP ${response.status}: ${reason}`, false, response.status);
+			}
+			data = (await response.json()) as JevResponse | null;
+		} finally {
+			this.recordUsage?.(pricedModelUsage("jev", data?.usage?.input_tokens, "USD", 42));
 		}
-		const data = (await response.json()) as {
-			model?: string;
-			answers?: Record<string, { type?: string; score?: number }>;
-		} | null;
-		if (!data?.model?.startsWith("jev-")) throw new Error("Invalid Jev model response");
-		const scores = input.documents.map((_, index) => {
-			const answer = data.answers?.[`d${index}`];
+		if (
+			typeof data?.model !== "string" ||
+			(provider.name === "typesafe"
+				? !data.model.startsWith("jev-")
+				: data.model !== provider.model)
+		) {
+			throw new Error("Invalid Jev model response");
+		}
+		const scores = Object.keys(payload.questions).map((id) => {
+			const answer = data.answers?.[id];
 			if (
 				answer?.type !== "score" ||
 				!Number.isFinite(answer.score) ||
 				answer.score! < 0 ||
 				answer.score! > 3
 			) {
-				throw new Error(`Missing or invalid Jev score for d${index}`);
+				throw new Error(`Missing or invalid Jev score for ${id}`);
 			}
 			return answer.score!;
 		});
 		return { scores, model: data.model };
+	}
+
+	private async qwenScores(input: RerankerInput, signal?: AbortSignal): Promise<RerankerResponse> {
+		signal?.throwIfAborted();
+		let response: RerankerResponse | undefined;
+		try {
+			response = await this.singleRequest(this.endpoint, this.buildPayload(input), signal);
+			return response;
+		} finally {
+			if (this.apiKey && this.recordUsage) {
+				const usage = pricedModelUsage(
+					"reranking",
+					response?.input_tokens ?? response?.inference_status?.tokens_input,
+					"USD",
+					50,
+				);
+				const cost = response?.inference_status?.cost;
+				const nanos = typeof cost === "number" ? Math.round(cost * 1e9) : NaN;
+				this.recordUsage(
+					Number.isSafeInteger(nanos) && nanos > 0
+						? { ...usage, costNanos: nanos, currency: "USD", costSource: "reported" }
+						: usage,
+				);
+			}
+		}
 	}
 
 	protected buildPayload(input: RerankerInput): unknown {

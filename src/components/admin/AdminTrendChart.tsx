@@ -36,6 +36,7 @@ export const AdminTrendChart = memo(function AdminTrendChart({
 	seriesName,
 	fitScale = false,
 	comparison,
+	stackComparison = false,
 	formatValue,
 }: {
 	metric: AdminMetricStats;
@@ -45,7 +46,12 @@ export const AdminTrendChart = memo(function AdminTrendChart({
 	seriesName?: string;
 	fitScale?: boolean;
 	formatValue?: (value: number) => string;
-	comparison?: { name: string; color: string; metric: AdminMetricStats }[];
+	comparison?: {
+		name: string;
+		color: string;
+		metric: { points: { date: string; count: number | null }[] };
+	}[];
+	stackComparison?: boolean;
 }) {
 	const { t, i18n } = useTranslation();
 	const { resolvedTheme } = useTheme();
@@ -54,6 +60,12 @@ export const AdminTrendChart = memo(function AdminTrendChart({
 		(point) => point.registered !== undefined || point.anonymous !== undefined,
 	);
 	const height = heightProp ?? (isRequest ? 180 : 120);
+	const chartType =
+		stackComparison || (!comparison && isRequest)
+			? "bar"
+			: comparison || fitScale
+				? "line"
+				: "area";
 	const fitted = fitScale ? fittedCountAxis(metric.points.map((point) => point.count)) : undefined;
 	const options = useMemo<ApexOptions>(() => {
 		const locale = i18n.resolvedLanguage?.startsWith("zh") ? "zh-CN" : "en";
@@ -67,8 +79,8 @@ export const AdminTrendChart = memo(function AdminTrendChart({
 			theme: { mode: resolvedTheme },
 			chart: {
 				background: "transparent",
-				type: comparison ? "line" : isRequest ? "bar" : fitScale ? "line" : "area",
-				stacked: isRequest || hasBreakdown,
+				type: chartType,
+				stacked: isRequest || hasBreakdown || stackComparison,
 				animations: { enabled: false },
 				sparkline: { enabled: false },
 				toolbar: {
@@ -87,7 +99,7 @@ export const AdminTrendChart = memo(function AdminTrendChart({
 				foreColor: resolvedTheme === "dark" ? "#94a3b8" : "#64748b",
 			},
 			plotOptions: { bar: { columnWidth: "65%", borderRadius: 2 } },
-			stroke: { width: isRequest ? 0 : fitScale ? 3 : 2, curve: "straight" },
+			stroke: { width: chartType === "bar" ? 0 : fitScale ? 3 : 2, curve: "straight" },
 			fill: { opacity: comparison || isRequest ? 1 : 0.2, type: "solid" },
 			colors: comparison
 				? comparison.map((item) => item.color)
@@ -99,7 +111,7 @@ export const AdminTrendChart = memo(function AdminTrendChart({
 						? [color, "#f59e0b"]
 						: [color],
 			dataLabels: { enabled: false },
-			legend: { show: !!comparison || hasBreakdown, position: "bottom" },
+			legend: { show: (!!comparison && !stackComparison) || hasBreakdown, position: "bottom" },
 			grid: {
 				borderColor: resolvedTheme === "dark" ? "#334155" : "#e2e8f0",
 				strokeDashArray: 3,
@@ -141,6 +153,8 @@ export const AdminTrendChart = memo(function AdminTrendChart({
 		fitted?.min,
 		fitted?.max,
 		comparison,
+		chartType,
+		stackComparison,
 		formatValue,
 	]);
 	const series = comparison
@@ -173,7 +187,7 @@ export const AdminTrendChart = memo(function AdminTrendChart({
 						},
 					];
 
-	if (metric.total === 0) {
+	if (metric.total === 0 && !stackComparison) {
 		return (
 			<div className="flex items-center justify-center text-xs text-muted" style={{ height }}>
 				{t("admin.stats_empty")}
@@ -189,12 +203,7 @@ export const AdminTrendChart = memo(function AdminTrendChart({
 					</div>
 				}
 			>
-				<ApexChart
-					options={options}
-					series={series}
-					type={comparison ? "line" : isRequest ? "bar" : fitScale ? "line" : "area"}
-					height={height}
-				/>
+				<ApexChart options={options} series={series} type={chartType} height={height} />
 			</Suspense>
 		</div>
 	);

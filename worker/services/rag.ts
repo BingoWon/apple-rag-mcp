@@ -15,6 +15,7 @@ import {
 	FallbackEmbeddingService,
 	SiliconFlowEmbeddingService,
 } from "./embedding.js";
+import { createModelUsageRecorder } from "./model-usage.js";
 import { RerankerService } from "./reranker.js";
 import { type RankedSearchResult, SearchEngine } from "./search-engine.js";
 
@@ -22,18 +23,29 @@ export class RAGService {
 	readonly database: DatabaseService;
 	readonly embedding: IEmbeddingService;
 	private readonly searchEngine: SearchEngine;
+	private readonly usage: ReturnType<typeof createModelUsageRecorder>;
 
-	constructor(config: AppConfig, env: Env, ctx: WaitUntilContext) {
+	constructor(
+		config: AppConfig,
+		env: Env,
+		private readonly ctx: WaitUntilContext,
+		channel: "mcp" | "cli",
+	) {
 		const reportFailure = createModelAlertReporter(env, ctx);
+		this.usage = createModelUsageRecorder(env.DB, channel);
 		this.database = new DatabaseService(config);
-		const deepInfra = new EmbeddingService(env.DEEPINFRA_API_KEY, reportFailure);
+		const deepInfra = new EmbeddingService(env.DEEPINFRA_API_KEY, reportFailure, this.usage.record);
 		this.embedding = env.SILICONFLOW_API_KEY
 			? new FallbackEmbeddingService(
-					new SiliconFlowEmbeddingService(env.SILICONFLOW_API_KEY, reportFailure),
+					new SiliconFlowEmbeddingService(
+						env.SILICONFLOW_API_KEY,
+						reportFailure,
+						this.usage.record,
+					),
 					deepInfra,
 				)
 			: deepInfra;
-		const reranker = new RerankerService(env, reportFailure);
+		const reranker = new RerankerService(env, reportFailure, this.usage.record);
 		this.searchEngine = new SearchEngine(this.database, this.embedding, reranker);
 	}
 
@@ -52,7 +64,9 @@ export class RAGService {
 		}
 
 		const resultCount = Math.min(Math.max(result_count, 1), 10);
-		const searchResult = await this.searchEngine.search(trimmedQuery, { resultCount, signal });
+		const searchResult = await this.searchEngine
+			.search(trimmedQuery, { resultCount, signal })
+			.finally(() => this.ctx.waitUntil(this.usage.flush()));
 		const formattedResults = this.formatResults(searchResult.results);
 		const totalTime = Date.now() - startTime;
 

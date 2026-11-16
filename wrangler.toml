@@ -10,6 +10,7 @@ keep_vars = true
 [vars]
 BATCH_SIZE = "30"
 FORCE_UPDATE_ALL = "false"
+MODEL_COST_CNY_PER_USD = "6.7152"
 
 [placement]
 mode = "smart"

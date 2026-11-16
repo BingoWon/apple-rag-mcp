@@ -3,6 +3,8 @@
  * Batched input requests against the standard embedding model with retry support.
  */
 
+import { embeddingUsage } from "../services/embedding.js";
+import type { ModelUsageRecorder } from "../services/model-usage.js";
 import { logger } from "./utils/logger.js";
 
 const DEEPINFRA_CONFIG = {
@@ -28,7 +30,10 @@ class EmbeddingRequestError extends Error {
 }
 
 export class BatchEmbeddingProvider {
-	constructor(private readonly apiKey: string) {
+	constructor(
+		private readonly apiKey: string,
+		private readonly recordUsage?: ModelUsageRecorder,
+	) {
 		if (!apiKey) throw new Error("DEEPINFRA_API_KEY is required");
 	}
 
@@ -38,6 +43,8 @@ export class BatchEmbeddingProvider {
 		let lastError!: Error;
 
 		for (let attempt = 1; attempt <= DEEPINFRA_CONFIG.MAX_ATTEMPTS; attempt++) {
+			let inputTokens: number | undefined;
+			let delayMs: number;
 			try {
 				const res = await fetch(DEEPINFRA_CONFIG.API_URL, {
 					method: "POST",
@@ -63,7 +70,9 @@ export class BatchEmbeddingProvider {
 
 				const json = (await res.json()) as {
 					data: Array<{ embedding: number[]; index: number }>;
+					usage?: { prompt_tokens?: number };
 				};
+				inputTokens = json?.usage?.prompt_tokens;
 
 				if (json.data?.length !== texts.length) {
 					throw new Error(
@@ -92,14 +101,16 @@ export class BatchEmbeddingProvider {
 				}
 
 				const retryAfterMs = e instanceof EmbeddingRequestError ? e.retryAfterMs : undefined;
-				const delayMs =
+				delayMs =
 					retryAfterMs ??
 					Math.min(
 						DEEPINFRA_CONFIG.RETRY_MAX_DELAY_MS,
 						DEEPINFRA_CONFIG.RETRY_BASE_DELAY_MS * 2 ** (attempt - 1),
 					);
-				await new Promise((resolve) => setTimeout(resolve, delayMs));
+			} finally {
+				this.recordUsage?.(embeddingUsage(inputTokens));
 			}
+			await new Promise((resolve) => setTimeout(resolve, delayMs));
 		}
 
 		logger.warn(`Embedding failed (batch ${texts.length}): ${lastError.message}`);
@@ -118,10 +129,14 @@ function parseRetryAfter(value: string | null): number | undefined {
 	return Number.isFinite(seconds) && seconds >= 0 ? seconds * 1_000 : undefined;
 }
 
-export async function createEmbeddings(texts: string[], apiKey: string): Promise<number[][]> {
+export async function createEmbeddings(
+	texts: string[],
+	apiKey: string,
+	recordUsage?: ModelUsageRecorder,
+): Promise<number[][]> {
 	if (!texts.length) return [];
 
-	const provider = new BatchEmbeddingProvider(apiKey);
+	const provider = new BatchEmbeddingProvider(apiKey, recordUsage);
 	const batches = Array.from(
 		{ length: Math.ceil(texts.length / DEEPINFRA_CONFIG.BATCH_SIZE) },
 		(_, index) => {

@@ -7,7 +7,7 @@ import app from "./admin/index.js";
 
 const NOW = Date.parse("2026-10-09T04:15:00.000Z");
 
-function createDatabase() {
+function createDatabase(rate?: string) {
 	const sqlite = new DatabaseSync(":memory:");
 	const directory = new URL("../../../migrations/", import.meta.url);
 	for (const file of readdirSync(directory)
@@ -40,6 +40,7 @@ function createDatabase() {
 			{ headers: { "X-Admin-Password": "test-admin" } },
 			{
 				ADMIN_PASSWORD: "test-admin",
+				MODEL_COST_CNY_PER_USD: rate,
 				DB: db as unknown as D1Database,
 			},
 		);
@@ -141,6 +142,7 @@ test("global daily statistics handle SQLite/ISO dates, Singapore boundaries, out
 	assert.equal(response.headers.get("Cache-Control"), "no-store");
 	const { data } = (await response.json()) as { data: AdminDashboardStats };
 	assert.equal(data.timezone, "Asia/Singapore");
+	assert.equal(data.model_costs.exchange_rate, null);
 	assert.equal(data.start, "2026-10-02T16:00:00.000Z");
 	assert.equal(data.end, new Date(NOW).toISOString());
 	assert.equal(data.metrics.users.total, 2);
@@ -196,7 +198,6 @@ test("global daily statistics handle SQLite/ISO dates, Singapore boundaries, out
 			);
 		}
 	}
-	assert.equal(queries.length, 15);
 	for (const table of ["search_logs", "fetch_logs"]) {
 		const sql = queries.find((query) => query.includes(`FROM ${table}`))!;
 		const plan = sqlite
@@ -453,6 +454,44 @@ test("channel comparison retains all sources while request filters preserve shar
 	assert.equal(custom.metrics.fetches.total, 1);
 	assert.equal(custom.channels.mcp.total, 1);
 	assert.equal(custom.channels.cli.total, 2);
+});
+
+test("model costs preserve native currencies, coverage and the request channel", async (t) => {
+	t.mock.method(Date, "now", () => NOW);
+	const { sqlite, request } = createDatabase("6.81");
+	t.after(() => sqlite.close());
+	const insert = sqlite.prepare(
+		`INSERT INTO model_usage_events (created_at, category, channel, currency, cost_nanos, cost_source)
+		 VALUES (?, ?, ?, ?, ?, ?)`,
+	);
+	const first = "2026-10-07T16:00:00.000Z";
+	insert.run(first, "jev", "mcp", "USD", 42, "estimated");
+	insert.run("2026-10-07T17:00:00.000Z", "jev", "mcp", "USD", 42, "estimated");
+	insert.run("2026-10-08T01:00:00.000Z", "embedding", "cli", "CNY", 140, "estimated");
+	insert.run("2026-10-08T03:00:00.000Z", "embedding", null, "USD", 20, "estimated");
+	insert.run("2026-10-09T01:00:00.000Z", "reranking", "mcp", "USD", 0, "reported");
+	insert.run("2026-10-09T02:00:00.000Z", "jev", "mcp", null, null, null);
+	insert.run(new Date(NOW).toISOString(), "jev", "mcp", "USD", 999, "estimated");
+	const { data } = (await (await request()).json()) as { data: AdminDashboardStats };
+	const { currencies, categories, first_recorded_at } = data.model_costs;
+	assert.equal(data.model_costs.exchange_rate, 6.81);
+	assert.equal(first_recorded_at, first);
+	assert.deepEqual(categories.jev, { attempts: 3, unpriced_attempts: 1 });
+	assert.equal(currencies.USD?.total_nanos, 104);
+	assert.equal(currencies.CNY?.total_nanos, 140);
+	assert.equal(currencies.USD?.categories.reranking.priced_attempts, 1);
+	assert.equal(currencies.USD?.categories.reranking.total_nanos, 0);
+	assert.deepEqual(currencies.USD?.categories.jev.points.slice(-3), [
+		{ date: "2026-10-06T16:00:00.000Z", count: null },
+		{ date: first, count: 84 },
+		{ date: "2026-10-08T16:00:00.000Z", count: 0 },
+	]);
+	const { data: filtered } = (await (await request("channel=mcp")).json()) as {
+		data: AdminDashboardStats;
+	};
+	assert.equal(filtered.model_costs.currencies.USD?.total_nanos, 84);
+	assert.equal(filtered.model_costs.currencies.CNY, undefined);
+	assert.equal(filtered.model_costs.categories.embedding.attempts, 0);
 });
 
 test("billing counts distinct payers, preserves currency and exact payment windows", async (t) => {

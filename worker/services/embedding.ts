@@ -5,6 +5,16 @@
 import type { EmbeddingService as IEmbeddingService } from "../services/types.js";
 import { logger } from "../shared/logger.js";
 import { DEEPINFRA_CONFIG, DeepInfraService } from "./deepinfra-base.js";
+import { pricedModelUsage } from "./model-usage.js";
+
+const EMBEDDING_PRICE_NANOS = { USD: 20, CNY: 140 } as const;
+
+export function embeddingUsage(
+	inputTokens: unknown,
+	currency: keyof typeof EMBEDDING_PRICE_NANOS = "USD",
+) {
+	return pricedModelUsage("embedding", inputTokens, currency, EMBEDDING_PRICE_NANOS[currency]);
+}
 
 interface EmbeddingInput {
 	text: string;
@@ -21,6 +31,7 @@ interface EmbeddingResponse {
 	data: Array<{
 		embedding: number[];
 	}>;
+	usage?: { prompt_tokens?: number };
 }
 
 export class EmbeddingService
@@ -28,6 +39,23 @@ export class EmbeddingService
 	implements IEmbeddingService
 {
 	protected readonly endpoint: string = "/v1/openai/embeddings";
+	protected readonly billingCurrency: keyof typeof EMBEDDING_PRICE_NANOS = "USD";
+
+	protected override async singleRequest(
+		endpoint: string,
+		payload: unknown,
+		signal?: AbortSignal,
+	): Promise<EmbeddingResponse> {
+		if (!this.recordUsage || !this.apiKey) return super.singleRequest(endpoint, payload, signal);
+		signal?.throwIfAborted();
+		let response: EmbeddingResponse | undefined;
+		try {
+			response = await super.singleRequest(endpoint, payload, signal);
+			return response;
+		} finally {
+			this.recordUsage(embeddingUsage(response?.usage?.prompt_tokens, this.billingCurrency));
+		}
+	}
 
 	/**
 	 * Create embedding (single provider)
@@ -96,6 +124,7 @@ export class SiliconFlowEmbeddingService extends EmbeddingService {
 	protected readonly baseUrl = "https://api.siliconflow.cn";
 	protected readonly endpoint = "/v1/embeddings";
 	protected readonly providerName = "SiliconFlow";
+	protected readonly billingCurrency = "CNY";
 
 	protected override buildPayload(input: EmbeddingInput): EmbeddingPayload {
 		return { ...super.buildPayload(input), dimensions: 2560 };

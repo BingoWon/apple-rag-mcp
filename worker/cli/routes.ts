@@ -94,7 +94,8 @@ cliOAuthRoutes.post("/revoke", async (c) => {
 });
 
 export function createCLIRoutes(
-	factory: (env: Env, ctx: WaitUntilContext) => Promise<Services> = createServices,
+	factory: (env: Env, ctx: WaitUntilContext) => Promise<Services> = (env, ctx) =>
+		createServices(env, ctx, "cli"),
 ) {
 	const app = new Hono<AppEnv>();
 	app.use("*", bodyLimit({ maxSize: 16 * 1024 }));

@@ -6,6 +6,7 @@ import {
 	FallbackEmbeddingService,
 	SiliconFlowEmbeddingService,
 } from "./embedding.js";
+import type { ModelUsageEvent } from "./model-usage.js";
 
 const vector = [0.6, 0.8];
 
@@ -64,23 +65,39 @@ test("SiliconFlow uses the OpenAI-compatible endpoint and 2560 dimensions", asyn
 	let requestUrl = "";
 	let requestBody: Record<string, unknown> = {};
 	let authorization = "";
+	const usage: ModelUsageEvent[] = [];
 	t.mock.method(globalThis, "fetch", async (input, init) => {
 		requestUrl = String(input);
 		requestBody = JSON.parse(String(init?.body));
 		authorization = new Headers(init?.headers).get("authorization") ?? "";
-		return Response.json({ data: [{ embedding: [1, 0] }] });
+		return Response.json({ data: [{ embedding: [1, 0] }], usage: { prompt_tokens: 5 } });
 	});
-	const service = new SiliconFlowEmbeddingService("sf-key", () => {});
+	const service = new SiliconFlowEmbeddingService(
+		"sf-key",
+		() => {},
+		(event) => usage.push(event),
+	);
 	assert.deepEqual(await service.createEmbedding("query"), [1, 0]);
 	assert.equal(requestUrl, "https://api.siliconflow.cn/v1/embeddings");
 	assert.equal(authorization, "Bearer sf-key");
 	assert.equal(requestBody.model, "Qwen/Qwen3-Embedding-4B");
 	assert.equal(requestBody.dimensions, 2560);
+	assert.deepEqual(usage, [
+		{
+			category: "embedding",
+			inputTokens: 5,
+			currency: "CNY",
+			costNanos: 700,
+			costSource: "estimated",
+		},
+	]);
 });
 
 test("SiliconFlow failure falls back to DeepInfra with provider-specific alerts", async (t) => {
 	const calls: string[] = [];
 	const alerts: string[] = [];
+	const usage: ModelUsageEvent[] = [];
+	const record = (event: ModelUsageEvent) => usage.push(event);
 	t.mock.method(globalThis, "fetch", async (input) => {
 		const url = String(input);
 		calls.push(url);
@@ -88,11 +105,11 @@ test("SiliconFlow failure falls back to DeepInfra with provider-specific alerts"
 			return Response.json({ error: "insufficient balance" }, { status: 402 });
 		}
 		assert.equal(url, "https://api.deepinfra.com/v1/openai/embeddings");
-		return Response.json({ data: [{ embedding: [0.6, 0.8] }] });
+		return Response.json({ data: [{ embedding: [0.6, 0.8] }], usage: { prompt_tokens: 5 } });
 	});
 	const service = new FallbackEmbeddingService(
-		new SiliconFlowEmbeddingService("sf-key", (_key, message) => alerts.push(message)),
-		new EmbeddingService("di-key", (_key, message) => alerts.push(message)),
+		new SiliconFlowEmbeddingService("sf-key", (_key, message) => alerts.push(message), record),
+		new EmbeddingService("di-key", (_key, message) => alerts.push(message), record),
 	);
 	const reasons: string[] = [];
 	assert.deepEqual(
@@ -103,4 +120,13 @@ test("SiliconFlow failure falls back to DeepInfra with provider-specific alerts"
 	assert.equal(calls.length, 2);
 	assert.equal(calls[0], "https://api.siliconflow.cn/v1/embeddings");
 	assert.match(alerts[0], /SiliconFlow Embedding generation failed/);
+	assert.equal(usage.length, 2);
+	assert.equal(usage[0]?.costNanos, undefined);
+	assert.deepEqual(usage[1], {
+		category: "embedding",
+		inputTokens: 5,
+		currency: "USD",
+		costNanos: 100,
+		costSource: "estimated",
+	});
 });

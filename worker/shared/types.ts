@@ -45,6 +45,8 @@ export interface Env {
 	DEEPINFRA_API_KEY: string;
 	SILICONFLOW_API_KEY?: string;
 	TYPESAFE_API_KEY?: string;
+	ZENMUX_API_KEY?: string;
+	MODEL_COST_CNY_PER_USD?: string;
 	FIRECRAWL_API_KEY?: string;
 	FIRECRAWL_DAILY_LIMIT?: string;
 

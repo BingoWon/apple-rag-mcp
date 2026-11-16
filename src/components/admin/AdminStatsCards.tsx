@@ -17,6 +17,7 @@ import type { AdminDashboardStats, AdminMetricStats, AdminStatsQuery } from "@/t
 import { TOOL_CHANNELS, type ToolChannel } from "../../../worker/shared/tool-channels";
 import { TOOL_OUTCOMES } from "../../../worker/shared/tool-outcomes";
 import { AdminBilling } from "./AdminBilling";
+import { AdminModelCosts } from "./AdminModelCosts";
 import { AdminTrendChart, OUTCOME_COLORS } from "./AdminTrendChart";
 
 const METRICS = [
@@ -432,6 +433,7 @@ export function AdminStatsCards({
 					},
 				)}
 			</section>
+			<AdminModelCosts stats={stats} channel={query.channel} loading={loading} />
 			<AdminBilling stats={stats} loading={loading} onSynced={onBillingSynced} />
 			<section>
 				<h2 className="mb-4 text-lg font-semibold text-light">{t("admin.operations_title")}</h2>
