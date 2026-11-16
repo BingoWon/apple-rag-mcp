@@ -1,5 +1,7 @@
 # [Jev](https://typesafe.ai/) Live Evaluation
 
+For the ZenMux model ID, endpoint, and a standalone smoke test, see [ZenMux Jev integration](zenmux.md).
+
 These scripts replay actual searches using only the supplied model.
 They do not call the production MCP endpoint, an embedding model, or the existing
 reranker. They do not change the production retrieval path.
