@@ -23,3 +23,5 @@ Inspect failures with `journalctl -u apple-rag-catalog.service`. To pause public
 ## Verification
 
 The catalog tests cover page boundaries, stable order, revision changes, relative references, aliases, fuzzy matches, unknown data, cycles and expansion limits. CI exercises publication, cache reuse and last-good rollback in an isolated PostgreSQL schema, tests both MCP handshakes, then installs the built CLI tarball in an isolated consumer. The Worker release and CLI health must advertise browse before automatic npm publication.
+
+The initial November 19 SwiftUI/UIKit publication contained 21,700 readable document pages. An exhaustive check resolved all 26,440 published edges back to their canonical targets and checked their published counts. Refreshing official navigation changed the stored Creating a view group from three to five readable pages without regenerating embeddings. These numbers describe the measured publication and will change as collection continues.
