@@ -303,6 +303,11 @@ class AppleDocCollector {
 		const unchangedRecords = processingPlan.filter((r) => !r.hasChanged && !r.error);
 		const errorRecords = processingPlan.filter((r) => r.error);
 
+		const navOnly = unchangedRecords.filter(
+			(r) =>
+				r.newRawJson &&
+				/^https:\/\/developer\.apple\.com\/documentation\/(swiftui|uikit)(\/|$)/.test(r.record.url),
+		);
 		const processResults = changedRecords.map((r) => r.processResult).filter(Boolean);
 
 		const { allChunks, embeddings } = await this.generateChunksAndEmbeddings(processResults);
@@ -317,6 +322,11 @@ class AppleDocCollector {
 				);
 			});
 		}
+
+		if (navOnly.length)
+			await this.dbManager.updateRawDocuments(
+				navOnly.map((r) => ({ id: r.record.id, json: r.newRawJson! })),
+			);
 
 		if (changedRecords.length > 0) {
 			logger.info(`📝 Content changed: ${changedRecords.length} URLs (full processing)`);

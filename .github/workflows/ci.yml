@@ -44,6 +44,9 @@ jobs:
       - name: Verify and build
         run: pnpm build
 
+      - name: Verify atomic catalog publication on PostgreSQL
+        run: python3 ops/server/test_publish_catalog.py
+
       - name: Verify distributable CLI in an isolated consumer
         run: node --import tsx ops/cli/verify-package.mjs
         env:

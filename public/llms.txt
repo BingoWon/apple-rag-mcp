@@ -27,7 +27,7 @@ setup page for the user's plan; never expose a token in an answer or source code
 
 Supports MCP 2026-07-28 and legacy initialize with 2025-11-25, 2025-06-18, and
 2025-03-26. A missing MCP-Protocol-Version header does not establish incompatibility.
-After setup, verify the connection and tools/list: search and fetch must be available.
+After setup, verify the connection and tools/list: search, browse, and fetch must be available.
 A reload may be required. A configuration file alone is not a successful connection.
 
 ### CLI
@@ -78,7 +78,7 @@ part of Apple search. Do not invent facts absent from retrieved material.
 **Free Account**: 50 tool calls per week, 5 per minute.
 **Pro**: 50,000 tool calls per week, 50 per minute.
 
-Allowances are shared by search and fetch across MCP, CLI, devices, and automation.
+Allowances are shared by search, browse, and fetch across MCP, CLI, devices, and automation.
 The server's current plan, remaining allowance, and reset time are authoritative.
 CLI installation is free; hosted calls are limited by the account plan. No separate
 CLI subscription or retrieval-model API key is needed.
@@ -87,3 +87,5 @@ Inspect structured errors and completeness, not just HTTP status. Narrow an empt
 search once if appropriate. Respect limits and reset times; never loop retries or
 switch identities to bypass them. Only perform retrieval for a real task. Verify
 actual retrieval separately from setup checks and report any limits honestly.
+
+Browse indexed SwiftUI and UIKit documentation with the browse tool or apple-rag browse. Follow catalog hrefs relative to their parent, applying base first. Use fetch to read a document.

@@ -236,6 +236,13 @@ class PostgreSQLManager {
 		};
 	}
 
+	async updateRawDocuments(records: { id: string; json: string }[]): Promise<void> {
+		await this.withTransaction("refresh documentation metadata", async (sql) => {
+			for (const r of records)
+				await sql`UPDATE pages SET raw_json=${r.json}::text::jsonb,updated_at=now()
+ WHERE id=${r.id} AND raw_json IS DISTINCT FROM ${r.json}::text::jsonb AND raw_json IS DISTINCT FROM to_jsonb(${r.json}::text)`;
+		});
+	}
 	async batchUpdateFullRecords(
 		records: Array<DatabaseRecord & { readonly raw_json: string | null }>,
 	): Promise<void> {
@@ -245,7 +252,7 @@ class PostgreSQLManager {
 			for (const record of records) {
 				await sql`
           UPDATE pages
-          SET raw_json = ${record.raw_json},
+          SET raw_json = ${record.raw_json}::text::jsonb,
               title = ${record.title},
               content = ${record.content},
               updated_at = ${record.updated_at}

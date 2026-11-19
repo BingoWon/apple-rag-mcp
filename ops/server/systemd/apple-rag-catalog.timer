@@ -1,0 +1,10 @@
+[Unit]
+Description=Refresh the Apple RAG catalog hourly
+
+[Timer]
+OnCalendar=hourly
+Persistent=true
+RandomizedDelaySec=120
+
+[Install]
+WantedBy=timers.target

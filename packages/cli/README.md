@@ -20,7 +20,7 @@ The client is publicly installable; cloud access is limited:
 | Signed-in free account | 50 | 5 |
 | Pro subscription | 50,000 | 50 |
 
-Search and fetch, all tokens and all MCP/CLI clients share the same account quota.
+Search, browse, and fetch share the account quota across MCP and CLI clients.
 
 ## Account authorization
 
@@ -122,3 +122,7 @@ This package contains compiled client code, manifest, README, license and skill.
 Hosted corpus, database credentials and service configuration stay on the server.
 Repository builds use pnpm; end users do not need it. Maintainers: see `ops/cli.md`
 for the owner-operated first npm publication and subsequent OIDC automation.
+
+## Browse documentation
+
+Run `apple-rag browse --json` to list the catalog, or `apple-rag browse 'https://developer.apple.com/documentation/swiftui/view' --depth 1` to list a page's sections. Small branches expand by default. Use `--page`, `--limit`, and `--revision` to continue a listing. Resolve relative links against the parent URL and any local base. Browsing shares the account's tool quota. The initial catalog covers SwiftUI and UIKit.

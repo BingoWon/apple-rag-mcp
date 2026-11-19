@@ -9,7 +9,7 @@ import billingSync from "./billing-sync";
 import contactMessagesAdmin from "./contact-messages";
 import fetchLogsAdmin from "./fetch-logs";
 import mcpTokensAdmin from "./mcp-tokens";
-import searchLogsAdmin from "./search-logs";
+import { resultLogs } from "./result-logs";
 import statsAdmin from "./stats";
 import userSubscriptionsAdmin from "./user-subscriptions";
 import usersAdmin from "./users";
@@ -63,7 +63,8 @@ app.route("/stats", statsAdmin);
 app.route("/billing-sync", billingSync);
 app.route("/mcp-tokens", mcpTokensAdmin);
 app.route("/authorized-ips", authorizedIPsAdmin);
-app.route("/search-logs", searchLogsAdmin);
+app.route("/search-logs", resultLogs("search"));
+app.route("/browse-logs", resultLogs("browse"));
 app.route("/fetch-logs", fetchLogsAdmin);
 app.route("/user-subscriptions", userSubscriptionsAdmin);
 app.route("/contact-messages", contactMessagesAdmin);
@@ -79,6 +80,7 @@ app.get("/", (c) => {
 				"/admin/stats",
 				"/admin/mcp-tokens",
 				"/admin/authorized-ips",
+				"/admin/browse-logs",
 				"/admin/search-logs",
 				"/admin/fetch-logs",
 				"/admin/user-subscriptions",

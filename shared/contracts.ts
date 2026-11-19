@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { browseDataSchema } from "./browse.js";
 
 export const PLATFORM_URL = "https://apple-rag.com";
 export const CLI_RESOURCE = "/api/cli/v1";
@@ -74,6 +75,8 @@ export const toolErrorSchema = z.object({
 		message: z.string(),
 		status: z.number().int(),
 		retry_at: z.iso.datetime().optional(),
+		candidates: z.array(z.string()).optional(),
+		total: z.int().nonnegative().optional(),
 	}),
 	url: z.string().optional(),
 	source: z.enum(["apple", "third_party"]).optional(),
@@ -133,3 +136,16 @@ export const fetchOutputSchema = z
 	.meta({ type: "object" });
 export type SearchOutput = z.infer<typeof searchOutputSchema>;
 export type FetchOutput = z.infer<typeof fetchOutputSchema>;
+
+export const browseOutputSchema = z
+	.union([
+		browseDataSchema.extend({
+			ok: z.literal(true),
+			outcome: z.literal("success"),
+			request_id: z.string().optional(),
+			account: accountSchema,
+		}),
+		toolErrorSchema,
+	])
+	.meta({ type: "object" });
+export type BrowseOutput = z.infer<typeof browseOutputSchema>;

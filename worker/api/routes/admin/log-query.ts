@@ -31,7 +31,10 @@ export const logQuerySchema = z
 		path: ["from"],
 	});
 
-export function logConditions(query: z.output<typeof logQuerySchema>, kind: "search" | "fetch") {
+export function logConditions(
+	query: z.output<typeof logQuerySchema>,
+	kind: "search" | "fetch" | "browse",
+) {
 	const clauses: string[] = [],
 		values: (string | number)[] = [];
 	const equal = (column: string, value: string | number | undefined) => {
@@ -58,17 +61,19 @@ export function logConditions(query: z.output<typeof logQuerySchema>, kind: "sea
 	}
 	if (query.q?.trim()) {
 		const fields =
-			kind === "fetch"
-				? [
-						"requested_url",
-						"actual_url",
-						"(SELECT name FROM users WHERE users.id = fetch_logs.user_id)",
-					]
-				: [
-						"requested_query",
-						"actual_query",
-						"(SELECT name FROM users WHERE users.id = search_logs.user_id)",
-					];
+			kind === "browse"
+				? ["requested_url", "(SELECT name FROM users WHERE users.id = browse_logs.user_id)"]
+				: kind === "fetch"
+					? [
+							"requested_url",
+							"actual_url",
+							"(SELECT name FROM users WHERE users.id = fetch_logs.user_id)",
+						]
+					: [
+							"requested_query",
+							"actual_query",
+							"(SELECT name FROM users WHERE users.id = search_logs.user_id)",
+						];
 		// INSTR supports long URLs and treats %, _ and quotes literally (D1 LIKE is limited to 50 bytes).
 		clauses.push(
 			`(${fields.map((f) => `instr(lower(coalesce(${f},'')),lower(?)) > 0`).join(" OR ")})`,

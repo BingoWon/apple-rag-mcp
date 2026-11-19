@@ -169,7 +169,7 @@ test("collector database operations remain safe under concurrency and interrupte
 	await sql`CREATE TABLE ${sql(schema)}.pages (
 		id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
 		url text NOT NULL UNIQUE,
-		raw_json text,
+		raw_json jsonb,
 		title text,
 		content text NOT NULL DEFAULT '',
 		collect_count integer NOT NULL DEFAULT 0,
@@ -282,11 +282,11 @@ test("collector database operations remain safe under concurrency and interrupte
 		"atomic claims preserve priority, skip held rows and return no old raw JSON",
 		async () => {
 			await sql`INSERT INTO pages (url, title, content, raw_json, collect_count) VALUES
-			(${`${prefix}a-empty`}, NULL, '', repeat('large unused JSON', 10000), 157),
-			(${`${prefix}b-empty`}, 'B', '', repeat('large unused JSON', 10000), 157),
-			(${`${prefix}c-title`}, NULL, 'Content C', repeat('large unused JSON', 10000), 157),
-			(${`${prefix}d-full`}, 'D', 'Content D', repeat('large unused JSON', 10000), 157),
-			(${`${prefix}e-full`}, 'E', 'Content E', repeat('large unused JSON', 10000), 157),
+			(${`${prefix}a-empty`}, NULL, '', to_jsonb(repeat('large unused JSON', 10000)), 157),
+			(${`${prefix}b-empty`}, 'B', '', to_jsonb(repeat('large unused JSON', 10000)), 157),
+			(${`${prefix}c-title`}, NULL, 'Content C', to_jsonb(repeat('large unused JSON', 10000)), 157),
+			(${`${prefix}d-full`}, 'D', 'Content D', to_jsonb(repeat('large unused JSON', 10000)), 157),
+			(${`${prefix}e-full`}, 'E', 'Content E', to_jsonb(repeat('large unused JSON', 10000)), 157),
 			(${`${prefix}later`}, 'Later', '', NULL, 160),
 			('https://example.com/other', NULL, '', NULL, 0)`;
 			const blocker = connect();
@@ -307,7 +307,8 @@ test("collector database operations remain safe under concurrency and interrupte
 					claimed.find((record) => record.url === `${prefix}c-title`)?.content,
 					"Content C",
 				);
-				const [stored] = await observer`SELECT octet_length(raw_json) AS size, collect_count
+				const [stored] =
+					await observer`SELECT octet_length(raw_json #>> '{}') AS size, collect_count
 				FROM pages WHERE url = ${`${prefix}a-empty`}`;
 				assert.equal(stored.size, 170_000);
 				assert.equal(stored.collect_count, 157);
@@ -592,6 +593,30 @@ test("collector database operations remain safe under concurrency and interrupte
 	});
 
 	await t.test(
+		"navigation-only changes refresh historical JSON without rewriting text, embeddings or an identical observation",
+		async () => {
+			const url = prefix + "catalog-only";
+			const [row] =
+				await sql`INSERT INTO pages(url,title,content,raw_json,collect_count) VALUES (${url},'Same','Unchanged',to_jsonb('{"topicSections":[]}'::text),72) RETURNING id`;
+			const m = new PostgreSQLManager(connect);
+			try {
+				const json = JSON.stringify({ topicSections: [{ title: "New group" }] });
+				await m.updateRawDocuments([{ id: row.id, json }]);
+				const [changed] =
+					await observer`SELECT raw_json,title,content,collect_count,updated_at FROM pages WHERE id=${row.id}`;
+				assert.deepEqual(changed.raw_json, JSON.parse(json));
+				assert.equal(changed.content, "Unchanged");
+				assert.equal(changed.collect_count, 72);
+				await m.updateRawDocuments([{ id: row.id, json }]);
+				const [next] = await observer`SELECT updated_at FROM pages WHERE id=${row.id}`;
+				assert.equal(next.updated_at.getTime(), changed.updated_at.getTime());
+			} finally {
+				await m.close();
+			}
+		},
+	);
+
+	await t.test(
 		"page updates reconnect after a real disconnection before commit",
 		async (subtest) => {
 			await sql`TRUNCATE pages, chunks`;
@@ -622,7 +647,7 @@ test("collector database operations remain safe under concurrency and interrupte
 					(row) =>
 						row.title === "New" &&
 						row.content === "New content" &&
-						row.raw_json === '{"updated":true}' &&
+						row.raw_json?.updated === true &&
 						row.collect_count === 157 &&
 						row.updated_at.getTime() === updatedAt.getTime(),
 				),

@@ -13,36 +13,19 @@ import { api } from "@/lib/api";
 import type { UsageLogItem as UsageLog } from "@/types";
 import { copyText } from "@/utils/clipboard";
 
+function useLogPage(kind: "search" | "fetch" | "browse") {
+	const load = useCallback(
+		async (page: number, limit: number) =>
+			(await api.getUsageLogs(limit, page, kind)) as PaginatedApiResponse<UsageLog>,
+		[kind],
+	);
+	return usePagination<UsageLog>(load, { initialPageSize: 20, pageSizeOptions: [20, 50, 100] });
+}
 export default function UsagePage() {
 	const { t } = useTranslation();
-
-	// Create properly typed API call functions
-	const fetchSearchLogs = useCallback(
-		async (page: number, limit: number): Promise<PaginatedApiResponse<UsageLog>> => {
-			const response = await api.getUsageSearchLogs(limit, page);
-			return response as PaginatedApiResponse<UsageLog>;
-		},
-		[],
-	);
-
-	const fetchFetchLogs = useCallback(
-		async (page: number, limit: number): Promise<PaginatedApiResponse<UsageLog>> => {
-			const response = await api.getUsageFetchLogs(limit, page);
-			return response as PaginatedApiResponse<UsageLog>;
-		},
-		[],
-	);
-
-	// Separate pagination for search and fetch logs
-	const searchPagination = usePagination<UsageLog>(fetchSearchLogs, {
-		initialPageSize: 20,
-		pageSizeOptions: [20, 50, 100],
-	});
-
-	const fetchPagination = usePagination<UsageLog>(fetchFetchLogs, {
-		initialPageSize: 20,
-		pageSizeOptions: [20, 50, 100],
-	});
+	const search = useLogPage("search"),
+		fetchPage = useLogPage("fetch"),
+		browse = useLogPage("browse");
 
 	// Define columns for search logs
 	const searchColumns: DataTableColumn<UsageLog>[] = [
@@ -143,114 +126,65 @@ export default function UsagePage() {
 		},
 	];
 
-	const tabItems = [
-		{
-			id: "search",
-			label: t("usage.search_logs"),
-			badge: searchPagination.total,
-			content: (
-				<Card>
-					<CardHeader>
-						<CardTitle className="flex items-center justify-between">
-							<div>
-								<span>{t("usage.search_calls")}</span>
-								<p className="text-sm text-muted-foreground mt-1 font-normal">
-									{t("usage.search_calls_desc")}
-								</p>
+	const tabItems = (
+		[
+			["search", search],
+			["fetch", fetchPage],
+			["browse", browse],
+		] as const
+	).map(([id, pagination]) => ({
+		id,
+		label: t(`usage.${id}_logs`),
+		badge: pagination.total,
+		content: (
+			<Card>
+				<CardHeader>
+					<CardTitle className="flex items-center justify-between">
+						<div>
+							<span>{t(`usage.${id}_calls`)}</span>
+							<p className="text-sm text-muted-foreground mt-1 font-normal">
+								{t(`usage.${id}_calls_desc`)}
+							</p>
+						</div>
+						<div className="flex items-center gap-4">
+							<div className="flex items-center gap-2 text-sm text-muted-foreground">
+								<IconClock className="h-4 w-4" />
+								{t("common.last_updated", { time: new Date().toLocaleTimeString() })}
 							</div>
-							<div className="flex items-center gap-4">
-								<div className="flex items-center gap-2 text-sm text-muted-foreground">
-									<IconClock className="h-4 w-4" />
-									{t("common.last_updated", { time: new Date().toLocaleTimeString() })}
-								</div>
-								<Button
-									variant="outline"
-									size="sm"
-									onClick={searchPagination.refresh}
-									disabled={searchPagination.isLoading}
-									className="flex items-center gap-2"
-								>
-									<IconRefresh className="h-4 w-4" />
-									{t("common.refresh")}
-								</Button>
-							</div>
-						</CardTitle>
-					</CardHeader>
-					<CardContent className="p-0">
-						<DataTable
-							columns={searchColumns}
-							data={searchPagination.data}
-							isLoading={searchPagination.isLoading}
-							error={searchPagination.error}
-						/>
-						<PaginationControls
-							currentPage={searchPagination.currentPage}
-							totalPages={searchPagination.totalPages}
-							pageSize={searchPagination.pageSize}
-							total={searchPagination.total}
-							pageSizeOptions={searchPagination.pageSizeOptions}
-							onPageChange={searchPagination.goToPage}
-							onPageSizeChange={searchPagination.changePageSize}
-							isLoading={searchPagination.isLoading}
-						/>
-					</CardContent>
-				</Card>
-			),
-		},
-		{
-			id: "fetch",
-			label: t("usage.fetch_logs"),
-			badge: fetchPagination.total,
-			content: (
-				<Card>
-					<CardHeader>
-						<CardTitle className="flex items-center justify-between">
-							<div>
-								<span>{t("usage.fetch_calls")}</span>
-								<p className="text-sm text-muted-foreground mt-1 font-normal">
-									{t("usage.fetch_calls_desc")}
-								</p>
-							</div>
-							<div className="flex items-center gap-4">
-								<div className="flex items-center gap-2 text-sm text-muted-foreground">
-									<IconClock className="h-4 w-4" />
-									{t("common.last_updated", { time: new Date().toLocaleTimeString() })}
-								</div>
-								<Button
-									variant="outline"
-									size="sm"
-									onClick={fetchPagination.refresh}
-									disabled={fetchPagination.isLoading}
-									className="flex items-center gap-2"
-								>
-									<IconRefresh className="h-4 w-4" />
-									{t("common.refresh")}
-								</Button>
-							</div>
-						</CardTitle>
-					</CardHeader>
-					<CardContent className="p-0">
-						<DataTable
-							columns={fetchColumns}
-							data={fetchPagination.data}
-							isLoading={fetchPagination.isLoading}
-							error={fetchPagination.error}
-						/>
-						<PaginationControls
-							currentPage={fetchPagination.currentPage}
-							totalPages={fetchPagination.totalPages}
-							pageSize={fetchPagination.pageSize}
-							total={fetchPagination.total}
-							pageSizeOptions={fetchPagination.pageSizeOptions}
-							onPageChange={fetchPagination.goToPage}
-							onPageSizeChange={fetchPagination.changePageSize}
-							isLoading={fetchPagination.isLoading}
-						/>
-					</CardContent>
-				</Card>
-			),
-		},
-	];
+							<Button
+								variant="outline"
+								size="sm"
+								onClick={pagination.refresh}
+								disabled={pagination.isLoading}
+								className="flex items-center gap-2"
+							>
+								<IconRefresh className="h-4 w-4" />
+								{t("common.refresh")}
+							</Button>
+						</div>
+					</CardTitle>
+				</CardHeader>
+				<CardContent className="p-0">
+					<DataTable
+						columns={id === "search" ? searchColumns : fetchColumns}
+						data={pagination.data}
+						isLoading={pagination.isLoading}
+						error={pagination.error}
+					/>
+					<PaginationControls
+						currentPage={pagination.currentPage}
+						totalPages={pagination.totalPages}
+						pageSize={pagination.pageSize}
+						total={pagination.total}
+						pageSizeOptions={pagination.pageSizeOptions}
+						onPageChange={pagination.goToPage}
+						onPageSizeChange={pagination.changePageSize}
+						isLoading={pagination.isLoading}
+					/>
+				</CardContent>
+			</Card>
+		),
+	}));
 
 	return (
 		<div className="space-y-6">
@@ -259,15 +193,6 @@ export default function UsagePage() {
 				<h1 className="text-2xl font-bold text-light">{t("usage.title")}</h1>
 				<p className="mt-1 text-sm text-muted">{t("usage.subtitle")}</p>
 			</div>
-
-			{/* Error State */}
-			{(searchPagination.error || fetchPagination.error) && (
-				<div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
-					<p className="text-destructive text-sm">
-						{searchPagination.error || fetchPagination.error}
-					</p>
-				</div>
-			)}
 
 			{/* Tabbed Interface */}
 			<Tabs items={tabItems} defaultTab="search" />

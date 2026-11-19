@@ -1,0 +1,9 @@
+[Unit]
+Description=Publish the Apple RAG navigation catalog
+After=docker.service network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /opt/apple-rag-catalog/publish_catalog.py
+Nice=10
+TimeoutStartSec=20min

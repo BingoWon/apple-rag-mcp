@@ -140,6 +140,7 @@ export interface AdminDashboardStats {
 		| "ips"
 		| "searches"
 		| "fetches"
+		| "browses"
 		| "messages"
 		| "new_users"
 		| "active_users"
@@ -174,7 +175,7 @@ export interface UsageLogItem {
 	channel: "mcp" | "cli" | "unknown";
 	credential_id: string | null;
 	request_id: string | null;
-	log_type: "search" | "fetch";
+	log_type: "search" | "fetch" | "browse";
 	created_at: string;
 }
 

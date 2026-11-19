@@ -52,7 +52,7 @@ test("discovery descriptions and agent documentation reflect the primary ranker 
 	const guide = readFileSync(new URL("../../public/llms.txt", import.meta.url), "utf8");
 	assert.ok(guide.includes("[Jev](https://typesafe.ai/)"));
 	assert.ok(guide.includes("API, platform, and version"));
-	assert.ok(guide.includes("shared by search and fetch"));
+	assert.ok(guide.includes("shared by search, browse, and fetch"));
 	assert.ok(!/unlimited|24\/7|dedicated infrastructure/i.test(guide));
 	for (const [tier, label] of [
 		["anonymous", "Anonymous"],

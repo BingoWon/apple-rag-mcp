@@ -1,5 +1,5 @@
 import type { ToolOutcome } from "../../worker/shared/tool-outcomes";
-export type AdminLogKind = "search" | "fetch";
+export type AdminLogKind = "search" | "fetch" | "browse";
 export interface AdminLog {
 	id: string;
 	user: import("../../worker/shared/admin-user").AdminUserIdentity;

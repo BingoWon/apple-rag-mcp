@@ -1,3 +1,4 @@
+import type { BrowseData, BrowseInput } from "../../shared/browse.js";
 import type { PageReader, StoredWebPage } from "../services/page-reader.js";
 import type { ToolCallLogger } from "../services/tool-call-logger.js";
 
@@ -57,6 +58,7 @@ export interface AuthContext {
 }
 
 export interface DatabaseService {
+	browse(input: BrowseInput, signal: AbortSignal): Promise<BrowseData>;
 	semanticSearch(embedding: number[], options: SearchOptions): Promise<SearchResult[]>;
 	keywordSearch(query: string, options: SearchOptions): Promise<SearchResult[]>;
 	getPageByUrl(url: string): Promise<PageResult | null>;

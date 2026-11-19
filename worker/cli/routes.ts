@@ -131,7 +131,7 @@ export function createCLIRoutes(
 		c.json({
 			ok: true,
 			channel: "cli",
-			operations: ["search", "fetch"],
+			operations: ["search", "fetch", "browse"],
 			authorization_server: new URL(c.req.url).origin,
 		}),
 	);
@@ -143,7 +143,7 @@ export function createCLIRoutes(
 		);
 		return c.json(accountStatus(identity, quota, "cli"));
 	});
-	for (const operation of ["search", "fetch"] as const)
+	for (const operation of ["search", "fetch", "browse"] as const)
 		app.post(`/v1/${operation}`, (c) => {
 			const response = (async () => {
 				let identity: AuthContext = { isAuthenticated: false };
@@ -185,10 +185,7 @@ export function createCLIRoutes(
 				const services = await factory(c.env, c.executionCtx);
 				const tools = new ToolService(services);
 				try {
-					const result =
-						operation === "search"
-							? await tools.execute("search", input, identity, c.req.raw, "cli")
-							: await tools.execute("fetch", input, identity, c.req.raw, "cli");
+					const result = await tools.execute(operation, input, identity, c.req.raw, "cli");
 					return Response.json(result, {
 						status: result.ok ? 200 : result.error.status,
 						headers: { ...noStore, "X-Request-ID": result.request_id! },

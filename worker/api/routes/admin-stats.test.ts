@@ -408,14 +408,20 @@ test("channel comparison retains all sources while request filters preserve shar
 		["search_logs", "2026-10-09T04:15:00Z", 200, "cli"],
 	] as const)
 		insertLog(sqlite, table, date, status, "reader", channel);
+	sqlite
+		.prepare(
+			"INSERT INTO browse_logs(user_id,channel,requested_url,result_count,status_code,outcome,created_at) VALUES ('reader','cli','https://developer.apple.com/documentation/swiftui',5,200,'success','2026-10-08T18:00:00Z')",
+		)
+		.run();
 	const { data: all } = (await (await request("period=24h")).json()) as {
 		data: AdminDashboardStats;
 	};
 	assert.deepEqual(
 		Object.fromEntries(Object.entries(all.channels).map(([key, metric]) => [key, metric.total])),
-		{ mcp: 2, cli: 2, unknown: 1 },
+		{ mcp: 2, cli: 3, unknown: 1 },
 	);
 	assert.equal(all.metrics.searches.total + all.metrics.fetches.total, 5);
+	assert.equal(all.metrics.browses.total, 1);
 	assert.equal(all.metrics.active_users.total, 1);
 	for (const [channel, searches, fetches] of [
 		["mcp", 1, 1],
@@ -427,6 +433,7 @@ test("channel comparison retains all sources while request filters preserve shar
 		};
 		assert.equal(data.metrics.searches.total, searches);
 		assert.equal(data.metrics.fetches.total, fetches);
+		assert.equal(data.metrics.browses.total, channel === "cli" ? 1 : 0);
 		assert.deepEqual(data.channels, all.channels);
 		for (const metric of ["users", "active_users", "new_users", "cumulative_users"] as const)
 			assert.deepEqual(data.metrics[metric], all.metrics[metric]);
@@ -453,7 +460,7 @@ test("channel comparison retains all sources while request filters preserve shar
 	assert.equal(custom.metrics.searches.total, 0);
 	assert.equal(custom.metrics.fetches.total, 1);
 	assert.equal(custom.channels.mcp.total, 1);
-	assert.equal(custom.channels.cli.total, 2);
+	assert.equal(custom.channels.cli.total, 3);
 });
 
 test("model costs preserve native currencies, coverage and the request channel", async (t) => {

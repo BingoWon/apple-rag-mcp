@@ -22,6 +22,7 @@ const METRICS = [
 	{ key: "ips", table: "user_authorized_ips" },
 	{ key: "searches", table: "search_logs" },
 	{ key: "fetches", table: "fetch_logs" },
+	{ key: "browses", table: "browse_logs" },
 	{ key: "messages", table: "contact_messages" },
 ] as const;
 
@@ -152,6 +153,7 @@ const statsRoute = createRoute({
 								ips: metricSchema,
 								searches: metricSchema,
 								fetches: metricSchema,
+								browses: metricSchema,
 								messages: metricSchema,
 								new_users: metricSchema,
 								active_users: metricSchema,
@@ -203,9 +205,9 @@ app.openapi(statsRoute, async (c) => {
 		const end = new Date(range.end).toISOString();
 		const format = range.bucket === "hour" ? "%Y-%m-%dT%H" : "%Y-%m-%d";
 		const statements = METRICS.map(({ key, table }) => {
-			const isRequest = key === "searches" || key === "fetches";
+			const isRequest = key === "searches" || key === "fetches" || key === "browses";
 			const statuses =
-				key === "searches" || key === "fetches"
+				key === "searches" || key === "fetches" || key === "browses"
 					? TOOL_OUTCOMES.map(
 							(outcome) =>
 								`, SUM(CASE WHEN outcome = '${outcome}' THEN 1 ELSE 0 END) AS ${outcome}`,
@@ -222,9 +224,7 @@ app.openapi(statsRoute, async (c) => {
 		});
 		const newAnonymousQuery = c.env.DB.prepare(
 			`WITH all_logs AS (
-				SELECT user_id, created_at FROM search_logs WHERE user_id LIKE 'anon_%' ESCAPE '\\'
-				UNION ALL
-				SELECT user_id, created_at FROM fetch_logs WHERE user_id LIKE 'anon_%' ESCAPE '\\'
+				SELECT user_id, created_at FROM tool_activity WHERE user_id LIKE 'anon_%' ESCAPE '\\'
 			), first_seen AS (
 				SELECT user_id, MIN(created_at) AS first_seen FROM all_logs GROUP BY user_id
 			)
@@ -239,11 +239,7 @@ app.openapi(statsRoute, async (c) => {
 		).bind(start, end);
 		const activeUsersQuery = c.env.DB.prepare(
 			`WITH all_logs AS (
-				SELECT user_id, created_at FROM search_logs
-				WHERE created_at >= ? AND created_at < ?
-				  AND julianday(created_at) >= julianday(?) AND julianday(created_at) < julianday(?)
-				UNION ALL
-				SELECT user_id, created_at FROM fetch_logs
+				SELECT user_id, created_at FROM tool_activity
 				WHERE created_at >= ? AND created_at < ?
 				  AND julianday(created_at) >= julianday(?) AND julianday(created_at) < julianday(?)
 			)
@@ -251,39 +247,17 @@ app.openapi(statsRoute, async (c) => {
 				COUNT(DISTINCT CASE WHEN user_id NOT LIKE 'anon_%' ESCAPE '\\' THEN user_id END) AS registered,
 				COUNT(DISTINCT CASE WHEN user_id LIKE 'anon_%' ESCAPE '\\' THEN user_id END) AS anonymous
 			FROM all_logs GROUP BY bucket ORDER BY bucket`,
-		).bind(
-			start.slice(0, 10),
-			new Date(range.end + DAY).toISOString().slice(0, 10),
-			start,
-			end,
-			start.slice(0, 10),
-			new Date(range.end + DAY).toISOString().slice(0, 10),
-			start,
-			end,
-		);
+		).bind(start.slice(0, 10), new Date(range.end + DAY).toISOString().slice(0, 10), start, end);
 		const activeTotalQuery = c.env.DB.prepare(
 			`WITH all_logs AS (
-				SELECT user_id, created_at FROM search_logs
-				WHERE created_at >= ? AND created_at < ?
-				  AND julianday(created_at) >= julianday(?) AND julianday(created_at) < julianday(?)
-				UNION ALL
-				SELECT user_id, created_at FROM fetch_logs
+				SELECT user_id, created_at FROM tool_activity
 				WHERE created_at >= ? AND created_at < ?
 				  AND julianday(created_at) >= julianday(?) AND julianday(created_at) < julianday(?)
 			)
 			SELECT COUNT(DISTINCT CASE WHEN user_id NOT LIKE 'anon_%' ESCAPE '\\' THEN user_id END) AS registered,
 				COUNT(DISTINCT CASE WHEN user_id LIKE 'anon_%' ESCAPE '\\' THEN user_id END) AS anonymous
 			FROM all_logs`,
-		).bind(
-			start.slice(0, 10),
-			new Date(range.end + DAY).toISOString().slice(0, 10),
-			start,
-			end,
-			start.slice(0, 10),
-			new Date(range.end + DAY).toISOString().slice(0, 10),
-			start,
-			end,
-		);
+		).bind(start.slice(0, 10), new Date(range.end + DAY).toISOString().slice(0, 10), start, end);
 		const registeredBaselineQuery = c.env.DB.prepare(
 			"SELECT COUNT(*) AS count FROM users WHERE julianday(created_at) < julianday(?)",
 		).bind(start);
@@ -310,7 +284,7 @@ app.openapi(statsRoute, async (c) => {
 				? Math.floor((now + OFFSET) / DAY) * DAY - OFFSET
 				: range.end - 1;
 		METRICS.forEach(({ key }, index) => {
-			const hasStatus = key === "searches" || key === "fetches";
+			const hasStatus = key === "searches" || key === "fetches" || key === "browses";
 			const rows = new Map<string, Record<string, unknown>>();
 			for (const row of results[index].results) {
 				const bucket = String(row.bucket);

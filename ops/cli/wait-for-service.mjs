@@ -12,7 +12,10 @@ export async function waitForService(version, signal) {
 			const api = await fetch("https://apple-rag.com/api", options);
 			if (api.ok && (await api.json()).version === version) {
 				const health = await fetch("https://apple-rag.com/api/cli/v1/health", options);
-				if (health.ok && (await health.json()).channel === "cli") return;
+				if (health.ok) {
+					const data = await health.json();
+					if (data.channel === "cli" && data.operations?.includes("browse")) return;
+				}
 			}
 		} catch {}
 		await wait(10000, undefined, { signal });

@@ -219,61 +219,17 @@ app.openapi(getUserToolCallsStatsRoute, async (c) => {
 			endDateStr = endDate.toISOString();
 		}
 
-		// Get total tool calls from both search_logs and fetch_logs
-		const totalToolCallsQuery = `SELECT
-      (SELECT COUNT(*) FROM search_logs WHERE user_id = ? AND created_at >= ? AND created_at <= ?) +
-      (SELECT COUNT(*) FROM fetch_logs WHERE user_id = ? AND created_at >= ? AND created_at <= ?) as total_tool_calls`;
-
-		const totalToolCallsResult = await c.env.DB.prepare(totalToolCallsQuery)
-			.bind(user.id, startDateStr, endDateStr, user.id, startDateStr, endDateStr)
-			.first();
-
-		// Get total results: search result_count + fetch count (each fetch = 1 result)
-		const totalResultsQuery = `SELECT
-      (SELECT SUM(CASE WHEN status_code = 200 THEN result_count ELSE 0 END) FROM search_logs WHERE user_id = ? AND created_at >= ? AND created_at <= ?) +
-      (SELECT COUNT(*) FROM fetch_logs WHERE user_id = ? AND created_at >= ? AND created_at <= ? AND status_code = 200) as total_results`;
-
-		const totalResultsResult = await c.env.DB.prepare(totalResultsQuery)
-			.bind(user.id, startDateStr, endDateStr, user.id, startDateStr, endDateStr)
-			.first();
-
-		const totalToolCalls = Number(totalToolCallsResult?.total_tool_calls) || 0;
-		const totalResults = Number(totalResultsResult?.total_results) || 0;
-
-		// Get tool calls breakdown by combining search_logs and fetch_logs
-		const toolCallsStatsQuery =
-			period === "24h"
-				? `WITH combined_logs AS (
-          SELECT created_at, result_count, status_code FROM search_logs WHERE user_id = ? AND created_at >= ? AND created_at <= ?
-          UNION ALL
-          SELECT created_at, 1 as result_count, status_code FROM fetch_logs WHERE user_id = ? AND created_at >= ? AND created_at <= ?
-        )
-        SELECT
-          created_at as date,
-          COUNT(*) as tool_calls,
-          SUM(CASE WHEN status_code = 200 THEN result_count ELSE 0 END) as results
-        FROM combined_logs
-        GROUP BY substr(created_at, 1, 13)
-        ORDER BY created_at ASC`
-				: `WITH combined_logs AS (
-          SELECT created_at, result_count, status_code FROM search_logs WHERE user_id = ? AND created_at >= ? AND created_at <= ?
-          UNION ALL
-          SELECT created_at, 1 as result_count, status_code FROM fetch_logs WHERE user_id = ? AND created_at >= ? AND created_at <= ?
-        )
-        SELECT
-          created_at as date,
-          COUNT(*) as tool_calls,
-          SUM(CASE WHEN status_code = 200 THEN result_count ELSE 0 END) as results
-        FROM combined_logs
-        GROUP BY substr(created_at, 1, 10)
-        ORDER BY created_at ASC`;
-
-		const toolCallsStatsResult = await c.env.DB.prepare(toolCallsStatsQuery)
-			.bind(user.id, startDateStr, endDateStr, user.id, startDateStr, endDateStr)
-			.all();
+		const bucket = period === "24h" ? 13 : 10;
+		const result = await c.env.DB.prepare(
+			`SELECT min(created_at) AS date, count(*) AS tool_calls, sum(CASE WHEN status_code=200 THEN result_count ELSE 0 END) AS results FROM tool_activity WHERE user_id=? AND created_at>=? AND created_at<=? GROUP BY substr(created_at,1,?) ORDER BY date`,
+		)
+			.bind(user.id, startDateStr, endDateStr, bucket)
+			.all<{ date: string; tool_calls: number; results: number }>();
+		const totalToolCalls = result.results.reduce((n, row) => n + row.tool_calls, 0);
+		const totalResults = result.results.reduce((n, row) => n + row.results, 0);
 
 		// Return raw data without time formatting - let frontend handle it
-		const usageByDay = (toolCallsStatsResult.results || []).map((row: Record<string, unknown>) => ({
+		const usageByDay = result.results.map((row: Record<string, unknown>) => ({
 			date: String(row.date), // Raw timestamp from database
 			tool_calls: Number(row.tool_calls) || 0,
 			results: Number(row.results) || 0,

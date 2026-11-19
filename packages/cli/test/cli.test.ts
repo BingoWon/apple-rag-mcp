@@ -366,3 +366,25 @@ test("browser never reports success when credentials cannot be saved", async (t)
 		0,
 	);
 });
+
+test("browse reaches the independent CLI route, shares quota, and records only a catalog log", async (t) => {
+	const { server, run } = await setup(t);
+	const response = await run(["browse", "--depth", "1", "--json"], {
+		APPLE_RAG_TOKEN: server.cliKey,
+	});
+	assert.equal(response.code, 0, response.stderr);
+	const data = JSON.parse(response.stdout);
+	assert.equal(data.items[0].href, "#App%20Frameworks");
+	assert.equal(data.account.auth_method, "api_key");
+	assert.equal(data.account.quota.week.remaining, 49);
+	const row = server.sql
+		.prepare("SELECT channel,requested_url,result_count FROM browse_logs WHERE request_id=?")
+		.get(data.request_id);
+	assert.equal(row?.channel, "cli");
+	assert.equal(row?.requested_url, "https://developer.apple.com/documentation/technologies");
+	assert.equal(row?.result_count, 1);
+	for (const table of ["fetch_logs", "search_logs"])
+		assert.equal(server.sql.prepare(`SELECT count(*) n FROM ${table}`).get()?.n, 0);
+	assert.equal((await run(["browse", "--limit", "0"])).code, 2);
+	assert.equal((await run(["browse", "--json"], { APPLE_RAG_TOKEN: TOKEN })).code, 3);
+});

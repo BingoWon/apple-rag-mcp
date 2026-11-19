@@ -1,4 +1,6 @@
+import { browseInputSchema, CATALOG_ROOT } from "../../shared/browse.js";
 import {
+	type BrowseOutput,
 	type FetchOutput,
 	fetchInputSchema,
 	type SearchOutput,
@@ -9,13 +11,14 @@ import { cleanQuerySafely } from "../services/query-cleaner.js";
 import { buildRateLimitMessage, extractClientInfo } from "../services/request-info.js";
 import { isAppleUrl } from "../shared/web-url.js";
 import { accountStatus } from "./account.js";
+import { CatalogError } from "./catalog.js";
 import { operationContext } from "./operation-context.js";
 import { PageReadError } from "./page-reader.js";
 import type { FetchLogEntry, SearchLogEntry } from "./tool-call-logger.js";
 import { fetchOutput, searchOutput } from "./tool-results.js";
 import type { AuthContext, RateLimitResult, Services } from "./types.js";
 
-type Operation = "search" | "fetch";
+export type Operation = "search" | "fetch" | "browse";
 export class ToolService {
 	constructor(private services: Services) {}
 
@@ -35,6 +38,22 @@ export class ToolService {
 		channel: "mcp" | "cli",
 		signal?: AbortSignal,
 	): Promise<FetchOutput>;
+	execute(
+		name: "browse",
+		input: unknown,
+		auth: AuthContext,
+		request: Request,
+		channel: "mcp" | "cli",
+		signal?: AbortSignal,
+	): Promise<BrowseOutput>;
+	execute(
+		name: Operation,
+		input: unknown,
+		auth: AuthContext,
+		request: Request,
+		channel: "mcp" | "cli",
+		signal?: AbortSignal,
+	): Promise<SearchOutput | FetchOutput | BrowseOutput>;
 	async execute(
 		name: Operation,
 		input: unknown,
@@ -42,8 +61,12 @@ export class ToolService {
 		request: Request,
 		channel: "mcp" | "cli",
 		signal = request.signal,
-	): Promise<SearchOutput | FetchOutput> {
-		const parsed = (name === "search" ? searchInputSchema : fetchInputSchema).safeParse(input);
+	): Promise<SearchOutput | FetchOutput | BrowseOutput> {
+		const parsed = {
+			search: searchInputSchema,
+			fetch: fetchInputSchema,
+			browse: browseInputSchema,
+		}[name].safeParse(input);
 		if (!parsed.success)
 			return rejectOperation(this.services.logger, name, input, auth, request, channel);
 		const data = parsed.data;
@@ -80,8 +103,18 @@ export class ToolService {
 					},
 				};
 			}
-			let result: SearchOutput | FetchOutput;
-			if ("query" in data) {
+			let result: SearchOutput | FetchOutput | BrowseOutput;
+			if ("depth" in data) {
+				const listing = await this.services.database.browse(data, signal);
+				signal.throwIfAborted();
+				result = {
+					...listing,
+					ok: true,
+					outcome: "success",
+					account: accountStatus(auth, quota, channel),
+				};
+				log({ outcome: "success", statusCode: 200, resultCount: listing.items.length });
+			} else if ("query" in data) {
 				const rag = await this.services.rag.query({
 					query: actualQuery!,
 					result_count: data.result_count,
@@ -117,6 +150,29 @@ export class ToolService {
 			if (signal.aborted) {
 				log({ outcome: "cancelled", statusCode: 499, reason: "REQUEST_CANCELLED" });
 				signal.throwIfAborted();
+			}
+			if (name === "browse") {
+				const e =
+					error instanceof CatalogError
+						? error
+						: new CatalogError(
+								503,
+								"CATALOG_UNAVAILABLE",
+								"The documentation catalog is temporarily unavailable.",
+							);
+				const outcome =
+					e.status >= 500
+						? "failed"
+						: e.status === 404 || e.status === 422
+							? "no_content"
+							: "invalid";
+				log({ outcome, statusCode: e.status, reason: e.code });
+				return {
+					ok: false,
+					outcome,
+					request_id: context.requestId,
+					error: { code: e.code, message: e.message, status: e.status, ...e.detail },
+				};
 			}
 			if (error instanceof PageReadError) {
 				const source = error.url ? (isAppleUrl(error.url) ? "apple" : "third_party") : undefined;
@@ -185,6 +241,22 @@ function logOperation(
 			actualQuery: details.actualQuery ?? query,
 			resultCount: details.resultCount ?? 0,
 		});
+	} else if (name === "browse") {
+		let url = "";
+		try {
+			const u = new URL("url" in value && typeof value.url === "string" ? value.url : CATALOG_ROOT);
+			if (
+				u.origin === "https://developer.apple.com" &&
+				!u.username &&
+				!u.password &&
+				/^\/documentation(?:\/|$)/i.test(u.pathname)
+			)
+				url = (u.origin + u.pathname + (details.outcome === "success" ? u.hash : "")).slice(
+					0,
+					2048,
+				);
+		} catch {}
+		logger?.logBrowse({ ...common, requestedUrl: url, resultCount: details.resultCount ?? 0 });
 	} else {
 		const url = "url" in value && typeof value.url === "string" ? value.url.slice(0, 2048) : "";
 		logger?.logFetch({

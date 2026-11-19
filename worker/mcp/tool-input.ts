@@ -4,7 +4,7 @@ import type { AuthContext, Services } from "../services/types.js";
 
 // Observe SDK validation without changing discovery schemas or parsing protocol envelopes.
 export function loggedToolInput<T extends z.ZodObject>(
-	name: "search" | "fetch",
+	name: "search" | "fetch" | "browse",
 	schema: T,
 	services: Services,
 	auth: AuthContext,

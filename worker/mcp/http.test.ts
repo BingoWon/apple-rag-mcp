@@ -140,7 +140,7 @@ test("serves a Cursor-style legacy initialize without modern headers", async () 
 	const tools = toolMessages.find((message) => message.result?.tools)?.result?.tools ?? [];
 	assert.deepEqual(
 		tools.map((tool) => tool.name),
-		["search", "fetch"],
+		["search", "fetch", "browse"],
 	);
 });
 

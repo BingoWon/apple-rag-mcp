@@ -34,7 +34,7 @@ Choose one connection per task; never replay errors through both automatically.
 
 ## Identity and subscription
 
-Shared search+fetch limits: anonymous 30/week, 3/minute; signed-in free 50/week,
+Shared search, browse, and fetch limits: anonymous 30/week, 3/minute; signed-in free 50/week,
 5/minute; Pro 50,000/week, 50/minute. All tokens/clients for one account share quota.
 The server's plan/remaining/reset fields are authoritative. `auth status` consumes
 no retrieval quota; `doctor` verifies identity/API health, not retrieval readiness.
@@ -48,6 +48,10 @@ via `APPLE_RAG_TOKEN`. Never include secrets in commands/reports. Invalid/revoke
 Logout revokes the saved CLI device; independent environment API keys remain and
 must be revoked in settings. MCP credentials and sessions are unaffected.
 `upgrade` prints https://apple-rag.com/#pricing; payment stays on the website.
+
+## Explore an indexed topic
+
+Use `browse` for a catalog or category question. Start at a known SwiftUI/UIKit documentation URL, or omit the URL for the pilot root. CLI: `apple-rag browse URL --json`. Resolve each href against its parent, applying the local base first. A section fragment opens a group; fetch a document URL to read its source. Inline items are complete small branches. Use depth 1 for just the next level or 3 for a deeper preview. For more members of a paginated group, repeat the URL and limit with the next page and the returned revision. On LIST_CHANGED, reopen the first page. A zero count is an indexed leaf; a null count means unknown. Results cover the indexed default language view.
 
 ## Retrieve, then answer
 

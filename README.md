@@ -41,7 +41,9 @@ The [hosted service](https://apple-rag.com/) connects your agent to an Apple kno
 - **Retrieval model calls included:** Embeddings, [Jev](https://typesafe.ai/) ranking, and the backup reranker run on our service.
 - **Ongoing upkeep:** We handle content collection, index updates, database backups, and protocol compatibility.
 
-The hosted service operates the database, refreshes the corpus, and manages retrieval model credentials. The CLI is distributed separately; the application repository is private.
+The hosted service operates the database, refreshes the corpus, and manages retrieval model credentials. The CLI is distributed separately; the application source is public.
+
+`browse` explores indexed SwiftUI and UIKit topics. Start at the catalog root or pass a documentation URL; follow relative links and use `fetch` to read a document.
 
 `search` retrieves the indexed Apple corpus. `fetch` reads indexed pages first,
 resolves Apple redirects, and uses official document JSON or Firecrawl when content
@@ -50,7 +52,7 @@ webpages are cached separately from the RAG corpus; arbitrary third-party pages
 never enter search automatically. See [web retrieval operations](ops/web-retrieval.md)
 for limits, setup, and log meanings.
 
-[Start free](https://apple-rag.com/). [Pro](https://apple-rag.com/#pricing) includes 50,000 tool calls/week and 50/minute for $1/week, shared by `search` and `fetch`.
+[Start free](https://apple-rag.com/). [Pro](https://apple-rag.com/#pricing) includes 50,000 tool calls/week and 50/minute for $1/week, shared by `search`, `browse`, and `fetch`.
 
 ---
 
@@ -133,7 +135,7 @@ Results include source URLs so agents can verify API details and cite their refe
 Our collector checks Apple documentation and developer video transcripts on a regular schedule.
 
 ### 🆓 **Start Free**
-Try without an account: 30 tool calls/week and 3/minute. Register at [apple-rag.com](https://apple-rag.com/) for 50/week and 5/minute, shared by `search` and `fetch`.
+Try without an account: 30 tool calls/week and 3/minute. Register at [apple-rag.com](https://apple-rag.com/) for 50/week and 5/minute, shared by `search`, `browse`, and `fetch`.
 
 </td>
 </tr>
@@ -154,7 +156,7 @@ Try without an account: 30 tool calls/week and 3/minute. Register at [apple-rag.
 
 ## 📄 License
 
-The CLI client is distributed under the [MIT License](LICENSE). The application source repository is private.
+The CLI client is distributed under the [MIT License](LICENSE). The application source is available in this public repository.
 
 <div align="center">
 

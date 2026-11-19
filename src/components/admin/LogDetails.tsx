@@ -93,9 +93,9 @@ export function LogDetails({
 					<div className="space-y-6">
 						<LogOutcome outcome={log.outcome} />
 						{[
-							[t(kind === "fetch" ? "admin.requested_url" : "admin.requested_query"), requested],
+							[t(kind !== "search" ? "admin.requested_url" : "admin.requested_query"), requested],
 							...(requested !== actual
-								? [[t(kind === "fetch" ? "admin.actual_url" : "admin.actual_query"), actual]]
+								? [[t(kind !== "search" ? "admin.actual_url" : "admin.actual_query"), actual]]
 								: []),
 						].map(([label, value]) => (
 							<section key={label} className="min-w-0 space-y-2">

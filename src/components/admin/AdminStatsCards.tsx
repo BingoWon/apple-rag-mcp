@@ -3,6 +3,7 @@ import {
 	IconArrowUpRight,
 	IconDownload,
 	IconKey,
+	IconListTree,
 	IconMessageCircle,
 	IconSearch,
 	IconTrendingUp,
@@ -34,6 +35,13 @@ const METRICS = [
 		href: "/admin/fetch-logs",
 		icon: IconDownload,
 		color: "#0891b2",
+	},
+	{
+		key: "browses",
+		title: "admin.browse_logs",
+		href: "/admin/browse-logs",
+		icon: IconListTree,
+		color: "#0f766e",
 	},
 	{ key: "users", title: "admin.users", href: "/admin/users", icon: IconUsers, color: "#2563eb" },
 	{
@@ -369,14 +377,14 @@ export function AdminStatsCards({
 					channel={query.channel}
 					onChannelChange={onChannelChange}
 				/>
-				{METRICS.filter((section) => section.key === "searches" || section.key === "fetches").map(
+				{METRICS.filter((section) => ["browses", "searches", "fetches"].includes(section.key)).map(
 					(section) => {
 						const metric = stats?.metrics[section.key];
 						const outcomes = metric?.outcomes;
-						const isRequest = section.key === "searches" || section.key === "fetches";
+
 						const Icon = section.icon;
 						return (
-							<Card key={section.key} className={`p-4 ${isRequest ? "xl:col-span-2" : ""}`}>
+							<Card key={section.key} className="p-4 xl:col-span-2">
 								<div className="flex items-center gap-2">
 									<Icon className="h-4 w-4 shrink-0" style={{ color: section.color }} />
 									<h3
@@ -387,12 +395,12 @@ export function AdminStatsCards({
 									</h3>
 									<span
 										className="shrink-0 text-xl font-semibold tabular-nums text-light"
-										title={t(isRequest ? "admin.stats_calls" : "admin.stats_new_records")}
+										title={t("admin.stats_calls")}
 									>
 										{metric ? metric.total.toLocaleString(i18n.resolvedLanguage) : "--"}
 									</span>
 									<Link
-										to={isRequest && detailQuery ? `${section.href}?${detailQuery}` : section.href}
+										to={detailQuery ? `${section.href}?${detailQuery}` : section.href}
 										title={t("admin.stats_view_details")}
 										aria-label={`${t(section.title)}: ${t("admin.stats_view_details")}`}
 										className="shrink-0 rounded p-1 text-muted hover:text-light focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
@@ -405,7 +413,7 @@ export function AdminStatsCards({
 								) : (
 									<div
 										className="flex items-center justify-center text-xs text-muted"
-										style={{ height: isRequest ? 180 : 120 }}
+										style={{ height: 180 }}
 									>
 										{t(loading ? "admin.stats_loading" : "admin.stats_unavailable")}
 									</div>
@@ -439,7 +447,9 @@ export function AdminStatsCards({
 				<h2 className="mb-4 text-lg font-semibold text-light">{t("admin.operations_title")}</h2>
 				<Card className="grid divide-y divide-default sm:grid-cols-2 lg:grid-cols-5 lg:divide-x lg:divide-y-0">
 					{[
-						...METRICS.filter((section) => section.key !== "searches" && section.key !== "fetches"),
+						...METRICS.filter(
+							(section) => !["browses", "searches", "fetches"].includes(section.key),
+						),
 						{
 							key: "subscriptions",
 							title: "admin.subscriptions",

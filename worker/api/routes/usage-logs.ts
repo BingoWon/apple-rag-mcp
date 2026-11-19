@@ -25,7 +25,7 @@ const UsageLogItemSchema = z.object({
 	request_id: z.string().nullable(),
 	response_time_ms: z.number().nullable(),
 	created_at: z.string(),
-	log_type: z.enum(["search", "fetch"]),
+	log_type: z.enum(["search", "fetch", "browse"]),
 });
 
 const PaginationSchema = z.object({
@@ -46,7 +46,7 @@ const getUsageLogsRoute = createRoute({
 			limit: z.coerce.number().int().min(1).max(100).optional().default(20),
 			status: z.enum(["success", "error", "all"]).optional().default("all"),
 			search: z.string().max(2048).optional(),
-			log_type: z.enum(["search", "fetch", "all"]).optional().default("all"),
+			log_type: z.enum(["search", "fetch", "browse", "all"]).optional().default("all"),
 		}),
 	},
 	responses: {
@@ -103,7 +103,7 @@ app.openapi(getUsageLogsRoute, async (c) => {
 	try {
 		const offset = (page - 1) * limit;
 
-		const kinds = log_type === "all" ? ["search", "fetch"] : [log_type];
+		const kinds = log_type === "all" ? ["search", "fetch", "browse"] : [log_type];
 		const parameters: (string | number)[] = [];
 		const selects = kinds.map((kind) => {
 			const field = kind === "search" ? "requested_query" : "requested_url";
@@ -115,7 +115,7 @@ app.openapi(getUsageLogsRoute, async (c) => {
 				conditions.push(`instr(lower(${field}),lower(?))>0`);
 				parameters.push(search);
 			}
-			return `SELECT id,${field} AS query,${kind === "search" ? "result_count" : "CASE WHEN status_code=200 THEN 1 ELSE 0 END"} AS result_count,
+			return `SELECT id,${field} AS query,${kind !== "fetch" ? "result_count" : "CASE WHEN status_code=200 THEN 1 ELSE 0 END"} AS result_count,
                 CASE WHEN status_code=200 THEN 'success' ELSE 'error' END AS status,
                 channel,credential_id,request_id,response_time_ms,created_at,'${kind}' AS log_type FROM ${kind}_logs WHERE ${conditions.join(" AND ")}`;
 		});
@@ -144,7 +144,7 @@ app.openapi(getUsageLogsRoute, async (c) => {
 			request_id: row.request_id as string | null,
 			response_time_ms: row.response_time_ms == null ? null : Number(row.response_time_ms),
 			created_at: String(row.created_at),
-			log_type: row.log_type as "search" | "fetch",
+			log_type: row.log_type as "search" | "fetch" | "browse",
 		}));
 
 		const pagination = {

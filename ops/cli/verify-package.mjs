@@ -85,6 +85,12 @@ try {
 	assert.equal(search.account.plan, "hobby");
 	assert.equal(search.account.quota.week.remaining, 49);
 	assert.equal(search.results[0].complete, false);
+	const browse = JSON.parse(
+		(await command(process.execPath, [cli, "browse", "--depth", "1", "--json"], { env })).stdout,
+	);
+	assert.equal(browse.ok, true);
+	assert.equal(browse.account.quota.week.remaining, 48);
+	assert.equal(browse.items[0].child_count, 2);
 	console.log(
 		`Verified ${archive}\nSHA256 ${checksum}\n${expected.length} allowlisted files; isolated install, bin, version, CLI health and independent API retrieval passed.`,
 	);

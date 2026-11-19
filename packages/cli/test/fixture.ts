@@ -84,7 +84,13 @@ export async function fixture() {
 	const services = {
 		rateLimit: new RateLimitService(DB),
 		logger: new ToolCallLogger(DB, ctx),
-		database: { close: async () => {} },
+		database: {
+			browse: async () => ({
+				base: "https://developer.apple.com/documentation/technologies",
+				items: [{ href: "#App%20Frameworks", child_count: 2 }],
+			}),
+			close: async () => {},
+		},
 		rag: {
 			query: async ({ query, signal }: { query: string; signal: AbortSignal }) => {
 				retrieved++;

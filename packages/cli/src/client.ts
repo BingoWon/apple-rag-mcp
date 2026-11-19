@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {
 	accountSchema,
+	browseOutputSchema,
 	CLI_CLIENT_ID,
 	CLI_RESOURCE,
 	CLI_SCOPE,
@@ -103,7 +104,7 @@ export class AppleRagClient {
 			throw new CLIError("INVALID_RESPONSE", "The server returned an invalid account response.");
 		return parsed.data;
 	}
-	async call(tool: "search" | "fetch", args: Record<string, unknown>) {
+	async call(tool: "search" | "fetch" | "browse", args: Record<string, unknown>) {
 		const response = await this.request(
 			`${CLI_RESOURCE}/${tool}`,
 			{
@@ -124,7 +125,11 @@ export class AppleRagClient {
 				statusExitCode(response.status),
 			);
 		}
-		const parsed = (tool === "search" ? searchOutputSchema : fetchOutputSchema).safeParse(body);
+		const parsed = {
+			search: searchOutputSchema,
+			fetch: fetchOutputSchema,
+			browse: browseOutputSchema,
+		}[tool].safeParse(body);
 		if (!parsed.success || response.ok !== parsed.data.ok)
 			throw new CLIError(
 				response.status === 401 ? "INVALID_TOKEN" : "INVALID_RESPONSE",
@@ -222,9 +227,9 @@ export class AppleRagClient {
 			.safeParse(await this.json(`${CLI_RESOURCE}/health`));
 		if (
 			!result.success ||
-			!["search", "fetch"].every((name) => result.data.operations.includes(name))
+			!["search", "fetch", "browse"].every((name) => result.data.operations.includes(name))
 		)
-			throw new CLIError("MISSING_TOOLS", "The CLI API must expose search and fetch.");
+			throw new CLIError("MISSING_TOOLS", "The CLI API must expose search, browse, and fetch.");
 		return {
 			ok: true,
 			endpoint: this.endpoint,

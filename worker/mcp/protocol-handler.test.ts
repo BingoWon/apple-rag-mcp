@@ -46,6 +46,7 @@ function createServices(): Services & {
 			optionalAuth: async () => ({ isAuthenticated: false }),
 		},
 		database: {
+			browse: async () => ({ items: [{ href: "view", child_count: 6 }] }),
 			semanticSearch: async () => [],
 			keywordSearch: async () => [],
 			getPageByUrl: async (url) => ({
@@ -76,6 +77,7 @@ function createServices(): Services & {
 		logger: {
 			logSearch: () => {},
 			logFetch: () => {},
+			logBrowse: () => {},
 		},
 	} as unknown as Services & { auth: { optionalAuth: (request: Request) => Promise<AuthContext> } };
 }
@@ -198,7 +200,7 @@ test("serves modern tools/list with cache metadata", async () => {
 	assert.equal(payload.result.resultType, "complete");
 	assert.deepEqual(
 		payload.result.tools.map((tool) => tool.name),
-		["search", "fetch"],
+		["search", "fetch", "browse"],
 	);
 	assert.equal(payload.result.ttlMs, 3_600_000);
 	assert.equal(payload.result.cacheScope, "public");
@@ -208,6 +210,35 @@ test("serves modern tools/list with cache metadata", async () => {
 		assert.equal(tool.annotations.destructiveHint, false);
 	}
 });
+
+for (const modern of [false, true]) {
+	test(`browse can be called over ${modern ? "modern" : "legacy"} MCP with its text and structured results`, async () => {
+		const r = await send(
+			{
+				jsonrpc: "2.0",
+				id: "catalog",
+				method: "tools/call",
+				params: { name: "browse", arguments: {}, ...(modern ? { _meta: modernMeta() } : {}) },
+			},
+			modern
+				? {
+						"MCP-Protocol-Version": MODERN_VERSION,
+						"Mcp-Method": "tools/call",
+						"Mcp-Name": "browse",
+					}
+				: {},
+		);
+		const p = await readPayload<{
+			result: {
+				structuredContent: { ok: boolean; items: { href: string; child_count: number }[] };
+				content: { text: string }[];
+			};
+		}>(r);
+		assert.equal(p.result.structuredContent.ok, true);
+		assert.equal(p.result.structuredContent.items[0].child_count, 6);
+		assert.match(p.result.content[0].text, /view.*6 subtopics/);
+	});
+}
 
 for (const modern of [false, true]) {
 	test(`${modern ? "modern" : "legacy"} tools preserve object-root structured output and account snapshots`, async () => {
@@ -372,6 +403,8 @@ for (const modern of [false, true]) {
 			["search", { query: " \n\t " }],
 			["search", {}],
 			["search", { query: "Swift", result_count: 11 }],
+			["browse", { depth: 4 }],
+			["browse", { page: 0 }],
 			["fetch", { url: null }],
 			["fetch", { url: "x".repeat(2049) }],
 		] as const) {
@@ -383,6 +416,7 @@ for (const modern of [false, true]) {
 			const logs: { outcome: string; reason?: string | null }[] = [];
 			services.logger.logSearch = (entry) => logs.push(entry);
 			services.logger.logFetch = (entry) => logs.push(entry);
+			services.logger.logBrowse = (entry) => logs.push(entry);
 			services.rag.query = async () => {
 				calls++;
 				throw new Error("must not search");

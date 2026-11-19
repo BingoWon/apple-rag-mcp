@@ -3,9 +3,11 @@
  * Optimized for Cloudflare Workers with external database connection
  */
 import postgres from "postgres";
+import type { BrowseInput } from "../../shared/browse.js";
 import type { AppConfig, SearchOptions, SearchResult } from "../services/types.js";
 import { logger } from "../shared/logger.js";
 import { isTransientPostgresConnectionError } from "../shared/postgres-retry.js";
+import { browseCatalog, type CatalogPage } from "./catalog.js";
 import type { StoredWebPage } from "./page-reader.js";
 
 export class DatabaseService {
@@ -202,6 +204,41 @@ export class DatabaseService {
 		}
 	}
 
+	async browse(input: BrowseInput, signal: AbortSignal) {
+		return this.withReconnect((sql) =>
+			sql.begin("isolation level repeatable read read only", async (tx) => {
+				await tx`SET LOCAL statement_timeout='5s'`;
+				return browseCatalog(
+					{
+						pages: async (urls, offset, limit) => tx<CatalogPage[]>`
+ SELECT n.url, n.readable, n.child_count AS count, n.digest, n.directory,
+   COALESCE((
+     SELECT jsonb_agg(jsonb_build_object('url', t.url, 'count', t.child_count, 'readable', t.readable) ORDER BY s.ord)
+     FROM unnest(n.members[${offset + 1}:${offset + limit}]) WITH ORDINALITY s(url, ord)
+     JOIN catalog_nodes t ON t.url = s.url
+   ), '[]'::jsonb) AS members
+ FROM catalog_nodes n WHERE n.url = ANY(${urls}::text[])
+ `,
+						sections: async (url, fragment) => tx<{ url: string; total: number }[]>`
+ SELECT s.url, count(*) OVER()::integer AS total FROM catalog_nodes n
+ CROSS JOIN LATERAL unnest(n.members) WITH ORDINALITY s(url,ord)
+ WHERE n.url = ${url} AND strpos(s.url, '#') > 0
+   AND strpos(lower(split_part(s.url, '#', 2)), lower(${encodeURIComponent(fragment)})) > 0
+ ORDER BY ord LIMIT 10
+ `,
+						alias: async (url) => {
+							const [alias] = await tx<{ canonical_url: string }[]>`
+ SELECT a.canonical_url FROM web_page_aliases a JOIN catalog_nodes n ON n.url=a.canonical_url
+ WHERE a.url=${url} AND a.expires_at>now()`;
+							return alias?.canonical_url ?? null;
+						},
+					},
+					input,
+					signal,
+				);
+			}),
+		);
+	}
 	async close(): Promise<void> {
 		await this.sql.end({ timeout: 0 }).catch(() => {});
 	}

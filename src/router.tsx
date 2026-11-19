@@ -23,6 +23,7 @@ const AdminUsersPage = lazy(() => import("@/pages/admin/UsersPage"));
 const AdminMCPTokensPage = lazy(() => import("@/pages/admin/MCPTokensPage"));
 const AdminAuthorizedIPsPage = lazy(() => import("@/pages/admin/AuthorizedIPsPage"));
 const AdminSearchLogsPage = lazy(() => import("@/pages/admin/SearchLogsPage"));
+const AdminBrowseLogsPage = lazy(() => import("@/pages/admin/BrowseLogsPage"));
 const AdminFetchLogsPage = lazy(() => import("@/pages/admin/FetchLogsPage"));
 const AdminUserSubscriptionsPage = lazy(() => import("@/pages/admin/UserSubscriptionsPage"));
 const AdminContactMessagesPage = lazy(() => import("@/pages/admin/ContactMessagesPage"));
@@ -136,6 +137,7 @@ export function AppRouter() {
 					<Route path="mcp-tokens" element={<AdminMCPTokensPage />} />
 					<Route path="authorized-ips" element={<AdminAuthorizedIPsPage />} />
 					<Route path="search-logs" element={<AdminSearchLogsPage />} />
+					<Route path="browse-logs" element={<AdminBrowseLogsPage />} />
 					<Route path="fetch-logs" element={<AdminFetchLogsPage />} />
 					<Route path="user-subscriptions" element={<AdminUserSubscriptionsPage />} />
 					<Route path="contact-messages" element={<AdminContactMessagesPage />} />

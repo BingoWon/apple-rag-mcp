@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 import { lstat, writeFile } from "node:fs/promises";
 import { parseArgs, stripVTControlCharacters } from "node:util";
+import { browseInputSchema, formatBrowse } from "../../../shared/browse.js";
+import type { BrowseOutput } from "../../../shared/contracts.js";
 import {
 	type AccountStatus,
 	type FetchOutput,
@@ -18,6 +20,7 @@ const HELP = `apple-rag — Apple developer documentation and WWDC transcripts
 
 Usage:
   apple-rag search "English technical query" [--limit 1..10] [--json] [--output file]
+  apple-rag browse [URL] [--depth 1..3] [--page N] [--limit 1..50] [--revision VALUE] [--json] [--output file]
   apple-rag fetch "https://developer.apple.com/..." [--json] [--output file]
   apple-rag auth login [--device] [--no-browser]
   apple-rag auth status [--json]
@@ -49,8 +52,12 @@ function accountSummary(account: AccountStatus): string {
 	);
 }
 
-function render(data: SearchOutput | FetchOutput): string {
-	if (!data.ok) return `${data.error.code}: ${data.error.message}\n`;
+function render(data: SearchOutput | FetchOutput | BrowseOutput): string {
+	if (!data.ok)
+		return [`${data.error.code}: ${data.error.message}`, ...(data.error.candidates ?? []), ""].join(
+			"\n",
+		);
+	if ("items" in data) return formatBrowse(data) + "\n";
 	if ("results" in data)
 		return data.results.length
 			? `${data.results
@@ -83,6 +90,9 @@ async function run(argv: string[], env: NodeJS.ProcessEnv = process.env): Promis
 					json: { type: "boolean" },
 					output: { type: "string", short: "o" },
 					limit: { type: "string" },
+					page: { type: "string" },
+					depth: { type: "string" },
+					revision: { type: "string" },
 					device: { type: "boolean" },
 					"no-browser": { type: "boolean" },
 					help: { type: "boolean", short: "h" },
@@ -106,6 +116,7 @@ async function run(argv: string[], env: NodeJS.ProcessEnv = process.env): Promis
 		const known =
 			command === "search" ||
 			command === "fetch" ||
+			command === "browse" ||
 			command === "doctor" ||
 			command === "upgrade" ||
 			(command === "auth" && ["login", "status", "logout"].includes(auth || ""));
@@ -114,7 +125,9 @@ async function run(argv: string[], env: NodeJS.ProcessEnv = process.env): Promis
 		if (
 			command === "search" || command === "fetch"
 				? rest.length !== 1
-				: rest.length !== (command === "auth" ? 1 : 0)
+				: command === "browse"
+					? rest.length > 1
+					: rest.length !== (command === "auth" ? 1 : 0)
 		)
 			throw new CLIError(
 				"INVALID_ARGUMENTS",
@@ -123,8 +136,9 @@ async function run(argv: string[], env: NodeJS.ProcessEnv = process.env): Promis
 			);
 		for (const key of Object.keys(args.values)) {
 			if (
-				(key === "limit" && command !== "search") ||
-				(key === "output" && !["search", "fetch"].includes(command)) ||
+				(key === "limit" && command !== "search" && command !== "browse") ||
+				(["depth", "page", "revision"].includes(key) && command !== "browse") ||
+				(key === "output" && !["search", "fetch", "browse"].includes(command)) ||
 				(["device", "no-browser"].includes(key) && auth !== "login") ||
 				(key === "json" && ["upgrade", "auth"].includes(command) && auth !== "status")
 			)
@@ -166,12 +180,20 @@ async function run(argv: string[], env: NodeJS.ProcessEnv = process.env): Promis
 			return 0;
 		}
 		const input =
-			command === "search"
-				? searchInputSchema.safeParse({
-						query: rest[0],
-						result_count: args.values.limit === undefined ? 4 : Number(args.values.limit),
+			command === "browse"
+				? browseInputSchema.safeParse({
+						url: rest[0],
+						limit: args.values.limit === undefined ? undefined : Number(args.values.limit),
+						depth: args.values.depth === undefined ? undefined : Number(args.values.depth),
+						page: args.values.page === undefined ? undefined : Number(args.values.page),
+						revision: args.values.revision,
 					})
-				: fetchInputSchema.safeParse({ url: rest[0] });
+				: command === "search"
+					? searchInputSchema.safeParse({
+							query: rest[0],
+							result_count: args.values.limit === undefined ? 4 : Number(args.values.limit),
+						})
+					: fetchInputSchema.safeParse({ url: rest[0] });
 		if (!input.success)
 			throw new CLIError(
 				"INVALID_ARGUMENTS",
@@ -188,7 +210,7 @@ async function run(argv: string[], env: NodeJS.ProcessEnv = process.env): Promis
 				if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
 			}
 		}
-		const result = await client.call(command as "search" | "fetch", input.data);
+		const result = await client.call(command as "search" | "fetch" | "browse", input.data);
 		if (result.account) process.stderr.write(accountSummary(result.account));
 		if (result.ok && result.outcome === "degraded")
 			process.stderr.write("Completed using a fallback path.\n");

@@ -4,11 +4,18 @@ import {
 	McpServer,
 	preloadSchemas,
 } from "@modelcontextprotocol/server";
-import { fetchOutputSchema, searchOutputSchema } from "../../shared/contracts.js";
+import { BROWSE_DESCRIPTION, browseInputSchema, formatBrowse } from "../../shared/browse.js";
+import {
+	browseOutputSchema,
+	fetchOutputSchema,
+	searchOutputSchema,
+} from "../../shared/contracts.js";
 import { MCPAuthenticationError } from "../mcp-auth/auth-middleware.js";
+import { ToolService } from "../services/tool-service.js";
 import type { AuthContext, Services } from "../services/types.js";
 import { logger } from "../shared/logger.js";
 import { SERVER_NAME, SERVER_VERSION, TOOLS } from "./constants.js";
+import { createSuccessResult, createToolErrorResult } from "./formatters/response-formatter.js";
 import { loggedToolInput } from "./tool-input.js";
 import { FETCH_TOOL_INPUT_SCHEMA, FetchTool } from "./tools/fetch-tool.js";
 import { SEARCH_TOOL_INPUT_SCHEMA, SearchTool } from "./tools/search-tool.js";
@@ -16,7 +23,7 @@ import { SEARCH_TOOL_INPUT_SCHEMA, SearchTool } from "./tools/search-tool.js";
 preloadSchemas();
 
 const SERVER_INSTRUCTIONS =
-	"Search Apple's official developer documentation and WWDC video transcripts with search, then use fetch when complete page content is needed.";
+	"Search Apple's official developer documentation and WWDC video transcripts with search, browse a documentation URL to discover indexed subtopics, or fetch a URL to read its content.";
 
 export class MCPProtocolHandler {
 	constructor(
@@ -143,6 +150,23 @@ export class MCPProtocolHandler {
 			(args, ctx) => trackTool(fetchTool.handle(args, authContext, request, ctx.mcpReq.signal)),
 		);
 
+		server.registerTool(
+			"browse",
+			{
+				description: BROWSE_DESCRIPTION,
+				inputSchema: loggedToolInput("browse", browseInputSchema, services, authContext, request),
+				outputSchema: browseOutputSchema,
+				annotations: { readOnlyHint: true, destructiveHint: false },
+			},
+			(args, ctx) =>
+				trackTool(
+					new ToolService(services)
+						.execute("browse", args, authContext, request, "mcp", ctx.mcpReq.signal)
+						.then((r) =>
+							r.ok ? createSuccessResult(formatBrowse(r), r) : createToolErrorResult(r),
+						),
+				),
+		);
 		return server;
 	}
 }

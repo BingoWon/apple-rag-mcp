@@ -8,12 +8,12 @@ export const TOOLS = {
 	SEARCH: {
 		NAME: "search",
 		DESCRIPTION:
-			"Search official Apple developer documentation and WWDC video transcripts using hybrid retrieval (keyword + semantic), followed by Jev relevance ranking of the merged candidates. Returns ranked source excerpts; use fetch for complete page content.",
+			"Search official Apple developer documentation and WWDC video transcripts using hybrid retrieval (keyword + semantic), followed by Jev relevance ranking of the merged candidates. Returns ranked source excerpts; use fetch for complete page content. Browse an indexed topic to discover its subtopics.",
 	},
 	FETCH: {
 		NAME: "fetch",
 		DESCRIPTION:
-			"Read a public webpage by URL. Uses indexed Apple documentation and video transcripts first, then official document JSON or live webpage extraction. Responses identify their original source and retrieval method. External pages are cached separately and never automatically added to Apple search.",
+			"Read a public webpage by URL. Open a document from search or browse, or read a URL you already have. The response identifies its source and retrieval method.",
 	},
 } as const;
 

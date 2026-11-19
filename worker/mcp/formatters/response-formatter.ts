@@ -1,3 +1,4 @@
+import type { BrowseOutput } from "../../../shared/contracts.js";
 /**
  * Response Formatting Utilities
  * Professional response formatting for MCP protocol
@@ -101,7 +102,7 @@ export function formatFetchResponse(
 
 export function createSuccessResult(
 	content: string,
-	structuredContent: SearchOutput | FetchOutput,
+	structuredContent: SearchOutput | FetchOutput | BrowseOutput,
 ): CallToolResult {
 	return {
 		structuredContent,
@@ -121,7 +122,7 @@ export function createToolErrorResult(details: Omit<ToolError, "ok">): CallToolR
 		content: [
 			{
 				type: "text",
-				text: details.error.message,
+				text: [details.error.message, ...(details.error.candidates ?? [])].join("\n"),
 			},
 		],
 	};

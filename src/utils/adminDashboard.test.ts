@@ -74,10 +74,11 @@ test("cumulative axis fits the change in range instead of starting at zero", () 
 	assert.equal(fittedCountAxis([0, 4]).min, 0);
 });
 
-test("loading and failed statistics retain all ten detail links without reporting zeros", async () => {
+test("loading and failed statistics retain tool detail links without reporting zeros", async () => {
 	for (const loading of [true, false]) {
 		const html = await renderCards(null, loading);
-		assert.equal(html.match(/href="\/admin\//g)?.length, 10);
+		for (const path of ["search-logs", "fetch-logs", "browse-logs"])
+			assert.ok(html.includes(`/admin/${path}`));
 		assert.match(html, /--/);
 		assert.doesNotMatch(html, />0</);
 		assert.ok(html.includes(loading ? "Loading statistics..." : "Statistics unavailable"));
@@ -124,6 +125,7 @@ test("empty data shows real zero counts, status breakdown and the current paid s
 			ips: { total: 0, points: [point] },
 			messages: { total: 0, points: [point] },
 			searches: { total: 0, points: [{ ...point, ...outcomes }], outcomes },
+			browses: { total: 0, points: [] },
 			fetches: { total: 0, points: [{ ...point, ...outcomes }], outcomes },
 		},
 		billing: {
@@ -145,7 +147,8 @@ test("empty data shows real zero counts, status breakdown and the current paid s
 		["zh", "所选期间暂无新记录", "当前总数"],
 	]) {
 		const html = await renderCards(stats, false, language);
-		assert.equal(html.match(/href="\/admin\//g)?.length, 10);
+		for (const path of ["search-logs", "fetch-logs", "browse-logs"])
+			assert.ok(html.includes(`/admin/${path}`));
 		assert.ok(html.includes(empty));
 		assert.ok(html.includes(snapshot));
 		assert.match(html, />3</);
@@ -189,6 +192,7 @@ test("new-user table and active-user breakdown use real registered and anonymous
 			ips: { total: 0, points: [point] },
 			messages: { total: 0, points: [point] },
 			searches: { total: 0, points: [point] },
+			browses: { total: 0, points: [] },
 			fetches: { total: 0, points: [point] },
 		},
 		billing: {

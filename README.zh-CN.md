@@ -40,14 +40,16 @@
 - **包含检索模型调用：** 向量生成、[Jev](https://typesafe.ai/) 排序与备用模型均由服务端处理。
 - **持续维护：** 内容采集、索引更新、数据库备份和协议适配由我们负责。
 
-托管服务负责数据库、资料索引更新和检索模型凭据。CLI 客户端独立分发，应用源码仓库保持私有。
+托管服务负责数据库、资料索引更新和检索模型凭据。CLI 客户端独立分发，应用源码公开。
+
+`browse` 按官方分组浏览已收录的 SwiftUI 和 UIKit 文档。从目录根或文档 URL 进入，使用相对链接展开子项，用 `fetch` 读取正文。
 
 `search` 检索已建立索引的 Apple 资料。`fetch` 优先读取已有正文，处理 Apple
 链接跳转；缺少内容时读取官方文档 JSON，或通过 Firecrawl 提取网页正文。
 响应标明内容来源和读取方式。公开网页缓存在 RAG 资料库之外，任意第三方网页不会
 自动进入搜索索引。限额、配置和日志含义见[网页读取运维说明](ops/web-retrieval.md)。
 
-[免费开始](https://apple-rag.com/)。[Pro](https://apple-rag.com/#pricing) 周付 $1，包含每周 50,000 次、每分钟 50 次工具调用，由 `search` 和 `fetch` 共用。
+[免费开始](https://apple-rag.com/)。[Pro](https://apple-rag.com/#pricing) 周付 $1，包含每周 50,000 次、每分钟 50 次工具调用，由 `search`、`browse` 和 `fetch` 共用。
 
 ---
 
@@ -127,7 +129,7 @@ MCP 与 CLI 使用独立凭据，共用账号额度，可单独撤销访问。
 采集器按计划检查 Apple 文档与开发者视频字幕。
 
 ### 🆓 **免费开始**
-免注册体验：每周 30 次、每分钟 3 次工具调用。在 [apple-rag.com](https://apple-rag.com/) 注册后，每周 50 次、每分钟 5 次，由 `search` 和 `fetch` 共用。
+免注册体验：每周 30 次、每分钟 3 次工具调用。在 [apple-rag.com](https://apple-rag.com/) 注册后，每周 50 次、每分钟 5 次，由 `search`、`browse` 和 `fetch` 共用。
 
 </td>
 </tr>
@@ -148,7 +150,7 @@ MCP 与 CLI 使用独立凭据，共用账号额度，可单独撤销访问。
 
 ## 📄 分发许可
 
-CLI 客户端以 [MIT 协议](LICENSE) 分发，应用源码仓库保持私有。
+CLI 客户端以 [MIT 协议](LICENSE) 分发，应用源码公开。
 
 <div align="center">
 

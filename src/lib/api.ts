@@ -233,17 +233,8 @@ class ApiClient {
 		return this.get("/stats/corpus");
 	}
 
-	async getUsageLogs(limit: number = 20, page: number = 1) {
-		return this.get(`/usage-logs/history?limit=${limit}&page=${page}`);
-	}
-
-	// Filtered usage logs methods following consistent naming pattern
-	async getUsageSearchLogs(limit: number = 20, page: number = 1) {
-		return this.get(`/usage-logs/history?limit=${limit}&page=${page}&log_type=search`);
-	}
-
-	async getUsageFetchLogs(limit: number = 20, page: number = 1) {
-		return this.get(`/usage-logs/history?limit=${limit}&page=${page}&log_type=fetch`);
+	async getUsageLogs(limit = 20, page = 1, kind: "all" | "search" | "fetch" | "browse" = "all") {
+		return this.get(`/usage-logs/history?limit=${limit}&page=${page}&log_type=${kind}`);
 	}
 
 	// Admin API methods with pagination support

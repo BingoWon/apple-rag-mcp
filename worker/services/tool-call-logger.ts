@@ -49,8 +49,14 @@ export class ToolCallLogger {
 			cache_hit: entry.cacheHit ? 1 : 0,
 		});
 	}
+	logBrowse(entry: LogEntry & { requestedUrl: string; resultCount: number }): void {
+		this.write("browse_logs", entry, {
+			requested_url: entry.requestedUrl,
+			result_count: entry.resultCount,
+		});
+	}
 	private write(
-		table: "search_logs" | "fetch_logs",
+		table: "search_logs" | "fetch_logs" | "browse_logs",
 		entry: LogEntry,
 		fields: Record<string, string | number | null>,
 	): void {

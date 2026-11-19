@@ -35,8 +35,8 @@ export function AdminLogs({ kind }: { kind: AdminLogKind }) {
 				),
 			},
 			{
-				key: kind === "fetch" ? "requested_url" : "requested_query",
-				label: t(kind === "fetch" ? "admin.col_url" : "admin.col_query"),
+				key: kind !== "search" ? "requested_url" : "requested_query",
+				label: t(kind !== "search" ? "admin.col_url" : "admin.col_query"),
 				width: 400,
 				render: (value, row) => (
 					<div>
@@ -190,7 +190,7 @@ export function AdminLogs({ kind }: { kind: AdminLogKind }) {
 								defaultValue={filters.q || ""}
 								maxLength={2048}
 								placeholder={t(
-									kind === "fetch"
+									kind !== "search"
 										? "admin.filter_url_placeholder"
 										: "admin.filter_query_placeholder",
 								)}

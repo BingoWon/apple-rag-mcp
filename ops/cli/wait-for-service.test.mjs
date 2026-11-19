@@ -6,7 +6,11 @@ test("npm service gate requires matching production version and independent CLI 
 	const calls = [];
 	t.mock.method(globalThis, "fetch", async (url) => {
 		calls.push(url);
-		return Response.json(url.endsWith("/api") ? { version: "5.5.1" } : { channel: "cli" });
+		return Response.json(
+			url.endsWith("/api")
+				? { version: "5.5.1" }
+				: { channel: "cli", operations: ["search", "fetch", "browse"] },
+		);
 	});
 	await waitForService("5.5.1", AbortSignal.timeout(1000));
 	assert.equal(calls.length, 2);
