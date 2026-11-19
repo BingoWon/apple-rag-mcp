@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export interface PaginationState {
 	currentPage: number;
@@ -60,14 +60,17 @@ export function usePagination<T>(
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 
+	const generation = useRef(0);
 	const fetchData = useCallback(
 		async (page: number, limit: number) => {
+			const id = ++generation.current;
 			try {
 				setIsLoading(true);
 				setError(null);
 
 				const response = await fetchFn(page, limit);
 
+				if (id !== generation.current) return;
 				if (response.success && response.data) {
 					setData(response.data.items || []);
 					setTotal(response.data.pagination.total);
@@ -80,6 +83,7 @@ export function usePagination<T>(
 					throw new Error(response.error?.message || "Failed to fetch data");
 				}
 			} catch (err) {
+				if (id !== generation.current) return;
 				console.error("Pagination fetch error:", err);
 				setError(err instanceof Error ? err.message : "Failed to load data");
 				setData([]);
@@ -88,7 +92,7 @@ export function usePagination<T>(
 				setHasNext(false);
 				setHasPrev(false);
 			} finally {
-				setIsLoading(false);
+				if (id === generation.current) setIsLoading(false);
 			}
 		},
 		[fetchFn],
@@ -132,6 +136,9 @@ export function usePagination<T>(
 	// biome-ignore lint/correctness/useExhaustiveDependencies: only run on mount or when fetchFn identity changes
 	useEffect(() => {
 		fetchData(1, initialPageSize);
+		return () => {
+			generation.current++;
+		};
 	}, [fetchData]);
 
 	return {

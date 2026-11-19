@@ -1,11 +1,8 @@
 import {
 	IconActivity,
 	IconArrowUpRight,
-	IconDownload,
 	IconKey,
-	IconListTree,
 	IconMessageCircle,
-	IconSearch,
 	IconTrendingUp,
 	IconUserPlus,
 	IconUsers,
@@ -16,33 +13,13 @@ import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/Card";
 import type { AdminDashboardStats, AdminMetricStats, AdminStatsQuery } from "@/types";
 import { TOOL_CHANNELS, type ToolChannel } from "../../../worker/shared/tool-channels";
-import { TOOL_OUTCOMES } from "../../../worker/shared/tool-outcomes";
+import { TrendChart } from "../charts/TrendChart";
+
 import { AdminBilling } from "./AdminBilling";
 import { AdminModelCosts } from "./AdminModelCosts";
-import { AdminTrendChart, OUTCOME_COLORS } from "./AdminTrendChart";
+import { ToolActivityCard } from "./ToolActivityCard";
 
 const METRICS = [
-	{
-		key: "searches",
-		title: "admin.search_logs",
-		href: "/admin/search-logs",
-		icon: IconSearch,
-		color: "#2563eb",
-	},
-	{
-		key: "fetches",
-		title: "admin.fetch_logs",
-		href: "/admin/fetch-logs",
-		icon: IconDownload,
-		color: "#0891b2",
-	},
-	{
-		key: "browses",
-		title: "admin.browse_logs",
-		href: "/admin/browse-logs",
-		icon: IconListTree,
-		color: "#0f766e",
-	},
 	{ key: "users", title: "admin.users", href: "/admin/users", icon: IconUsers, color: "#2563eb" },
 	{
 		key: "tokens",
@@ -125,7 +102,7 @@ function ChannelUsageCard({
 			</div>
 			<p className="mt-2 text-xs leading-5 text-muted">{t("admin.stats_channels_note")}</p>
 			{stats ? (
-				<AdminTrendChart
+				<TrendChart
 					metric={{ total, points: [] }}
 					bucket={stats.bucket}
 					color={CHANNEL_COLORS.mcp}
@@ -218,7 +195,7 @@ function CumulativeUsersCard({
 								</span>
 							</div>
 							{series ? (
-								<AdminTrendChart
+								<TrendChart
 									metric={series}
 									bucket={bucket}
 									color={side.color}
@@ -278,7 +255,7 @@ function AudienceCard({
 				</Link>
 			</div>
 			{metric ? (
-				<AdminTrendChart metric={metric} bucket={bucket} color={color} height={180} />
+				<TrendChart metric={metric} bucket={bucket} color={color} height={180} />
 			) : (
 				<div
 					className="flex items-center justify-center text-xs text-muted"
@@ -377,69 +354,7 @@ export function AdminStatsCards({
 					channel={query.channel}
 					onChannelChange={onChannelChange}
 				/>
-				{METRICS.filter((section) => ["browses", "searches", "fetches"].includes(section.key)).map(
-					(section) => {
-						const metric = stats?.metrics[section.key];
-						const outcomes = metric?.outcomes;
-
-						const Icon = section.icon;
-						return (
-							<Card key={section.key} className="p-4 xl:col-span-2">
-								<div className="flex items-center gap-2">
-									<Icon className="h-4 w-4 shrink-0" style={{ color: section.color }} />
-									<h3
-										className="min-w-0 flex-1 truncate text-sm font-medium text-light"
-										title={t(section.title)}
-									>
-										{t(section.title)}
-									</h3>
-									<span
-										className="shrink-0 text-xl font-semibold tabular-nums text-light"
-										title={t("admin.stats_calls")}
-									>
-										{metric ? metric.total.toLocaleString(i18n.resolvedLanguage) : "--"}
-									</span>
-									<Link
-										to={detailQuery ? `${section.href}?${detailQuery}` : section.href}
-										title={t("admin.stats_view_details")}
-										aria-label={`${t(section.title)}: ${t("admin.stats_view_details")}`}
-										className="shrink-0 rounded p-1 text-muted hover:text-light focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-									>
-										<IconArrowUpRight className="h-4 w-4" />
-									</Link>
-								</div>
-								{metric && stats ? (
-									<AdminTrendChart metric={metric} bucket={stats.bucket} color={section.color} />
-								) : (
-									<div
-										className="flex items-center justify-center text-xs text-muted"
-										style={{ height: 180 }}
-									>
-										{t(loading ? "admin.stats_loading" : "admin.stats_unavailable")}
-									</div>
-								)}
-								{outcomes && (
-									<ul className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted">
-										{TOOL_OUTCOMES.filter(
-											(outcome) => outcome === "success" || outcomes[outcome],
-										).map((outcome) => (
-											<li key={outcome} className="inline-flex items-center gap-1.5">
-												<span
-													className="h-2 w-2 rounded-full"
-													style={{ backgroundColor: OUTCOME_COLORS[outcome] }}
-												/>
-												{t(`admin.stats_${outcome}`)}
-												<span className="font-medium tabular-nums text-light">
-													{outcomes[outcome].toLocaleString(i18n.resolvedLanguage)}
-												</span>
-											</li>
-										))}
-									</ul>
-								)}
-							</Card>
-						);
-					},
-				)}
+				<ToolActivityCard stats={stats} loading={loading} detailQuery={detailQuery} />
 			</section>
 			<AdminModelCosts stats={stats} channel={query.channel} loading={loading} />
 			<AdminBilling stats={stats} loading={loading} onSynced={onBillingSynced} />
@@ -447,9 +362,7 @@ export function AdminStatsCards({
 				<h2 className="mb-4 text-lg font-semibold text-light">{t("admin.operations_title")}</h2>
 				<Card className="grid divide-y divide-default sm:grid-cols-2 lg:grid-cols-5 lg:divide-x lg:divide-y-0">
 					{[
-						...METRICS.filter(
-							(section) => !["browses", "searches", "fetches"].includes(section.key),
-						),
+						...METRICS,
 						{
 							key: "subscriptions",
 							title: "admin.subscriptions",

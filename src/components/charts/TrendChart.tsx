@@ -28,7 +28,7 @@ export function fittedCountAxis(values: number[]) {
 	return { min: Math.max(0, lowest - pad), max: highest + pad };
 }
 
-export const AdminTrendChart = memo(function AdminTrendChart({
+export const TrendChart = memo(function TrendChart({
 	metric,
 	bucket,
 	color,

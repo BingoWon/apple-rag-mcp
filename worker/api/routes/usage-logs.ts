@@ -6,6 +6,7 @@ import { createRoute, z } from "@hono/zod-openapi";
 import { ApiErrorCode } from "../constants/error-codes";
 import { authMiddleware } from "../middleware/auth";
 import type { User } from "../types";
+import { logWindowPredicate, logWindowValues } from "../utils/activity";
 import { logger } from "../utils/logger";
 import { createOpenAPIApp } from "../utils/openapi";
 
@@ -41,13 +42,22 @@ const getUsageLogsRoute = createRoute({
 	method: "get",
 	path: "/history",
 	request: {
-		query: z.object({
-			page: z.coerce.number().int().min(1).optional().default(1),
-			limit: z.coerce.number().int().min(1).max(100).optional().default(20),
-			status: z.enum(["success", "error", "all"]).optional().default("all"),
-			search: z.string().max(2048).optional(),
-			log_type: z.enum(["search", "fetch", "browse", "all"]).optional().default("all"),
-		}),
+		query: z
+			.object({
+				page: z.coerce.number().int().min(1).optional().default(1),
+				limit: z.coerce.number().int().min(1).max(100).optional().default(20),
+				status: z.enum(["success", "error", "all"]).optional().default("all"),
+				search: z.string().max(2048).optional(),
+				log_type: z.enum(["search", "fetch", "browse", "all"]).optional().default("all"),
+				from: z.iso.datetime({ offset: true }).optional(),
+				to: z.iso.datetime({ offset: true }).optional(),
+			})
+			.refine(
+				(q) =>
+					(q.from === undefined && q.to === undefined) ||
+					(!!q.from && !!q.to && Date.parse(q.from) < Date.parse(q.to)),
+				{ message: "Provide an ordered pair of timestamps.", path: ["from"] },
+			),
 	},
 	responses: {
 		200: {
@@ -98,7 +108,7 @@ const getUsageLogsRoute = createRoute({
 
 app.openapi(getUsageLogsRoute, async (c) => {
 	const user = c.get("user") as User;
-	const { page, limit, status, search, log_type } = c.req.valid("query");
+	const { page, limit, status, search, log_type, from, to } = c.req.valid("query");
 
 	try {
 		const offset = (page - 1) * limit;
@@ -109,6 +119,10 @@ app.openapi(getUsageLogsRoute, async (c) => {
 			const field = kind === "search" ? "requested_query" : "requested_url";
 			const conditions = ["user_id = ?"];
 			parameters.push(user.id);
+			if (from && to) {
+				conditions.push(logWindowPredicate);
+				parameters.push(...logWindowValues(from, to));
+			}
 			if (status !== "all")
 				conditions.push(status === "success" ? "status_code=200" : "status_code>=400");
 			if (search) {

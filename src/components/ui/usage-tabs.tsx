@@ -2,7 +2,7 @@
  * Modern Tab Component
  * Elegant, accessible tab interface for content switching
  */
-import { type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 export interface TabItem {
@@ -14,31 +14,24 @@ export interface TabItem {
 
 interface TabsProps {
 	items: TabItem[];
-	defaultTab?: string;
+	activeTab: string;
 	className?: string;
-	onTabChange?: (tabId: string) => void;
+	onTabChange: (tabId: string) => void;
 }
 
-export function Tabs({ items, defaultTab, className, onTabChange }: TabsProps) {
-	const [activeTab, setActiveTab] = useState(defaultTab || items[0]?.id);
-
-	const handleTabChange = (tabId: string) => {
-		setActiveTab(tabId);
-		onTabChange?.(tabId);
-	};
-
+export function Tabs({ items, activeTab, className, onTabChange }: TabsProps) {
 	const activeItem = items.find((item) => item.id === activeTab);
 
 	return (
 		<div className={cn("w-full", className)}>
 			{/* Tab Headers */}
 			<div className="border-b border-border">
-				<nav className="flex space-x-8" aria-label="Tabs">
+				<nav className="flex flex-wrap gap-x-4 sm:gap-x-8" aria-label="Tabs">
 					{items.map((item) => (
 						<button
 							type="button"
 							key={item.id}
-							onClick={() => handleTabChange(item.id)}
+							onClick={() => onTabChange(item.id)}
 							className={cn(
 								"whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors",
 								activeTab === item.id

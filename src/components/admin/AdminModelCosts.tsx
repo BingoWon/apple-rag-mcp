@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/Card";
 import type { AdminDashboardStats, ModelCostCurrency } from "@/types";
 import type { ToolChannel } from "../../../worker/shared/tool-channels";
-import { AdminTrendChart } from "./AdminTrendChart";
+import { TrendChart } from "../charts/TrendChart";
 
 const CATEGORIES = [
 	{ key: "jev", color: "#7c3aed" },
@@ -122,7 +122,7 @@ export function AdminModelCosts({
 					})}
 				</dl>
 				{stats && trend ? (
-					<AdminTrendChart
+					<TrendChart
 						metric={{ total: trend.values.total_nanos, points: [] }}
 						bucket={stats.bucket}
 						color={CATEGORIES[0].color}

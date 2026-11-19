@@ -119,6 +119,24 @@ for (let day = 0; day < 7; day++) {
 	const created = new Date(fixtureNow - day * 86400000 - 60000).toISOString();
 	for (const channel of ["mcp", "cli"]) {
 		for (let call = 0; call < (7 - day) * (channel === "mcp" ? 3 : 1); call++) {
+			if (call % 5 === 0) {
+				const outcome = call % 13 === 0 ? "limited" : call % 7 === 0 ? "failed" : "success";
+				sql
+					.prepare(
+						"INSERT INTO browse_logs(user_id,requested_url,channel,outcome,status_code,response_time_ms,result_count,created_at) VALUES(?,?,?,?,?,?,?,?)",
+					)
+					.run(
+						"channel-reader",
+						"https://developer.apple.com/documentation/swiftui",
+						channel,
+						outcome,
+						outcome === "success" ? 200 : outcome === "limited" ? 429 : 503,
+						130 + call,
+						outcome === "success" ? 5 : 0,
+						created,
+					);
+				continue;
+			}
 			const kind = call % 2 ? "fetch" : "search";
 			const columns =
 				kind === "fetch" ? "requested_url,actual_url" : "requested_query,actual_query";

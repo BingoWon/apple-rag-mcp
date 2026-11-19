@@ -3,9 +3,11 @@
  * Implements user quota, statistics, and profile management
  */
 import { createRoute, z } from "@hono/zod-openapi";
+import { activitySchema, usagePeriod } from "../../../shared/tool-activity";
 import { ApiErrorCode } from "../constants/error-codes";
 import { authMiddleware } from "../middleware/auth";
 import type { User } from "../types";
+import { accountActivity } from "../utils/activity";
 import { logger } from "../utils/logger";
 import { createOpenAPIApp } from "../utils/openapi";
 import { createStripeClient } from "../utils/stripe-client";
@@ -126,19 +128,6 @@ app.openapi(getUserQuotaRoute, async (c) => {
 	}
 });
 
-// Tool calls stats schema
-const ToolCallsStatsResponseSchema = z.object({
-	total_tool_calls: z.number(),
-	total_results: z.number(),
-	calls_by_day: z.array(
-		z.object({
-			date: z.string(),
-			tool_calls: z.number(),
-			results: z.number(),
-		}),
-	),
-});
-
 // Get user tool calls statistics
 const getUserToolCallsStatsRoute = createRoute({
 	method: "get",
@@ -146,7 +135,7 @@ const getUserToolCallsStatsRoute = createRoute({
 	middleware: [authMiddleware],
 	request: {
 		query: z.object({
-			period: z.enum(["24h", "7d", "30d"]).optional().default("7d"),
+			period: usagePeriod.default("7d"),
 		}),
 	},
 	responses: {
@@ -156,7 +145,7 @@ const getUserToolCallsStatsRoute = createRoute({
 				"application/json": {
 					schema: z.object({
 						success: z.boolean(),
-						data: ToolCallsStatsResponseSchema,
+						data: activitySchema,
 					}),
 				},
 			},
@@ -198,50 +187,9 @@ app.openapi(getUserToolCallsStatsRoute, async (c) => {
 	const { period } = c.req.valid("query");
 
 	try {
-		// Calculate date range based on period (return raw timestamps)
-		const startDate = new Date();
-		const endDate = new Date();
-		let startDateStr: string;
-		let endDateStr: string;
-
-		if (period === "24h") {
-			// For 24h period, go back 24 hours from now
-			startDate.setHours(startDate.getHours() - 24);
-			startDateStr = startDate.toISOString();
-			endDateStr = endDate.toISOString();
-		} else {
-			// For day periods (7d, 30d), calculate full date range
-			const days = parseInt(period.replace("d", ""), 10);
-			startDate.setDate(startDate.getDate() - days);
-			startDate.setHours(0, 0, 0, 0); // Start of day
-			endDate.setHours(23, 59, 59, 999); // End of day
-			startDateStr = startDate.toISOString();
-			endDateStr = endDate.toISOString();
-		}
-
-		const bucket = period === "24h" ? 13 : 10;
-		const result = await c.env.DB.prepare(
-			`SELECT min(created_at) AS date, count(*) AS tool_calls, sum(CASE WHEN status_code=200 THEN result_count ELSE 0 END) AS results FROM tool_activity WHERE user_id=? AND created_at>=? AND created_at<=? GROUP BY substr(created_at,1,?) ORDER BY date`,
-		)
-			.bind(user.id, startDateStr, endDateStr, bucket)
-			.all<{ date: string; tool_calls: number; results: number }>();
-		const totalToolCalls = result.results.reduce((n, row) => n + row.tool_calls, 0);
-		const totalResults = result.results.reduce((n, row) => n + row.results, 0);
-
-		// Return raw data without time formatting - let frontend handle it
-		const usageByDay = result.results.map((row: Record<string, unknown>) => ({
-			date: String(row.date), // Raw timestamp from database
-			tool_calls: Number(row.tool_calls) || 0,
-			results: Number(row.results) || 0,
-		}));
-
-		const statsResponse = {
-			total_tool_calls: totalToolCalls,
-			total_results: totalResults,
-			calls_by_day: usageByDay,
-		};
-
-		return c.json({ success: true, data: statsResponse }, 200);
+		const data = await accountActivity(c.env.DB, user.id, period);
+		c.header("Cache-Control", "private, no-store");
+		return c.json({ success: true, data }, 200);
 	} catch (error) {
 		await logger.error(
 			`Get user tool calls stats error: ${error instanceof Error ? error.message : "Unknown error"}`,

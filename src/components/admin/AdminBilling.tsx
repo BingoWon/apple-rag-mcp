@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { api } from "@/lib/api";
 import type { AdminDashboardStats } from "@/types";
-import { AdminTrendChart } from "./AdminTrendChart";
+import { TrendChart } from "../charts/TrendChart";
 
 export function AdminBilling({
 	stats,
@@ -118,7 +118,7 @@ export function AdminBilling({
 						</label>
 					</div>
 					{ready && (
-						<AdminTrendChart
+						<TrendChart
 							metric={revenue}
 							bucket={stats?.bucket ?? "day"}
 							color="#3b82f6"
@@ -155,7 +155,7 @@ export function AdminBilling({
 			<Card className="p-5">
 				<h3 className="text-sm font-medium text-light">{t("admin.billing_people_trend")}</h3>
 				{ready && (
-					<AdminTrendChart
+					<TrendChart
 						metric={{
 							total: billing.new_subscribers.total + billing.renewing_subscribers.total,
 							points: [],

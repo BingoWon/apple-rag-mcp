@@ -2,6 +2,7 @@ import { IconClipboard, IconClock, IconRefresh } from "@tabler/icons-react";
 import { useCallback } from "react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
+import { Link, useSearchParams } from "react-router-dom";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
@@ -12,20 +13,55 @@ import { type PaginatedApiResponse, usePagination } from "@/hooks/usePagination"
 import { api } from "@/lib/api";
 import type { UsageLogItem as UsageLog } from "@/types";
 import { copyText } from "@/utils/clipboard";
+import { TOOL_KINDS, type ToolKind } from "../../../shared/tool-activity";
 
-function useLogPage(kind: "search" | "fetch" | "browse") {
+function useLogPage(kind: ToolKind, from?: string, to?: string) {
 	const load = useCallback(
 		async (page: number, limit: number) =>
-			(await api.getUsageLogs(limit, page, kind)) as PaginatedApiResponse<UsageLog>,
-		[kind],
+			(await api.getUsageLogs(limit, page, kind, from, to)) as PaginatedApiResponse<UsageLog>,
+		[kind, from, to],
 	);
 	return usePagination<UsageLog>(load, { initialPageSize: 20, pageSizeOptions: [20, 50, 100] });
 }
 export default function UsagePage() {
-	const { t } = useTranslation();
-	const search = useLogPage("search"),
-		fetchPage = useLogPage("fetch"),
-		browse = useLogPage("browse");
+	const [params, update] = useSearchParams();
+	const from = params.get("from") || undefined,
+		to = params.get("to") || undefined;
+	const kind = TOOL_KINDS.find((k) => k === params.get("tool")) ?? "search";
+	return (
+		<UsageContent
+			key={JSON.stringify([from, to])}
+			from={from}
+			to={to}
+			kind={kind}
+			select={(v) => {
+				const q = new URLSearchParams(params);
+				q.set("tool", v);
+				update(q);
+			}}
+		/>
+	);
+}
+function UsageContent({
+	from,
+	to,
+	kind,
+	select,
+}: {
+	from?: string;
+	to?: string;
+	kind: ToolKind;
+	select: (kind: string) => void;
+}) {
+	const { t, i18n } = useTranslation();
+	const time = (v: string) =>
+		new Date(v).toLocaleString(i18n.resolvedLanguage, {
+			timeZone: "Asia/Singapore",
+			hourCycle: "h23",
+		});
+	const search = useLogPage("search", from, to),
+		fetchPage = useLogPage("fetch", from, to),
+		browse = useLogPage("browse", from, to);
 
 	// Define columns for search logs
 	const searchColumns: DataTableColumn<UsageLog>[] = [
@@ -135,7 +171,7 @@ export default function UsagePage() {
 	).map(([id, pagination]) => ({
 		id,
 		label: t(`usage.${id}_logs`),
-		badge: pagination.total,
+		badge: pagination.isLoading || pagination.error ? undefined : pagination.total,
 		content: (
 			<Card>
 				<CardHeader>
@@ -195,7 +231,19 @@ export default function UsagePage() {
 			</div>
 
 			{/* Tabbed Interface */}
-			<Tabs items={tabItems} defaultTab="search" />
+			{(from || to) && (
+				<div className="flex flex-wrap items-center gap-3 text-xs text-muted">
+					<span>
+						{from && to && Date.parse(from) < Date.parse(to)
+							? `${time(from)} – ${time(to)} (UTC+8)`
+							: t("admin.stats_range_error")}
+					</span>
+					<Link to={"/usage?tool=" + kind} className="text-brand">
+						{t("activity.all_dates")}
+					</Link>
+				</div>
+			)}
+			<Tabs items={tabItems} activeTab={kind} onTabChange={select} />
 		</div>
 	);
 }

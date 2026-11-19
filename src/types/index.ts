@@ -50,16 +50,6 @@ export interface MCPToken {
 	created_at: string;
 }
 
-export interface ToolCallsStats {
-	total_tool_calls: number;
-	total_results: number;
-	calls_by_day: Array<{
-		date: string;
-		tool_calls: number;
-		results: number;
-	}>;
-}
-
 export interface AdminStatsQuery {
 	period: "24h" | "7d" | "30d" | "custom";
 	channel?: ToolChannel;

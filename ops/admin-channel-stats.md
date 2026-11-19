@@ -2,15 +2,15 @@
 
 The overview compares MCP and CLI request sources in one trend chart. An unknown
 series appears only when unclassified records actually exist (or that filter is selected).
-Counts include recorded search and fetch attempts, including rate limits and failures;
+Counts include recorded search, fetch and browse attempts, including rate limits and failures;
 they are not counts of successful retrievals or billable usage. Each source shows its
 share of all recorded calls in the selected period. Historical records confirmed to belong to the MCP-only era are corrected once by
 migration 0012. Unverified records are not silently treated as MCP.
 
 `GET /api/admin/stats` accepts `channel=mcp|cli|unknown`. The filter applies to the
-search and fetch metrics and their outcomes. The source comparison always includes
+search, fetch and browse metrics and their outcomes. The source comparison always includes
 all sources. User, active-user, token, IP, message, and subscription statistics remain
-global; accounts and subscriptions are shared across access methods. Search and fetch
+global; accounts and subscriptions are shared across access methods. Per-tool
 aggregation groups by time bucket and channel in the existing queries, without an
 additional scan for the comparison chart.
 
@@ -58,3 +58,10 @@ spacing and use up to two decimal places to avoid presenting small shares as zer
 Production verification after migration: search MCP 18,801 / CLI 1, fetch MCP 7,252,
 unknown 0 in both tables. No CLI rows were changed. These are all-time counts at
 verification, not a fixed value for the dashboard's selected period.
+
+
+## Account and admin activity
+
+The user overview shows the current weekly quota counter separately from recorded activity over the last 24 hours or 7/30 Singapore calendar days. Daily buckets start at UTC+8 midnight. The account statistics response contains the exact half-open window, the total, counts by tool, and aligned zero-filled buckets. Links to a tool's usage history carry the same start and end instants, including failed and rate-limited calls. The result counts of unlike tools are not added into the activity chart.
+
+The admin activity section compares the three tools on one scale. Selecting a tool shows its outcomes, and the row link preserves the time and channel filters when opening logs. Empty, loading and unavailable statistics are displayed separately.

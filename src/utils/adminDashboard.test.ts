@@ -5,7 +5,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { I18nextProvider } from "react-i18next";
 import { MemoryRouter } from "react-router-dom";
-import { fittedCountAxis } from "../components/admin/AdminTrendChart.js";
+import { fittedCountAxis } from "../components/charts/TrendChart.js";
 import { ThemeProvider } from "../components/providers/ThemeProvider.js";
 import en from "../i18n/en.json";
 import zh from "../i18n/zh.json";
@@ -125,7 +125,7 @@ test("empty data shows real zero counts, status breakdown and the current paid s
 			ips: { total: 0, points: [point] },
 			messages: { total: 0, points: [point] },
 			searches: { total: 0, points: [{ ...point, ...outcomes }], outcomes },
-			browses: { total: 0, points: [] },
+			browses: { total: 0, points: [], outcomes },
 			fetches: { total: 0, points: [{ ...point, ...outcomes }], outcomes },
 		},
 		billing: {
@@ -153,7 +153,7 @@ test("empty data shows real zero counts, status breakdown and the current paid s
 		assert.ok(html.includes(snapshot));
 		assert.match(html, />3</);
 		assert.doesNotMatch(html, /--/);
-		assert.ok(html.includes(language === "zh" ? "成功" : "Success"));
+		assert.ok(html.includes(language === "zh" ? "限流" : "Rate limited"));
 		assert.ok(!html.includes(language === "zh" ? "状态未知" : "Unknown status"));
 		assert.ok(html.includes(language === "zh" ? "新用户" : "New users"));
 		assert.ok(html.includes(language === "zh" ? "匿名用户" : "Anonymous"));

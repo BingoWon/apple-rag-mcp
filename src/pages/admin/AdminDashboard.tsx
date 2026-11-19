@@ -2,7 +2,7 @@ import { IconCalendar, IconCheck, IconRefresh } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AdminStatsCards } from "@/components/admin/AdminStatsCards";
-import TimeRangeSelector from "@/components/dashboard/ToolCallsChart/TimeRangeSelector";
+import TimeRangeSelector from "@/components/charts/TimeRangeSelector";
 import { Button } from "@/components/ui/Button";
 import { api } from "@/lib/api";
 import type { AdminDashboardStats, AdminStatsQuery } from "@/types";

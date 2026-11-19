@@ -74,7 +74,7 @@ const StatsCards = () => {
 		},
 		{
 			icon: IconCircleCheck,
-			value: `${corpusStats?.embedded_percentage ?? 100}%`,
+			value: corpusStats ? `${corpusStats.embedded_percentage}%` : "…",
 			labelKey: "dashboard.stats_embedded",
 			color: "#dc5bb7",
 			clickable: false,

@@ -1,25 +1,25 @@
 import { create } from "zustand";
 import { trackEvent } from "@/lib/analytics";
 import { api } from "@/lib/api";
-import type { CurrentUsage, MCPToken, Subscription, ToolCallsStats } from "@/types";
+import type { CurrentUsage, MCPToken, Subscription } from "@/types";
 
 interface DashboardState {
 	// Data
 	mcpTokens: MCPToken[];
-	toolCallsStats: ToolCallsStats | null;
+
 	currentUsage: CurrentUsage | null;
 	subscription: Subscription | null;
 
 	// Loading states
 	isLoadingTokens: boolean;
-	isLoadingUsage: boolean;
+
 	isLoadingQuota: boolean;
 	isLoadingSubscription: boolean;
 
 	// Error states
 	errors: {
 		tokens: string | null;
-		usage: string | null;
+
 		quota: string | null;
 		subscription: string | null;
 	};
@@ -29,28 +29,26 @@ interface DashboardState {
 	createMCPToken: (data: { name: string; permissions?: string[] }) => Promise<MCPToken | null>;
 	updateMCPToken: (id: string, name: string) => Promise<void>;
 	deleteMCPToken: (id: string) => Promise<void>;
-	fetchToolCallsStats: (period?: "24h" | "7d" | "30d") => Promise<boolean>;
+
 	fetchCurrentUsage: () => Promise<boolean>;
 	fetchSubscription: () => Promise<boolean>;
-	refreshDashboard: () => Promise<void>;
-	clearError: (key: keyof DashboardState["errors"]) => void;
 }
 
 export const useDashboardStore = create<DashboardState>((set, get) => ({
 	// Initial state
 	mcpTokens: [],
-	toolCallsStats: null,
+
 	currentUsage: null,
 	subscription: null,
 	isLoadingTokens: false,
-	isLoadingUsage: false,
+
 	isLoadingQuota: false,
 	isLoadingSubscription: false,
 
 	// Initial error states
 	errors: {
 		tokens: null,
-		usage: null,
+
 		quota: null,
 		subscription: null,
 	},
@@ -167,37 +165,6 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
 		}
 	},
 
-	fetchToolCallsStats: async (period: "24h" | "7d" | "30d" = "7d"): Promise<boolean> => {
-		set({
-			isLoadingUsage: true,
-			errors: { ...get().errors, usage: null },
-		});
-
-		try {
-			const response = await api.getUserToolCallsStats(period);
-
-			if (response.success && response.data) {
-				set({
-					toolCallsStats: response.data as ToolCallsStats,
-					isLoadingUsage: false,
-					errors: { ...get().errors, usage: null },
-				});
-				return true;
-			} else {
-				throw new Error("Failed to fetch usage statistics");
-			}
-		} catch (error) {
-			const errorMessage =
-				error instanceof Error ? error.message : "Failed to fetch usage statistics";
-			set({
-				toolCallsStats: null,
-				isLoadingUsage: false,
-				errors: { ...get().errors, usage: errorMessage },
-			});
-			return false;
-		}
-	},
-
 	fetchCurrentUsage: async (): Promise<boolean> => {
 		set({
 			isLoadingQuota: true,
@@ -255,22 +222,5 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
 			});
 			return false;
 		}
-	},
-
-	refreshDashboard: async () => {
-		const { fetchMCPTokens, fetchToolCallsStats, fetchCurrentUsage } = get();
-
-		try {
-			await Promise.allSettled([fetchMCPTokens(), fetchToolCallsStats(), fetchCurrentUsage()]);
-		} catch (error) {
-			console.warn("Some dashboard data failed to load:", error);
-		}
-	},
-
-	// Clear error method
-	clearError: (key: keyof DashboardState["errors"]) => {
-		set((state) => ({
-			errors: { ...state.errors, [key]: null },
-		}));
 	},
 }));

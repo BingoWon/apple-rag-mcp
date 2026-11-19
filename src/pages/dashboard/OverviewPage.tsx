@@ -2,34 +2,27 @@ import { lazy, Suspense, useEffect, useRef } from "react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { AccountActivity } from "@/components/dashboard/AccountActivity";
 import StatsCards from "@/components/dashboard/StatsCards";
 import { useAuth } from "@/hooks/useAuth";
 import { authReturnPath, clearAuthReturn } from "@/lib/auth-return";
-import { useDashboardStore } from "@/stores/dashboard";
 
 const AgentUsageGuide = lazy(() =>
 	import("@/components/dashboard/AgentUsageGuide").then(({ AgentUsageGuide }) => ({
 		default: AgentUsageGuide,
 	})),
 );
-const ToolCallsChart = lazy(() =>
-	import("@/components/dashboard/ToolCallsChart").then(({ ToolCallsChart }) => ({
-		default: ToolCallsChart,
-	})),
-);
-
 function DashboardOverviewContent() {
 	const { t } = useTranslation();
-	const { toolCallsStats, refreshDashboard } = useDashboardStore();
 
 	const [searchParams] = useSearchParams();
 	const navigate = useNavigate();
-	const { loginWithToken } = useAuth();
+	const { loginWithToken, isAuthenticated, user } = useAuth();
 	const processedAuth = useRef(false);
 
-	// Modern OAuth and data loading effect
+	// Consume the login callback once before loading private data.
 	useEffect(() => {
-		const handleOAuthAndLoadData = async () => {
+		const handleAuthReturn = async () => {
 			const authParam = searchParams.get("auth");
 
 			// Handle OAuth callback if present (prevent duplicate processing)
@@ -55,19 +48,10 @@ function DashboardOverviewContent() {
 					toast.error(t("dashboard.auth_failed"));
 				}
 			}
-
-			// Load dashboard data
-			refreshDashboard();
 		};
 
-		handleOAuthAndLoadData();
-	}, [
-		searchParams,
-		navigate,
-		loginWithToken, // Load dashboard data
-		refreshDashboard,
-		t,
-	]);
+		handleAuthReturn();
+	}, [searchParams, navigate, loginWithToken, t]);
 
 	return (
 		<div className="space-y-6">
@@ -77,25 +61,15 @@ function DashboardOverviewContent() {
 				<p className="mt-1 text-sm text-muted">{t("dashboard.subtitle")}</p>
 			</div>
 
-			{/* Main Content - Left/Right Layout */}
-			<div className="grid grid-cols-1 lg:grid-cols-9 gap-6">
-				{/* Left Side - MCP Usage Guide */}
-				<div className="lg:col-span-4">
-					<AgentUsageGuide />
-				</div>
-
-				{/* Right Side - Stats Cards and Interactive Charts */}
-				<div className="lg:col-span-5">
-					<div className="mb-5">
+			{isAuthenticated && (
+				<>
+					<AccountActivity key={user?.id} />
+					<div className="grid min-w-0 items-start gap-6 lg:grid-cols-2">
+						<AgentUsageGuide />
 						<StatsCards />
 					</div>
-					<ToolCallsChart
-						data={toolCallsStats?.calls_by_day || []}
-						totalToolCalls={toolCallsStats?.total_tool_calls || 0}
-						totalResults={toolCallsStats?.total_results || 0}
-					/>
-				</div>
-			</div>
+				</>
+			)}
 		</div>
 	);
 }

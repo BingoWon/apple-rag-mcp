@@ -1,7 +1,8 @@
 import axios, { type AxiosError, type AxiosInstance, type AxiosResponse } from "axios";
-import type { AdminDashboardStats, AdminStatsQuery, ApiResponse } from "@/types";
+import type { AdminDashboardStats, AdminStatsQuery, ApiResponse, CurrentUsage } from "@/types";
 import type { AdminLogFilters, AdminLogKind, AdminLogsResponse } from "@/types/admin-logs";
 import { normalizeEmail } from "@/utils/email";
+import type { ToolActivity, UsagePeriod } from "../../shared/tool-activity";
 import { ADMIN_PASSWORD_HEADER, ADMIN_SESSION_KEY } from "./constants";
 
 let isLoggingOut = false;
@@ -221,20 +222,26 @@ class ApiClient {
 		return this.delete(`/mcp-tokens/${id}`);
 	}
 
-	async getUserQuota() {
-		return this.get("/users/quota");
+	async getUserQuota(signal?: AbortSignal) {
+		return this.get<CurrentUsage>("/users/quota", { signal });
 	}
 
-	async getUserToolCallsStats(period: "24h" | "7d" | "30d" = "7d") {
-		return this.get(`/users/usage/stats?period=${period}`);
+	async getUserToolCallsStats(period: UsagePeriod, signal?: AbortSignal) {
+		return this.get<ToolActivity>("/users/usage/stats", { params: { period }, signal });
 	}
 
 	async getCorpusStats() {
 		return this.get("/stats/corpus");
 	}
 
-	async getUsageLogs(limit = 20, page = 1, kind: "all" | "search" | "fetch" | "browse" = "all") {
-		return this.get(`/usage-logs/history?limit=${limit}&page=${page}&log_type=${kind}`);
+	async getUsageLogs(
+		limit = 20,
+		page = 1,
+		kind: "all" | "search" | "fetch" | "browse" = "all",
+		from?: string,
+		to?: string,
+	) {
+		return this.get("/usage-logs/history", { params: { limit, page, log_type: kind, from, to } });
 	}
 
 	// Admin API methods with pagination support
