@@ -378,7 +378,7 @@
 		"update_error": "Failed to update authorized IP"
 	},
 	"activity": {
-		"weekly_remaining": "Weekly calls remaining",
+		"weekly_remaining": "Weekly calls left",
 		"unlimited": "Unlimited",
 		"resets": "Resets {{date}} (UTC+8)",
 		"tool_calls": "Tool calls",

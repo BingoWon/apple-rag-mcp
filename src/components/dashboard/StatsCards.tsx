@@ -88,15 +88,15 @@ const StatsCards = () => {
 	};
 
 	return (
-		<Card className="mb-6">
+		<Card className="mb-6 @container">
 			<CardContent className="p-6">
 				<div className="flex justify-center mb-5">
-					<div className="flex w-auto items-center space-x-2 rounded-full bg-brand px-1.5 py-1 whitespace-pre">
+					<div className="flex max-w-full items-center gap-2 rounded-full bg-brand px-1.5 py-1">
 						<div className="w-fit rounded-full bg-white px-2 py-0.5 text-xs font-semibold text-brand sm:text-sm text-center flex items-center gap-1">
 							<IconCircleCheck className="w-4 h-4" />
 							<span className="hidden sm:inline">{t("dashboard.stats_status")}</span>
 						</div>
-						<p className="text-xs font-semibold text-white sm:text-base pr-2">
+						<p className="min-w-0 pr-2 text-xs font-semibold text-white @[450px]:text-base">
 							{t("dashboard.stats_freshness")}
 						</p>
 					</div>
@@ -107,7 +107,7 @@ const StatsCards = () => {
 						{t("dashboard.stats_date", { date: statsDate })}
 					</p>
 				</div>
-				<div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+				<div className="grid grid-cols-2 gap-3 @[450px]:grid-cols-4 @[450px]:gap-4">
 					{stats.map((stat, index) => {
 						const StatIcon = stat.icon;
 						const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -122,7 +122,7 @@ const StatsCards = () => {
 								key={index}
 								role={stat.clickable ? "button" : undefined}
 								tabIndex={stat.clickable ? 0 : undefined}
-								className={`rounded-[10px] w-full h-24 lg:h-32 flex flex-col items-center justify-center gap-1 lg:gap-2 transition-all duration-[350ms] ease-in-out ${
+								className={`rounded-[10px] min-w-0 w-full h-24 @[450px]:h-32 flex flex-col items-center justify-center gap-1 @[450px]:gap-2 transition-all duration-[350ms] ease-in-out ${
 									stat.clickable ? "cursor-pointer hover:scale-110" : "cursor-default"
 								}`}
 								style={{ backgroundColor: `${stat.color}20` }}
@@ -130,10 +130,16 @@ const StatsCards = () => {
 								onKeyDown={stat.clickable ? handleKeyDown : undefined}
 							>
 								<StatIcon className="w-6 h-6 lg:w-8 lg:h-8" style={{ color: stat.color }} />
-								<span className="text-lg lg:text-xl font-semibold" style={{ color: stat.color }}>
+								<span
+									className="text-lg @[450px]:text-xl font-semibold"
+									style={{ color: stat.color }}
+								>
 									{stat.value}
 								</span>
-								<span className="text-xs lg:text-sm font-semibold" style={{ color: stat.color }}>
+								<span
+									className="text-xs @[450px]:text-sm font-semibold"
+									style={{ color: stat.color }}
+								>
 									{t(stat.labelKey)}
 								</span>
 							</div>

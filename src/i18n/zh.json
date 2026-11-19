@@ -367,7 +367,7 @@
 		"update_error": "更新授权 IP 失败"
 	},
 	"activity": {
-		"weekly_remaining": "本周剩余调用额度",
+		"weekly_remaining": "本周剩余额度",
 		"unlimited": "不限量",
 		"resets": "{{date}} 重置（UTC+8）",
 		"tool_calls": "工具调用",

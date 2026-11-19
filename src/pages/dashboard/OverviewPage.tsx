@@ -62,13 +62,19 @@ function DashboardOverviewContent() {
 			</div>
 
 			{isAuthenticated && (
-				<>
-					<AccountActivity key={user?.id} />
-					<div className="grid min-w-0 items-start gap-6 lg:grid-cols-2">
+				<div className="flex min-w-0 flex-col gap-6 lg:grid lg:grid-cols-9 lg:items-start">
+					<div className="order-2 min-w-0 lg:order-none lg:col-span-4">
 						<AgentUsageGuide />
-						<StatsCards />
 					</div>
-				</>
+					<div className="contents lg:col-span-5 lg:block lg:min-w-0">
+						<div className="order-3 lg:mb-5">
+							<StatsCards />
+						</div>
+						<div className="order-1 min-w-0">
+							<AccountActivity key={user?.id} />
+						</div>
+					</div>
+				</div>
 			)}
 		</div>
 	);
