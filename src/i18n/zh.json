@@ -370,6 +370,7 @@
 		"weekly_remaining": "本周剩余额度",
 		"unlimited": "不限量",
 		"resets": "{{date}} 重置（UTC+8）",
+		"total_calls": "总调用次数",
 		"tool_calls": "工具调用",
 		"recorded": "次调用",
 		"search": "搜索",

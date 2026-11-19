@@ -1,5 +1,5 @@
 import { IconActivity, IconArrowUpRight, IconCircleCheck } from "@tabler/icons-react";
-import { useEffect, useState } from "react";
+import { type CSSProperties, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { useTheme } from "@/components/providers/ThemeProvider";
@@ -38,7 +38,7 @@ function WeeklyQuota() {
 			<div>
 				<h3 className={style.label}>
 					{t("activity.weekly_remaining")}
-					<IconCircleCheck aria-hidden style={{ color: "hsl(var(--chart-3))" }} />
+					<IconCircleCheck aria-hidden className="text-muted-foreground" />
 				</h3>
 				<p className="mt-1 flex flex-wrap items-baseline gap-x-1.5 text-3xl font-bold tabular-nums text-light">
 					{data ? (data.limit === -1 ? t("activity.unlimited") : num(data.remaining)) : "—"}
@@ -115,7 +115,16 @@ export function AccountActivity() {
 	}, [period, attempt]);
 	const number = (v: number) => v.toLocaleString(i18n.resolvedLanguage);
 	return (
-		<Card className={style.panel}>
+		<Card
+			className={style.panel}
+			style={
+				{
+					"--overview-search": colors.search,
+					"--overview-fetch": colors.fetch,
+					"--overview-browse": colors.browse,
+				} as CSSProperties
+			}
+		>
 			<CardHeader className="flex-row flex-wrap items-center justify-between gap-2 space-y-0">
 				<CardTitle>{t("chart.usage_trends")}</CardTitle>
 				<TimeRangeSelector
@@ -129,14 +138,16 @@ export function AccountActivity() {
 					<div className={style.tile + " " + style.calls}>
 						<div>
 							<h3 className={style.label}>
-								{t("activity.tool_calls")}
-								<IconActivity aria-hidden style={{ color: "var(--color-chart-queries)" }} />
+								{t("activity.total_calls")}
+								<IconActivity aria-hidden className="text-muted-foreground" />
 							</h3>
 							<p className="mt-1 text-3xl font-bold tabular-nums text-light">
 								{data ? number(data.total) : "—"}
 							</p>
 						</div>
-						<div className={style.spark}>{data && <CallsSparkline points={data.points} />}</div>
+						<div className={style.spark}>
+							{data && <CallsSparkline data={data} colors={colors} />}
+						</div>
 					</div>
 					<WeeklyQuota />
 				</div>
@@ -164,7 +175,7 @@ export function AccountActivity() {
 							))}
 						</div>
 						{data.total ? (
-							<OverviewChart data={data} />
+							<OverviewChart data={data} colors={colors} />
 						) : (
 							<p className="py-10 text-center text-sm text-muted">{t("activity.empty")}</p>
 						)}

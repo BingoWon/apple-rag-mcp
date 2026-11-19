@@ -19,19 +19,33 @@
 	background-color: var(--color-card);
 }
 .calls {
-	border: 1px solid var(--color-chart-queries);
-	box-shadow: 0 4px 12px rgb(33 132 139 / 12%);
+	border: 1px solid var(--color-default);
+	box-shadow: 0 4px 12px rgb(35 48 68 / 8%);
 	background-image:
-		radial-gradient(circle at 20% 80%, hsl(var(--chart-1) / 0.38), transparent 60%),
-		radial-gradient(circle at 80% 20%, hsl(var(--chart-2) / 0.35), transparent 60%),
-		radial-gradient(circle at 40% 40%, hsl(var(--chart-1) / 0.12), transparent 60%);
+		radial-gradient(
+			ellipse at 0% 100%,
+			color-mix(in srgb, var(--overview-search) 18%, transparent),
+			transparent 70%
+		),
+		radial-gradient(
+			ellipse at 65% 90%,
+			color-mix(in srgb, var(--overview-fetch) 13%, transparent),
+			transparent 65%
+		),
+		radial-gradient(
+			ellipse at 100% 20%,
+			color-mix(in srgb, var(--overview-browse) 12%, transparent),
+			transparent 65%
+		);
 }
 .quota {
-	border: 1px solid hsl(var(--chart-3) / 0.42);
-	box-shadow: 0 3px 10px rgb(94 68 128 / 9%);
-	background-image:
-		radial-gradient(circle at 20% 80%, hsl(var(--chart-3) / 0.27), transparent 60%),
-		radial-gradient(circle at 80% 20%, hsl(var(--chart-4) / 0.18), transparent 60%);
+	border: 1px solid var(--color-default);
+	box-shadow: 0 3px 10px rgb(32 38 46 / 7%);
+	background-image: linear-gradient(
+		135deg,
+		transparent 20%,
+		color-mix(in srgb, var(--color-muted-foreground) 12%, transparent)
+	);
 }
 .label {
 	display: flex;
@@ -60,14 +74,14 @@
 	height: 4px;
 	overflow: hidden;
 	border-radius: 100px;
-	background: hsl(var(--chart-4) / 0.12);
+	background: color-mix(in srgb, var(--color-muted-foreground) 18%, transparent);
 	margin-bottom: 0.45rem;
 }
 .rail > span {
 	display: block;
 	height: 100%;
 	border-radius: inherit;
-	background: linear-gradient(90deg, hsl(var(--chart-3)), hsl(var(--chart-4)));
+	background: var(--color-muted-foreground);
 }
 @container (max-width: 470px) {
 	.summary {

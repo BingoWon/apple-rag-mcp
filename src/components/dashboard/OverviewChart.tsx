@@ -1,28 +1,30 @@
 import type { ApexOptions } from "apexcharts";
-import { lazy, Suspense, useId } from "react";
+import { lazy, Suspense } from "react";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@/components/providers/ThemeProvider";
-import { TOOL_KINDS, type ToolActivity } from "../../../shared/tool-activity";
+import { TOOL_KINDS, type ToolActivity, type ToolKind } from "../../../shared/tool-activity";
 
 const ApexChart = lazy(() => import("react-apexcharts"));
 const overviewColors = { search: "#128b84", fetch: "#5868d9", browse: "#bd4393" };
 const nightColors = { search: "#39dfcf", fetch: "#99a7ff", browse: "#f09fdb" };
 export const overviewPalette = (dark: boolean) => (dark ? nightColors : overviewColors);
-export function CallsSparkline({ points }: { points: ToolActivity["points"] }) {
-	const id = useId();
-	const values = points.map((p) => p.search + p.fetch + p.browse);
-	if (!values.length) return null;
-	const ceiling = Math.max(1, ...values);
-	const coords = values.map((v, i) => [
-		(i * 240) / Math.max(1, values.length - 1),
-		48 - (v / ceiling) * 41,
-	]);
-	if (coords.length === 1) coords.push([240, coords[0][1]]);
-	const line = coords.slice(1).reduce((s, [x, y], i) => {
-		const [px, py] = coords[i];
+type Palette = Record<ToolKind, string>;
+type Point = [number, number];
+
+function curve(points: Point[]): string {
+	return points.slice(1).reduce((line, [x, y], i) => {
+		const [px, py] = points[i];
 		const mid = (px + x) / 2;
-		return s + ` C${mid},${py} ${mid},${y} ${x},${y}`;
-	}, `M0,${coords[0][1]}`);
+		return line + ` C${mid},${py} ${mid},${y} ${x},${y}`;
+	}, points[0].join(","));
+}
+
+export function CallsSparkline({ data, colors }: { data: ToolActivity; colors: Palette }) {
+	const { points } = data;
+	if (!data.total || !points.length) return null;
+	const max = Math.max(1, ...points.map((p) => p.search + p.fetch + p.browse));
+	const samples = points.length === 1 ? [points[0], points[0]] : points;
+	let lower: Point[] = samples.map((_, i) => [(i * 240) / (samples.length - 1), 50]);
 	return (
 		<svg
 			aria-hidden="true"
@@ -31,29 +33,33 @@ export function CallsSparkline({ points }: { points: ToolActivity["points"] }) {
 			width="100%"
 			height="100%"
 		>
-			<defs>
-				<linearGradient id={id} x2="1" y2="0">
-					<stop stopColor="hsl(var(--chart-1))" />
-					<stop offset="1" stopColor="hsl(var(--chart-2))" />
-				</linearGradient>
-			</defs>
-			<path d={line + " V54 H0 Z"} fill={`url(#${id})`} opacity=".22" />
-			<path
-				d={line}
-				fill="none"
-				stroke={`url(#${id})`}
-				strokeWidth="2.5"
-				vectorEffect="non-scaling-stroke"
-			/>
+			{TOOL_KINDS.filter((k) => data.by_tool[k] > 0).map((k) => {
+				const upper: Point[] = lower.map(([x, y], i) => [x, y - (samples[i][k] * 43) / max]);
+				const edge = "M" + curve(upper);
+				const band = edge + " L" + curve([...lower].reverse()) + " Z";
+				lower = upper;
+				return (
+					<g key={k}>
+						<path d={band} fill={colors[k]} fillOpacity=".20" />
+						<path
+							d={edge}
+							fill="none"
+							stroke={colors[k]}
+							strokeWidth="1.8"
+							vectorEffect="non-scaling-stroke"
+						/>
+					</g>
+				);
+			})}
 		</svg>
 	);
 }
-export function OverviewChart({ data }: { data: ToolActivity }) {
+export function OverviewChart({ data, colors }: { data: ToolActivity; colors: Palette }) {
 	const { t, i18n } = useTranslation();
 	const { resolvedTheme } = useTheme();
 	const dark = resolvedTheme === "dark",
 		axis = dark ? "#94a3b8" : "#64748b";
-	const colors = overviewPalette(dark);
+	const visible = TOOL_KINDS.filter((k) => data.by_tool[k] > 0);
 	const date = new Intl.DateTimeFormat(i18n.resolvedLanguage, {
 		timeZone: "Asia/Singapore",
 		month: "short",
@@ -71,7 +77,7 @@ export function OverviewChart({ data }: { data: ToolActivity }) {
 			foreColor: axis,
 		},
 		theme: { mode: dark ? "dark" : "light" },
-		colors: TOOL_KINDS.map((k) => colors[k]),
+		colors: visible.map((k) => colors[k]),
 		stroke: { curve: "smooth", width: 2.5 },
 		fill: { type: "gradient", gradient: { opacityFrom: 0.34, opacityTo: 0.05, stops: [0, 100] } },
 		markers: { size: 0 },
@@ -118,7 +124,7 @@ export function OverviewChart({ data }: { data: ToolActivity }) {
 					width="100%"
 					height="100%"
 					options={options}
-					series={TOOL_KINDS.map((k) => ({
+					series={visible.map((k) => ({
 						name: t("activity." + k),
 						data: data.points.map((p) => [Date.parse(p.date), p[k]]),
 					}))}

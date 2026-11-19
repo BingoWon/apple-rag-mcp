@@ -381,6 +381,7 @@
 		"weekly_remaining": "Weekly calls left",
 		"unlimited": "Unlimited",
 		"resets": "Resets {{date}} (UTC+8)",
+		"total_calls": "Total calls",
 		"tool_calls": "Tool calls",
 		"recorded": "calls in this period",
 		"search": "Search",
