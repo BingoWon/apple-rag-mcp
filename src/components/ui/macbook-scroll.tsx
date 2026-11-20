@@ -90,6 +90,7 @@ export const MacbookScroll = () => {
 			className="relative flex min-h-[150vh] shrink-0 transform flex-col items-center justify-start py-8 md:min-h-[200vh] md:py-12"
 		>
 			<motion.div
+				className="w-full"
 				style={{
 					translateY: textTransform,
 					opacity: textOpacity,

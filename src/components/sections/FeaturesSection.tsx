@@ -41,8 +41,8 @@ export function FeaturesSection() {
 			{/* Subtle background pattern for light mode */}
 			<div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(120,119,198,0.03),transparent_50%)] dark:bg-[radial-gradient(circle_at_50%_50%,rgba(120,119,198,0.1),transparent_50%)]" />
 
-			<div className="relative mx-auto max-w-7xl px-6 lg:px-8">
-				<div className="home-section-heading mx-auto max-w-4xl lg:text-center">
+			<div className="home-content relative">
+				<div className="home-section-heading lg:text-center">
 					<h2 className="text-base font-semibold leading-7 text-action">{t("features.eyebrow")}</h2>
 					<p className="mt-2 text-3xl font-bold tracking-tight text-light sm:text-4xl">
 						{t("features.title")}

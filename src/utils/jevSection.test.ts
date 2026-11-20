@@ -43,7 +43,6 @@ test("Jev section uses logo-prefixed branding and centered natural scrolling wit
 			assert.ok(!html.includes("160svh"));
 			assert.ok(!html.includes("400vh"));
 			assert.ok(html.includes("text-3xl font-bold text-light sm:text-4xl"));
-			assert.ok(html.includes("max-w-6xl text-lg leading-8 text-muted"));
 			assert.ok(html.includes('viewBox="0 300 1440 430"'));
 			assert.ok(html.includes('<feGaussianBlur in="SourceGraphic" stdDeviation="5"'));
 			assert.ok(html.includes('href="https://typesafe.ai/"'));

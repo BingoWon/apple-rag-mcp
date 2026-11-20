@@ -57,10 +57,7 @@ export function PricingSection() {
 	}, []);
 
 	return (
-		<div
-			className="home-section mx-auto max-w-7xl rounded-xl bg-secondary px-6 lg:px-8"
-			id="pricing"
-		>
+		<div className="home-section home-content rounded-xl bg-secondary" id="pricing">
 			<div className="home-section-heading text-center">
 				<h2 className="text-base font-semibold leading-7 text-action">{t("pricing.eyebrow")}</h2>
 				<p className="mt-2 text-3xl font-bold tracking-tight text-light sm:text-4xl">

@@ -161,10 +161,20 @@ html {
 	scroll-behavior: smooth;
 }
 
+.home-content {
+	@apply mx-auto w-full max-w-6xl px-6 lg:px-8;
+}
+
 .home-section {
 	/* Adjacent sections each supply half of the space between their contents. */
 	padding-block: clamp(2.5rem, 6.25vw, 3.5rem);
 	scroll-margin-block-start: 4rem;
+}
+
+@media (min-width: 64rem) {
+	.home-section {
+		padding-block: 6.125rem;
+	}
 }
 
 .home-section-heading {

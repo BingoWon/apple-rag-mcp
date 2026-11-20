@@ -1,6 +1,6 @@
 {
 	"name": "apple-rag-mcp",
-	"version": "5.15.4",
+	"version": "5.15.5",
 	"mcpName": "com.apple-rag/mcp-server",
 	"private": true,
 	"license": "MIT",
@@ -42,7 +42,7 @@
 		"clsx": "^2.1.1",
 		"gsap": "^3.13.0",
 		"hono": "^4.13.5",
-		"i18next": "^25.8.18",
+		"i18next": "^25.9.08",
 		"jose": "6.2.15",
 		"motion": "^12.37.0",
 		"postgres": "3.4.9",

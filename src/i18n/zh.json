@@ -85,8 +85,8 @@
 		"description": "它会根据问题中的 API、平台和版本要求，为 Apple 文档和视频字幕评分排序，优先呈现更相关的资料。"
 	},
 	"features": {
-		"eyebrow": "为智能体开发流程而建",
-		"title": "让智能体找到开发所需的 Apple 资料",
+		"eyebrow": "和智能体天生一对",
+		"title": "让苹果官方开发文档唾手可得",
 		"subtitle": "让智能体查阅 API 文档，或顺着一场 WWDC 讲座找到相关资料。",
 		"document_lookup": "查找并读取 Apple 文档",
 		"document_lookup_desc": "智能体可以搜索已建索引的文档和 WWDC 字幕，也可以按主题浏览 SwiftUI 和 UIKit。找到相关内容后，可按需读取原文。",
@@ -124,8 +124,8 @@
 	"pricing": {
 		"eyebrow": "订阅价格",
 		"title": "一个套餐，支持 MCP / CLI",
-		"subtitle": "免费开始使用，按智能体每周的调用需求升级。",
-		"shared_quota": "搜索、浏览目录和读取原文共用账号额度，MCP、CLI、各台设备及自动化任务合并计数。",
+		"subtitle": "免登录免费试用，按需升级。",
+		"shared_quota": "不同调用渠道、不同工具调用均共享账号额度。",
 		"most_popular": "最受欢迎",
 		"badge_card": "银行卡",
 		"badge_alipay": "支付宝",
@@ -166,9 +166,9 @@
 	},
 	"plans": {
 		"hobby": "Hobby",
-		"hobby_desc": "适合入门和小型项目。",
+		"hobby_desc": "快速验证，上手体验。",
 		"pro": "Pro",
-		"pro_desc": "适合专业开发者和成长中的团队。",
+		"pro_desc": "适合专业开发者和中小团队。",
 		"enterprise": "Enterprise",
 		"enterprise_desc": "联系我们，讨论团队的使用需求。",
 		"tool_calls_per_week": "每周 {{count}} 次工具调用",
@@ -190,11 +190,11 @@
 		"mcp_cli_supported": "MCP / CLI 接入"
 	},
 	"cta": {
-		"ready": "准备好",
+		"ready": "开始",
 		"to": "为你的",
 		"empower": "智能体",
 		"your": "注入",
-		"ai_agents": "超能力了吗？",
+		"ai_agents": "超能力！",
 		"subtitle": "时，让智能体通过 MCP 或 CLI 随时查阅 Apple 官方资料。"
 	},
 	"auth": {

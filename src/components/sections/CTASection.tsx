@@ -29,7 +29,7 @@ export function CTASection() {
 	];
 
 	return (
-		<div className="home-section relative overflow-hidden rounded-xl" id="cta">
+		<div className="relative overflow-hidden rounded-xl" id="cta">
 			{/* Vertical Fade Mask - Creates transparent fade at top and bottom */}
 			<div
 				className="absolute inset-0"
@@ -46,9 +46,9 @@ export function CTASection() {
 			</div>
 
 			{/* Content */}
-			<div className="relative px-6 lg:px-8">
+			<div className="home-content relative py-32 sm:py-40">
 				<div className="text-center">
-					<TypewriterEffectSmooth words={words} className="my-0" />
+					<TypewriterEffectSmooth words={words} />
 					<p className="mt-6 text-lg leading-8 text-light/90">
 						<span className="font-extrabold text-white bg-gradient-to-r from-brand to-brand-secondary px-2 py-1 rounded-lg text-xl tracking-wide transform -rotate-5 inline-block hover:rotate-0 transition-transform duration-300">
 							Vibe Coding

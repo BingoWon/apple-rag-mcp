@@ -26,8 +26,8 @@ export function QuickStartSection() {
 
 	return (
 		<section className="home-section" id="quickstart" aria-labelledby="quickstart-title">
-			<div className="mx-auto max-w-7xl px-6 lg:px-8">
-				<header className="home-section-heading mx-auto max-w-2xl text-center">
+			<div className="home-content">
+				<header className="home-section-heading text-center">
 					<p className="text-sm font-semibold text-action">{t("quickstart.eyebrow")}</p>
 					<h2
 						id="quickstart-title"
@@ -35,9 +35,7 @@ export function QuickStartSection() {
 					>
 						{t("quickstart.title")}
 					</h2>
-					<p className="mx-auto mt-4 max-w-xl text-base leading-7 text-muted">
-						{t("quickstart.subtitle")}
-					</p>
+					<p className="mt-4 text-base leading-7 text-muted">{t("quickstart.subtitle")}</p>
 				</header>
 
 				<Card className="mx-auto max-w-2xl rounded-2xl shadow-none">

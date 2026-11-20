@@ -24,9 +24,9 @@ export const GoogleGeminiEffect = ({
 }) => {
 	return (
 		<div className={cn("relative w-full", className)}>
-			<div className="relative z-10 mx-auto max-w-7xl px-6 text-center lg:px-8">
+			<div className="home-content relative z-10 text-center">
 				<h2 className="text-3xl font-bold text-light sm:text-4xl">{title}</h2>
-				<p className="mx-auto mt-4 max-w-6xl text-lg leading-8 text-muted">{description}</p>
+				<p className="mt-4 text-lg leading-8 text-muted">{description}</p>
 			</div>
 			<div
 				ref={drawingRef}
