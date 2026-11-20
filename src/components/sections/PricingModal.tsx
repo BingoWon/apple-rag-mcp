@@ -1,6 +1,8 @@
-import { IconCreditCard } from "@tabler/icons-react";
+import "./PricingModal.css";
+import { IconCreditCard, IconLock } from "@tabler/icons-react";
 import Alipay from "@thesvg/react/alipay";
-import { type ReactElement, useState } from "react";
+import { spring } from "motion";
+import { type CSSProperties, type ReactElement, useState } from "react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -24,6 +26,15 @@ interface PricingModalProps {
 	children: ReactElement;
 	defaultTab?: PaymentType;
 }
+
+const panelMotion = {
+	"--pricing-spring": String(spring({ keyframes: [0, 1], stiffness: 260, damping: 15 })),
+} as CSSProperties;
+const discountColors: Partial<Record<PricingOption["id"], string>> = {
+	monthly: "bg-warning",
+	semiannual: "bg-success",
+	annual: "bg-brand",
+};
 
 const CONFLICT_MESSAGES: Record<string, string> = {
 	CONFLICT_SUBSCRIPTION_ACTIVE: "pricing.conflict_subscription_active",
@@ -98,21 +109,33 @@ export function PricingModal({ children, defaultTab = "subscription" }: PricingM
 	return (
 		<Dialog>
 			<DialogTrigger asChild>{children}</DialogTrigger>
-			<DialogContent className="max-w-lg space-y-4 p-4 sm:p-6">
-				<DialogHeader>
-					<DialogTitle>{t("pricing.choose_plan", { plan: "Pro" })}</DialogTitle>
+			<DialogContent
+				style={panelMotion}
+				className="pricing-dialog max-w-2xl space-y-4 bg-card/95 p-4 shadow-[var(--shadow-complex)] backdrop-blur-xl sm:space-y-6 sm:p-8 md:rounded-3xl md:p-10"
+			>
+				<DialogHeader className="px-6 text-center">
+					<DialogTitle className="text-2xl">
+						{t("pricing.choose_plan", { plan: "Pro" })}
+					</DialogTitle>
 					<DialogDescription>{t("pricing.choose_cycle")}</DialogDescription>
 				</DialogHeader>
 				<div className="flex gap-1 rounded-lg border border-default bg-secondary p-1">
 					{(["subscription", "one_time"] as const).map((type) => {
 						const recurring = type === "subscription";
+						const locked = recurring ? subscriptionTabDisabled : onetimeTabDisabled;
 						return (
 							<Button
 								key={type}
-								variant={paymentType === type ? "primary" : "ghost"}
-								className="h-auto flex-1 whitespace-normal"
+								variant="ghost"
+								className={cn(
+									"h-auto min-w-0 flex-1 gap-1.5 whitespace-normal rounded-lg px-2 py-2.5",
+									paymentType === type &&
+										(recurring
+											? "bg-[#635BFF] text-white hover:bg-[#554cde]"
+											: "bg-[#146bdc] text-white hover:bg-[#105ebf]"),
+								)}
 								aria-pressed={paymentType === type}
-								disabled={isLoading || (recurring ? subscriptionTabDisabled : onetimeTabDisabled)}
+								disabled={isLoading || locked}
 								title={
 									recurring && subscriptionTabDisabled
 										? t("pricing.tab_disabled_has_onetime")
@@ -122,19 +145,33 @@ export function PricingModal({ children, defaultTab = "subscription" }: PricingM
 								}
 								onClick={() => handleTabChange(type)}
 							>
+								{locked ? (
+									<IconLock aria-hidden="true" className="size-4 shrink-0" />
+								) : (
+									<>
+										<IconCreditCard aria-hidden="true" className="size-4 shrink-0" />
+										{!recurring && (
+											<Alipay aria-hidden="true" variant="mono" className="size-4 shrink-0" />
+										)}
+									</>
+								)}
 								{t(recurring ? "pricing.tab_subscription" : "pricing.tab_onetime")}
 							</Button>
 						);
 					})}
 				</div>
-				<fieldset className="space-y-2" disabled={isLoading}>
+				<fieldset className="min-w-0 space-y-3" disabled={isLoading}>
 					<legend className="sr-only">{t("pricing.choose_cycle")}</legend>
 					{options.map((option) => (
 						<label
 							key={option.id}
 							className={cn(
-								"flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 focus-within:ring-2 focus-within:ring-action",
-								selectedOption === option.id ? "border-action bg-action/5" : "border-default",
+								"relative flex cursor-pointer items-center gap-3 rounded-xl border-2 px-3 py-3 focus-within:ring-2 focus-within:ring-action sm:p-5",
+								selectedOption === option.id
+									? "border-action bg-action/10 shadow-lg"
+									: option.popular
+										? "border-dashed border-yellow-400"
+										: "border-default hover:bg-accent",
 							)}
 						>
 							<input
@@ -148,16 +185,23 @@ export function PricingModal({ children, defaultTab = "subscription" }: PricingM
 							<span className="min-w-0 flex-1">
 								<span className="block font-semibold">{t(`pricing.${option.id}`)}</span>
 								{option.popular && (
-									<span className="block text-xs text-muted">{t("pricing.most_popular")}</span>
+									<span className="absolute left-3 top-0 -translate-y-1/2 rounded-full bg-yellow-500 px-2.5 py-0.5 text-xs font-semibold text-slate-950 shadow-sm">
+										{t("pricing.most_popular")}
+									</span>
 								)}
 							</span>
 							<span className="text-right">
-								<strong className="block text-lg tabular-nums">${option.price}</strong>
+								<strong className="block text-xl tabular-nums sm:text-3xl">${option.price}</strong>
 								<span className="block text-xs text-muted">
 									{t(`pricing.${option.subtitleKey}`)}
 								</span>
 								{option.discount && (
-									<span className="block text-xs text-muted">
+									<span
+										className={cn(
+											"absolute right-3 top-0 -translate-y-1/2 rounded-full px-2.5 py-0.5 text-xs font-semibold text-slate-950 shadow-sm",
+											discountColors[option.id] ?? "bg-success",
+										)}
+									>
 										{t("pricing.discount", { percent: option.discount.replace(/[^0-9]/g, "") })}
 									</span>
 								)}
@@ -168,16 +212,24 @@ export function PricingModal({ children, defaultTab = "subscription" }: PricingM
 				{isOneTime && <p className="text-sm text-muted">{t("pricing.onetime_note")}</p>}
 				<div className="flex flex-wrap justify-end gap-2 border-t border-default pt-4">
 					<DialogClose asChild>
-						<Button variant="outline">{t("common.cancel")}</Button>
+						<Button variant="outline" className="flex-1">
+							{t("common.cancel")}
+						</Button>
 					</DialogClose>
 					{isOneTime && (
-						<Button variant="outline" disabled={isLoading} onClick={() => handleCheckout("alipay")}>
+						<Button
+							variant="primary"
+							className="flex-1 bg-[#146bdc] text-white"
+							disabled={isLoading}
+							onClick={() => handleCheckout("alipay")}
+						>
 							<Alipay aria-hidden="true" variant="mono" className="size-4" />
 							{t("pricing.pay_alipay")}
 						</Button>
 					)}
 					<Button
 						variant="primary"
+						className="flex-1 bg-[#635BFF] text-white"
 						disabled={isLoading}
 						onClick={() => handleCheckout(isOneTime ? "card" : undefined)}
 					>

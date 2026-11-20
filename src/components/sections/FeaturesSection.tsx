@@ -85,7 +85,10 @@ const GridItem = ({ area, icon, title, description }: GridItemProps) => {
 		<li className={`min-h-[12rem] md:min-h-[14rem] list-none ${area}`}>
 			<div className="group relative h-full rounded-2xl border border-border/60 bg-gradient-to-br from-card/70 via-card/50 to-card/30 backdrop-blur-sm p-2 md:rounded-3xl md:p-3 shadow-sm hover:shadow-lg transition-all duration-300 hover:border-border/80">
 				<GlowingEffect />
-				<div className="relative flex h-full flex-col justify-between gap-4 md:gap-6 overflow-hidden rounded-lg md:rounded-xl px-4 py-3 md:p-6 bg-card">
+				<div className="relative flex h-full flex-col justify-between gap-4 md:gap-6 overflow-hidden rounded-lg md:rounded-xl px-4 py-3 md:p-6 bg-gradient-to-br from-background/90 via-background/85 to-background/80 backdrop-blur-sm shadow-inner border border-border/30 group-hover:border-border/40 transition-all duration-300">
+					{/* Subtle inner glow for light mode */}
+					<div className="absolute inset-0 rounded-lg md:rounded-xl bg-gradient-to-br from-white/5 via-transparent to-transparent dark:from-white/10" />
+
 					<div className="relative flex flex-1 flex-col justify-between gap-2 md:gap-3">
 						<div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-brand to-brand/80 shadow-lg shadow-brand/20 group-hover:shadow-xl group-hover:shadow-brand/30 transition-all duration-300">
 							{icon}

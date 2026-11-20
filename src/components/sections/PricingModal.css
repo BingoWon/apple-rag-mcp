@@ -1,0 +1,30 @@
+@media (prefers-reduced-motion: no-preference) {
+	.pricing-dialog[data-state="open"] {
+		animation: pricing-enter var(--pricing-spring) both;
+	}
+	.pricing-dialog[data-state="closed"] {
+		animation: pricing-exit var(--pricing-spring) both;
+	}
+}
+
+@keyframes pricing-enter {
+	from {
+		opacity: 0;
+		transform: perspective(800px) translateY(40px) rotateX(40deg) scale(0.5);
+	}
+	to {
+		opacity: 1;
+		transform: perspective(800px) translateY(0) rotateX(0deg) scale(1);
+	}
+}
+
+@keyframes pricing-exit {
+	from {
+		opacity: 1;
+		transform: perspective(800px) rotateX(0deg) scale(1);
+	}
+	to {
+		opacity: 0;
+		transform: perspective(800px) rotateX(10deg) scale(0.8);
+	}
+}

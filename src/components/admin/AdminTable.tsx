@@ -90,7 +90,15 @@ export function AdminTable<T extends object>({
 				return <span className="font-mono text-xs">{stringValue}</span>;
 			}
 
-			if (typeof value === "boolean") return t(value ? "common.yes" : "common.no");
+			if (typeof value === "boolean") {
+				return (
+					<span
+						className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${value ? "bg-green-900 text-green-200" : "bg-red-900 text-red-200"}`}
+					>
+						{t(value ? "common.yes" : "common.no")}
+					</span>
+				);
+			}
 
 			return String(value);
 		},

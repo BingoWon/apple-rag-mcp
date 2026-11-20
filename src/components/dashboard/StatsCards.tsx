@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { api } from "@/lib/api";
+import { cn } from "@/lib/utils";
 import type { CorpusStats } from "@/types";
 
 const metrics = [
@@ -65,19 +66,29 @@ export default function StatsCards() {
 	return (
 		<Card className="mb-6 @container">
 			<CardContent className="p-6">
+				{data && (
+					<div className="flex justify-center mb-5">
+						<div className="flex max-w-full items-center gap-2 rounded-full bg-action px-1.5 py-1">
+							<div className="w-fit rounded-full bg-white px-2 py-0.5 text-xs font-semibold text-blue-700 sm:text-sm text-center flex items-center gap-1">
+								<IconCircleCheck aria-hidden="true" className="w-4 h-4" />
+								<span className="hidden sm:inline">{t("common.status")}</span>
+							</div>
+							<p className="min-w-0 pr-2 text-xs font-semibold text-action-foreground @[450px]:text-base">
+								{t("dashboard.stats_freshness")}
+							</p>
+						</div>
+					</div>
+				)}
 				<div className="mb-5 text-center">
 					<h3 className="text-xl font-bold text-light">{t("dashboard.stats_heading")}</h3>
 					{data && (
-						<>
-							<p className="mt-1 text-sm text-muted">{t("dashboard.stats_freshness")}</p>
-							<p className="mt-1 text-xs text-muted">
-								{t("dashboard.stats_date", {
-									date: new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(
-										Date.parse(data.generated_at),
-									),
-								})}
-							</p>
-						</>
+						<p className="mt-1 text-xs text-muted">
+							{t("dashboard.stats_date", {
+								date: new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(
+									Date.parse(data.generated_at),
+								),
+							})}
+						</p>
 					)}
 				</div>
 				{data ? (
@@ -90,7 +101,11 @@ export default function StatsCards() {
 									href={url}
 									target={url ? "_blank" : undefined}
 									rel={url ? "noopener noreferrer" : undefined}
-									className="group flex h-24 min-w-0 flex-col items-center justify-center gap-1 rounded-[10px] text-center focus-visible:outline-2 focus-visible:outline-action @[450px]:h-32 @[450px]:gap-2"
+									className={cn(
+										"group flex h-24 min-w-0 flex-col items-center justify-center gap-1 rounded-[10px] text-center focus-visible:outline-2 focus-visible:outline-action @[450px]:h-32 @[450px]:gap-2",
+										url &&
+											"motion-safe:transition-transform motion-safe:duration-[350ms] motion-safe:hover:scale-110",
+									)}
 									style={{ backgroundColor: `${color}20` }}
 								>
 									<Icon aria-hidden="true" className="size-6 lg:size-8" style={{ color }} />
