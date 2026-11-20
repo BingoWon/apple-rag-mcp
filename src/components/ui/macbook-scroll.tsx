@@ -32,114 +32,87 @@ import { useEffect, useRef, useState } from "react";
 import { HeroContent } from "@/components/sections/HeroContent";
 import { cn } from "@/lib/utils";
 
-// Distances in viewport heights after the MacBook is upright.
-const FILM_LEAD = 0.2;
-const FILM_PLAYBACK = 2;
-const FILM_HOLD = 0.25;
-const TRACK_HEIGHT = 1 + FILM_LEAD + FILM_PLAYBACK + FILM_HOLD;
-const FILM_ASPECT = 1280 / 848;
-
 export const MacbookScroll = () => {
-	const intro = useRef<HTMLDivElement>(null);
-	const track = useRef<HTMLDivElement>(null);
-	const panel = useRef<HTMLDivElement>(null);
+	const ref = useRef<HTMLDivElement>(null);
 	const laptop = useRef<HTMLDivElement>(null);
-	const { scrollYProgress: opening } = useScroll({
-		target: intro,
+	const { scrollYProgress } = useScroll({
+		target: ref,
 		offset: ["start start", "end start"],
 	});
-	const { scrollYProgress: trackProgress } = useScroll({
-		target: track,
-		offset: ["start start", "end start"],
+	const { scrollYProgress: screenProgress } = useScroll({
+		target: laptop,
+		offset: ["start 65%", "end 45%"],
 	});
-	const videoProgress = useTransform(
-		trackProgress,
-		[FILM_LEAD / TRACK_HEIGHT, (FILM_LEAD + FILM_PLAYBACK) / TRACK_HEIGHT],
-		[0, 1],
+	const videoProgress = useTransform(() =>
+		Math.min(screenProgress.get(), scrollYProgress.get() * 3),
 	);
 
-	const [framing, setFraming] = useState({ scale: 1, y: 0 });
+	const [isMobile, setIsMobile] = useState(false);
+	const [lidTravel, setLidTravel] = useState(1000);
+
 	useEffect(() => {
-		const stage = panel.current;
-		const model = laptop.current;
-		if (!stage || !model) return;
 		const resize = () => {
-			const box = model.getBoundingClientRect();
-			// The floating navigation occupies the top of a short landscape viewport.
-			const availableHeight = Math.min(stage.clientHeight * 0.8, stage.clientHeight - 112);
-			const scale = Math.min(
-				stage.clientWidth < 768 ? 1.4 : 2,
-				(stage.clientWidth - 32) / box.width,
-				(Math.max(1, availableHeight) * FILM_ASPECT) / box.width,
-			);
-			const screenHeight = (box.width * scale) / FILM_ASPECT;
-			const screenTop = Math.max(88, (stage.clientHeight - screenHeight) / 2);
-			const y = screenTop - (model.offsetHeight - box.height) / 2;
-			setFraming({ scale, y });
+			const mobile = window.innerWidth < 768;
+			setIsMobile(mobile);
+			// Leave room to see the open lid even in a short landscape viewport.
+			setLidTravel(Math.min(mobile ? 1500 : 1000, 2 * Math.max(0, window.innerHeight - 384)));
 		};
 		resize();
-		const observer = new ResizeObserver(resize);
-		observer.observe(stage);
-		return () => observer.disconnect();
+		window.addEventListener("resize", resize);
+		return () => window.removeEventListener("resize", resize);
 	}, []);
 
-	const scaleX = useTransform(opening, [0, 1], [1.2, framing.scale]);
-	const scaleY = useTransform(opening, [0, 1], [0.6, framing.scale]);
-	const translate = useTransform(opening, [0, 1], [0, framing.y]);
-	const rotate = useTransform(opening, [0.4, 1], [-28, 0]);
-	const textTransform = useTransform(opening, [0, 1], [0, 100]);
-	const textOpacity = useTransform(opening, [0, 2 / 3], [1, 0]);
+	const scaleX = useTransform(scrollYProgress, [0, 0.3], [1.2, isMobile ? 1.4 : 2]);
+	const scaleY = useTransform(scrollYProgress, [0, 0.3], [0.6, isMobile ? 1.4 : 2]);
+	const translate = useTransform(scrollYProgress, [0, 1], [0, lidTravel]);
+	const rotate = useTransform(scrollYProgress, [0.1, 0.12, 0.3], [-28, -28, 0]);
+	const textTransform = useTransform(scrollYProgress, [0, 0.3], [0, 100]);
+	const textOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
 
 	return (
-		<>
-			<div ref={intro} className="relative flex flex-col items-center pt-8 md:pt-12">
-				<motion.div
-					style={{
-						translateY: textTransform,
-						opacity: textOpacity,
-					}}
-				>
-					<HeroContent />
-				</motion.div>
-			</div>
-			<div
-				ref={track}
-				className="relative [&:not(:has(video))]:!h-svh"
-				style={{ height: `${TRACK_HEIGHT * 100}svh` }}
+		<div
+			ref={ref}
+			className="relative flex min-h-[150vh] shrink-0 transform flex-col items-center justify-start py-8 md:min-h-[200vh] md:py-12"
+		>
+			<motion.div
+				style={{
+					translateY: textTransform,
+					opacity: textOpacity,
+				}}
 			>
-				<div ref={panel} className="sticky top-0 flex h-svh items-start justify-center">
-					<motion.div style={{ y: translate }}>
-						<div
-							ref={laptop}
-							className="scale-50 transform [perspective:800px] sm:scale-75 md:scale-100 [@media(max-height:32rem)]:!scale-50"
-						>
-							{/* Lid */}
-							<Lid scaleX={scaleX} scaleY={scaleY} rotate={rotate} progress={videoProgress} />
-							{/* Base area */}
-							<div className="relative -z-10 h-[22rem] w-[32rem] overflow-hidden rounded-2xl bg-tertiary">
-								{/* above keyboard bar */}
-								<div className="relative h-10 w-full">
-									<div className="absolute inset-x-0 mx-auto h-4 w-[80%] bg-[#050505]" />
-								</div>
-								<div className="relative flex">
-									<div className="mx-auto h-full w-[10%] overflow-hidden">
-										<SpeakerGrid />
-									</div>
-									<div className="mx-auto h-full w-[80%]">
-										<Keypad />
-									</div>
-									<div className="mx-auto h-full w-[10%] overflow-hidden">
-										<SpeakerGrid />
-									</div>
-								</div>
-								<Trackpad />
-								<div className="absolute inset-x-0 bottom-0 mx-auto h-2 w-20 rounded-tl-3xl rounded-tr-3xl bg-gradient-to-t from-[#272729] to-[#050505]" />
-							</div>
+				<HeroContent />
+			</motion.div>
+			<div ref={laptop} className="scale-50 transform [perspective:800px] sm:scale-75 md:scale-100">
+				{/* Lid */}
+				<Lid
+					scaleX={scaleX}
+					scaleY={scaleY}
+					rotate={rotate}
+					translate={translate}
+					progress={videoProgress}
+				/>
+				{/* Base area */}
+				<div className="relative -z-10 h-[22rem] w-[32rem] overflow-hidden rounded-2xl bg-tertiary">
+					{/* above keyboard bar */}
+					<div className="relative h-10 w-full">
+						<div className="absolute inset-x-0 mx-auto h-4 w-[80%] bg-[#050505]" />
+					</div>
+					<div className="relative flex">
+						<div className="mx-auto h-full w-[10%] overflow-hidden">
+							<SpeakerGrid />
 						</div>
-					</motion.div>
+						<div className="mx-auto h-full w-[80%]">
+							<Keypad />
+						</div>
+						<div className="mx-auto h-full w-[10%] overflow-hidden">
+							<SpeakerGrid />
+						</div>
+					</div>
+					<Trackpad />
+					<div className="absolute inset-x-0 bottom-0 mx-auto h-2 w-20 rounded-tl-3xl rounded-tr-3xl bg-gradient-to-t from-[#272729] to-[#050505]" />
 				</div>
 			</div>
-		</>
+		</div>
 	);
 };
 
@@ -147,11 +120,13 @@ export const Lid = ({
 	scaleX,
 	scaleY,
 	rotate,
+	translate,
 	progress,
 }: {
 	scaleX: MotionValue<number>;
 	scaleY: MotionValue<number>;
 	rotate: MotionValue<number>;
+	translate: MotionValue<number>;
 	progress: MotionValue<number>;
 }) => {
 	const video = useRef<HTMLVideoElement>(null);
@@ -159,8 +134,7 @@ export const Lid = ({
 	const reducedMotion = useReducedMotion();
 	const [failed, setFailed] = useState(false);
 	const poster = "/iphone-duo-hero.webp";
-	const mediaClass = "absolute inset-0 block h-full w-full rounded-lg bg-white object-fill";
-	const backOpacity = useTransform(rotate, [-12, 0], [1, 0]);
+	const mediaClass = "absolute inset-0 block h-full w-full rounded-lg bg-white object-contain";
 	useEffect(() => {
 		const el = video.current;
 		if (!el || reducedMotion || failed) return;
@@ -197,9 +171,8 @@ export const Lid = ({
 	useMotionValueEvent(progress, "change", syncFrame);
 	return (
 		<div className="relative [perspective:800px]">
-			<motion.div
+			<div
 				style={{
-					opacity: backOpacity,
 					transform: "perspective(800px) rotateX(-25deg) translateZ(0px)",
 					transformOrigin: "bottom",
 					transformStyle: "preserve-3d",
@@ -212,17 +185,17 @@ export const Lid = ({
 					}}
 					className="absolute inset-0 flex items-center justify-center rounded-lg bg-[#010101]"
 				></div>
-			</motion.div>
+			</div>
 			<motion.div
 				aria-hidden="true"
 				style={{
 					scaleX: scaleX,
 					scaleY: scaleY,
 					rotateX: rotate,
+					translateY: translate,
 					transformOrigin: "top",
-					aspectRatio: FILM_ASPECT,
 				}}
-				className="absolute inset-x-0 top-0 w-[32rem] rounded-2xl bg-[#010101] p-2 [will-change:transform]"
+				className="absolute inset-0 h-96 w-[32rem] rounded-2xl bg-[#010101] p-2 [will-change:transform]"
 			>
 				<div className="absolute inset-0 rounded-lg bg-[#272729]" />
 				{reducedMotion || failed ? (
