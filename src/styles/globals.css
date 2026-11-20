@@ -161,11 +161,14 @@ html {
 	scroll-behavior: smooth;
 }
 
-/* Smooth Scroll Offset for Fixed Navbar */
-#features,
-#pricing,
-#contact {
-	scroll-margin-top: 50px; /* 导航栏高度 + 额外间距 */
+.home-section {
+	/* Adjacent sections each supply half of the space between their contents. */
+	padding-block: clamp(2.5rem, 6.25vw, 3.5rem);
+	scroll-margin-block-start: 4rem;
+}
+
+.home-section-heading {
+	margin-block-end: clamp(2rem, 5vw, 3rem);
 }
 
 /* Global Transition for All Interactive Elements */

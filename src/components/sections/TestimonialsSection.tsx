@@ -39,10 +39,10 @@ export function TestimonialsSection() {
 	];
 
 	return (
-		<section className="py-16 md:py-24 bg-background overflow-x-clip" id="testimonials">
+		<section className="home-section bg-background overflow-x-clip" id="testimonials">
 			<div className="mx-auto max-w-7xl px-4 lg:px-8">
 				{/* Section Header */}
-				<div className="text-center mb-0 md:mb-8">
+				<div className="mb-20 text-center md:mb-24">
 					<h2 className="text-base font-semibold leading-7 text-brand">
 						{t("testimonials.eyebrow")}
 					</h2>

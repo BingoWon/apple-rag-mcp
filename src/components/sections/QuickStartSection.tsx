@@ -26,9 +26,9 @@ export function QuickStartSection() {
 	};
 
 	return (
-		<section className="py-16 sm:py-20" id="quickstart" aria-labelledby="quickstart-title">
+		<section className="home-section" id="quickstart" aria-labelledby="quickstart-title">
 			<div className="mx-auto max-w-7xl px-6 lg:px-8">
-				<header className="mx-auto mb-8 max-w-2xl text-center">
+				<header className="home-section-heading mx-auto max-w-2xl text-center">
 					<p className="text-sm font-semibold text-brand">{t("quickstart.eyebrow")}</p>
 					<h2
 						id="quickstart-title"

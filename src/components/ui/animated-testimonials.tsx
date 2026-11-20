@@ -91,7 +91,7 @@ export const AnimatedTestimonials = ({
 		return rotationValues[index] || 0;
 	};
 	return (
-		<section className="mx-auto max-w-7xl px-4 py-16 md:py-24 lg:px-8">
+		<section className="mx-auto max-w-7xl px-4 lg:px-8">
 			<div className="relative grid grid-cols-1 gap-12 md:gap-20 md:grid-cols-2">
 				<div>
 					<div className="relative h-80 w-full">

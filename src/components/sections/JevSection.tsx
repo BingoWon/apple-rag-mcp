@@ -19,7 +19,7 @@ export function JevSection() {
 	return (
 		<div
 			id="jev"
-			className="relative flex min-h-[65svh] w-full items-center justify-center overflow-clip bg-background py-16 sm:py-20"
+			className="home-section relative flex w-full items-center justify-center overflow-clip bg-background"
 		>
 			<GoogleGeminiEffect
 				title={<JevText i18nKey="jev.title" />}

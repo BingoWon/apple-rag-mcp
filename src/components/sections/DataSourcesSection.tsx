@@ -5,9 +5,9 @@ import { WobbleCard } from "../ui/wobble-card";
 export function DataSourcesShowcase() {
 	const { t } = useTranslation();
 	return (
-		<div className="relative pb-24">
+		<div className="home-section relative">
 			<div className="mx-auto max-w-7xl px-6 lg:px-8">
-				<div className="mx-auto max-w-4xl lg:text-center mb-16">
+				<div className="home-section-heading mx-auto max-w-4xl lg:text-center">
 					<h2 className="text-base font-semibold leading-7 text-brand">
 						{t("datasources.eyebrow")}
 					</h2>

@@ -37,7 +37,6 @@ test("Jev section uses logo-prefixed branding and centered natural scrolling wit
 			assert.ok(!html.includes(language === "en" ? "Ranked by " : "文档重排序"));
 			assert.ok(html.includes("jev-drawing"));
 			assert.ok(html.includes('class="relative w-full"'));
-			assert.ok(html.includes("min-h-[65svh]"));
 			assert.ok(html.includes("items-center justify-center"));
 			assert.ok(!html.includes("sticky"));
 			assert.ok(!html.includes("180svh"));

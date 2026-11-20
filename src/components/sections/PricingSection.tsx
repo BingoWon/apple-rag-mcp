@@ -61,10 +61,10 @@ export function PricingSection() {
 
 	return (
 		<div
-			className="mx-auto max-w-7xl px-6 lg:px-8 bg-secondary rounded-xl py-4 sm:py-8"
+			className="home-section mx-auto max-w-7xl rounded-xl bg-secondary px-6 lg:px-8"
 			id="pricing"
 		>
-			<div className="text-center">
+			<div className="home-section-heading text-center">
 				<h2 className="text-base font-semibold leading-7 text-brand">{t("pricing.eyebrow")}</h2>
 				<p className="mt-2 text-3xl font-bold tracking-tight text-light sm:text-4xl">
 					{t("pricing.title")}
@@ -73,7 +73,7 @@ export function PricingSection() {
 					<JevText i18nKey="pricing.subtitle" />
 				</p>
 			</div>
-			<div className="mx-auto mt-4 sm:mt-10 grid max-w-md grid-cols-1 gap-y-6 lg:mx-0 lg:max-w-none lg:grid-cols-3 lg:gap-x-8 lg:gap-y-0 lg:items-start">
+			<div className="mx-auto grid max-w-md grid-cols-1 gap-y-6 lg:mx-0 lg:max-w-none lg:grid-cols-3 lg:gap-x-8 lg:gap-y-0 lg:items-start">
 				{tiers.map((tier) => (
 					<div key={tier.id} className="border border-default flex flex-col w-full relative">
 						{/* Corner Icons */}

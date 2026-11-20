@@ -68,7 +68,7 @@ export const TracingBeam = ({
 		offset: ["start start", "end start"],
 	});
 
-	const contentRef = useRef<HTMLDivElement>(null);
+	const svgRef = useRef<SVGSVGElement>(null);
 	const [svgHeight, setSvgHeight] = useState(0);
 	const [isMobile, setIsMobile] = useState(false);
 
@@ -87,9 +87,16 @@ export const TracingBeam = ({
 	const pathConfig = isMobile ? TRACING_BEAM_CONFIG.MOBILE : TRACING_BEAM_CONFIG.DESKTOP;
 
 	useEffect(() => {
-		if (contentRef.current) {
-			setSvgHeight(contentRef.current.offsetHeight);
-		}
+		const container = ref.current;
+		const svg = svgRef.current;
+		if (!container || !svg) return;
+		const observer = new ResizeObserver(() => {
+			setSvgHeight(
+				Math.max(0, container.getBoundingClientRect().bottom - svg.getBoundingClientRect().top),
+			);
+		});
+		observer.observe(container);
+		return () => observer.disconnect();
 	}, []);
 
 	const y1 = useSpring(
@@ -152,6 +159,7 @@ export const TracingBeam = ({
 					/>
 				</motion.div>
 				<svg
+					ref={svgRef}
 					viewBox={`0 0 ${TRACING_BEAM_CONFIG.SVG_VIEWBOX_WIDTH} ${svgHeight}`}
 					width={TRACING_BEAM_CONFIG.SVG_WIDTH}
 					height={svgHeight} // Set the SVG height
@@ -194,7 +202,7 @@ export const TracingBeam = ({
 					</defs>
 				</svg>
 			</div>
-			<div ref={contentRef}>{children}</div>
+			{children}
 		</motion.div>
 	);
 };
