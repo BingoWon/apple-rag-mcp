@@ -5,7 +5,6 @@ import { readdirSync, readFileSync } from "node:fs";
 import { createServer } from "node:http";
 import { extname, resolve } from "node:path";
 import { DatabaseSync } from "node:sqlite";
-import Stripe from "stripe";
 import app from "../../worker/api/routes/admin/index.ts";
 
 const sql = new DatabaseSync(":memory:");
@@ -185,12 +184,6 @@ sql
 		"success",
 	);
 if (process.env.ADMIN_FIXTURE_BILLING_PENDING) sql.exec("DELETE FROM billing_history_sync");
-Stripe.resources.Invoices.prototype.list = async () => {
-	console.log("Fixture: Stripe invoice import requested");
-	if (process.env.ADMIN_FIXTURE_BILLING_PENDING === "error")
-		throw new Error("Fixture Stripe unavailable");
-	return { data: [], has_more: false };
-};
 const DB = {
 	prepare(text) {
 		let values = [];
@@ -239,7 +232,7 @@ const server = createServer(async (req, res) => {
 					headers: req.headers,
 					...(chunks.length ? { body: Buffer.concat(chunks).toString() } : {}),
 				},
-				{ DB, ADMIN_PASSWORD: "local-admin-test", STRIPE_SECRET_KEY: "sk_live_local_fixture" },
+				{ DB, ADMIN_PASSWORD: "local-admin-test" },
 			);
 			res.writeHead(response.status, Object.fromEntries(response.headers));
 			res.end(Buffer.from(await response.arrayBuffer()));

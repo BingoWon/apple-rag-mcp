@@ -28,7 +28,7 @@ export function ToolActivityCard({
 		: undefined;
 	const active = selected && stats ? stats.metrics[metricKeys[selected]] : null;
 	return (
-		<Card className="min-w-0 p-4 md:col-span-2 xl:col-span-4">
+		<Card className="min-w-0 p-4">
 			<div className="flex flex-wrap items-center justify-between gap-3">
 				<h3 className="text-sm font-semibold text-light">
 					{t("activity.tool_calls")}
@@ -52,7 +52,7 @@ export function ToolActivityCard({
 				<TrendChart
 					metric={active ?? { total: total ?? 0, points: [] }}
 					bucket={stats.bucket}
-					height={210}
+					height={220}
 					color={TOOL_COLORS[selected ?? "search"]}
 					comparison={
 						active
@@ -65,7 +65,7 @@ export function ToolActivityCard({
 					}
 				/>
 			) : (
-				<div className="grid min-h-48 place-items-center text-xs text-muted">
+				<div className="grid h-55 place-items-center text-xs text-muted">
 					{t(loading ? "admin.stats_loading" : "admin.stats_unavailable")}
 				</div>
 			)}

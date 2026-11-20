@@ -245,10 +245,6 @@ class ApiClient {
 	}
 
 	// Admin API methods with pagination support
-	async syncAdminBilling(cursor?: string) {
-		return this.post<{ cursor: string | null }>("/admin/billing-sync", { cursor });
-	}
-
 	async getAdminStats(query: AdminStatsQuery, signal?: AbortSignal) {
 		return this.get<AdminDashboardStats>("/admin/stats", { params: query, signal });
 	}

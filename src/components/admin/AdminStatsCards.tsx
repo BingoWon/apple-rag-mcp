@@ -73,7 +73,7 @@ function ChannelUsageCard({
 		maximumFractionDigits: 2,
 	});
 	return (
-		<Card className="p-4 md:col-span-2 xl:col-span-4">
+		<Card className="min-w-0 p-4">
 			<div className="flex flex-wrap items-center justify-between gap-3">
 				<h3 className="flex items-center gap-2 text-sm font-medium text-light">
 					<IconActivity className="h-4 w-4 text-brand" />
@@ -307,15 +307,13 @@ export function AdminStatsCards({
 	loading,
 	query,
 	onChannelChange,
-	onBillingSynced,
 }: {
 	stats: AdminDashboardStats | null;
 	loading: boolean;
 	query: AdminStatsQuery;
 	onChannelChange: (channel?: ToolChannel) => void;
-	onBillingSynced: () => void;
 }) {
-	const { t, i18n } = useTranslation();
+	const { t } = useTranslation();
 	const detailQuery = new URLSearchParams({
 		...(stats ? { from: stats.start, to: stats.end } : {}),
 		...(query.channel ? { channel: query.channel } : {}),
@@ -344,10 +342,8 @@ export function AdminStatsCards({
 					loading={loading}
 				/>
 			</section>
-			<section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-				<h2 className="text-lg font-semibold text-light md:col-span-2 xl:col-span-4">
-					{t("admin.usage_title")}
-				</h2>
+			<section className="grid gap-4 lg:grid-cols-2">
+				<h2 className="text-lg font-semibold text-light lg:col-span-2">{t("admin.usage_title")}</h2>
 				<ChannelUsageCard
 					stats={stats}
 					loading={loading}
@@ -357,7 +353,7 @@ export function AdminStatsCards({
 				<ToolActivityCard stats={stats} loading={loading} detailQuery={detailQuery} />
 			</section>
 			<AdminModelCosts stats={stats} channel={query.channel} loading={loading} />
-			<AdminBilling stats={stats} loading={loading} onSynced={onBillingSynced} />
+			<AdminBilling stats={stats} loading={loading} />
 			<section>
 				<h2 className="mb-4 text-lg font-semibold text-light">{t("admin.operations_title")}</h2>
 				<Card className="grid divide-y divide-default sm:grid-cols-2 lg:grid-cols-5 lg:divide-x lg:divide-y-0">

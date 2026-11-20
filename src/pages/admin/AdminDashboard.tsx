@@ -1,5 +1,5 @@
 import { IconCalendar, IconCheck, IconRefresh } from "@tabler/icons-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AdminStatsCards } from "@/components/admin/AdminStatsCards";
 import TimeRangeSelector from "@/components/charts/TimeRangeSelector";
@@ -7,10 +7,14 @@ import { Button } from "@/components/ui/Button";
 import { api } from "@/lib/api";
 import type { AdminDashboardStats, AdminStatsQuery } from "@/types";
 
+const REFRESH_INTERVAL = 5 * 60_000;
+
 export default function AdminDashboard() {
 	const { t, i18n } = useTranslation();
 	const [query, setQuery] = useState<AdminStatsQuery>({ period: "7d" });
-	const [stats, setStats] = useState<AdminDashboardStats | null>(null);
+	const [snapshot, setSnapshot] = useState<{ query: AdminStatsQuery; data: AdminDashboardStats }>();
+	const stats = snapshot?.query === query ? snapshot.data : null;
+	const refresh = useRef<() => void>(() => {});
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(false);
 	const [customOpen, setCustomOpen] = useState(false);
@@ -21,24 +25,47 @@ export default function AdminDashboard() {
 
 	useEffect(() => {
 		const controller = new AbortController();
+		let timer: number;
+		let nextRefresh = 0;
+		let inFlight = false;
 		setLoading(true);
 		setError(false);
-		setStats(null);
-		api
-			.getAdminStats(query, controller.signal)
-			.then((response) => {
+		const load = async () => {
+			if (inFlight || controller.signal.aborted) return;
+			inFlight = true;
+			window.clearTimeout(timer);
+			setLoading(true);
+			try {
+				const response = await api.getAdminStats(query, controller.signal);
+				if (!response.success || !response.data) throw new Error("Statistics unavailable");
 				if (!controller.signal.aborted) {
-					if (!response.success || !response.data) throw new Error("Statistics unavailable");
-					setStats(response.data);
+					setSnapshot({ query, data: response.data });
+					setError(false);
 				}
-			})
-			.catch(() => {
+			} catch {
 				if (!controller.signal.aborted) setError(true);
-			})
-			.finally(() => {
-				if (!controller.signal.aborted) setLoading(false);
-			});
-		return () => controller.abort();
+			} finally {
+				inFlight = false;
+				if (!controller.signal.aborted) {
+					setLoading(false);
+					nextRefresh = Date.now() + REFRESH_INTERVAL;
+					timer = window.setTimeout(check, REFRESH_INTERVAL);
+				}
+			}
+		};
+		const check = () => {
+			if (!document.hidden && Date.now() >= nextRefresh) void load();
+		};
+		refresh.current = load;
+		check();
+		document.addEventListener("visibilitychange", check);
+		window.addEventListener("focus", check);
+		return () => {
+			controller.abort();
+			window.clearTimeout(timer);
+			document.removeEventListener("visibilitychange", check);
+			window.removeEventListener("focus", check);
+		};
 	}, [query]);
 
 	const locale = i18n.resolvedLanguage?.startsWith("zh") ? "zh-CN" : "en";
@@ -81,15 +108,16 @@ export default function AdminDashboard() {
 							: t("admin.stats_timezone")
 					}
 				>
+					{stats && <>{t("admin.stats_updated", { time: formatDate(stats.generated_at) })} · </>}
 					UTC+8
 				</span>
 				<Button
 					variant="secondary"
 					size="icon"
-					title={`${t("admin.stats_refresh")}${stats ? ` · ${t("admin.stats_updated", { time: formatDate(stats.generated_at) })}` : ""}`}
+					title={t("admin.stats_refresh")}
 					aria-label={t("admin.stats_refresh")}
 					disabled={loading}
-					onClick={() => setQuery((value) => ({ ...value }))}
+					onClick={() => refresh.current()}
 				>
 					<IconRefresh className="h-4 w-4" />
 				</Button>
@@ -163,7 +191,7 @@ export default function AdminDashboard() {
 					className="flex flex-wrap items-center justify-between gap-3 border-l-2 border-error py-2 pl-3 text-sm text-error"
 				>
 					{t("admin.stats_load_error")}
-					<Button variant="secondary" size="sm" onClick={() => setQuery((value) => ({ ...value }))}>
+					<Button variant="secondary" size="sm" onClick={() => refresh.current()}>
 						{t("admin.stats_retry")}
 					</Button>
 				</div>
@@ -172,7 +200,6 @@ export default function AdminDashboard() {
 				stats={stats}
 				loading={loading}
 				query={query}
-				onBillingSynced={() => setQuery((value) => ({ ...value }))}
 				onChannelChange={(channel) => setQuery((value) => ({ ...value, channel }))}
 			/>
 		</div>

@@ -5,7 +5,6 @@
 import { logger } from "../../utils/logger.js";
 import { createOpenAPIApp } from "../../utils/openapi";
 import authorizedIPsAdmin from "./authorized-ips";
-import billingSync from "./billing-sync";
 import clientsAdmin from "./clients";
 import contactMessagesAdmin from "./contact-messages";
 import fetchLogsAdmin from "./fetch-logs";
@@ -62,7 +61,6 @@ app.use("*", async (c, next) => {
 app.route("/users", usersAdmin);
 app.route("/stats", statsAdmin);
 app.route("/clients", clientsAdmin);
-app.route("/billing-sync", billingSync);
 app.route("/mcp-tokens", mcpTokensAdmin);
 app.route("/authorized-ips", authorizedIPsAdmin);
 app.route("/search-logs", resultLogs("search"));

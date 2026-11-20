@@ -11,6 +11,7 @@ import { handleAccountRequest } from "./mcp/account.js";
 import { HEALTH_STATUS, SERVER_MANIFEST } from "./mcp/manifest.js";
 import { MCPProtocolHandler } from "./mcp/protocol-handler.js";
 import { AuthMiddleware } from "./mcp-auth/auth-middleware.js";
+import { reconcileBilling } from "./services/billing-reconciliation.js";
 import type { WaitUntilContext } from "./services/d1-utils.js";
 import { createServices } from "./services/index.js";
 import type { Env } from "./shared/types.js";
@@ -218,7 +219,8 @@ export default {
 		return app.fetch(request, env, ctx);
 	},
 
-	async scheduled(_event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
+	async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
+		if (event.cron === "7 * * * *") return reconcileBilling(env, event.scheduledTime);
 		ctx.waitUntil(
 			new CLIAuthorization(env.DB, env.JWT_SECRET, "https://apple-rag.com")
 				.cleanup()

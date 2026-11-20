@@ -1,4 +1,4 @@
-# Admin business overview (5.8.0)
+# Admin business overview
 
 The overview is organized into audience growth, agent activity, subscriptions and receipts,
 and compact administrative counts. Existing MCP/CLI filtering remains
@@ -26,30 +26,30 @@ The existing entitlement and checkout flows remain the source of access decision
   refunds and Stripe fees are not deducted. Currencies are never added together.
 - UTC+8 buckets and half-open `[start,end)` payment windows match the overview.
 
-On the first overview visit with no completed import, the browser automatically
-starts one reconciliation attempt. Failures stop and offer a manual retry; changing
-the date or channel does not start a retry loop. **Sync from Stripe** also uses the deployed Worker's existing secret
-key through the admin-authenticated `/api/admin/billing-sync` endpoint. Keys never
-reach the browser. Each request imports at most 100 paid invoices, and the browser
-continues through every page. Completion is recorded only after the final page.
-Test keys and test invoices are rejected, including an empty response from a test key.
-Until the first complete reconciliation, financial figures display as unavailable,
-not zero. The last reconciliation timestamp remains visible.
+## How the overview stays current
 
-The webhook accepts `invoice.paid` for ongoing updates. Delivery requires that event
-on the existing Stripe webhook subscription; production subscription settings have
-not been inspected. Manual reconciliation also catches missed events. Treat the
-visible reconciliation time as the verified coverage time, not a real-time guarantee.
+Stripe's signed `invoice.paid` webhook records new receipts as events arrive.
+The production Stripe destination must subscribe to that event for immediate updates.
 
-## Verification and rollout
+A separate Worker cron runs at seven minutes past each hour. Once per UTC day
+(normally 08:07 Singapore time), it reads all paid Stripe invoices in pages of 100
+and reconciles the receipt ledger. It uses the Worker's existing live key. A failed
+run is retried the next hour. Earlier pages can be replayed safely. The last
+page and the completion timestamp are committed together, including an empty
+final page. The job runs even when the admin page is closed.
 
-Apply migration `0011_subscription_receipts.sql` before publishing the Worker. It adds
-two tables and an index; it does not rewrite account or subscription records.
-SQL-backed checks cover payer deduplication, currencies, boundary times, and incomplete
-history. Reconciliation tests cover admin authentication, test-mode rejection,
-pagination completion, and idempotence. No layout or button-copy locks were added.
+The dashboard reads the database on open, every five minutes while visible, and
+on return if its snapshot is stale. The timestamp beside the date controls is
+the last successful read. The timestamp under subscriptions and receipts is the
+last completed invoice check. A failed refresh preserves the displayed snapshot.
+Before the first complete check, receipts and subscriber flows display a dash.
+If a check is over 25 hours old, the page flags potentially incomplete figures.
+Current paid accounts still come from the entitlement snapshot.
 
-Production migration applied successfully. Production history had not yet been imported at the 5.8.3 investigation (zero receipts
-and no completion marker). The first authenticated overview visit starts the import
-using the Worker's production Stripe configuration. No owner key needs to be sent or
-installed locally. A missing live key now returns a distinct configuration error.
+## Operations
+
+Migration `0011_subscription_receipts.sql` created the ledger and completion
+marker. To investigate a delayed check, inspect the hourly cron execution in
+Workers logs and verify the Worker has a live Stripe key with invoice read access.
+If daily reconciliation finds payments that were missing from the ledger, check
+delivery of `invoice.paid` on the production Stripe destination.

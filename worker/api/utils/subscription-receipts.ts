@@ -21,7 +21,9 @@ export function subscriptionReceipt(invoice: Stripe.Invoice) {
 		new Date(invoice.status_transitions.paid_at * 1000).toISOString(),
 	] as const;
 }
-export const RECEIPT_SQL = `INSERT INTO subscription_receipts (invoice_id,customer_key,billing_reason,currency,amount_paid,paid_at) VALUES (?,?,?,?,?,?) ON CONFLICT(invoice_id) DO UPDATE SET customer_key=excluded.customer_key,billing_reason=excluded.billing_reason,currency=excluded.currency,amount_paid=excluded.amount_paid,paid_at=excluded.paid_at`;
+export const RECEIPT_SQL = `INSERT INTO subscription_receipts (invoice_id,customer_key,billing_reason,currency,amount_paid,paid_at) VALUES (?,?,?,?,?,?) ON CONFLICT(invoice_id) DO UPDATE SET customer_key=excluded.customer_key,billing_reason=excluded.billing_reason,currency=excluded.currency,amount_paid=excluded.amount_paid,paid_at=excluded.paid_at
+ WHERE (customer_key,billing_reason,currency,amount_paid,paid_at) IS NOT
+       (excluded.customer_key,excluded.billing_reason,excluded.currency,excluded.amount_paid,excluded.paid_at)`;
 export async function recordSubscriptionReceipt(db: D1Database, invoice: Stripe.Invoice) {
 	const row = subscriptionReceipt(invoice);
 	if (row)

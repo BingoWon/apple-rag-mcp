@@ -1,54 +1,20 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { api } from "@/lib/api";
+import { formatAdminDateTime } from "@/lib/admin-utils";
 import type { AdminDashboardStats } from "@/types";
 import { TrendChart } from "../charts/TrendChart";
 
 export function AdminBilling({
 	stats,
 	loading,
-	onSynced,
 }: {
 	stats: AdminDashboardStats | null;
 	loading: boolean;
-	onSynced: () => void;
 }) {
 	const { t, i18n } = useTranslation();
-	const [syncing, setSyncing] = useState(false);
-	const [syncError, setSyncError] = useState<string | null>(null);
-	const attempted = useRef(false);
-	const sync = useCallback(async () => {
-		attempted.current = true;
-		setSyncing(true);
-		setSyncError(null);
-		try {
-			let cursor: string | undefined;
-			do {
-				const result = await api.syncAdminBilling(cursor);
-				if (!result.success || !result.data) {
-					setSyncError(
-						result.error?.code === "BILLING_NOT_CONFIGURED"
-							? "admin.billing_configuration_error"
-							: "admin.billing_sync_error",
-					);
-					return;
-				}
-				cursor = result.data.cursor ?? undefined;
-			} while (cursor);
-			onSynced();
-		} catch {
-			setSyncError("admin.billing_sync_error");
-		} finally {
-			setSyncing(false);
-		}
-	}, [onSynced]);
 	const [selected, setSelected] = useState("USD");
 	const billing = stats?.billing;
-	useEffect(() => {
-		if (billing && !billing.history_complete && !attempted.current) void sync();
-	}, [billing, sync]);
 	const currencies = Object.keys(billing?.receipts ?? {}).sort();
 	const currency = currencies.includes(selected) ? selected : (currencies[0] ?? "USD");
 	const money = new Intl.NumberFormat(i18n.resolvedLanguage, { style: "currency", currency });
@@ -59,32 +25,21 @@ export function AdminBilling({
 	const revenue = billing?.receipts[currency] ?? empty;
 	return (
 		<section className="space-y-4">
-			<div className="flex flex-wrap items-center justify-between gap-3">
-				<span className="text-xs text-muted">
-					{stats?.billing.synced_at
-						? t("admin.billing_synced", {
-								date: new Intl.DateTimeFormat(i18n.resolvedLanguage, {
-									dateStyle: "medium",
-									timeStyle: "short",
-									timeZone: "Asia/Singapore",
-								}).format(new Date(stats.billing.synced_at)),
-							})
-						: t("admin.billing_not_synced")}
-				</span>
-				<Button size="sm" variant="secondary" disabled={loading || syncing} onClick={sync}>
-					{t(syncing ? "admin.billing_syncing" : "admin.billing_sync")}
-				</Button>
-			</div>
-			{syncError && (
-				<p role="alert" className="text-sm text-error">
-					{t(syncError)}
-				</p>
-			)}
 			<div>
 				<h2 className="text-lg font-semibold text-light">{t("admin.billing_title")}</h2>
 				<p className="mt-1 text-xs leading-5 text-muted">{t("admin.billing_scope")}</p>
 			</div>
-			{!ready && !syncError && (
+			{billing?.synced_at && stats && (
+				<p className="text-xs text-muted">
+					{t(
+						Date.parse(stats.generated_at) - Date.parse(billing.synced_at) > 25 * 3_600_000
+							? "admin.billing_overdue"
+							: "admin.billing_reconciled",
+						{ date: formatAdminDateTime(billing.synced_at) },
+					)}
+				</p>
+			)}
+			{!ready && (
 				<p role="status" className="rounded-lg border border-default px-4 py-3 text-sm text-muted">
 					{t(
 						loading
