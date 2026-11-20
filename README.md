@@ -20,6 +20,8 @@
 
 ## What your agent can do
 
+Choose the tool that fits the question. A single call can be enough.
+
 | Tool | When to use it |
 | --- | --- |
 | `search` | Find an API or a WWDC discussion with an English query. Keyword and semantic search find relevant passages. |

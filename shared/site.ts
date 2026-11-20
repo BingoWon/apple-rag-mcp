@@ -83,7 +83,7 @@ export const SITE_PAGES: Record<string, SitePage> = {
 		indexable: false,
 		zh: {
 			title: "控制台 — Apple RAG",
-			description: "接入智能体，查看搜索、目录浏览和原文读取的用量趋势，以及本周剩余额度。",
+			description: "接入智能体，查看搜索、浏览目录和读取原文的用量趋势，以及本周剩余额度。",
 		},
 	},
 	"/settings": {
@@ -107,7 +107,7 @@ export const SITE_PAGES: Record<string, SitePage> = {
 		indexable: false,
 		zh: {
 			title: "使用记录 — Apple RAG",
-			description: "查看 MCP 与 CLI 的搜索、目录浏览和原文读取记录。",
+			description: "查看 MCP 与 CLI 的搜索、浏览目录和读取原文记录。",
 		},
 	},
 	"/mcp-tokens": {

@@ -7,15 +7,18 @@ import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { LoaderFive } from "@/components/ui/loader";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { ADMIN_SESSION_KEY } from "@/lib/constants";
+import { TOOL_KINDS } from "../../../shared/tool-activity";
 
 const adminNavItems = [
 	{ href: "/admin", labelKey: "nav.overview", exact: true },
 	{ href: "/admin/users", labelKey: "admin.users", exact: false },
 	{ href: "/admin/mcp-tokens", labelKey: "nav.mcp_tokens", exact: false },
 	{ href: "/admin/authorized-ips", labelKey: "nav.authorized_ips", exact: false },
-	{ href: "/admin/search-logs", labelKey: "admin.search_logs", exact: false },
-	{ href: "/admin/browse-logs", labelKey: "admin.browse_logs", exact: false },
-	{ href: "/admin/fetch-logs", labelKey: "admin.fetch_logs", exact: false },
+	...TOOL_KINDS.map((tool) => ({
+		href: `/admin/${tool}-logs`,
+		labelKey: `admin.${tool}_logs`,
+		exact: false,
+	})),
 	{ href: "/admin/user-subscriptions", labelKey: "admin.subscriptions", exact: false },
 	{ href: "/admin/contact-messages", labelKey: "admin.contact_messages", exact: false },
 ];

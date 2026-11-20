@@ -200,7 +200,7 @@ test("serves modern tools/list with cache metadata", async () => {
 	assert.equal(payload.result.resultType, "complete");
 	assert.deepEqual(
 		payload.result.tools.map((tool) => tool.name),
-		["search", "fetch", "browse"],
+		["search", "browse", "fetch"],
 	);
 	assert.equal(payload.result.ttlMs, 3_600_000);
 	assert.equal(payload.result.cacheScope, "public");

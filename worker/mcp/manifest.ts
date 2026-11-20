@@ -3,14 +3,14 @@
  * Centralized server discovery and capability information
  */
 
+import serverJson from "../../server.json";
 import { MCP_PROTOCOL_VERSION, SERVER_NAME, SERVER_VERSION } from "./constants.js";
 
 export const SERVER_MANIFEST = {
 	name: "Apple RAG",
 	title: "Apple RAG — Apple Developer Knowledge for AI Agents",
 	version: SERVER_VERSION,
-	description:
-		"Browse and read Apple docs. Search docs and WWDC with RAG retrieval and Jev relevance ranking.",
+	description: serverJson.description,
 	protocolVersion: MCP_PROTOCOL_VERSION,
 	supportedProtocolVersions: ["2026-07-28", "2025-11-25", "2025-06-18", "2025-03-26"],
 	capabilities: {

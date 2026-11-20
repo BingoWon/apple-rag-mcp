@@ -62,6 +62,8 @@ does not import old plaintext MCP credentials. MCP itself continues to work.
 
 ## Agent command reference
 
+Choose a command for the task. Search for a specific question, browse to see what a framework contains, or fetch a known URL directly. Stop once the source answers the question.
+
 ```sh
 apple-rag search "StoreKit Transaction currentEntitlements" --limit 4
 apple-rag browse --json

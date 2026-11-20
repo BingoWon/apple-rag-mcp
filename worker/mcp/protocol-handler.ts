@@ -23,7 +23,7 @@ import { SEARCH_TOOL_INPUT_SCHEMA, SearchTool } from "./tools/search-tool.js";
 preloadSchemas();
 
 const SERVER_INSTRUCTIONS =
-	"Search Apple's official developer documentation and WWDC video transcripts with search, browse a documentation URL to discover indexed subtopics, or fetch a URL to read its content.";
+	"Choose the tool that answers the task. Use search for a specific Apple API or WWDC question, browse to explore indexed topics, or fetch to read a known URL directly. Cite the source when the retrieved evidence answers the question.";
 
 export class MCPProtocolHandler {
 	constructor(
@@ -134,23 +134,6 @@ export class MCPProtocolHandler {
 		);
 
 		server.registerTool(
-			TOOLS.FETCH.NAME,
-			{
-				description: TOOLS.FETCH.DESCRIPTION,
-				outputSchema: fetchOutputSchema,
-				inputSchema: loggedToolInput(
-					"fetch",
-					FETCH_TOOL_INPUT_SCHEMA,
-					services,
-					authContext,
-					request,
-				),
-				annotations: { readOnlyHint: true, destructiveHint: false },
-			},
-			(args, ctx) => trackTool(fetchTool.handle(args, authContext, request, ctx.mcpReq.signal)),
-		);
-
-		server.registerTool(
 			"browse",
 			{
 				description: BROWSE_DESCRIPTION,
@@ -166,6 +149,23 @@ export class MCPProtocolHandler {
 							r.ok ? createSuccessResult(formatBrowse(r), r) : createToolErrorResult(r),
 						),
 				),
+		);
+
+		server.registerTool(
+			TOOLS.FETCH.NAME,
+			{
+				description: TOOLS.FETCH.DESCRIPTION,
+				outputSchema: fetchOutputSchema,
+				inputSchema: loggedToolInput(
+					"fetch",
+					FETCH_TOOL_INPUT_SCHEMA,
+					services,
+					authContext,
+					request,
+				),
+				annotations: { readOnlyHint: true, destructiveHint: false },
+			},
+			(args, ctx) => trackTool(fetchTool.handle(args, authContext, request, ctx.mcpReq.signal)),
 		);
 		return server;
 	}

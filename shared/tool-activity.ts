@@ -1,10 +1,10 @@
 import { z } from "zod";
 
-export const TOOL_KINDS = ["search", "fetch", "browse"] as const;
+export const TOOL_KINDS = ["search", "browse", "fetch"] as const;
 export type ToolKind = (typeof TOOL_KINDS)[number];
 export const usagePeriod = z.enum(["24h", "7d", "30d"]);
 export type UsagePeriod = z.infer<typeof usagePeriod>;
-const counts = z.object({ search: z.number(), fetch: z.number(), browse: z.number() });
+const counts = z.object({ search: z.number(), browse: z.number(), fetch: z.number() });
 export const activitySchema = z.object({
 	start: z.iso.datetime(),
 	end: z.iso.datetime(),

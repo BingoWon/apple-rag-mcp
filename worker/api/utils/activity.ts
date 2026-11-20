@@ -43,11 +43,11 @@ export async function accountActivity(
 		.prepare(branches.join(" UNION ALL "))
 		.bind(...TOOL_KINDS.flatMap(() => args))
 		.all<{ tool: ToolKind; bucket: number; n: number }>();
-	const by_tool = { search: 0, fetch: 0, browse: 0 };
+	const by_tool = { search: 0, browse: 0, fetch: 0 };
 	const points: ToolActivity["points"] = [];
 	const first = align(start);
 	for (let ms = first; ms < now; ms += step)
-		points.push({ date: new Date(ms).toISOString(), search: 0, fetch: 0, browse: 0 });
+		points.push({ date: new Date(ms).toISOString(), search: 0, browse: 0, fetch: 0 });
 	for (const { tool, bucket, n } of rows.results) {
 		const point = points[(bucket - first) / step];
 		if (!point) throw new Error("Activity timestamp outside reporting window");

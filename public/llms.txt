@@ -43,6 +43,8 @@ npm install -g apple-rag-cli
 apple-rag auth status --json
 apple-rag auth login --no-browser
 apple-rag doctor --json
+
+# Choose a lookup for the task:
 apple-rag search "SwiftUI NavigationStack path binding" --limit 3 --json
 apple-rag browse --json
 apple-rag fetch "https://developer.apple.com/documentation/swiftui" --json
@@ -61,6 +63,8 @@ are errors, not permission to fall back to another identity. Logout revokes the
 saved device; independent automation keys must be revoked separately in Settings.
 
 ## Retrieve and cite
+
+Choose the tool that fits the question. A search passage or a directory listing can be enough to answer. If the task is to read a known URL, call fetch directly.
 
 Use search for a precise English technical question about Apple APIs, platform
 availability, deprecations, or WWDC material. Search covers indexed Apple content.

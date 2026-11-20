@@ -1,8 +1,5 @@
-/**
- * Tool Call Logs Routes
- * Modern implementation for tracking separated search and fetch tool call logs
- */
 import { createRoute, z } from "@hono/zod-openapi";
+import { TOOL_KINDS } from "../../../shared/tool-activity.js";
 import { ApiErrorCode } from "../constants/error-codes";
 import { authMiddleware } from "../middleware/auth";
 import type { User } from "../types";
@@ -26,7 +23,7 @@ const UsageLogItemSchema = z.object({
 	request_id: z.string().nullable(),
 	response_time_ms: z.number().nullable(),
 	created_at: z.string(),
-	log_type: z.enum(["search", "fetch", "browse"]),
+	log_type: z.enum(TOOL_KINDS),
 });
 
 const PaginationSchema = z.object({
@@ -48,7 +45,10 @@ const getUsageLogsRoute = createRoute({
 				limit: z.coerce.number().int().min(1).max(100).optional().default(20),
 				status: z.enum(["success", "error", "all"]).optional().default("all"),
 				search: z.string().max(2048).optional(),
-				log_type: z.enum(["search", "fetch", "browse", "all"]).optional().default("all"),
+				log_type: z
+					.enum([...TOOL_KINDS, "all"])
+					.optional()
+					.default("all"),
 				from: z.iso.datetime({ offset: true }).optional(),
 				to: z.iso.datetime({ offset: true }).optional(),
 			})
@@ -113,7 +113,7 @@ app.openapi(getUsageLogsRoute, async (c) => {
 	try {
 		const offset = (page - 1) * limit;
 
-		const kinds = log_type === "all" ? ["search", "fetch", "browse"] : [log_type];
+		const kinds = log_type === "all" ? TOOL_KINDS : [log_type];
 		const parameters: (string | number)[] = [];
 		const selects = kinds.map((kind) => {
 			const field = kind === "search" ? "requested_query" : "requested_url";

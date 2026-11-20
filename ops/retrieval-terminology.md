@@ -24,3 +24,21 @@ every retrieval-related string to contain both brand names.
 Pricing uses concise annotations: "Semantic search (for RAG)" and
 "Hybrid search (ranked by [Jev](https://typesafe.ai/))". These identify the
 intended use and ranker, while the descriptions explain the retrieval steps.
+
+## Tool order and selection
+
+Present the tools in the following order whenever all three appear together. Use
+this order in tool discovery, CLI help, setup prompts, documentation, chart
+legends, and log navigation. The shared ordered list is `TOOL_KINDS` in
+`shared/tool-activity.ts`. Keep each tool’s chart color and log target bound to
+its name, including when a chart omits an empty series.
+
+| Tool | Chinese label | When an agent should use it |
+| --- | --- | --- |
+| `search` | 搜索 | Answer a specific Apple API or WWDC question. Cite the returned passage when it provides enough evidence. |
+| `browse` | 浏览目录 | Discover the topics or APIs in an indexed framework. The directory listing itself can answer a navigation question. |
+| `fetch` | 读取原文 | Read a known URL directly, or open a source found through search or browse when more context is needed. |
+
+Search and browse both help an agent discover sources. Fetch reads a selected
+page. An agent can start with any tool and stop as soon as it can answer.
+Task-specific examples only need to mention the tools the task uses.

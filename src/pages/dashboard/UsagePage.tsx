@@ -59,9 +59,11 @@ function UsageContent({
 			timeZone: "Asia/Singapore",
 			hourCycle: "h23",
 		});
-	const search = useLogPage("search", from, to),
-		fetchPage = useLogPage("fetch", from, to),
-		browse = useLogPage("browse", from, to);
+	const pages = {
+		search: useLogPage("search", from, to),
+		browse: useLogPage("browse", from, to),
+		fetch: useLogPage("fetch", from, to),
+	};
 
 	// Define columns for search logs
 	const searchColumns: DataTableColumn<UsageLog>[] = [
@@ -162,65 +164,62 @@ function UsageContent({
 		},
 	];
 
-	const tabItems = (
-		[
-			["search", search],
-			["fetch", fetchPage],
-			["browse", browse],
-		] as const
-	).map(([id, pagination]) => ({
-		id,
-		label: t(`usage.${id}_logs`),
-		badge: pagination.isLoading || pagination.error ? undefined : pagination.total,
-		content: (
-			<Card>
-				<CardHeader>
-					<CardTitle className="flex items-center justify-between">
-						<div>
-							<span>{t(`usage.${id}_calls`)}</span>
-							<p className="text-sm text-muted-foreground mt-1 font-normal">
-								{t(`usage.${id}_calls_desc`)}
-							</p>
-						</div>
-						<div className="flex items-center gap-4">
-							<div className="flex items-center gap-2 text-sm text-muted-foreground">
-								<IconClock className="h-4 w-4" />
-								{t("common.last_updated", { time: new Date().toLocaleTimeString() })}
+	const tabItems = TOOL_KINDS.map((id) => {
+		const pagination = pages[id];
+		return {
+			id,
+			label: t(`activity.${id}`),
+			badge: pagination.isLoading || pagination.error ? undefined : pagination.total,
+			content: (
+				<Card>
+					<CardHeader>
+						<CardTitle className="flex items-center justify-between">
+							<div>
+								<span>{t(`usage.${id}_calls`)}</span>
+								<p className="text-sm text-muted-foreground mt-1 font-normal">
+									{t(`usage.${id}_calls_desc`)}
+								</p>
 							</div>
-							<Button
-								variant="outline"
-								size="sm"
-								onClick={pagination.refresh}
-								disabled={pagination.isLoading}
-								className="flex items-center gap-2"
-							>
-								<IconRefresh className="h-4 w-4" />
-								{t("common.refresh")}
-							</Button>
-						</div>
-					</CardTitle>
-				</CardHeader>
-				<CardContent className="p-0">
-					<DataTable
-						columns={id === "search" ? searchColumns : fetchColumns}
-						data={pagination.data}
-						isLoading={pagination.isLoading}
-						error={pagination.error}
-					/>
-					<PaginationControls
-						currentPage={pagination.currentPage}
-						totalPages={pagination.totalPages}
-						pageSize={pagination.pageSize}
-						total={pagination.total}
-						pageSizeOptions={pagination.pageSizeOptions}
-						onPageChange={pagination.goToPage}
-						onPageSizeChange={pagination.changePageSize}
-						isLoading={pagination.isLoading}
-					/>
-				</CardContent>
-			</Card>
-		),
-	}));
+							<div className="flex items-center gap-4">
+								<div className="flex items-center gap-2 text-sm text-muted-foreground">
+									<IconClock className="h-4 w-4" />
+									{t("common.last_updated", { time: new Date().toLocaleTimeString() })}
+								</div>
+								<Button
+									variant="outline"
+									size="sm"
+									onClick={pagination.refresh}
+									disabled={pagination.isLoading}
+									className="flex items-center gap-2"
+								>
+									<IconRefresh className="h-4 w-4" />
+									{t("common.refresh")}
+								</Button>
+							</div>
+						</CardTitle>
+					</CardHeader>
+					<CardContent className="p-0">
+						<DataTable
+							columns={id === "search" ? searchColumns : fetchColumns}
+							data={pagination.data}
+							isLoading={pagination.isLoading}
+							error={pagination.error}
+						/>
+						<PaginationControls
+							currentPage={pagination.currentPage}
+							totalPages={pagination.totalPages}
+							pageSize={pagination.pageSize}
+							total={pagination.total}
+							pageSizeOptions={pagination.pageSizeOptions}
+							onPageChange={pagination.goToPage}
+							onPageSizeChange={pagination.changePageSize}
+							isLoading={pagination.isLoading}
+						/>
+					</CardContent>
+				</Card>
+			),
+		};
+	});
 
 	return (
 		<div className="space-y-6">

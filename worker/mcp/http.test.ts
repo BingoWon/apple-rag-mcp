@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { TOOL_KINDS } from "../../shared/tool-activity.js";
 import worker from "../index.js";
 
 const executionContext = {
@@ -140,7 +141,7 @@ test("serves a Cursor-style legacy initialize without modern headers", async () 
 	const tools = toolMessages.find((message) => message.result?.tools)?.result?.tools ?? [];
 	assert.deepEqual(
 		tools.map((tool) => tool.name),
-		["search", "fetch", "browse"],
+		TOOL_KINDS,
 	);
 });
 

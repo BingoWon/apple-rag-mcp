@@ -2,13 +2,13 @@
 
 The overview compares MCP and CLI request sources in one trend chart. An unknown
 series appears only when unclassified records actually exist (or that filter is selected).
-Counts include recorded search, fetch and browse attempts, including rate limits and failures;
+Counts include recorded search, browse and fetch attempts, including rate limits and failures;
 they are not counts of successful retrievals or billable usage. Each source shows its
 share of all recorded calls in the selected period. Historical records confirmed to belong to the MCP-only era are corrected once by
 migration 0012. Unverified records are not silently treated as MCP.
 
 `GET /api/admin/stats` accepts `channel=mcp|cli|unknown`. The filter applies to the
-search, fetch and browse metrics and their outcomes. The source comparison always includes
+search, browse and fetch metrics and their outcomes. The source comparison always includes
 all sources. User, active-user, token, IP, message, and subscription statistics remain
 global; accounts and subscriptions are shared across access methods. Per-tool
 aggregation groups by time bucket and channel in the existing queries, without an

@@ -11,6 +11,7 @@ import {
 	PLATFORM_URL,
 	searchOutputSchema,
 } from "../../../shared/contracts.js";
+import { TOOL_KINDS } from "../../../shared/tool-activity.js";
 import { CredentialStore, parseToken } from "./credentials.js";
 import { CLIError, statusExitCode } from "./errors.js";
 import { VERSION } from "./version.js";
@@ -225,10 +226,7 @@ export class AppleRagClient {
 		const result = z
 			.object({ ok: z.literal(true), channel: z.literal("cli"), operations: z.array(z.string()) })
 			.safeParse(await this.json(`${CLI_RESOURCE}/health`));
-		if (
-			!result.success ||
-			!["search", "fetch", "browse"].every((name) => result.data.operations.includes(name))
-		)
+		if (!result.success || !TOOL_KINDS.every((name) => result.data.operations.includes(name)))
 			throw new CLIError("MISSING_TOOLS", "The CLI API must expose search, browse, and fetch.");
 		return {
 			ok: true,

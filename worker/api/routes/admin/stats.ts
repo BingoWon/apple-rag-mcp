@@ -21,8 +21,8 @@ const METRICS = [
 	{ key: "tokens", table: "mcp_tokens" },
 	{ key: "ips", table: "user_authorized_ips" },
 	{ key: "searches", table: "search_logs" },
-	{ key: "fetches", table: "fetch_logs" },
 	{ key: "browses", table: "browse_logs" },
+	{ key: "fetches", table: "fetch_logs" },
 	{ key: "messages", table: "contact_messages" },
 ] as const;
 
@@ -152,8 +152,8 @@ const statsRoute = createRoute({
 								tokens: metricSchema,
 								ips: metricSchema,
 								searches: metricSchema,
-								fetches: metricSchema,
 								browses: metricSchema,
+								fetches: metricSchema,
 								messages: metricSchema,
 								new_users: metricSchema,
 								active_users: metricSchema,

@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { z } from "zod";
 import { CLI_CLIENT_ID, CLI_SCOPE } from "../../shared/contracts.js";
+import { TOOL_KINDS } from "../../shared/tool-activity.js";
 import { authMiddleware } from "../api/middleware/auth.js";
 import type { AppEnv } from "../api/types/hono.js";
 import { accountStatus } from "../services/account.js";
@@ -131,7 +132,7 @@ export function createCLIRoutes(
 		c.json({
 			ok: true,
 			channel: "cli",
-			operations: ["search", "fetch", "browse"],
+			operations: TOOL_KINDS,
 			authorization_server: new URL(c.req.url).origin,
 		}),
 	);
@@ -143,7 +144,7 @@ export function createCLIRoutes(
 		);
 		return c.json(accountStatus(identity, quota, "cli"));
 	});
-	for (const operation of ["search", "fetch", "browse"] as const)
+	for (const operation of TOOL_KINDS)
 		app.post(`/v1/${operation}`, (c) => {
 			const response = (async () => {
 				let identity: AuthContext = { isAuthenticated: false };

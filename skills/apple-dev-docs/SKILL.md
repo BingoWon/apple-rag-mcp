@@ -4,7 +4,7 @@ description: Use when exploring SwiftUI or UIKit topics, verifying Apple API beh
 license: MIT
 compatibility: Requires Apple RAG remote MCP tools, or apple-rag-cli with Node.js 22.20+. Anonymous trial, signed-in free and Pro access share service quotas.
 metadata:
-  version: "2.1.1"
+  version: "2.1.2"
 ---
 
 # Apple Developer Documentation
@@ -22,6 +22,8 @@ same core retrieval service. Keep the connection already configured for this tas
 
 ```sh
 apple-rag auth status --json
+
+# Choose a lookup for the task:
 apple-rag search "SwiftUI NavigationStack path binding" --limit 3 --json
 apple-rag browse --json
 apple-rag fetch "https://developer.apple.com/documentation/swiftui" --json
@@ -50,21 +52,19 @@ Logout revokes the saved CLI device; independent environment API keys remain and
 must be revoked in settings. MCP credentials and sessions are unaffected.
 `upgrade` prints https://apple-rag.com/#pricing; payment stays on the website.
 
-## Explore an indexed topic
+## Choose a tool for the task
 
-Use `browse` for a catalog or category question. Start at a known SwiftUI/UIKit documentation URL, or omit the URL to see the current catalog. CLI: `apple-rag browse URL --json`. Resolve each href against its parent, applying the local base first. A section fragment opens a group; fetch a document URL to read its source. Inline items are complete small branches. Use depth 1 for just the next level or 3 for a deeper preview. For more members of a paginated group, repeat the URL and limit with the next page and the returned revision. On LIST_CHANGED, reopen the first page. A zero count is an indexed leaf; a null count means unknown. Results cover the indexed default language view.
+- **Search** for a specific API or WWDC question using a precise English query. Include the framework and platform or version when relevant. Start with 2–4 results. CLI JSON reports `results[].complete`, `total_chunks`, and zero-based `chunk_indices`. Cite a passage directly when it answers the question.
+- **Browse** to find which APIs or topics a framework contains. Start at a SwiftUI or UIKit documentation URL, or omit the URL for the catalog root. If the listing answers the question, cite the catalog page.
+- **Fetch** a known URL directly when the task calls for the source text. Also use it when a passage or catalog entry needs more context. For long pages, the CLI can save the result with `--output new-file.md`.
 
-## Retrieve, then answer
+Answer in the user's language and cite the relevant URLs. Distinguish Apple documentation, WWDC transcripts, and third-party references.
 
-1. Identify framework, API and platform/version constraint.
-2. Search one precise English technical/API query. Avoid phrases such as "latest".
-   Use 2-4 results; do not fan out broad searches.
-3. Read completeness markers. CLI JSON has `results[].complete`, `total_chunks`
-   and zero-based `chunk_indices`; MCP text marks complete vs partial documents.
-4. Fetch partial documents and pages you will quote. Save long pages with
-   `--output new-file.md` and read relevant sections locally when using CLI.
-5. Answer in the user's language with source URLs. Distinguish documentation from
-   WWDC transcripts and official Apple material from third-party references.
+### Following a catalog listing
+
+Resolve each href against its parent, applying the local base first. A section fragment opens a group. Inline items are complete small branches. Use depth 1 for just the next level or 3 for a deeper preview. For more members of a paginated group, repeat the URL and limit with the next page and the returned revision. On LIST_CHANGED, reopen the first page. A zero count is an indexed leaf. A null count means unknown. Results cover the indexed default language view.
+
+## Source coverage
 
 Search covers the indexed Apple corpus. Fetch prefers the index, then Apple JSON
 or live extraction. Structured results retain requested/canonical URLs, `source`,
