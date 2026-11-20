@@ -2,6 +2,7 @@ import { IconChevronRight, IconRefresh } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
+import { AdminPagedList } from "@/components/admin/AdminPagedList";
 import TimeRangeSelector from "@/components/charts/TimeRangeSelector";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -14,7 +15,6 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "@/components/ui/Dialog";
-import { PaginationControls } from "@/components/ui/PaginationControls";
 import { formatAdminDateTime } from "@/lib/admin-utils";
 import { api } from "@/lib/api";
 import {
@@ -116,7 +116,7 @@ function Breakdown({
 					</div>
 				))}
 			</dl>
-			<div className="flex gap-2">
+			<div className="mb-3 flex gap-2">
 				{(["environment", "version"] as const).map((d) => (
 					<Button
 						key={d}
@@ -144,8 +144,13 @@ function Breakdown({
 					</Button>
 				</p>
 			) : (
-				<>
-					<table className="mt-3 w-full text-left text-sm">
+				<AdminPagedList
+					currentPage={page}
+					total={data.total}
+					pageSize={CLIENT_PAGE_SIZE}
+					onPageChange={setPage}
+				>
+					<table className="w-full text-left text-sm [&_td]:px-3 [&_th]:px-3">
 						<thead>
 							<tr className="border-b border-default text-xs text-muted-foreground">
 								<th scope="col" className="py-2">
@@ -185,17 +190,7 @@ function Breakdown({
 					{!data.total && (
 						<p className="py-3 text-sm text-muted-foreground">{t("client_stats.empty")}</p>
 					)}
-					{data.total > CLIENT_PAGE_SIZE && (
-						<PaginationControls
-							currentPage={page}
-							totalPages={Math.ceil(data.total / CLIENT_PAGE_SIZE)}
-							total={data.total}
-							pageSize={CLIENT_PAGE_SIZE}
-							onPageChange={setPage}
-							showPageSizeSelector={false}
-						/>
-					)}
-				</>
+				</AdminPagedList>
 			)}
 		</>
 	);

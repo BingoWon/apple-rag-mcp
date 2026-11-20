@@ -1,3 +1,4 @@
+import "./admin-layout.css";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, Outlet, useLocation } from "react-router-dom";
@@ -54,7 +55,7 @@ export function AdminLayout() {
 	}
 
 	return (
-		<div className="min-h-screen bg-background">
+		<div className="admin-layout min-h-dvh bg-background">
 			<header className="bg-card shadow-sm border-b border-border">
 				<div className="mx-auto flex min-h-12 items-center gap-3 px-4 sm:px-6 lg:px-8">
 					<nav
@@ -99,7 +100,7 @@ export function AdminLayout() {
 				</div>
 			</header>
 
-			<main className="max-w-full mx-auto py-4 px-4 sm:px-6 sm:py-6 lg:px-8">
+			<main className="w-full min-w-0 mx-auto py-4 px-4 sm:px-6 sm:py-6 lg:px-8">
 				<Outlet />
 			</main>
 		</div>

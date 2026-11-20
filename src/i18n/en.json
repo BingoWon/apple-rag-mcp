@@ -867,6 +867,7 @@
 		"warning": "This action cannot be undone."
 	},
 	"pagination": {
+		"label": "Pagination",
 		"show": "Show",
 		"per_page": "per page"
 	},

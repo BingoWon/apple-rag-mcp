@@ -87,7 +87,7 @@ export default function AdminAuthorizedIPsPage() {
 	// No need to format data - AdminTable will handle time formatting automatically
 
 	return (
-		<div className="space-y-6">
+		<div className="flex h-full flex-col">
 			<AdminTable
 				title={t("admin.authorized_ips_table")}
 				description={t("admin.authorized_ips_table_desc", { total })}

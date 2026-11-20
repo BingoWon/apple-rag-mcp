@@ -5,10 +5,10 @@
 import { IconRefresh } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/Button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { CardHeader, CardTitle } from "@/components/ui/Card";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
-import { PaginationControls } from "@/components/ui/PaginationControls";
 import { formatAdminDateTime, formatAdminResponseTime, getCountryFlag } from "@/lib/admin-utils";
+import { AdminPagedList } from "./AdminPagedList";
 
 interface AdminTableProps<T extends object> {
 	title: string;
@@ -21,7 +21,7 @@ interface AdminTableProps<T extends object> {
 	isLoading?: boolean;
 	error?: string | null;
 	onRefresh?: () => void;
-	onPageChange?: (page: number) => void;
+	onPageChange: (page: number) => void;
 }
 
 export function AdminTable<T extends object>({
@@ -38,8 +38,6 @@ export function AdminTable<T extends object>({
 	onPageChange,
 }: AdminTableProps<T>) {
 	const { t } = useTranslation();
-	// Calculate pagination info
-	const totalPages = Math.ceil(total / limit);
 	// Convert AdminTable columns to DataTable columns
 	const dataTableColumns: DataTableColumn<T>[] = columns.map((col) => ({
 		key: col.key,
@@ -115,42 +113,44 @@ export function AdminTable<T extends object>({
 	}));
 
 	return (
-		<Card>
-			<CardHeader>
-				<CardTitle className="flex flex-wrap items-center justify-between gap-3">
-					<div>
-						<span>{title}</span>
-						{description && (
-							<p className="text-sm text-muted-foreground mt-1 font-normal">{description}</p>
+		<AdminPagedList
+			currentPage={currentPage}
+			pageSize={limit}
+			total={total}
+			onPageChange={onPageChange}
+			isLoading={isLoading}
+			header={
+				<CardHeader className="shrink-0">
+					<CardTitle className="flex flex-wrap items-center justify-between gap-3">
+						<div>
+							<span>{title}</span>
+							{description && (
+								<p className="text-sm text-muted-foreground mt-1 font-normal">{description}</p>
+							)}
+						</div>
+						{onRefresh && (
+							<Button
+								variant="outline"
+								size="sm"
+								onClick={onRefresh}
+								disabled={isLoading}
+								className="flex items-center gap-2"
+							>
+								<IconRefresh className="h-4 w-4" />
+								{t("common.refresh")}
+							</Button>
 						)}
-					</div>
-					{onRefresh && (
-						<Button
-							variant="outline"
-							size="sm"
-							onClick={onRefresh}
-							disabled={isLoading}
-							className="flex items-center gap-2"
-						>
-							<IconRefresh className="h-4 w-4" />
-							{t("common.refresh")}
-						</Button>
-					)}
-				</CardTitle>
-			</CardHeader>
-			<CardContent className="p-0">
-				<DataTable columns={dataTableColumns} data={data} isLoading={isLoading} error={error} />
-
-				<PaginationControls
-					currentPage={currentPage}
-					totalPages={totalPages}
-					pageSize={limit}
-					total={total}
-					showPageSizeSelector={false}
-					onPageChange={(page) => onPageChange?.(page)}
-					isLoading={isLoading}
-				/>
-			</CardContent>
-		</Card>
+					</CardTitle>
+				</CardHeader>
+			}
+		>
+			<DataTable
+				externalScroll
+				columns={dataTableColumns}
+				data={data}
+				isLoading={isLoading}
+				error={error}
+			/>
+		</AdminPagedList>
 	);
 }

@@ -18,6 +18,7 @@ export interface DataTableProps<T extends object> {
 	isLoading?: boolean;
 	error?: string | null;
 	className?: string;
+	externalScroll?: boolean;
 }
 
 export function DataTable<T extends object>({
@@ -26,6 +27,7 @@ export function DataTable<T extends object>({
 	isLoading = false,
 	error = null,
 	className = "",
+	externalScroll = false,
 }: DataTableProps<T>) {
 	const { t } = useTranslation();
 
@@ -65,7 +67,9 @@ export function DataTable<T extends object>({
 					<p className="text-muted-foreground">{t("table.no_data")}</p>
 				</div>
 			) : (
-				<div className="max-h-[65dvh] overflow-auto overscroll-contain">
+				<div
+					className={externalScroll ? undefined : "max-h-[65dvh] overflow-auto overscroll-contain"}
+				>
 					<table
 						className="w-full table-fixed"
 						style={{ minWidth: columns.reduce((sum, column) => sum + (column.width ?? 160), 0) }}

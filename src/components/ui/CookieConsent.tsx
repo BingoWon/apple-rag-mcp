@@ -58,9 +58,9 @@ export function CookieConsent() {
 					animate={{ y: 0, opacity: 1 }}
 					exit={{ y: 100, opacity: 0 }}
 					transition={{ duration: 0.3, ease: "easeOut" }}
-					className="fixed bottom-4 left-4 right-4 z-50 flex justify-center"
+					className="pointer-events-none fixed bottom-4 left-4 right-4 z-50 flex justify-center"
 				>
-					<div className="relative overflow-hidden rounded-xl border border-border bg-background shadow-lg">
+					<div className="pointer-events-auto relative overflow-hidden rounded-xl border border-border bg-background shadow-lg">
 						<div className="absolute inset-0 bg-gradient-to-r from-brand/5 to-brand-secondary/5" />
 
 						<div className="relative px-2.5 py-2">

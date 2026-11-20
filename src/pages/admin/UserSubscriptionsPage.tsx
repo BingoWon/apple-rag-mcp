@@ -94,7 +94,7 @@ export default function AdminUserSubscriptionsPage() {
 	}, [fetchSubscriptions]);
 
 	return (
-		<div className="space-y-6">
+		<div className="flex h-full flex-col">
 			<AdminTable
 				title={t("admin.subscriptions_table")}
 				description={t("admin.subscriptions_table_desc")}

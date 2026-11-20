@@ -88,7 +88,7 @@ export default function AdminMCPTokensPage() {
 	}, [fetchTokens]);
 
 	return (
-		<div className="space-y-6">
+		<div className="flex h-full flex-col">
 			<AdminTable
 				title={t("admin.mcp_tokens_table")}
 				description={t("admin.mcp_tokens_table_desc")}

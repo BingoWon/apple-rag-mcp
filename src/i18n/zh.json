@@ -865,6 +865,7 @@
 		"warning": "此操作不可撤销。"
 	},
 	"pagination": {
+		"label": "分页",
 		"show": "每页",
 		"per_page": "条"
 	},

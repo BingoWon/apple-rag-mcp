@@ -1,6 +1,7 @@
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/Button";
+import { cn } from "@/lib/utils";
 
 export interface PaginationControlsProps {
 	currentPage: number;
@@ -14,6 +15,7 @@ export interface PaginationControlsProps {
 	className?: string;
 	showPageSizeSelector?: boolean;
 	showInfo?: boolean;
+	showNavigation?: boolean;
 }
 
 export function PaginationControls({
@@ -28,124 +30,109 @@ export function PaginationControls({
 	className = "",
 	showPageSizeSelector = true,
 	showInfo = true,
+	showNavigation = true,
 }: PaginationControlsProps) {
 	const { t } = useTranslation();
-	// Always render pagination controls, even for single page or no data
-	// This provides consistent UI and shows current pagination state
-
 	const startIndex = total > 0 ? (currentPage - 1) * pageSize + 1 : 0;
 	const endIndex = Math.min(currentPage * pageSize, total);
 
-	// Generate smart page numbers (max 5 pages shown)
-	const getPageNumbers = () => {
-		const pages: number[] = [];
-
-		if (totalPages === 0) {
-			// Show page 1 even when no data
-			pages.push(1);
-		} else if (totalPages <= 5) {
-			// Show all pages if 5 or fewer
-			for (let i = 1; i <= totalPages; i++) {
-				pages.push(i);
-			}
-		} else if (currentPage <= 3) {
-			// Show first 5 pages
-			for (let i = 1; i <= 5; i++) {
-				pages.push(i);
-			}
-		} else if (currentPage >= totalPages - 2) {
-			// Show last 5 pages
-			for (let i = totalPages - 4; i <= totalPages; i++) {
-				pages.push(i);
-			}
-		} else {
-			// Show current page and 2 pages on each side
-			for (let i = currentPage - 2; i <= currentPage + 2; i++) {
-				pages.push(i);
-			}
-		}
-
-		return pages;
-	};
+	const firstPage = Math.max(1, Math.min(currentPage - 2, totalPages - 4));
+	const pages = Array.from(
+		{ length: Math.max(1, Math.min(5, totalPages)) },
+		(_, index) => firstPage + index,
+	);
 
 	return (
 		<div
-			className={`flex flex-wrap items-center justify-between gap-3 px-4 py-4 border-t border-border ${className}`}
+			className={cn(
+				"@container flex flex-wrap items-center justify-between gap-3 px-4 py-4 border-t border-border",
+				className,
+			)}
 		>
 			{/* Left side: Page size selector and info */}
-			<div className="flex flex-wrap items-center gap-3">
-				{showPageSizeSelector && onPageSizeChange && (
-					<div className="flex items-center gap-2">
-						<span className="text-sm text-muted-foreground">{t("pagination.show")}</span>
-						<div className="flex items-center gap-1">
-							{pageSizeOptions.map((size) => (
-								<Button
-									key={size}
-									variant={pageSize === size ? "default" : "ghost"}
-									size="sm"
-									onClick={() => onPageSizeChange(size)}
-									disabled={isLoading}
-									className="h-8 px-2 text-xs"
-								>
-									{size}
-								</Button>
-							))}
+			{(showInfo || (showPageSizeSelector && onPageSizeChange)) && (
+				<div className="flex flex-wrap items-center gap-3">
+					{showPageSizeSelector && onPageSizeChange && (
+						<div className="flex items-center gap-2">
+							<span className="text-sm text-muted-foreground">{t("pagination.show")}</span>
+							<div className="flex items-center gap-1">
+								{pageSizeOptions.map((size) => (
+									<Button
+										key={size}
+										variant={pageSize === size ? "default" : "ghost"}
+										size="sm"
+										onClick={() => onPageSizeChange(size)}
+										disabled={isLoading}
+										className="h-8 px-2 text-xs"
+									>
+										{size}
+									</Button>
+								))}
+							</div>
+							<span className="text-sm text-muted-foreground">{t("pagination.per_page")}</span>
 						</div>
-						<span className="text-sm text-muted-foreground">{t("pagination.per_page")}</span>
-					</div>
-				)}
+					)}
 
-				{showInfo && (
-					<div className="text-sm text-muted-foreground">
-						{t("common.showing_range", {
-							from: total > 0 ? startIndex : 0,
-							to: total > 0 ? endIndex : 0,
-							total,
-						})}
-					</div>
-				)}
-			</div>
+					{showInfo && (
+						<div className="text-sm text-muted-foreground">
+							{t("common.showing_range", {
+								from: total > 0 ? startIndex : 0,
+								to: total > 0 ? endIndex : 0,
+								total,
+							})}
+						</div>
+					)}
+				</div>
+			)}
 
 			{/* Right side: Page navigation */}
-			<div className="flex items-center space-x-2">
-				<Button
-					variant="outline"
-					size="sm"
-					onClick={() => onPageChange(currentPage - 1)}
-					disabled={currentPage <= 1 || isLoading}
-					className="flex items-center gap-1"
+			{showNavigation && (
+				<nav
+					aria-label={t("pagination.label")}
+					className="ml-auto flex items-center gap-1 sm:gap-2"
 				>
-					<IconChevronLeft className="h-4 w-4" />
-					{t("common.previous")}
-				</Button>
+					<Button
+						variant="outline"
+						size="sm"
+						onClick={() => onPageChange(currentPage - 1)}
+						disabled={currentPage <= 1 || isLoading}
+						className="px-2 @sm:px-3"
+					>
+						<IconChevronLeft className="h-4 w-4" />
+						<span className="sr-only @sm:not-sr-only">{t("common.previous")}</span>
+					</Button>
 
-				<div className="flex items-center space-x-1">
-					{getPageNumbers().map((pageNum) => (
-						<Button
-							key={pageNum}
-							variant={currentPage === pageNum ? "default" : "outline"}
-							aria-current={currentPage === pageNum ? "page" : undefined}
-							size="sm"
-							onClick={() => onPageChange(pageNum)}
-							disabled={isLoading}
-							className="w-8 h-8 p-0"
-						>
-							{pageNum}
-						</Button>
-					))}
-				</div>
+					<div className="flex items-center space-x-1">
+						{pages.map((pageNum) => (
+							<Button
+								key={pageNum}
+								variant={currentPage === pageNum ? "default" : "outline"}
+								aria-current={currentPage === pageNum ? "page" : undefined}
+								size="sm"
+								onClick={() => onPageChange(pageNum)}
+								disabled={isLoading}
+								className={cn(
+									"w-8 h-8 p-0",
+									currentPage !== pageNum && "hidden @min-[16rem]:inline-flex",
+								)}
+							>
+								{pageNum}
+							</Button>
+						))}
+					</div>
 
-				<Button
-					variant="outline"
-					size="sm"
-					onClick={() => onPageChange(currentPage + 1)}
-					disabled={totalPages === 0 || currentPage >= totalPages || isLoading}
-					className="flex items-center gap-1"
-				>
-					{t("common.next")}
-					<IconChevronRight className="h-4 w-4" />
-				</Button>
-			</div>
+					<Button
+						variant="outline"
+						size="sm"
+						onClick={() => onPageChange(currentPage + 1)}
+						disabled={totalPages === 0 || currentPage >= totalPages || isLoading}
+						className="px-2 @sm:px-3"
+					>
+						<span className="sr-only @sm:not-sr-only">{t("common.next")}</span>
+						<IconChevronRight className="h-4 w-4" />
+					</Button>
+				</nav>
+			)}
 		</div>
 	);
 }

@@ -3,13 +3,12 @@ import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
-import { PaginationControls } from "@/components/ui/PaginationControls";
 import { useAdminLogs } from "@/hooks/useAdminLogs";
 import { formatAdminDateTime, formatAdminResponseTime } from "@/lib/admin-utils";
 import type { AdminLog, AdminLogFilters, AdminLogKind } from "@/types/admin-logs";
 import { TOOL_OUTCOMES } from "../../../worker/shared/tool-outcomes";
+import { AdminPagedList } from "./AdminPagedList";
 import { AdminUserLabel } from "./AdminUserLabel";
 import { LogDetails } from "./LogDetails";
 import { LogOutcome } from "./LogOutcome";
@@ -138,7 +137,7 @@ export function AdminLogs({ kind }: { kind: AdminLogKind }) {
 		</label>
 	);
 	return (
-		<div className="min-w-0 space-y-4">
+		<div className="flex h-full min-w-0 flex-col gap-4">
 			<header className="flex flex-wrap items-start justify-between gap-3">
 				<div>
 					<h1 className="text-xl font-semibold tracking-tight">{t(`admin.${kind}_logs`)}</h1>
@@ -311,9 +310,16 @@ export function AdminLogs({ kind }: { kind: AdminLogKind }) {
 					</Button>
 				</div>
 			)}
-			<Card className="min-w-0">
+			<AdminPagedList
+				currentPage={logs.query.page}
+				pageSize={logs.query.limit}
+				total={logs.data?.total ?? 0}
+				onPageChange={logs.goToPage}
+				onPageSizeChange={logs.changeLimit}
+				isLoading={logs.loading}
+			>
 				{!logs.loading && !!logs.data?.logs.length && (
-					<ul className="max-h-[65dvh] divide-y divide-border overflow-auto sm:hidden">
+					<ul className="divide-y divide-border sm:hidden">
 						{logs.data.logs.map((row) => (
 							<li key={row.id}>
 								<button
@@ -355,19 +361,14 @@ export function AdminLogs({ kind }: { kind: AdminLogKind }) {
 					</ul>
 				)}
 				<div className={!logs.loading && logs.data?.logs.length ? "hidden sm:block" : ""}>
-					<DataTable columns={columns} data={logs.data?.logs ?? []} isLoading={logs.loading} />
+					<DataTable
+						externalScroll
+						columns={columns}
+						data={logs.data?.logs ?? []}
+						isLoading={logs.loading}
+					/>
 				</div>
-				<PaginationControls
-					currentPage={logs.query.page}
-					totalPages={Math.ceil((logs.data?.total ?? 0) / logs.query.limit)}
-					pageSize={logs.query.limit}
-					total={logs.data?.total ?? 0}
-					pageSizeOptions={[20, 50, 100]}
-					onPageChange={logs.goToPage}
-					onPageSizeChange={logs.changeLimit}
-					isLoading={logs.loading}
-				/>
-			</Card>
+			</AdminPagedList>
 			<LogDetails
 				log={selected}
 				kind={kind}

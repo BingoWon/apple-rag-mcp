@@ -5,6 +5,7 @@
 import { IconEye, IconEyeCheck, IconLock, IconMessageCircle } from "@tabler/icons-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { AdminPagedList } from "@/components/admin/AdminPagedList";
 import { AdminUserLabel } from "@/components/admin/AdminUserLabel";
 import { MessageReplyDialog } from "@/components/admin/MessageReplyDialog";
 import { Button } from "@/components/ui/Button";
@@ -28,8 +29,6 @@ export default function AdminContactMessagesPage() {
 		readByUser: 0,
 	});
 	const [limit, setLimit] = useState(50);
-	const [offset, setOffset] = useState(0);
-	const [hasMore, setHasMore] = useState(false);
 	const [currentPage, setCurrentPage] = useState(1);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
@@ -51,8 +50,6 @@ export default function AdminContactMessagesPage() {
 						total: number;
 						stats: MessageStats;
 						limit: number;
-						offset: number;
-						hasMore: boolean;
 					};
 					setMessages(data.messages || []);
 					setTotal(data.total || 0);
@@ -64,8 +61,6 @@ export default function AdminContactMessagesPage() {
 						},
 					);
 					setLimit(data.limit || 50);
-					setOffset(data.offset || 0);
-					setHasMore(data.hasMore || false);
 					setCurrentPage(page);
 				} else {
 					throw new Error("Failed to fetch contact messages data");
@@ -81,10 +76,6 @@ export default function AdminContactMessagesPage() {
 		},
 		[limit],
 	);
-
-	const handlePageChange = (page: number) => {
-		fetchMessages(page);
-	};
 
 	const handleReplySuccess = () => {
 		fetchMessages(currentPage);
@@ -171,7 +162,7 @@ export default function AdminContactMessagesPage() {
 	}, [fetchMessages]);
 
 	return (
-		<div className="space-y-6">
+		<div className="flex h-full flex-col gap-6">
 			{/* Header */}
 			<div className="flex items-center justify-between">
 				<div>
@@ -221,113 +212,83 @@ export default function AdminContactMessagesPage() {
 			)}
 
 			{/* Messages Table */}
-			<div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-				<div className="overflow-x-auto">
-					<table className="w-full table-fixed">
-						<thead className="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+			<AdminPagedList
+				currentPage={currentPage}
+				pageSize={limit}
+				total={total}
+				onPageChange={fetchMessages}
+				isLoading={isLoading}
+			>
+				<table className="w-full min-w-2xl table-fixed">
+					<thead className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+						<tr>
+							<th className="w-1/5 px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+								{t("admin.col_user_name")}
+							</th>
+							<th className="w-2/5 px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+								{t("admin.col_message")}
+							</th>
+							<th className="w-1/6 px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+								{t("admin.date")}
+							</th>
+							<th className="w-1/6 px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+								{t("admin.action")}
+							</th>
+						</tr>
+					</thead>
+					<tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+						{isLoading ? (
 							<tr>
-								<th className="w-1/5 px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-									{t("admin.col_user_name")}
-								</th>
-								<th className="w-2/5 px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-									{t("admin.col_message")}
-								</th>
-								<th className="w-1/6 px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-									{t("admin.date")}
-								</th>
-								<th className="w-1/6 px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-									{t("admin.action")}
-								</th>
+								<td colSpan={4} className="px-6 py-12 text-center">
+									<div className="flex items-center justify-center">
+										<div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+									</div>
+								</td>
 							</tr>
-						</thead>
-						<tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-							{isLoading ? (
-								<tr>
-									<td colSpan={4} className="px-6 py-12 text-center">
-										<div className="flex items-center justify-center">
-											<div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+						) : messages.length === 0 ? (
+							<tr>
+								<td colSpan={4} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+									{t("admin.no_messages")}
+								</td>
+							</tr>
+						) : (
+							messages.map((message) => (
+								<tr
+									key={message.id}
+									className="hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors"
+								>
+									<td className="px-6 py-4">
+										<div className="text-sm">
+											<div className="font-medium text-gray-900 dark:text-white">
+												<AdminUserLabel user={message.user} />
+											</div>
+											<p className="text-xs text-muted">
+												{t(message.can_reply ? "admin.logged_in_user" : "admin.anonymous_feedback")}
+											</p>
 										</div>
 									</td>
-								</tr>
-							) : messages.length === 0 ? (
-								<tr>
-									<td
-										colSpan={4}
-										className="px-6 py-12 text-center text-gray-500 dark:text-gray-400"
-									>
-										{t("admin.no_messages")}
+									<td className="px-6 py-4 max-w-md">
+										<div className="space-y-1">
+											<p className="text-sm text-gray-900 dark:text-white line-clamp-2 break-words">
+												{message.message}
+											</p>
+											{message.admin_reply && (
+												<p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-1 break-words">
+													{t("admin.reply_preview", { reply: message.admin_reply })}
+												</p>
+											)}
+										</div>
 									</td>
+									<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+										{formatDateCompact(message.created_at)}
+									</td>
+									<td className="px-6 py-4">{getActionButton(message)}</td>
 								</tr>
-							) : (
-								messages.map((message) => (
-									<tr
-										key={message.id}
-										className="hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors"
-									>
-										<td className="px-6 py-4">
-											<div className="text-sm">
-												<div className="font-medium text-gray-900 dark:text-white">
-													<AdminUserLabel user={message.user} />
-												</div>
-												<p className="text-xs text-muted">
-													{t(
-														message.can_reply ? "admin.logged_in_user" : "admin.anonymous_feedback",
-													)}
-												</p>
-											</div>
-										</td>
-										<td className="px-6 py-4 max-w-md">
-											<div className="space-y-1">
-												<p className="text-sm text-gray-900 dark:text-white line-clamp-2 break-words">
-													{message.message}
-												</p>
-												{message.admin_reply && (
-													<p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-1 break-words">
-														{t("admin.reply_preview", { reply: message.admin_reply })}
-													</p>
-												)}
-											</div>
-										</td>
-										<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-											{formatDateCompact(message.created_at)}
-										</td>
-										<td className="px-6 py-4">{getActionButton(message)}</td>
-									</tr>
-								))
-							)}
-						</tbody>
-					</table>
-				</div>
-
-				{/* Pagination */}
-				{!isLoading && messages.length > 0 && (
-					<div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
-						<p className="text-sm text-gray-600 dark:text-gray-400">
-							{t("common.showing_range", {
-								from: offset + 1,
-								to: Math.min(offset + limit, total),
-								total,
-							})}
-						</p>
-						<div className="flex gap-2">
-							<Button
-								onClick={() => handlePageChange(currentPage - 1)}
-								disabled={currentPage === 1}
-								variant="secondary"
-							>
-								{t("common.previous")}
-							</Button>
-							<Button
-								onClick={() => handlePageChange(currentPage + 1)}
-								disabled={!hasMore}
-								variant="secondary"
-							>
-								{t("common.next")}
-							</Button>
-						</div>
-					</div>
-				)}
-			</div>
+							))
+						)}
+					</tbody>
+				</table>
+			</AdminPagedList>
 
 			{/* Reply Dialog */}
 			{selectedMessage && (
