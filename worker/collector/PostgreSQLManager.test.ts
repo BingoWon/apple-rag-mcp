@@ -696,6 +696,31 @@ test("collector database operations remain safe under concurrency and interrupte
 		},
 	);
 
+	await t.test("a rejected page update rolls back replacement of its existing chunks", async () => {
+		const url = prefix + "page-a";
+		const [record] = await observer`SELECT * FROM pages WHERE url=${url}`;
+		const before = await observer`SELECT id FROM chunks WHERE url=${url} ORDER BY id`;
+		assert.equal(before.length, 2);
+		await assert.rejects(
+			manager.batchUpdateFullRecords(
+				[
+					{ ...record, raw_json: "invalid-json", content: "Incomplete update" } as Parameters<
+						PostgreSQLManager["batchUpdateFullRecords"]
+					>[0][number],
+				],
+				[],
+			),
+			/invalid input syntax/,
+		);
+		const [after] = await observer`SELECT content,raw_json FROM pages WHERE url=${url}`;
+		assert.equal(after.content, record.content);
+		assert.deepEqual(after.raw_json, record.raw_json);
+		assert.deepEqual(
+			(await observer`SELECT id FROM chunks WHERE url=${url} ORDER BY id`).map((r) => r.id),
+			before.map((r) => r.id),
+		);
+	});
+
 	await t.test(
 		"permanent deletion reconnects and leaves unrelated pages and chunks intact",
 		async (subtest) => {

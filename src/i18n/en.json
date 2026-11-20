@@ -188,14 +188,14 @@
 		"mcp_cli_supported": "MCP / CLI access"
 	},
 	"success": {
-		"title": "Payment Successful!",
-		"subtitle": "Your Apple RAG Pro plan is active. Connect your agent through MCP or CLI.",
-		"whats_next": "What's Next?",
+		"title": "Your checkout",
+		"subtitle": "Your billing page shows your current plan. Pro access starts once payment is confirmed.",
+		"pro_features": "Included with Apple RAG Pro",
 		"feature_queries": "50,000 tool calls per week",
 		"feature_rpm": "50 requests per minute",
 		"feature_rag": "Keyword + semantic search, followed by <jev>Jev</jev> relevance ranking",
 		"feature_analytics": "Usage trends for search, browse, and fetch",
-		"go_dashboard": "Go to Dashboard",
+		"view_billing": "View billing",
 		"back_home": "Back to Home"
 	},
 	"cta": {
@@ -207,6 +207,7 @@
 		"subtitle": "with Apple RAG: official sources, RAG retrieval, and <jev>Jev</jev> ranking through MCP or CLI."
 	},
 	"auth": {
+		"existing_method": "This email is already registered. Use your original sign-in method.",
 		"welcome_back": "Welcome back",
 		"sign_in_subtitle": "Choose your preferred way to sign in",
 		"welcome_register": "Create your Apple RAG account",
@@ -442,8 +443,7 @@
 		"cancelled": "Cancelled",
 		"past_due": "Past Due",
 		"incomplete": "Incomplete",
-		"payment_success": "Payment successful!\nYour subscription has been updated successfully.",
-		"subscription_updated": "Subscription updated!\nYour changes have been saved successfully.",
+		"load_error": "Your billing information couldn’t be loaded.",
 		"manage_error": "Unable to open billing management. Please contact support if this persists.",
 		"plan_suffix": "Plan",
 		"expires_on": "Expires on {{date}}",

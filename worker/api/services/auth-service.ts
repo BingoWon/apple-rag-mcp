@@ -21,7 +21,7 @@ interface RegisterRequest {
 
 import { ResponseBuilder } from "../types/response";
 import { hashPassword, verifyPassword } from "../utils/security";
-import { getPlanPermissions, getUserPlanType } from "../utils/subscription";
+import { getPlanPermissions, getUserPlanType, type PlanType } from "../utils/subscription";
 import { EmailService } from "./email-service";
 
 export class AuthService {
@@ -30,181 +30,84 @@ export class AuthService {
 		private env: Env,
 	) {}
 
-	/**
-	 * Register a new user with modern email normalization
-	 */
-	async registerUser(request: RegisterRequest): Promise<
-		ApiResponse<{
-			user: {
-				id: string;
-				email: string;
-				name?: string;
-				avatar?: string;
-				plan_type: string;
-				created_at: string;
-			};
-			token: string;
-			expires_at: string;
-		}>
-	> {
+	async registerUser(request: RegisterRequest) {
+		const email = request.email.toLowerCase().trim();
 		try {
-			// Normalize email to lowercase for case-insensitive uniqueness
-			const normalizedEmail = request.email.toLowerCase().trim();
-
-			// Check if email already exists (case-insensitive, any provider)
-			const existingUser = await this.db
-				.prepare("SELECT id, provider FROM users WHERE LOWER(email) = ?")
-				.bind(normalizedEmail)
-				.first();
-
-			if (existingUser) {
-				const provider = (existingUser as Record<string, unknown>).provider;
-				const providerName = provider === "email" ? "email/password" : provider;
-				return {
-					success: false,
-					error: {
-						code: "EMAIL_ALREADY_EXISTS",
-						message: `Email already registered with ${providerName} authentication`,
-					},
-				};
-			}
-
-			// Hash password
-			const passwordHash = await hashPassword(request.password);
-
-			// Create user with normalized email
-			const userId = crypto.randomUUID();
+			const conflict = await this.db
+				.prepare("SELECT provider FROM users WHERE LOWER(email)=?")
+				.bind(email)
+				.first<{ provider: string }>();
+			if (conflict)
+				return ResponseBuilder.error(
+					"EMAIL_ALREADY_EXISTS",
+					`Email already registered with ${conflict.provider === "email" ? "email/password" : conflict.provider} authentication.`,
+				);
 			const now = new Date().toISOString();
-			await this.db
+			const user: User = {
+				id: crypto.randomUUID(),
+				email,
+				name: request.name,
+				provider: "email",
+				password_hash: await hashPassword(request.password),
+				created_at: now,
+				updated_at: now,
+			};
+			const insert = this.db
 				.prepare(
-					`INSERT INTO users (id, email, password_hash, name, provider, created_at, updated_at)
-           VALUES (?, ?, ?, ?, 'email', ?, ?)`,
+					`INSERT INTO users (id,email,password_hash,name,provider,created_at,updated_at) VALUES(?,?,?,?,'email',?,?)`,
 				)
-				.bind(userId, normalizedEmail, passwordHash, request.name ?? null, now, now)
-				.run();
-
-			// Get created user
-			const userResult = await this.db
-				.prepare("SELECT * FROM users WHERE id = ?")
-				.bind(userId)
-				.first();
-
-			if (!userResult) {
-				throw new Error("Failed to create user");
-			}
-
-			const user = userResult as unknown as User;
-
-			// Ensure user has required fields
-			if (!user.id || !user.email || !user.created_at) {
-				throw new Error("User object is missing required fields");
-			}
-
-			// Get user's subscription plan type
-			const planType = await getUserPlanType(user.id!, this.db);
-			const permissions = getPlanPermissions(planType);
-
-			const tokens = await issueWebSession(
-				this.db,
-				user,
-				planType,
-				permissions,
-				this.env.JWT_SECRET!,
-			);
-
-			return ResponseBuilder.success({
-				user: {
-					id: user.id!,
-					email: user.email!,
-					name: user.name || undefined,
-					avatar: user.avatar || undefined,
-					plan_type: planType,
-					created_at: user.created_at!,
-				},
-				token: tokens.token,
-				expires_at: tokens.expires_at,
-			});
+				.bind(user.id, user.email, user.password_hash!, user.name ?? null, now, now);
+			return await this.signedIn(user, "hobby", insert);
 		} catch (error) {
-			console.error("Registration error:", error);
+			if (
+				error instanceof Error &&
+				error.message.includes("UNIQUE constraint failed: users.email")
+			) {
+				return ResponseBuilder.error(
+					"EMAIL_ALREADY_EXISTS",
+					"This email is already registered. Sign in with your existing account.",
+				);
+			}
+			console.error("Registration failed", error);
 			return ResponseBuilder.error("INTERNAL_ERROR", "Registration failed");
 		}
 	}
 
-	/**
-	 * Login user with modern email normalization
-	 */
-	async loginUser(request: LoginRequest): Promise<
-		ApiResponse<{
-			user: {
-				id: string;
-				email: string;
-				name?: string;
-				avatar?: string;
-				plan_type: string;
-				created_at: string;
-			};
-			token: string;
-			expires_at: string;
-		}>
-	> {
+	async loginUser(request: LoginRequest) {
 		try {
-			// Normalize email and find user with email provider only
-			const normalizedEmail = request.email.toLowerCase().trim();
-			const userResult = await this.db
-				.prepare("SELECT * FROM users WHERE LOWER(email) = ? AND provider = 'email'")
-				.bind(normalizedEmail)
-				.first();
-
-			const user = userResult as unknown as User | null;
-
-			if (!user?.password_hash || !user.id) {
+			const user = await this.db
+				.prepare("SELECT * FROM users WHERE LOWER(email)=? AND provider='email'")
+				.bind(request.email.toLowerCase().trim())
+				.first<User>();
+			if (!user?.password_hash || !(await verifyPassword(request.password, user.password_hash)))
 				return ResponseBuilder.error("INVALID_CREDENTIALS", "Invalid email or password");
-			}
-
-			// Verify password
-			const isValidPassword = await verifyPassword(request.password, user.password_hash);
-			if (!isValidPassword) {
-				return ResponseBuilder.error("INVALID_CREDENTIALS", "Invalid email or password");
-			}
-
-			// Get user's subscription plan type
-			const planType = await getUserPlanType(user.id!, this.db);
-			const permissions = getPlanPermissions(planType);
-
-			// Generate tokens
-			const tokens = await issueWebSession(
-				this.db,
-				user,
-				planType,
-				permissions,
-				this.env.JWT_SECRET!,
-			);
-
-			return {
-				success: true,
-				data: {
-					user: {
-						id: user.id!,
-						email: user.email!,
-						name: user.name || undefined,
-						avatar: user.avatar || undefined,
-						plan_type: planType,
-						created_at: user.created_at!,
-					},
-					token: tokens.token,
-					expires_at: tokens.expires_at,
-				},
-			};
+			return await this.signedIn(user, await getUserPlanType(user.id, this.db));
 		} catch (error) {
-			console.error("Login error:", error);
-			return {
-				success: false,
-				error: {
-					code: "INTERNAL_ERROR",
-					message: "Login failed",
-				},
-			};
+			console.error("Login failed", error);
+			return ResponseBuilder.error("INTERNAL_ERROR", "Login failed");
 		}
+	}
+
+	private async signedIn(user: User, plan: PlanType, writeUser?: D1PreparedStatement) {
+		const session = await issueWebSession(
+			this.db,
+			user,
+			plan,
+			getPlanPermissions(plan),
+			this.env.JWT_SECRET,
+			{ writeUser },
+		);
+		return ResponseBuilder.success({
+			user: {
+				id: user.id,
+				email: user.email,
+				name: user.name || undefined,
+				avatar: user.avatar || undefined,
+				plan_type: plan,
+				created_at: user.created_at,
+			},
+			...session,
+		});
 	}
 
 	/**

@@ -9,13 +9,17 @@ import { createOpenAPIApp } from "../utils/openapi";
 import { verifyWebToken } from "../utils/web-session";
 
 const app = createOpenAPIApp();
+app.use("*", async (c, next) => {
+	c.header("Cache-Control", "no-store");
+	await next();
+});
 
 // Unified OAuth provider type
 const OAuthProvider = z.enum(["google", "github"]);
 
 // Unified OAuth callback query schema
 const OAuthCallbackSchema = z.object({
-	code: z.string().min(1, "Authorization code is required"),
+	code: z.string().min(1).optional(),
 	state: z.string().optional(),
 });
 
@@ -59,7 +63,13 @@ const oauthInitRoute = createRoute({
 app.openapi(oauthInitRoute, async (c) => {
 	const provider = c.req.valid("param").provider;
 	const state = crypto.randomUUID();
-	setCookie(c, "oauth_state_" + provider, state, {
+	const browserKey = crypto.randomUUID();
+	await c.env.DB.prepare(
+		"INSERT INTO oauth_attempts(state,provider,browser_key,expires_at) VALUES(?,?,?,unixepoch()+600)",
+	)
+		.bind(state, provider, browserKey)
+		.run();
+	setCookie(c, `oauth_state_${state}`, browserKey, {
 		httpOnly: true,
 		secure: new URL(c.req.url).protocol === "https:",
 		sameSite: "Lax",
@@ -98,35 +108,49 @@ const oauthCallbackRoute = createRoute({
 app.openapi(oauthCallbackRoute, async (c) => {
 	const provider = c.req.valid("param").provider;
 	const { code, state } = c.req.valid("query");
-	const expected = getCookie(c, "oauth_state_" + provider);
-	deleteCookie(c, "oauth_state_" + provider, { path: "/api/oauth" });
-	if (!state || !expected || state !== expected)
-		return c.redirect("/login?error=Invalid%20login%20state");
+	if (!state || !z.uuid().safeParse(state).success) return c.redirect("/login?error=oauth_failed");
+	const cookieName = `oauth_state_${state}`;
+	const browserKey = getCookie(c, cookieName);
+	deleteCookie(c, cookieName, { path: "/api/oauth" });
+	if (
+		!browserKey ||
+		!(await c.env.DB.prepare(
+			"DELETE FROM oauth_attempts WHERE state=? AND provider=? AND browser_key=? AND expires_at>unixepoch() RETURNING state",
+		)
+			.bind(state, provider, browserKey)
+			.first()) ||
+		!code
+	)
+		return c.redirect("/login?error=oauth_failed");
 	const origin = new URL(c.req.url).origin;
 	const oauthService = new OAuthService(c.env, origin);
 
 	const result = await oauthService.handleCallback(provider, code);
 
-	if (result.success && result.data) {
-		setCookie(c, "oauth_handoff", result.data.jwtToken, {
+	if (result.success) {
+		setCookie(c, `oauth_handoff_${state}`, result.token, {
 			httpOnly: true,
 			secure: new URL(origin).protocol === "https:",
 			sameSite: "Strict",
 			path: "/api/oauth/session/exchange",
 			maxAge: 60,
 		});
-		c.header("Cache-Control", "no-store");
-		return c.redirect(origin + "/overview?login=complete");
+		return c.redirect(`${origin}/overview?login=${state}`);
 	} else {
-		const errorMessage = encodeURIComponent(result.error || "OAuth authentication failed");
-		return c.redirect(`${origin}/login?error=${errorMessage}`);
+		return c.redirect(`/login?error=${result.error}`);
 	}
 });
 
 app.post("/session/exchange", async (c) => {
-	c.header("Cache-Control", "no-store");
-	const token = getCookie(c, "oauth_handoff");
-	deleteCookie(c, "oauth_handoff", { path: "/api/oauth/session/exchange" });
+	const request = z.object({ state: z.uuid() }).safeParse(await c.req.json().catch(() => null));
+	if (!request.success)
+		return c.json(
+			{ success: false, error: { code: "INVALID_REQUEST", message: "Missing login attempt." } },
+			400,
+		);
+	const cookieName = `oauth_handoff_${request.data.state}`;
+	const token = getCookie(c, cookieName);
+	deleteCookie(c, cookieName, { path: "/api/oauth/session/exchange" });
 	const session = token && (await verifyWebToken(token, c.env.JWT_SECRET).catch(() => null));
 	if (
 		!session ||

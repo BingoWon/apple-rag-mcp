@@ -4,6 +4,8 @@ import { cors } from "hono/cors";
 import { MCP_CLIENT_HEADER } from "../shared/mcp-clients.js";
 import { siteSitemap } from "../shared/site.js";
 import { apiApp } from "./api/app.js";
+import { reconcileCheckouts } from "./api/services/stripe-checkout";
+import { configureTelegram } from "./api/utils/telegram-notifier";
 import { CLIAuthorization } from "./cli/authorization.js";
 import { authorizationMetadata, cliOAuthRoutes } from "./cli/routes.js";
 import { handleScheduled } from "./collector/handler.js";
@@ -220,7 +222,14 @@ export default {
 	},
 
 	async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
-		if (event.cron === "7 * * * *") return reconcileBilling(env, event.scheduledTime);
+		if (event.cron === "7 * * * *") {
+			configureTelegram({
+				default: env.TELEGRAM_DEFAULT_BOT_URL,
+				alerts: env.TELEGRAM_ALERT_BOT_URL,
+			});
+			ctx.waitUntil(reconcileCheckouts(env, event.scheduledTime));
+			return reconcileBilling(env, event.scheduledTime);
+		}
 		ctx.waitUntil(
 			new CLIAuthorization(env.DB, env.JWT_SECRET, "https://apple-rag.com")
 				.cleanup()

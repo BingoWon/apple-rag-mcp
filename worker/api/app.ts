@@ -21,7 +21,11 @@ import { configureTelegram } from "./utils/telegram-notifier.js";
 
 const apiApp = createOpenAPIApp();
 
-apiApp.use("*", honoLogger());
+// Callback URLs carry provider authorization codes. Keep those query strings out of request logs.
+const requestLogger = honoLogger();
+apiApp.use("*", (c, next) =>
+	c.req.path.startsWith("/api/oauth/") ? next() : requestLogger(c, next),
+);
 apiApp.use("*", requestId());
 apiApp.use("*", timing());
 apiApp.use(prettyJSON());

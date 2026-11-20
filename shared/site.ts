@@ -132,10 +132,10 @@ export const SITE_PAGES: Record<string, SitePage> = {
 		},
 	},
 	"/success": {
-		title: "Payment Confirmation — Apple RAG",
-		description: "Check the status of your Apple RAG payment.",
+		title: "Checkout — Apple RAG",
+		description: "Visit your billing page to see your current Apple RAG plan after checkout.",
 		indexable: false,
-		zh: { title: "支付确认 — Apple RAG", description: "查看 Apple RAG 的支付结果。" },
+		zh: { title: "结账 — Apple RAG", description: "结账后可前往账单页查看当前 Apple RAG 套餐。" },
 	},
 	"/admin": {
 		title: "Administration — Apple RAG",

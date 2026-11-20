@@ -25,3 +25,9 @@ export function authReturnPath(): string {
 export function clearAuthReturn(): void {
 	sessionStorage.removeItem(KEY);
 }
+
+export function oauthReturnState(location: { pathname: string; search: string }): string | null {
+	return location.pathname.replace(/\/$/, "") === "/overview"
+		? new URLSearchParams(location.search).get("login")
+		: null;
+}

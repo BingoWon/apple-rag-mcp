@@ -30,7 +30,7 @@ class ApiClient {
 				const raw = localStorage.getItem("auth-storage");
 				if (raw) {
 					const token = JSON.parse(raw).state?.token;
-					if (token && !config.headers.Authorization)
+					if (token && !config.headers.Authorization && !config.url?.startsWith("/oauth/"))
 						config.headers.Authorization = `Bearer ${token}`;
 				}
 			} catch {}

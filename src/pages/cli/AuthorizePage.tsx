@@ -16,6 +16,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
 import { api } from "@/lib/api";
 import { rememberAuthReturn } from "@/lib/auth-return";
+import { useAuthStore } from "@/stores/auth";
 
 interface Authorization {
 	client_name: string;
@@ -26,9 +27,13 @@ interface Authorization {
 	scope: string;
 }
 export default function AuthorizePage() {
+	const { user } = useAuth();
+	return <AuthorizationForm key={user?.id ?? "anonymous"} />;
+}
+function AuthorizationForm() {
 	const { t, i18n } = useTranslation();
 	const { resolvedTheme } = useTheme();
-	const { isAuthenticated, isHydrated, user } = useAuth();
+	const { isAuthenticated, isHydrated, user, token } = useAuth();
 	const location = useLocation(),
 		navigate = useNavigate();
 	const [params, setParams] = useSearchParams();
@@ -67,12 +72,15 @@ export default function AuthorizePage() {
 		return () => controller.abort();
 	}, [isAuthenticated, request, userCode]);
 	const decide = async (approve: boolean) => {
+		if (!token || useAuthStore.getState().token !== token) return;
 		setBusy(true);
 		try {
 			const result = await api.post<{ approved: boolean; redirect_uri?: string }>(
 				"/cli/authorization",
 				{ ...(request ? { request } : { user_code: userCode }), approve },
+				{ headers: { Authorization: `Bearer ${token}` } },
 			);
+			if (useAuthStore.getState().token !== token) return;
 			if (!result.success || !result.data) throw Error();
 			const redirect = result.data.redirect_uri;
 			if (redirect) {

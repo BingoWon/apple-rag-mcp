@@ -22,7 +22,7 @@ export function LoginForm() {
 	const [oauthLoading, setOauthLoading] = useState<string | null>(null);
 	const [error, setError] = useState<string | null>(null);
 
-	const [searchParams] = useSearchParams();
+	const [searchParams, setSearchParams] = useSearchParams();
 	const { login } = useAuth();
 	const { handleError } = useErrorHandler();
 	const { t } = useTranslation();
@@ -31,16 +31,20 @@ export function LoginForm() {
 	useEffect(() => {
 		const urlError = searchParams.get("error");
 		if (urlError) {
-			// Decode the URL-encoded error message
-			const decodedError = decodeURIComponent(urlError);
-			toast.error(decodedError);
-
-			// Clean up the URL by removing the error parameter
-			const newUrl = new URL(window.location.href);
-			newUrl.searchParams.delete("error");
-			window.history.replaceState({}, "", newUrl.toString());
+			toast.error(
+				t(urlError === "account_exists" ? "auth.existing_method" : "dashboard.auth_failed"),
+				{ id: "oauth-callback-error" },
+			);
+			setSearchParams(
+				(current) => {
+					const next = new URLSearchParams(current);
+					next.delete("error");
+					return next;
+				},
+				{ replace: true },
+			);
 		}
-	}, [searchParams]);
+	}, [searchParams, setSearchParams, t]);
 
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();

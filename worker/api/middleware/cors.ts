@@ -23,7 +23,10 @@ export const securityHeaders = async (c: Context<{ Bindings: Env }>, next: Next)
 	await next();
 	c.res.headers.set("X-Content-Type-Options", "nosniff");
 	c.res.headers.set("X-Frame-Options", "DENY");
-	c.res.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+	c.res.headers.set(
+		"Referrer-Policy",
+		c.req.path.startsWith("/api/oauth/") ? "no-referrer" : "strict-origin-when-cross-origin",
+	);
 	if (new URL(c.req.url).protocol === "https:") {
 		c.res.headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
 	}

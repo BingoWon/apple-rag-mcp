@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { mapStripeStatus } from "./stripe.js";
+import { mapStripeStatus } from "../services/stripe-entitlements.js";
 
 test("maps Stripe subscription statuses to valid local values", () => {
 	assert.equal(mapStripeStatus("active"), "active");

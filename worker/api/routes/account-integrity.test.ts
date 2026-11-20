@@ -36,20 +36,52 @@ test("a Unicode OAuth profile exchanges once and logout or a password change rev
 		f.env,
 	);
 	assert.match(bad.headers.get("location")!, /error=/);
+	const second = await oauthRoutes.request(
+		"/google",
+		{ method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" },
+		f.env,
+	);
+	const secondState = new URL((await second.json()).data.auth_url).searchParams.get("state");
+	const secondCookie = second.headers.get("set-cookie")!.split(";")[0];
+	assert.notEqual(cookie.split("=")[0], secondCookie.split("=")[0]);
+	f.sql.exec(
+		"CREATE TRIGGER reject_oauth_session BEFORE INSERT ON web_sessions BEGIN SELECT RAISE(ABORT,'fixture write failure'); END",
+	);
+	const failed = await oauthRoutes.request(
+		"/google/callback?code=local&state=" + secondState,
+		{ headers: { cookie: secondCookie } },
+		f.env,
+	);
+	assert.equal(failed.headers.get("location"), "/login?error=oauth_failed");
+	assert.equal(
+		f.sql.prepare("SELECT count(*) n FROM users WHERE email='zh@example.test'").get()?.n,
+		0,
+	);
+	f.sql.exec("DROP TRIGGER reject_oauth_session");
 	const callback = await oauthRoutes.request(
 		"/google/callback?code=local&state=" + state,
 		{ headers: { cookie } },
 		f.env,
 	);
-	assert.match(callback.headers.get("location")!, /overview\?login=complete$/);
+	assert.equal(new URL(callback.headers.get("location")!).searchParams.get("login"), state);
+	const replay = await oauthRoutes.request(
+		"/google/callback?code=local&state=" + state,
+		{ headers: { cookie } },
+		f.env,
+	);
+	assert.match(replay.headers.get("location")!, /error=/);
 	const handoff = callback.headers
 		.getSetCookie()
-		.find((value) => value.startsWith("oauth_handoff="))!;
+		.find((value) => value.startsWith(`oauth_handoff_${state}=`))!;
 	assert.match(handoff, /HttpOnly/);
 	const exchange = () =>
 		oauthRoutes.request(
 			"/session/exchange",
-			{ method: "POST", headers: { cookie: handoff.split(";")[0] } },
+			{
+				method: "POST",
+				headers: { cookie: handoff.split(";")[0], "Content-Type": "application/json" },
+				body: JSON.stringify({ state }),
+			},
 			f.env,
 		);
 	const result = await exchange();
@@ -117,4 +149,36 @@ test("canonical IPv6 grants identity only for a single account", async (t) => {
 	);
 	assert.equal(await ip.checkIPAuthentication("2001:db8::1"), null);
 	await Promise.all(pending);
+});
+
+test("email registration rolls back with its first session and a retry can sign in", async (t) => {
+	const f = await fixture();
+	t.after(() => f.close());
+	const input = {
+		email: "lin@example.test",
+		name: "小林 🦊",
+		password: "local-only-test",
+		terms_accepted: true,
+	};
+	const post = (path: string, body: unknown) =>
+		auth.request(
+			path,
+			{
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(body),
+			},
+			f.env,
+		);
+	f.sql.exec(
+		"CREATE TRIGGER reject_session BEFORE INSERT ON web_sessions BEGIN SELECT RAISE(ABORT,'fixture session failure'); END",
+	);
+	assert.equal((await post("/register", input)).status, 500);
+	assert.equal(f.sql.prepare("SELECT count(*) n FROM users WHERE email=?").get(input.email)?.n, 0);
+	f.sql.exec("DROP TRIGGER reject_session");
+	assert.equal((await post("/register", input)).status, 201);
+	assert.equal((await post("/register", input)).status, 409);
+	const login = await post("/login", input);
+	assert.equal(login.status, 200);
+	assert.equal(extractUserFromJWTToken((await login.json()).data.token).name, input.name);
 });

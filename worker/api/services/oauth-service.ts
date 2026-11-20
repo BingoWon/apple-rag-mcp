@@ -8,6 +8,8 @@ import { getPlanPermissions, getUserPlanType } from "../utils/subscription";
 import { notifyTelegram } from "../utils/telegram-notifier.js";
 import { issueWebSession } from "../utils/web-session";
 
+const emailConflict = "This email is already registered. Use your existing sign-in method.";
+
 // OAuth provider response types
 interface GoogleUserInfo {
 	id: string;
@@ -17,15 +19,11 @@ interface GoogleUserInfo {
 }
 
 interface UserProfile {
-	id: string;
 	email: string;
 	name: string;
 	avatar?: string;
 	provider: string;
 	provider_id: string;
-	plan_type?: string;
-	created_at?: string;
-	updated_at?: string;
 }
 
 interface OAuthTokens {
@@ -78,34 +76,19 @@ export class OAuthService {
 	async handleCallback(
 		provider: "google" | "github",
 		code: string,
-	): Promise<{
-		success: boolean;
-		data?: {
-			user: UserProfile;
-			jwtToken: string;
-			expiresAt: string;
-		};
-		error?: string;
-	}> {
+	): Promise<{ success: true; token: string } | { success: false; error: string }> {
 		try {
 			const tokens = await this.exchangeCodeForTokens(provider, code);
-			const userInfo = await this.getUserInfo(provider, tokens.access_token);
-			const user = await this.createOrUpdateUser(userInfo);
-			const jwtToken = await this.generateJwtToken(user);
-
-			return {
-				success: true,
-				data: {
-					user,
-					jwtToken: jwtToken.token,
-					expiresAt: jwtToken.expiresAt,
-				},
-			};
+			const profile = await this.getUserInfo(provider, tokens.access_token);
+			return { success: true, token: await this.signIn(profile) };
 		} catch (error) {
 			console.error(`OAuth ${provider} callback error:`, error);
 			return {
 				success: false,
-				error: error instanceof Error ? error.message : "OAuth authentication failed",
+				error:
+					error instanceof Error && error.message === emailConflict
+						? "account_exists"
+						: "oauth_failed",
 			};
 		}
 	}
@@ -182,7 +165,6 @@ export class OAuthService {
 
 			const data = (await response.json()) as GoogleUserInfo;
 			return {
-				id: `google_${data.id}`,
 				email: data.email,
 				name: data.name,
 				avatar: data.picture,
@@ -232,7 +214,6 @@ export class OAuthService {
 				}
 
 				return {
-					id: `github_${userData.id}`,
 					email: primaryEmail as string,
 					name: (userData.name || userData.login || "GitHub User") as string,
 					avatar: userData.avatar_url as string | undefined,
@@ -250,132 +231,67 @@ export class OAuthService {
 		throw new Error(`Unsupported provider: ${provider}`);
 	}
 
-	/**
-	 * Creates or updates user. Emails normalized; users isolated by provider.
-	 */
-	private async createOrUpdateUser(userInfo: UserProfile): Promise<UserProfile> {
-		const normalizedEmail = userInfo.email.toLowerCase().trim();
-
-		const existingUser = await this.env.DB.prepare(
-			"SELECT * FROM users WHERE provider = ? AND provider_id = ?",
+	private async signIn(profile: UserProfile) {
+		const email = profile.email.toLowerCase().trim();
+		const existing = await this.env.DB.prepare(
+			"SELECT id,created_at FROM users WHERE provider=? AND provider_id=?",
 		)
-			.bind(userInfo.provider, userInfo.provider_id)
-			.first();
-
-		if (existingUser) {
-			const now = new Date().toISOString();
-			await this.env.DB.prepare(
-				`UPDATE users SET
-         email = ?, name = ?, avatar = ?, last_login = ?, updated_at = ?
-         WHERE id = ?`,
-			)
-				.bind(normalizedEmail, userInfo.name, userInfo.avatar ?? null, now, now, existingUser.id)
-				.run();
-
-			const updatedUser = await this.env.DB.prepare(
-				"SELECT id, email, name, avatar, provider, provider_id, created_at, updated_at FROM users WHERE id = ?",
-			)
-				.bind(existingUser.id)
-				.first();
-
-			return {
-				...userInfo,
-				email: normalizedEmail,
-				id: existingUser.id as string,
-
-				created_at: updatedUser?.created_at as string,
-				updated_at: updatedUser?.updated_at as string,
-			};
-		} else {
-			const emailConflict = await this.env.DB.prepare(
-				"SELECT id, provider FROM users WHERE LOWER(email) = ?",
-			)
-				.bind(normalizedEmail)
-				.first();
-
-			if (emailConflict) {
-				const conflictProvider = (emailConflict as Record<string, unknown>).provider;
-				throw new Error(
-					`Email ${normalizedEmail} is already registered with ${conflictProvider} authentication. Please use ${conflictProvider} to sign in.`,
-				);
-			}
-
-			const userId = crypto.randomUUID();
-			const now = new Date().toISOString();
-
-			await this.env.DB.prepare(
-				`INSERT INTO users (id, email, name, avatar, provider, provider_id, created_at, updated_at, last_login)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-			)
-				.bind(
-					userId,
-					normalizedEmail,
-					userInfo.name,
-					userInfo.avatar ?? null,
-					userInfo.provider,
-					userInfo.provider_id,
-					now,
-					now,
-					now,
-				)
-				.run();
-
-			const newUser = await this.env.DB.prepare(
-				"SELECT id, email, name, avatar, provider, provider_id, created_at, updated_at FROM users WHERE id = ?",
-			)
-				.bind(userId)
-				.first();
-
-			const providerLabel =
-				userInfo.provider === "google"
-					? "Google"
-					: userInfo.provider === "github"
-						? "GitHub"
-						: userInfo.provider;
-			await notifyTelegram(`👤 New OAuth Registration
-Provider: ${providerLabel}
-Email: ${normalizedEmail}`);
-
-			// New users start with hobby plan
-			return {
-				...userInfo,
-				email: normalizedEmail,
-				id: userId,
-				plan_type: "hobby",
-				created_at: newUser?.created_at as string,
-				updated_at: newUser?.updated_at as string,
-			};
+			.bind(profile.provider, profile.provider_id)
+			.first<Pick<User, "id" | "created_at">>();
+		if (
+			!existing &&
+			(await this.env.DB.prepare("SELECT 1 FROM users WHERE LOWER(email)=?").bind(email).first())
+		) {
+			throw Error(emailConflict);
 		}
-	}
-
-	/**
-	 * Generates JWT for website auth.
-	 */
-	private async generateJwtToken(user: UserProfile): Promise<{
-		token: string;
-		expiresAt: string;
-	}> {
-		const planType = await getUserPlanType(user.id, this.env.DB);
-		const permissions = getPlanPermissions(planType);
-
-		const userForToken: User = {
-			id: user.id,
-			email: user.email,
-			name: user.name,
-			avatar: user.avatar,
-			provider: user.provider ?? "oauth",
-			created_at: user.created_at!,
-			updated_at: user.updated_at!,
+		const now = new Date().toISOString();
+		const user: User = {
+			...profile,
+			email,
+			id: existing?.id ?? crypto.randomUUID(),
+			created_at: existing?.created_at ?? now,
+			updated_at: now,
 		};
-
-		const session = await issueWebSession(
-			this.env.DB,
-			userForToken,
-			planType,
-			permissions,
-			this.env.JWT_SECRET,
-			true,
-		);
-		return { token: session.token, expiresAt: session.expires_at };
+		const writeUser = existing
+			? this.env.DB.prepare(
+					"UPDATE users SET email=?,name=?,avatar=?,last_login=?,updated_at=? WHERE id=?",
+				).bind(email, user.name, user.avatar ?? null, now, now, user.id)
+			: this.env.DB.prepare(
+					"INSERT INTO users(id,email,name,avatar,provider,provider_id,last_login,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?)",
+				).bind(
+					user.id,
+					email,
+					user.name,
+					user.avatar ?? null,
+					profile.provider,
+					profile.provider_id,
+					now,
+					now,
+					now,
+				);
+		const plan = existing ? await getUserPlanType(user.id, this.env.DB) : "hobby";
+		try {
+			const { token } = await issueWebSession(
+				this.env.DB,
+				user,
+				plan,
+				getPlanPermissions(plan),
+				this.env.JWT_SECRET,
+				{ handoff: true, writeUser },
+			);
+			if (!existing)
+				await notifyTelegram(
+					`👤 New OAuth Registration\nProvider: ${profile.provider}\nEmail: ${email}`,
+				);
+			return token;
+		} catch (error) {
+			if (
+				error instanceof Error &&
+				error.message.includes("UNIQUE constraint failed: users.email")
+			) {
+				throw Error(emailConflict);
+			}
+			throw error;
+		}
 	}
 }

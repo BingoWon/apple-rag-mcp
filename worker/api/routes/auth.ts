@@ -39,6 +39,11 @@ app.post("/logout", authMiddleware, async (c) => {
 	return c.json({ success: true });
 });
 
+const AuthErrorSchema = z.object({
+	success: z.boolean(),
+	error: z.object({ code: z.string(), message: z.string() }),
+});
+
 // Register route (modernized)
 const registerRoute = createRoute({
 	method: "post",
@@ -53,6 +58,10 @@ const registerRoute = createRoute({
 		},
 	},
 	responses: {
+		500: {
+			description: "Authentication service unavailable",
+			content: { "application/json": { schema: AuthErrorSchema } },
+		},
 		201: {
 			description: "User registered successfully",
 			content: {
@@ -68,13 +77,7 @@ const registerRoute = createRoute({
 			description: "Bad request",
 			content: {
 				"application/json": {
-					schema: z.object({
-						success: z.boolean(),
-						error: z.object({
-							code: z.string(),
-							message: z.string(),
-						}),
-					}),
+					schema: AuthErrorSchema,
 				},
 			},
 		},
@@ -82,13 +85,7 @@ const registerRoute = createRoute({
 			description: "Email already exists",
 			content: {
 				"application/json": {
-					schema: z.object({
-						success: z.boolean(),
-						error: z.object({
-							code: z.string(),
-							message: z.string(),
-						}),
-					}),
+					schema: AuthErrorSchema,
 				},
 			},
 		},
@@ -108,7 +105,7 @@ app.openapi(registerRoute, async (c) => {
 
 		return c.json({ success: true, data: result.data }, 201);
 	} else {
-		const status = result.error?.code === "EMAIL_ALREADY_EXISTS" ? 409 : 400;
+		const status = result.error?.code === "EMAIL_ALREADY_EXISTS" ? 409 : 500;
 		return c.json(
 			{
 				success: false,
@@ -136,6 +133,10 @@ const loginRoute = createRoute({
 		},
 	},
 	responses: {
+		500: {
+			description: "Authentication service unavailable",
+			content: { "application/json": { schema: AuthErrorSchema } },
+		},
 		200: {
 			description: "Login successful",
 			content: {
@@ -151,13 +152,7 @@ const loginRoute = createRoute({
 			description: "Invalid credentials",
 			content: {
 				"application/json": {
-					schema: z.object({
-						success: z.boolean(),
-						error: z.object({
-							code: z.string(),
-							message: z.string(),
-						}),
-					}),
+					schema: AuthErrorSchema,
 				},
 			},
 		},
@@ -182,7 +177,7 @@ app.openapi(loginRoute, async (c) => {
 					message: result.error?.message || "Login failed",
 				},
 			},
-			401,
+			result.error.code === "INVALID_CREDENTIALS" ? 401 : 500,
 		);
 	}
 });

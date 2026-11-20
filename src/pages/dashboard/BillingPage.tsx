@@ -1,39 +1,20 @@
-import { Suspense, useEffect, useRef } from "react";
-import toast from "react-hot-toast";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useSearchParams } from "react-router-dom";
 import { SubscriptionCard } from "@/components/billing/SubscriptionCard";
 import { PricingSection } from "@/components/sections/PricingSection";
+import { Button } from "@/components/ui/Button";
 import { useDashboardStore } from "@/stores/dashboard";
 
-function BillingPageContent() {
+export default function BillingPage() {
 	const { t } = useTranslation();
-	const [searchParams] = useSearchParams();
-	const { subscription, currentUsage, fetchSubscription, fetchCurrentUsage } = useDashboardStore();
 
-	const processedParams = useRef(new Set<string>());
+	const { subscription, currentUsage, errors, fetchSubscription, fetchCurrentUsage } =
+		useDashboardStore();
 
 	useEffect(() => {
 		fetchSubscription();
 		fetchCurrentUsage();
-
-		const successParam = searchParams.get("success");
-		if (successParam === "true" && !processedParams.current.has("success")) {
-			processedParams.current.add("success");
-			toast.success(t("billing.payment_success"));
-		}
-
-		const refreshParam = searchParams.get("refresh");
-		if (refreshParam === "true" && !processedParams.current.has("refresh")) {
-			processedParams.current.add("refresh");
-
-			const url = new URL(window.location.href);
-			url.searchParams.delete("refresh");
-			window.history.replaceState({}, "", url.toString());
-
-			toast.success(t("billing.subscription_updated"));
-		}
-	}, [fetchSubscription, fetchCurrentUsage, searchParams, t]);
+	}, [fetchSubscription, fetchCurrentUsage]);
 
 	return (
 		<div className="space-y-6">
@@ -44,15 +25,17 @@ function BillingPageContent() {
 
 			{subscription && <SubscriptionCard subscription={subscription} usage={currentUsage} />}
 
-			{(!subscription || subscription.plan_id === "hobby") && <PricingSection />}
+			{errors.subscription ? (
+				<div role="alert" className="flex items-center gap-3">
+					<span>{t("billing.load_error")}</span>
+					<Button variant="outline" onClick={() => void fetchSubscription()}>
+						{t("common.retry")}
+					</Button>
+				</div>
+			) : (
+				!subscription && <p role="status">{t("billing.loading")}</p>
+			)}
+			{subscription?.plan_id === "hobby" && !errors.subscription && <PricingSection />}
 		</div>
-	);
-}
-
-export default function BillingPage() {
-	return (
-		<Suspense fallback={<div></div>}>
-			<BillingPageContent />
-		</Suspense>
 	);
 }

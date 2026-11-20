@@ -43,3 +43,17 @@ test("a lost commit acknowledgement refunds both counts exactly once", async (t)
 	);
 	assert.equal(f.sql.prepare("SELECT sum(count) AS n FROM usage_counters").get()?.n, 0);
 });
+
+test("failure to write the minute counter leaves the weekly counter unchanged", async (t) => {
+	const f = await fixture();
+	t.after(() => f.close());
+	f.sql.exec(
+		"CREATE TRIGGER reject_minute BEFORE INSERT ON usage_counters WHEN NEW.period='minute' BEGIN SELECT RAISE(ABORT,'fixture minute counter failure'); END",
+	);
+	const service = new RateLimitService(f.env.DB);
+	await assert.rejects(
+		service.checkLimits("203.0.113.12", { isAuthenticated: false }),
+		/fixture minute/,
+	);
+	assert.equal(f.sql.prepare("SELECT count(*) n FROM usage_counters").get()?.n, 0);
+});

@@ -14,7 +14,7 @@ export async function issueWebSession(
 	plan: string,
 	permissions: string[],
 	secret: string,
-	handoff = false,
+	{ handoff = false, writeUser }: { handoff?: boolean; writeUser?: D1PreparedStatement } = {},
 ) {
 	const id = crypto.randomUUID();
 	const exp = Math.floor(Date.now() / 1000) + lifetime;
@@ -33,18 +33,18 @@ export async function issueWebSession(
 		.setIssuedAt()
 		.setExpirationTime(exp)
 		.sign(key(secret));
-	const issued = await db
+	const session = db
 		.prepare(`INSERT INTO web_sessions(id,user_id,expires_at,handoff_until)
- SELECT ?,id,?,? FROM users WHERE id=? AND (provider!='email' OR password_hash IS ?) RETURNING id`)
+ VALUES(?,(SELECT id FROM users WHERE id=? AND (provider!='email' OR password_hash IS ?)),?,?)`)
 		.bind(
 			id,
-			exp,
-			handoff ? Math.floor(Date.now() / 1000) + 60 : null,
 			user.id,
 			user.password_hash ?? null,
-		)
-		.first();
-	if (!issued) throw Error("Account credentials changed during login");
+			exp,
+			handoff ? Math.floor(Date.now() / 1000) + 60 : null,
+		);
+	if (writeUser) await db.batch([writeUser, session]);
+	else await session.run();
 	return { token, expires_at: new Date(exp * 1000).toISOString() };
 }
 

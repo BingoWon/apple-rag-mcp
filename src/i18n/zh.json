@@ -196,6 +196,7 @@
 		"subtitle": "，让智能体通过 MCP / CLI 查阅 Apple 官方资料，由 RAG 检索与 <jev>Jev</jev> 排序提供支持。"
 	},
 	"auth": {
+		"existing_method": "这个邮箱已注册，请使用原来的方式登录。",
 		"welcome_back": "欢迎回来",
 		"sign_in_subtitle": "选择你喜欢的登录方式",
 		"welcome_register": "创建 Apple RAG 账号",
@@ -431,8 +432,7 @@
 		"cancelled": "已取消",
 		"past_due": "逾期",
 		"incomplete": "未完成",
-		"payment_success": "支付成功！\n订阅已更新。",
-		"subscription_updated": "订阅已更新！\n你的更改已保存。",
+		"load_error": "暂时无法加载账单信息。",
 		"manage_error": "无法打开账单管理页面，如问题持续请联系客服。",
 		"plan_suffix": "方案",
 		"expires_on": "到期时间：{{date}}",
@@ -774,14 +774,14 @@
 		"crafted": "为智能体而建。"
 	},
 	"success": {
-		"title": "支付成功！",
-		"subtitle": "Apple RAG Pro 已生效，可通过 MCP / CLI 接入你的智能体。",
-		"whats_next": "接下来",
+		"title": "查看结账结果",
+		"subtitle": "当前套餐可在账单页查看。付款确认后，Pro 权益会自动生效。",
+		"pro_features": "Apple RAG Pro 包含的权益",
 		"feature_queries": "每周 50,000 次工具调用",
 		"feature_rpm": "每分钟 50 次请求",
 		"feature_rag": "关键词与语义混合搜索，再由 <jev>Jev</jev> 进行相关性重排",
 		"feature_analytics": "分别查看搜索、浏览目录和读取原文的用量趋势",
-		"go_dashboard": "前往控制台",
+		"view_billing": "查看账单",
 		"back_home": "回到首页"
 	},
 	"errors": {

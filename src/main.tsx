@@ -6,18 +6,12 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Providers } from "@/components/providers/Providers";
 import { CookieConsent } from "@/components/ui/CookieConsent";
 import { getSiteMetadata, siteStructuredJSON } from "../shared/site";
+import { oauthReturnState } from "./lib/auth-return";
 import { AppRouter } from "./router";
 import "./i18n";
 import "./styles/globals.css";
 
-const FabButton = lazy(() =>
-	import("@/components/ui/FabButton").then(({ FabButton }) => ({ default: FabButton })),
-);
-const UnreadReplyNotification = lazy(() =>
-	import("@/components/UnreadReplyNotification").then(({ UnreadReplyNotification }) => ({
-		default: UnreadReplyNotification,
-	})),
-);
+const AccountOverlays = lazy(() => import("@/components/AccountOverlays"));
 
 function SiteMetadata() {
 	const { pathname } = useLocation();
@@ -70,8 +64,10 @@ function SiteMetadata() {
 }
 
 function CustomerOverlays() {
-	const { pathname } = useLocation();
+	const location = useLocation();
+	const { pathname } = location;
 	if (
+		oauthReturnState(location) ||
 		pathname === "/admin" ||
 		pathname.startsWith("/admin/") ||
 		pathname.startsWith("/cli/") ||
@@ -82,8 +78,7 @@ function CustomerOverlays() {
 		return null;
 	return (
 		<Suspense fallback={null}>
-			<FabButton />
-			<UnreadReplyNotification />
+			<AccountOverlays />
 		</Suspense>
 	);
 }
