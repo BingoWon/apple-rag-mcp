@@ -19,7 +19,14 @@ import {
 	IconVolume3,
 	IconWorld,
 } from "@tabler/icons-react";
-import { type MotionValue, motion, useScroll, useTransform } from "motion/react";
+import {
+	type MotionValue,
+	motion,
+	useMotionValueEvent,
+	useReducedMotion,
+	useScroll,
+	useTransform,
+} from "motion/react";
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import { HeroContent } from "@/components/sections/HeroContent";
@@ -27,22 +34,37 @@ import { cn } from "@/lib/utils";
 
 export const MacbookScroll = () => {
 	const ref = useRef<HTMLDivElement>(null);
+	const laptop = useRef<HTMLDivElement>(null);
 	const { scrollYProgress } = useScroll({
 		target: ref,
 		offset: ["start start", "end start"],
 	});
+	const { scrollYProgress: screenProgress } = useScroll({
+		target: laptop,
+		offset: ["start 65%", "end 45%"],
+	});
+	const videoProgress = useTransform(() =>
+		Math.min(screenProgress.get(), scrollYProgress.get() * 3),
+	);
 
 	const [isMobile, setIsMobile] = useState(false);
+	const [lidTravel, setLidTravel] = useState(1000);
 
 	useEffect(() => {
-		if (window && window.innerWidth < 768) {
-			setIsMobile(true);
-		}
+		const resize = () => {
+			const mobile = window.innerWidth < 768;
+			setIsMobile(mobile);
+			// Leave room to see the open lid even in a short landscape viewport.
+			setLidTravel(Math.min(mobile ? 1500 : 1000, 2 * Math.max(0, window.innerHeight - 384)));
+		};
+		resize();
+		window.addEventListener("resize", resize);
+		return () => window.removeEventListener("resize", resize);
 	}, []);
 
 	const scaleX = useTransform(scrollYProgress, [0, 0.3], [1.2, isMobile ? 1.4 : 2]);
 	const scaleY = useTransform(scrollYProgress, [0, 0.3], [0.6, isMobile ? 1.4 : 2]);
-	const translate = useTransform(scrollYProgress, [0, 1], [0, isMobile ? 1500 : 1000]);
+	const translate = useTransform(scrollYProgress, [0, 1], [0, lidTravel]);
 	const rotate = useTransform(scrollYProgress, [0.1, 0.12, 0.3], [-28, -28, 0]);
 	const textTransform = useTransform(scrollYProgress, [0, 0.3], [0, 100]);
 	const textOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
@@ -60,9 +82,15 @@ export const MacbookScroll = () => {
 			>
 				<HeroContent />
 			</motion.div>
-			<div className="scale-50 transform [perspective:800px] sm:scale-75 md:scale-100">
+			<div ref={laptop} className="scale-50 transform [perspective:800px] sm:scale-75 md:scale-100">
 				{/* Lid */}
-				<Lid scaleX={scaleX} scaleY={scaleY} rotate={rotate} translate={translate} />
+				<Lid
+					scaleX={scaleX}
+					scaleY={scaleY}
+					rotate={rotate}
+					translate={translate}
+					progress={videoProgress}
+				/>
 				{/* Base area */}
 				<div className="relative -z-10 h-[22rem] w-[32rem] overflow-hidden rounded-2xl bg-tertiary">
 					{/* above keyboard bar */}
@@ -93,12 +121,54 @@ export const Lid = ({
 	scaleY,
 	rotate,
 	translate,
+	progress,
 }: {
 	scaleX: MotionValue<number>;
 	scaleY: MotionValue<number>;
 	rotate: MotionValue<number>;
 	translate: MotionValue<number>;
+	progress: MotionValue<number>;
 }) => {
+	const video = useRef<HTMLVideoElement>(null);
+	const requestedFrame = useRef(-1);
+	const reducedMotion = useReducedMotion();
+	const [failed, setFailed] = useState(false);
+	const poster = "/iphone-duo-hero.webp";
+	const mediaClass = "absolute inset-0 block h-full w-full rounded-lg bg-white object-contain";
+	useEffect(() => {
+		const el = video.current;
+		if (!el || reducedMotion || failed) return;
+		const controller = new AbortController();
+		let source: string;
+		// Static hosting can return 200 to byte-range requests. A local Blob stays seekable.
+		async function load() {
+			const response = await fetch("/iphone-duo-hero.mp4", { signal: controller.signal });
+			if (!response.ok) throw new Error("Video unavailable");
+			const blob = await response.blob();
+			if (!controller.signal.aborted && el) {
+				source = URL.createObjectURL(blob);
+				el.src = source;
+			}
+		}
+		load().catch(() => {
+			if (!controller.signal.aborted) setFailed(true);
+		});
+		return () => {
+			controller.abort();
+			if (source) URL.revokeObjectURL(source);
+		};
+	}, [failed, reducedMotion]);
+	const syncFrame = () => {
+		const el = video.current;
+		if (!el || el.readyState < 2 || el.seeking || !Number.isFinite(el.duration)) return;
+		// Seek to the center of a frame so scrolling back lands on the same image.
+		const lastFrame = Math.round(el.duration * 30) - 1;
+		const frame = Math.round(progress.get() * lastFrame);
+		if (requestedFrame.current === frame) return;
+		requestedFrame.current = frame;
+		el.currentTime = (frame + 0.5) / 30;
+	};
+	useMotionValueEvent(progress, "change", syncFrame);
 	return (
 		<div className="relative [perspective:800px]">
 			<div
@@ -117,6 +187,7 @@ export const Lid = ({
 				></div>
 			</div>
 			<motion.div
+				aria-hidden="true"
 				style={{
 					scaleX: scaleX,
 					scaleY: scaleY,
@@ -127,19 +198,21 @@ export const Lid = ({
 				className="absolute inset-0 h-96 w-[32rem] rounded-2xl bg-[#010101] p-2 [will-change:transform]"
 			>
 				<div className="absolute inset-0 rounded-lg bg-[#272729]" />
-				<picture className="absolute inset-0 block">
-					<source srcSet="/wwdc26-macbook-screen.avif" type="image/avif" />
-					<img
-						src="/wwdc26-macbook-screen.jpg"
-						alt="WWDC26 Apple Developer Documentation"
-						width={1600}
-						height={1200}
-						decoding="async"
-						fetchPriority="high"
-						loading="eager"
-						className="absolute inset-0 block h-full w-full rounded-lg object-cover object-center"
+				{reducedMotion || failed ? (
+					<img src={poster} alt="" className={mediaClass} />
+				) : (
+					<video
+						ref={video}
+						poster={poster}
+						preload="auto"
+						muted
+						playsInline
+						className={mediaClass}
+						onLoadedData={syncFrame}
+						onSeeked={syncFrame}
+						onError={() => setFailed(true)}
 					/>
-				</picture>
+				)}
 			</motion.div>
 		</div>
 	);
