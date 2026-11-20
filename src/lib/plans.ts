@@ -12,6 +12,8 @@ function buildPricingPlans(): PricingPlan[] {
 			quota: 50,
 			popular: false,
 			action: "register",
+			gradientFrom: "from-gray-500",
+			gradientTo: "to-yellow-500",
 			features: [
 				i18n.t("plans.tool_calls_per_week", { count: 50 }),
 				i18n.t("plans.requests_per_minute", { count: 5 }),
@@ -33,6 +35,8 @@ function buildPricingPlans(): PricingPlan[] {
 			quota: 50000,
 			popular: true,
 			action: "modal",
+			gradientFrom: "from-green-500",
+			gradientTo: "to-brand-tertiary",
 			features: [
 				i18n.t("plans.tool_calls_per_week", { count: 50000 }),
 				i18n.t("plans.requests_per_minute", { count: 50 }),
@@ -54,6 +58,8 @@ function buildPricingPlans(): PricingPlan[] {
 			quota: -1,
 			popular: false,
 			action: "contact",
+			gradientFrom: "from-red-400",
+			gradientTo: "to-brand-tertiary",
 			features: [
 				i18n.t("plans.team_usage"),
 				i18n.t("plans.request_capacity"),
@@ -94,6 +100,8 @@ export const createPricingTier = (plan: PricingPlan): PricingTier => ({
 	features: plan.features,
 	action: plan.action,
 	popular: plan.popular ?? false,
+	gradientFrom: plan.gradientFrom,
+	gradientTo: plan.gradientTo,
 	href: getActionHref(plan.action),
 });
 

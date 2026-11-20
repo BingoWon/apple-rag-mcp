@@ -227,3 +227,10 @@ for model attribution, and use the other sections to explain sources and actions
 Corpus statistics distinguish loading, failure and zero values. Subscription
 rows describe what happens at period end in the selected language. Load optional
 notification effects and command highlighting only when the relevant UI opens.
+
+## Pricing card interaction
+
+The homepage and the free account billing page share the original pricing cards.
+Moving the pointer reveals the character pattern and the gradient assigned to
+each plan. Keep this interaction when updating copy, contrast or checkout.
+The Pro button opens the accessible, scrollable plan chooser.

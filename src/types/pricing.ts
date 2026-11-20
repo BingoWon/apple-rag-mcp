@@ -31,6 +31,8 @@ export interface PricingPlan {
 	popular?: boolean;
 	features: string[];
 	action: PlanAction;
+	gradientFrom: string;
+	gradientTo: string;
 }
 
 export interface PricingTier {
@@ -41,5 +43,7 @@ export interface PricingTier {
 	features: string[];
 	action: PlanAction;
 	popular: boolean;
+	gradientFrom: string;
+	gradientTo: string;
 	href: string;
 }
