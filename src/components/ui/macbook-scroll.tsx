@@ -30,12 +30,11 @@ import {
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import { HeroContent } from "@/components/sections/HeroContent";
-import type { HeroPreview } from "@/dev/hero-preview";
 import { cn } from "@/lib/utils";
 
-export const HERO_VIDEO_END_PERCENT = 70;
+const HERO_VIDEO_END_PERCENT = 70;
 
-export const MacbookScroll = ({ preview }: { preview?: HeroPreview }) => {
+export const MacbookScroll = () => {
 	const ref = useRef<HTMLDivElement>(null);
 	const laptop = useRef<HTMLDivElement>(null);
 	const { scrollYProgress } = useScroll({
@@ -43,15 +42,11 @@ export const MacbookScroll = ({ preview }: { preview?: HeroPreview }) => {
 		offset: ["start start", "end start"],
 	});
 	const [autoStart, setAutoStart] = useState(0);
-	const [start, end] = (import.meta.env.DEV && preview?.range) || [
-		autoStart,
-		HERO_VIDEO_END_PERCENT,
-	];
 	const videoProgress = useTransform(() => {
 		const percent = scrollYProgress.get() * 100;
-		if (percent >= end) return 1;
-		if (percent <= start) return 0;
-		return (percent - start) / (end - start);
+		if (percent >= HERO_VIDEO_END_PERCENT) return 1;
+		if (percent <= autoStart) return 0;
+		return (percent - autoStart) / (HERO_VIDEO_END_PERCENT - autoStart);
 	});
 
 	const [isMobile, setIsMobile] = useState(false);
@@ -81,7 +76,7 @@ export const MacbookScroll = ({ preview }: { preview?: HeroPreview }) => {
 		};
 	}, []);
 
-	const upright = import.meta.env.DEV && preview ? preview.upright / 100 : 0.3;
+	const upright = 0.3;
 	const scaleX = useTransform(scrollYProgress, [0, upright], [1.2, isMobile ? 1.4 : 2]);
 	const scaleY = useTransform(scrollYProgress, [0, upright], [0.6, isMobile ? 1.4 : 2]);
 	const translate = useTransform(scrollYProgress, [0, 1], [0, lidTravel]);
@@ -92,9 +87,6 @@ export const MacbookScroll = ({ preview }: { preview?: HeroPreview }) => {
 	return (
 		<div
 			ref={ref}
-			style={
-				import.meta.env.DEV && preview?.height ? { minHeight: `${preview.height}vh` } : undefined
-			}
 			className="relative flex min-h-[150vh] shrink-0 transform flex-col items-center justify-start py-8 md:min-h-[200vh] md:py-12"
 		>
 			<motion.div
@@ -113,7 +105,6 @@ export const MacbookScroll = ({ preview }: { preview?: HeroPreview }) => {
 					rotate={rotate}
 					translate={translate}
 					progress={videoProgress}
-					preview={import.meta.env.DEV ? preview : undefined}
 				/>
 				{/* Base area */}
 				<div className="relative -z-10 h-[22rem] w-[32rem] overflow-hidden rounded-2xl bg-tertiary">
@@ -146,14 +137,12 @@ export const Lid = ({
 	rotate,
 	translate,
 	progress,
-	preview,
 }: {
 	scaleX: MotionValue<number>;
 	scaleY: MotionValue<number>;
 	rotate: MotionValue<number>;
 	translate: MotionValue<number>;
 	progress: MotionValue<number>;
-	preview?: HeroPreview;
 }) => {
 	const video = useRef<HTMLVideoElement>(null);
 	const requestedFrame = useRef(-1);
@@ -162,7 +151,6 @@ export const Lid = ({
 	const poster = "/iphone-duo-hero.webp";
 	const mediaClass =
 		"absolute inset-0 block h-full w-full rounded-lg bg-white object-contain object-bottom";
-	const mediaStyle = import.meta.env.DEV && preview ? { objectFit: preview.fit } : undefined;
 	useEffect(() => {
 		const el = video.current;
 		if (!el || reducedMotion || failed) return;
@@ -222,18 +210,12 @@ export const Lid = ({
 					rotateX: rotate,
 					translateY: translate,
 					transformOrigin: "top",
-					...(import.meta.env.DEV &&
-						preview?.aspect === "video" && {
-							aspectRatio: "80 / 53",
-							height: "auto",
-							bottom: "auto",
-						}),
 				}}
 				className="absolute inset-0 h-96 w-[32rem] rounded-2xl bg-[#010101] p-2 [will-change:transform]"
 			>
 				<div className="absolute inset-0 rounded-lg bg-[#272729]" />
 				{reducedMotion || failed ? (
-					<img src={poster} alt="" className={mediaClass} style={mediaStyle} />
+					<img src={poster} alt="" className={mediaClass} />
 				) : (
 					<video
 						ref={video}
@@ -242,7 +224,6 @@ export const Lid = ({
 						muted
 						playsInline
 						className={mediaClass}
-						style={mediaStyle}
 						onLoadedData={syncFrame}
 						onSeeked={syncFrame}
 						onError={() => setFailed(true)}

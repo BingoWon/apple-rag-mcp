@@ -1,9 +1,9 @@
 import ClaudeCode from "@thesvg/react/claude-code";
 import Cline from "@thesvg/react/cline";
-import Codex from "@thesvg/react/codex-openai";
 import Cursor from "@thesvg/react/cursor";
 import DeepSeek from "@thesvg/react/deepseek";
 import Antigravity from "@thesvg/react/google-antigravity";
+import ChatGPT from "@thesvg/react/openai-chatgpt";
 import OpenCode from "@thesvg/react/opencode";
 import Pi from "@thesvg/react/pi";
 import TRAE from "@thesvg/react/trae";
@@ -19,7 +19,7 @@ import {
 import { MCP_CLIENT_NAMES, type MCPClientId, mcpClientIds } from "../../shared/mcp-clients";
 
 const guides = {
-	codex: { Logo: Codex, href: "https://developers.openai.com/codex/mcp" },
+	codex: { Logo: ChatGPT, href: "https://developers.openai.com/codex/mcp" },
 	claude: { Logo: ClaudeCode, href: "https://code.claude.com/docs/en/mcp" },
 	opencode: { Logo: OpenCode, href: "https://opencode.ai/docs/mcp-servers/" },
 	pi: { Logo: Pi, href: "https://github.com/earendil-works/pi" },

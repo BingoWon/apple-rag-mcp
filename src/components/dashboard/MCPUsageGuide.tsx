@@ -5,11 +5,10 @@ import {
 	IconSettings,
 	IconShieldCheck,
 	IconSquareRoundedPlus,
-	IconTerminal,
 	IconWorld,
 } from "@tabler/icons-react";
 import ClaudeCode from "@thesvg/react/claude-code";
-import OpenAI from "@thesvg/react/openai-chatgpt";
+import ChatGPT from "@thesvg/react/openai-chatgpt";
 import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
@@ -290,11 +289,7 @@ export function MCPUsageGuide() {
 											>
 												<div className="flex items-center gap-3">
 													<div className="flex items-center gap-1.5">
-														<OpenAI aria-hidden="true" className="size-5" />
-														<span className="text-sm font-semibold text-light">OpenAI</span>
-													</div>
-													<div className="flex items-center gap-1.5">
-														<IconTerminal className="h-5 w-5 text-light" />
+														<ChatGPT aria-hidden="true" className="size-5 text-light" />
 														<span className="text-sm font-semibold text-light">Codex CLI</span>
 													</div>
 													<span className="text-sm text-muted">{t("guide.codex_config")}</span>

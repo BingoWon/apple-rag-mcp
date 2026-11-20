@@ -1,8 +1,5 @@
-import { lazy, Suspense } from "react";
 import { MacbookScroll } from "@/components/ui/macbook-scroll";
 import { Spotlight } from "@/components/ui/spotlight";
-
-const LocalHero = import.meta.env.DEV ? lazy(() => import("@/dev/HeroDebug")) : null;
 
 export function HeroSection() {
 	return (
@@ -10,13 +7,7 @@ export function HeroSection() {
 			<Spotlight />
 			<div className="relative z-10 pt-30">
 				<div className="[&>div]:!bg-transparent">
-					{LocalHero && ["localhost", "127.0.0.1", "[::1]"].includes(location.hostname) ? (
-						<Suspense fallback={null}>
-							<LocalHero />
-						</Suspense>
-					) : (
-						<MacbookScroll />
-					)}
+					<MacbookScroll />
 				</div>
 			</div>
 		</div>

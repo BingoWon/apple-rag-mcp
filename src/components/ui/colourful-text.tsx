@@ -1,62 +1,4 @@
-import { useLayoutEffect, useRef } from "react";
-
 function ColourfulText({ text }: { text: string }) {
-	const spansRef = useRef<Array<HTMLSpanElement | null>>([]);
-
-	useLayoutEffect(() => {
-		if (!import.meta.env.DEV) return;
-
-		const reportLayout = (phase: string) => {
-			const spans = spansRef.current.filter((span): span is HTMLSpanElement => span !== null);
-			const rects = spans.map((span, index) => {
-				const rect = span.getBoundingClientRect();
-				const style = getComputedStyle(span);
-				return {
-					index,
-					text: span.textContent,
-					left: Math.round(rect.left * 100) / 100,
-					top: Math.round(rect.top * 100) / 100,
-					width: Math.round(rect.width * 100) / 100,
-					height: Math.round(rect.height * 100) / 100,
-					display: style.display,
-					color: style.color,
-					opacity: style.opacity,
-					transform: style.transform,
-				};
-			});
-			const uniquePositions = new Set(rects.map((rect) => `${rect.left}:${rect.top}`)).size;
-			const heading = spans[0]?.closest("h1");
-			const headingRect = heading?.getBoundingClientRect();
-
-			console.info("[hero-debug]", {
-				phase,
-				text,
-				spanCount: rects.length,
-				diagnosis: rects.length > 1 && uniquePositions === 1 ? "stacked-layout" : "inline-layout",
-				heading: headingRect
-					? {
-							left: Math.round(headingRect.left * 100) / 100,
-							top: Math.round(headingRect.top * 100) / 100,
-							width: Math.round(headingRect.width * 100) / 100,
-							height: Math.round(headingRect.height * 100) / 100,
-						}
-					: null,
-				fonts: document.fonts?.status,
-				rects,
-			});
-		};
-
-		const timers = [0, 16, 64, 250].map((delay) =>
-			window.setTimeout(() => reportLayout(`t+${delay}ms`), delay),
-		);
-
-		return () => {
-			for (const timer of timers) {
-				window.clearTimeout(timer);
-			}
-		};
-	}, [text]);
-
 	// 精心挑选的14个高质感颜色：绿→黄→橙→红→紫→蓝
 	const premiumColors = [
 		"rgb(16, 185, 129)", // 1. 翡翠绿 - 高级翡翠色，深邃而优雅
@@ -90,9 +32,6 @@ function ColourfulText({ text }: { text: string }) {
 		return (
 			<span
 				key={`${char}-${index}`}
-				ref={(span) => {
-					spansRef.current[index] = span;
-				}}
 				className="inline-block whitespace-pre font-sans [letter-spacing:0]"
 			>
 				<span style={{ color: getColor() }}>{char}</span>
