@@ -25,6 +25,7 @@ test("failed URL sync leaves the source unchanged and a later collection retries
 		code: "55P03",
 	});
 	const database = {
+		recordChecks: async (checks: { record: DatabaseRecord }[]) => checks.map((c) => c.record),
 		getChunkLayout: async () => [],
 		getBatchRecords: async () => {
 			events.push("claim");
@@ -101,4 +102,37 @@ test("claim failures keep their cause and identify the database stage", async ()
 			error.message.includes("PostgreSQL batch claim failed") &&
 			error.cause === cause,
 	);
+});
+
+test("a rejected embedding keeps the previous index and records a retry for the page", async (t) => {
+	const url = "https://developer.apple.com/documentation/swift/array";
+	const record = { id: "source", collect_count: 2, url, title: "old", content: "cached" };
+	const checked: string[] = [];
+	const database = {
+		getBatchRecords: async () => [record],
+		recordChecks: async (checks: { record: { url: string }; outcome: string }[]) =>
+			checks.map((c) => {
+				checked.push(c.outcome);
+				return c.record;
+			}),
+	};
+	t.mock.method(AppleAPIClient.prototype, "fetchDocuments", async () => [
+		{ url, data: { metadata: { title: "Array" } } },
+	]);
+	t.mock.method(ContentProcessor.prototype, "processDocuments", async () => [
+		{ url, data: { title: "Array", content: "Updated", extractedUrls: [] } },
+	]);
+	t.mock.method(
+		globalThis,
+		"fetch",
+		async () => new Response("Unavailable", { status: 429, headers: { "Retry-After": "86400" } }),
+	);
+	const result = await new AppleDocCollector(database as unknown as PostgreSQLManager, "fixture", {
+		batchSize: 30,
+		forceUpdateAll: false,
+	}).execute();
+	assert.deepEqual(checked, ["retry"]);
+	assert.equal(result.failed, 1);
+	assert.equal(result.updated, 0);
+	assert.equal(result.stale, 0);
 });

@@ -1,10 +1,9 @@
 import assert from "node:assert/strict";
 import { readFileSync, writeFileSync } from "node:fs";
-import postgres from "postgres";
 import { AppleDocCollector } from "../../worker/collector/AppleDocCollector.ts";
 import { ContentProcessor } from "../../worker/collector/ContentProcessor.ts";
 import {
-	COLLECTOR_CONNECTION_PARAMETERS,
+	collectorConnection,
 	PostgreSQLManager,
 } from "../../worker/collector/PostgreSQLManager.ts";
 
@@ -18,23 +17,7 @@ assert.ok(process.env.DEEPINFRA_API_KEY, "The collector embedding credential is 
 const { records: incidentRecords } = JSON.parse(readFileSync(inputPath, "utf8"));
 const ids = [...new Set(incidentRecords.map((record) => record.id))];
 assert.ok(ids.length > 0 && ids.length <= 50, "Recovery requires 1-50 explicit incident page IDs");
-const createClient = () =>
-	postgres({
-		host: process.env.RAG_DB_HOST,
-		port: Number(process.env.RAG_DB_PORT || "5432"),
-		database: process.env.RAG_DB_DATABASE,
-		username: process.env.RAG_DB_USER,
-		password: process.env.RAG_DB_PASSWORD,
-		ssl: process.env.RAG_DB_SSLMODE === "require",
-		max: 1,
-		idle_timeout: 0,
-		connect_timeout: 60,
-		connection: {
-			...COLLECTOR_CONNECTION_PARAMETERS,
-			application_name: "collector-targeted-recovery",
-		},
-		onnotice: () => {},
-	});
+const createClient = () => collectorConnection(process.env, "collector-targeted-recovery");
 const sql = createClient();
 const manager = new PostgreSQLManager(createClient);
 const started = new Date();

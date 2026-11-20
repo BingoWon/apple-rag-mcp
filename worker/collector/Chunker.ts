@@ -82,3 +82,22 @@ export function chunkText(text: string, title: string | null) {
 		total_chunks: blocks.length,
 	}));
 }
+
+export function matchesChunkLayout(
+	chunks: ReturnType<typeof chunkText>,
+	stored: (ReturnType<typeof chunkText>[number] & { indexed: boolean })[],
+) {
+	return (
+		stored.length === chunks.length &&
+		stored.every((v, i) => {
+			const chunk = chunks[i]!;
+			return (
+				v.indexed &&
+				v.chunk_index === i &&
+				v.total_chunks === chunk.total_chunks &&
+				v.title === chunk.title &&
+				v.content === chunk.content
+			);
+		})
+	);
+}

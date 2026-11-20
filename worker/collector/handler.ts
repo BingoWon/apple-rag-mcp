@@ -1,8 +1,7 @@
-import postgres from "postgres";
 import { createModelUsageRecorder, type ModelUsageRecorder } from "../services/model-usage.js";
 import type { Env } from "../shared/types.js";
 import { AppleDocCollector } from "./AppleDocCollector.js";
-import { COLLECTOR_CONNECTION_PARAMETERS, PostgreSQLManager } from "./PostgreSQLManager.js";
+import { collectorConnection, PostgreSQLManager } from "./PostgreSQLManager.js";
 import type { BatchConfig } from "./types/index.js";
 import { logger } from "./utils/logger.js";
 import { configureTelegram, notifyStats } from "./utils/telegram-notifier.js";
@@ -50,24 +49,7 @@ async function processAppleContent(
 
 	logger.info(`Database connecting: ${env.RAG_DB_HOST}:${env.RAG_DB_PORT}/${env.RAG_DB_DATABASE}`);
 
-	const createClient = () =>
-		postgres({
-			host: env.RAG_DB_HOST,
-			port: Number.parseInt(env.RAG_DB_PORT || "5432", 10),
-			database: env.RAG_DB_DATABASE,
-			username: env.RAG_DB_USER,
-			password: env.RAG_DB_PASSWORD || "",
-			ssl: env.RAG_DB_SSLMODE === "require",
-			max: 1,
-			idle_timeout: 0,
-			connect_timeout: 60,
-			keep_alive: 30,
-			connection: COLLECTOR_CONNECTION_PARAMETERS,
-			transform: { undefined: null },
-			onnotice: () => {},
-		});
-
-	const dbManager = new PostgreSQLManager(createClient);
+	const dbManager = new PostgreSQLManager(() => collectorConnection(env));
 	const collector = new AppleDocCollector(dbManager, env.DEEPINFRA_API_KEY, config, recordUsage);
 
 	try {

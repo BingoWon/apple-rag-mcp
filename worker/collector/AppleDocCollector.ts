@@ -1,6 +1,6 @@
 import type { ModelUsageRecorder } from "../services/model-usage.js";
 import { AppleAPIClient } from "./AppleAPIClient.js";
-import { chunkText } from "./Chunker.js";
+import { chunkText, matchesChunkLayout } from "./Chunker.js";
 import { ContentProcessor } from "./ContentProcessor.js";
 import { createEmbeddings } from "./EmbeddingProvider.js";
 import type { PostgreSQLManager } from "./PostgreSQLManager.js";
@@ -92,7 +92,7 @@ class AppleDocCollector {
 				record,
 				title,
 				content,
-				raw_json: raw.get(record.url) ?? null,
+				raw_json: raw.get(record.url) ?? JSON.stringify({ title, content }),
 				chunks: chunkText(content, title),
 			});
 		}
@@ -118,22 +118,7 @@ class AppleDocCollector {
 				layouts.set(row.url, rows);
 			}
 		const unchanged = new Set(
-			sameBody.filter((p) => {
-				const stored = layouts.get(p.record.url) ?? [];
-				return (
-					stored.length === p.chunks.length &&
-					stored.every((v, i) => {
-						const c = p.chunks[i]!;
-						return (
-							v.indexed &&
-							v.chunk_index === i &&
-							v.total_chunks === c.total_chunks &&
-							v.title === c.title &&
-							v.content === c.content
-						);
-					})
-				);
-			}),
+			sameBody.filter((p) => matchesChunkLayout(p.chunks, layouts.get(p.record.url) ?? [])),
 		);
 		const changed = pages.filter((p) => !unchanged.has(p));
 		const chunks = changed.flatMap((p) =>
@@ -143,24 +128,34 @@ class AppleDocCollector {
 			chunks.map((c) => (c.title ? `${c.title}\n\n${c.content}` : c.content)),
 			this.apiKey,
 			this.recordUsage,
-		);
-		const saved = changed.length
-			? await this.dbManager.batchUpdateFullRecords(
-					changed.map((p) => ({
-						...p.record,
-						raw_json: p.raw_json,
-						updated_at: new Date(),
-						title: p.title,
-						content: p.content,
-					})),
-					chunks.map((c, i) => ({ ...c, embedding: embeddings[i]! })),
-				)
-			: [];
+		).catch((error: unknown) => {
+			const reason = error instanceof Error ? error.message : String(error);
+			for (const page of changed)
+				failures.push({ record: page.record, error: `Embedding failed: ${reason}` });
+			return null;
+		});
+		const saved =
+			embeddings && changed.length
+				? await this.dbManager.batchUpdateFullRecords(
+						changed.map((p) => ({
+							...p.record,
+							raw_json: p.raw_json,
+							updated_at: new Date(),
+							title: p.title,
+							content: p.content,
+						})),
+						chunks.map((c, i) => ({ ...c, embedding: embeddings[i]! })),
+					)
+				: [];
 		const savedUrls = new Set(saved);
 		const nav = [...unchanged].filter(
 			(p) =>
 				p.raw_json &&
-				/^https:\/\/developer\.apple\.com\/documentation\/(swiftui|uikit)(\/|$)/.test(p.record.url),
+				!AppleAPIClient.isVideoUrl(p.record.url) &&
+				(ids ||
+					/^https:\/\/developer\.apple\.com\/documentation\/(swiftui|uikit)(\/|$)/.test(
+						p.record.url,
+					)),
 		);
 		if (nav.length)
 			await this.dbManager.updateRawDocuments(
@@ -189,13 +184,28 @@ class AppleDocCollector {
 					.map((p) => p.record.url)
 					.join("\n")}`,
 			);
+		const confirmed = await this.dbManager.recordChecks([
+			...[...unchanged].map((p) => ({ record: p.record, outcome: "unchanged" as const })),
+			...failed.map((f) => ({
+				record: f.record,
+				outcome:
+					/^(?:UNSUPPORTED_DOCUMENT|NO_SUBTITLES|EMPTY_TRANSCRIPT|DOCUMENT_JSON_UNAVAILABLE):/.test(
+						f.error,
+					)
+						? ("unavailable" as const)
+						: ("retry" as const),
+			})),
+		]);
+		const current = new Set(confirmed.map((r) => r.url));
+		const unchangedCount = [...unchanged].filter((p) => current.has(p.record.url)).length;
+		const failedCount = failed.filter((f) => current.has(f.record.url)).length;
 		const summary = {
 			claimed: records.length,
 			updated: saved.length,
-			unchanged: unchanged.size,
-			failed: failed.length,
+			unchanged: unchangedCount,
+			failed: failedCount,
 			deleted,
-			stale: changed.length - saved.length + removable.length - deleted,
+			stale: records.length - saved.length - unchangedCount - failedCount - deleted,
 			totalChunks: chunks.filter((c) => savedUrls.has(c.url)).length,
 		};
 		logger.info(`Collector batch: ${JSON.stringify(summary)}`);

@@ -1,9 +1,10 @@
-import type postgres from "postgres";
+import postgres from "postgres";
 import { readCorpusStats } from "../shared/corpus-stats.js";
 import {
 	isTransientPostgresConnectionError,
 	retryTransientPostgres,
 } from "../shared/postgres-retry.js";
+import type { Env } from "../shared/types.js";
 import type { DatabaseRecord } from "./types/index.js";
 import { logger } from "./utils/logger.js";
 
@@ -15,6 +16,35 @@ export const COLLECTOR_CONNECTION_PARAMETERS = {
 	tcp_user_timeout: 60_000,
 	client_connection_check_interval: 1_000,
 } as const;
+
+export function collectorConnection(
+	env: Pick<
+		Env,
+		| "RAG_DB_HOST"
+		| "RAG_DB_PORT"
+		| "RAG_DB_DATABASE"
+		| "RAG_DB_USER"
+		| "RAG_DB_PASSWORD"
+		| "RAG_DB_SSLMODE"
+	>,
+	applicationName = "apple-rag-collector",
+) {
+	return postgres({
+		host: env.RAG_DB_HOST,
+		port: Number(env.RAG_DB_PORT) || 5432,
+		database: env.RAG_DB_DATABASE,
+		username: env.RAG_DB_USER,
+		password: env.RAG_DB_PASSWORD,
+		ssl: env.RAG_DB_SSLMODE === "require",
+		max: 1,
+		idle_timeout: 0,
+		connect_timeout: 60,
+		keep_alive: 30,
+		connection: { ...COLLECTOR_CONNECTION_PARAMETERS, application_name: applicationName },
+		transform: { undefined: null },
+		onnotice: () => {},
+	});
+}
 
 function shouldRetryUrlInsert(error: unknown): boolean {
 	const code = error && typeof error === "object" && "code" in error ? error.code : null;
@@ -81,22 +111,6 @@ class PostgreSQLManager {
 	async batchInsertUrls(urls: string[]): Promise<number> {
 		if (urls.length === 0) return 0;
 
-		const minCollectCount = await this.withRetry("URL sync scheduling query", async (sql) => {
-			// Query minimum collect_count from Apple Developer URLs (excluding 0)
-			// This ensures new URLs integrate into normal scheduling without causing starvation
-			const minResult = await sql`
-          SELECT COALESCE(
-            (SELECT MIN(collect_count)
-             FROM pages
-             WHERE url LIKE 'https://developer.apple.com/%'
-             AND collect_count > 0),
-            0
-          ) as min
-        `;
-			return parseInt(minResult[0]?.min || "0", 10);
-		});
-		const newUrlCollectCount = Math.max(0, minCollectCount - 1);
-
 		let insertedCount = 0;
 		const batchCount = Math.ceil(urls.length / PostgreSQLManager.URL_INSERT_BATCH_SIZE);
 
@@ -110,7 +124,7 @@ class PostgreSQLManager {
 					// Existing rows can be read without waiting on another collector's row locks.
 					const result = await sql`
             INSERT INTO pages (url, collect_count)
-            SELECT incoming.url, ${newUrlCollectCount}
+            SELECT incoming.url, 0
             FROM unnest(${urlBatch}::text[]) WITH ORDINALITY AS incoming(url, position)
             WHERE NOT EXISTS (
               SELECT 1 FROM pages existing WHERE existing.url = incoming.url
@@ -139,34 +153,48 @@ class PostgreSQLManager {
 	}
 
 	async getBatchRecords(batchSize: number, ids?: string[]): Promise<DatabaseRecord[]> {
-		if (ids)
-			return this.sql<DatabaseRecord[]>`
-            WITH targets AS (SELECT id FROM pages WHERE id=ANY(${ids}::uuid[]) AND url LIKE 'https://developer.apple.com/%' ORDER BY id FOR UPDATE)
-            UPDATE pages SET collect_count=collect_count+1 WHERE id IN (SELECT id FROM targets)
+		if (!Number.isSafeInteger(batchSize) || batchSize < 1)
+			throw Error("Invalid collector batch size");
+		const sql = this.sql;
+		const targets = ids
+			? sql`SELECT id FROM pages WHERE id=ANY(${ids}::uuid[]) AND url LIKE 'https://developer.apple.com/%' ORDER BY id FOR UPDATE`
+			: sql`
+            WITH priority AS MATERIALIZED (
+                SELECT id FROM pages WHERE url LIKE 'https://developer.apple.com/%' AND next_check_at<=now()
+                AND last_outcome IN ('new','updated','retry')
+                ORDER BY next_check_at,id LIMIT ${Math.ceil(batchSize / 3)} FOR UPDATE SKIP LOCKED
+            ), rest AS (
+                SELECT id FROM pages WHERE url LIKE 'https://developer.apple.com/%' AND next_check_at<=now()
+                AND id NOT IN (SELECT id FROM priority)
+                ORDER BY next_check_at,id LIMIT (${batchSize} - (SELECT count(*) FROM priority)) FOR UPDATE SKIP LOCKED
+            ) SELECT id FROM priority UNION ALL SELECT id FROM rest`;
+		return sql<DatabaseRecord[]>`WITH targets AS (${targets}) UPDATE pages
+            SET collect_count=collect_count+1,next_check_at=now()+interval '15 minutes'
+            WHERE id IN (SELECT id FROM targets)
             RETURNING id,url,title,content,collect_count,created_at,updated_at`;
-		// Atomic operation: SELECT records with minimum collect_count and UPDATE them
-		// This ensures different workers get different records by always taking the minimum collect_count
-		return this.sql<DatabaseRecord[]>`
-      WITH min_count_records AS (
-        SELECT id FROM pages
-        WHERE url LIKE 'https://developer.apple.com/%'
-          AND collect_count = (
-            SELECT MIN(collect_count)
-            FROM pages
-            WHERE url LIKE 'https://developer.apple.com/%'
-          )
-        ORDER BY
-          CASE WHEN content IS NULL OR content = '' THEN 0 ELSE 1 END ASC,
-          CASE WHEN title IS NULL OR title = '' THEN 0 ELSE 1 END ASC,
-          url ASC
-        LIMIT ${batchSize}
-        FOR UPDATE SKIP LOCKED
-      )
-      UPDATE pages
-      SET collect_count = collect_count + 1
-      WHERE id IN (SELECT id FROM min_count_records)
-      RETURNING id, url, title, content, collect_count, created_at, updated_at
-    `;
+	}
+
+	async recordChecks(
+		checks: {
+			record: DatabaseRecord;
+			outcome: "unchanged" | "retry" | "unavailable";
+		}[],
+	) {
+		if (!checks.length) return [];
+		const checkedAt = new Date();
+		return this.withRetry(
+			"record collection checks",
+			(sql) => sql<{ url: string }[]>`
+            UPDATE pages p SET last_checked_at=${checkedAt},
+                last_success_at=CASE WHEN c.outcome='unchanged' THEN ${checkedAt} ELSE p.last_success_at END,
+                last_outcome=c.outcome,
+                next_check_at=${checkedAt}::timestamptz + CASE c.outcome
+                    WHEN 'unchanged' THEN interval '45 days'
+                    WHEN 'unavailable' THEN interval '45 days' ELSE interval '1 hour' END
+            FROM unnest(${checks.map((c) => c.record.id)}::uuid[],${checks.map((c) => c.record.collect_count)}::int[],
+                ${checks.map((c) => c.outcome)}::text[]) c(id,generation,outcome)
+            WHERE p.id=c.id AND p.collect_count=c.generation RETURNING p.url`,
+		);
 	}
 
 	getStats() {
@@ -224,7 +252,8 @@ class PostgreSQLManager {
 			}
 			for (const record of records) {
 				if (urls.has(record.url))
-					await sql`UPDATE pages SET raw_json=${record.raw_json}::text::jsonb,title=${record.title},content=${record.content},updated_at=${record.updated_at} WHERE id=${record.id}`;
+					await sql`UPDATE pages SET raw_json=${record.raw_json}::text::jsonb,title=${record.title},content=${record.content},updated_at=${record.updated_at},
+                          last_checked_at=now(),last_success_at=now(),last_outcome='updated',next_check_at=now()+interval '7 days' WHERE id=${record.id}`;
 			}
 			return [...urls];
 		});

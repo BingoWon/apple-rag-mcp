@@ -123,7 +123,9 @@ export class BatchEmbeddingProvider {
 
 	private l2Normalize(vector: number[]): number[] {
 		const norm = Math.sqrt(vector.reduce((sum, val) => sum + val * val, 0));
-		return norm === 0 ? vector : vector.map((val) => val / norm);
+		if (!Number.isFinite(norm) || norm === 0 || !vector.every(Number.isFinite))
+			throw new Error("Invalid embedding values");
+		return vector.map((val) => val / norm);
 	}
 }
 
