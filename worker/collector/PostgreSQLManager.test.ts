@@ -120,7 +120,7 @@ test("skips exact and casefold URL conflicts without losing new URLs across batc
 			const inserted =
 				await transaction`SELECT url, collect_count FROM pages WHERE url <> ${existingUrl}`;
 			assert.deepEqual(inserted.map((row) => row.url).sort(), [...newUrls].sort());
-			assert.ok(inserted.every((row) => row.collect_count === 156));
+			assert.ok(inserted.every((row) => row.collect_count === 0));
 		});
 	} finally {
 		await sql.end();
@@ -177,7 +177,7 @@ test("collector database operations remain safe under concurrency and interrupte
 		content text NOT NULL DEFAULT '',
 		collect_count integer NOT NULL DEFAULT 0,
 		created_at timestamptz NOT NULL DEFAULT now(),
-		updated_at timestamptz
+		updated_at timestamptz, next_check_at timestamptz not null default now(), last_checked_at timestamptz, last_success_at timestamptz, last_outcome text default 'new'
 	)`;
 	await sql`CREATE UNIQUE INDEX idx_pages_url_casefold ON pages (lower(url))
 		WHERE url LIKE 'https://developer.apple.com/%'`;
@@ -293,6 +293,8 @@ test("collector database operations remain safe under concurrency and interrupte
 			(${`${prefix}e-full`}, 'E', 'Content E', to_jsonb(repeat('large unused JSON', 10000)), 157),
 			(${`${prefix}later`}, 'Later', '', NULL, 160),
 			('https://example.com/other', NULL, '', NULL, 0)`;
+			await sql`UPDATE pages SET next_check_at='2020-01-01'::timestamptz + (ascii(substring(url from '/([a-e])-')) * interval '1 second') WHERE url ~ '/[a-e]-'`;
+			await sql`UPDATE pages SET next_check_at=now()+interval '1 day' WHERE url=${prefix + "later"}`;
 			const blocker = connect();
 			const held = await hold(
 				blocker,
@@ -380,7 +382,7 @@ test("collector database operations remain safe under concurrency and interrupte
 			);
 			assert.ok(performance.now() - started < 2000);
 			const [added] = await observer`SELECT collect_count FROM pages WHERE url = ${`${prefix}new`}`;
-			assert.equal(added.collect_count, 156);
+			assert.equal(added.collect_count, 0);
 		} finally {
 			held.release();
 			assert.equal(await held.done, null);
@@ -780,6 +782,58 @@ test("collector database operations remain safe under concurrency and interrupte
 			await sql`DELETE FROM pages WHERE id=${stale.id}`;
 		},
 	);
+	await t.test(
+		"due times reserve capacity for discoveries, release expired claims, and keep the last success on failure",
+		async () => {
+			await sql`TRUNCATE pages`;
+			await sql`INSERT INTO pages(url,last_outcome,next_check_at) SELECT ${prefix}||'stable'||n,NULL,now()-interval '1 day' FROM generate_series(1,10)n`;
+			await manager.batchInsertUrls([prefix + "new"]);
+			const records = await manager.getBatchRecords(3);
+			assert.ok(records.some((row) => row.url === prefix + "new"));
+			assert.equal(records.length, 3);
+			const [first] = records;
+			await manager.recordChecks([{ record: first!, outcome: "unchanged" }]);
+			const [done] =
+				await sql`SELECT last_success_at,last_outcome,next_check_at>now()+interval '44 days' AS deferred FROM pages WHERE id=${first!.id}`;
+			assert.ok(done.last_success_at);
+			assert.equal(done.last_outcome, "unchanged");
+			assert.ok(done.deferred);
+			await sql`UPDATE pages SET next_check_at=now()-interval '2 days' WHERE id=${first!.id}`;
+			const reclaimed = (await manager.getBatchRecords(3)).find((r) => r.id === first!.id)!;
+			assert.equal(reclaimed.collect_count, first!.collect_count + 1);
+			assert.equal(
+				(await manager.recordChecks([{ record: first!, outcome: "unchanged" }])).length,
+				0,
+			);
+			await manager.recordChecks([{ record: reclaimed, outcome: "retry" }]);
+			const [failed] =
+				await sql`SELECT last_success_at,last_outcome,next_check_at BETWEEN now()+interval '59 minutes' AND now()+interval '61 minutes' AS deferred FROM pages WHERE id=${first!.id}`;
+			assert.equal(failed.last_success_at.getTime(), done.last_success_at.getTime());
+			assert.equal(failed.last_outcome, "retry");
+			assert.ok(failed.deferred);
+			await sql`TRUNCATE pages`;
+			await sql`INSERT INTO pages(url,collect_count) VALUES(${prefix + "ack"},157)`;
+		},
+	);
+	await t.test(
+		"coverage separates discovered, readable, indexed and navigation-only URLs",
+		async () => {
+			await sql`TRUNCATE pages,chunks,catalog_nodes`;
+			assert.equal((await manager.getStats()).embedded_percentage, null);
+			await sql`INSERT INTO pages(url,content) VALUES (${prefix + "one"},'Readable'),(${prefix + "two"},'Pending index'),(${prefix + "new"},'')`;
+			await sql`INSERT INTO chunks(url,content,embedding) VALUES (${prefix + "one"},'1','[1]'),(${prefix + "one"},'2','[1]'),(${prefix + "two"},'Unembedded',null)`;
+			await sql`INSERT INTO catalog_nodes VALUES (${prefix + "nav"},false),(${prefix + "nav#section"},false)`;
+			const stats = await manager.getStats();
+			assert.equal(stats.docs_total, 3);
+			assert.equal(stats.readable_pages, 2);
+			assert.equal(stats.indexed_pages, 1);
+			assert.equal(stats.chunks_total, 3);
+			assert.equal(stats.navigation_only_pages, 1);
+			assert.equal(stats.embedded_percentage, 50);
+			await sql`TRUNCATE pages,chunks,catalog_nodes`;
+			await sql`INSERT INTO pages(url,collect_count) VALUES(${prefix + "ack"},157)`;
+		},
+	);
 	await t.test("a lost claim acknowledgement never replays the counter increment", async () => {
 		let created = 0;
 		const client = connect();
@@ -787,11 +841,13 @@ test("collector database operations remain safe under concurrency and interrupte
 			created++;
 			return new Proxy(client, {
 				apply: (target, receiver, args) =>
-					Promise.resolve(Reflect.apply(target, receiver, args)).then(() => {
-						throw Object.assign(new Error("write CONNECTION_CLOSED after claim"), {
-							code: "CONNECTION_CLOSED",
-						});
-					}),
+					!String(args[0][0]).startsWith("WITH targets AS")
+						? Reflect.apply(target, receiver, args)
+						: Promise.resolve(Reflect.apply(target, receiver, args)).then(() => {
+								throw Object.assign(new Error("write CONNECTION_CLOSED after claim"), {
+									code: "CONNECTION_CLOSED",
+								});
+							}),
 			});
 		});
 		await assert.rejects(claim.getBatchRecords(1), /CONNECTION_CLOSED/);
