@@ -65,3 +65,26 @@ verification, not a fixed value for the dashboard's selected period.
 The user overview shows the current weekly quota counter separately from recorded activity over the last 24 hours or 7/30 Singapore calendar days. Daily buckets start at UTC+8 midnight. The account statistics response contains the exact half-open window, the total, counts by tool, and aligned zero-filled buckets. Links to a tool's usage history carry the same start and end instants, including failed and rate-limited calls. The result counts of unlike tools are not added into the activity chart.
 
 The admin activity section compares the three tools on one scale. Selecting a tool shows its outcomes, and the row link preserves the time and channel filters when opening logs. Empty, loading and unavailable statistics are displayed separately.
+
+## Client attribution
+
+The **Client usage** tab at `/admin/clients` reads the search, browse and fetch
+logs, including failed, limited and cancelled attempts. It defaults to a rolling
+seven-day window. The other choices are the last 24 hours, the last 30 days and
+all retained history. Rows without a usable timestamp contribute only to all-time totals. The displayed cutoff is in Singapore time. Breakdowns reuse
+the report's cutoff. Opening this page makes no retrieval calls.
+
+The server assigns MCP or CLI from the entry point. Products and environments
+are self-reported, matched against known User-Agent signatures. An OpenCode or
+Claude Code shell integration on the MCP endpoint counts as MCP. A curl request
+to the CLI API counts as CLI traffic from an HTTP tool. Official CLI versions use
+the explicit version header when available. The launching agent is unavailable.
+Directory probes, HTTP tools, unclassified labels and absent historical labels
+remain in the denominator as separate groups. For an unclassified label, a short alphabetic product name before an explicit version may be shown as reported evidence. It still counts as unclassified. Recognition rules apply at read time.
+
+Account counts use distinct IDs that match the accounts table for the entire
+report, each channel and each product independently. Summing per-product accounts
+can count a shared account twice. Calls without a matching account include anonymous
+traffic. HTTP 2xx, HTTP 429 and all other responses partition each row's attempts.
+The admin-only breakdown exposes aggregated environments and versions, with stable
+pagination. It returns no raw User-Agent, account ID, credential, IP or query text.

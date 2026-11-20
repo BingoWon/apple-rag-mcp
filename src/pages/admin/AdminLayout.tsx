@@ -11,6 +11,7 @@ import { TOOL_KINDS } from "../../../shared/tool-activity";
 
 const adminNavItems = [
 	{ href: "/admin", labelKey: "nav.overview", exact: true },
+	{ href: "/admin/clients", labelKey: "client_stats.title", exact: false },
 	{ href: "/admin/users", labelKey: "admin.users", exact: false },
 	{ href: "/admin/mcp-tokens", labelKey: "nav.mcp_tokens", exact: false },
 	{ href: "/admin/authorized-ips", labelKey: "nav.authorized_ips", exact: false },

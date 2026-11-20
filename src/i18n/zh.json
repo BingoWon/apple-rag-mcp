@@ -998,5 +998,33 @@
 		"designation_3": "高级 iOS 架构师",
 		"designation_4": "自由应用开发者",
 		"designation_5": "MCP 平台专家"
+	},
+	"client_stats": {
+		"title": "客户端统计",
+		"all": "全部历史",
+		"calls": "工具调用总数",
+		"identified": "可识别产品的调用",
+		"accounts": "去重账号数",
+		"cli_note": "CLI 能标明客户端或 HTTP 工具，但不会上报是哪个智能体启动了命令。",
+		"client": "客户端标识",
+		"share": "渠道内占比",
+		"probe": "目录探测与监控",
+		"http": "HTTP 工具与浏览器",
+		"missing": "未记录客户端标识",
+		"unrecognized": "尚未归类的标识",
+		"account_calls": "可关联账号的调用",
+		"other_calls": "未关联账号的调用",
+		"ok": "HTTP 2xx",
+		"limited": "限流（429）",
+		"other_status": "其他响应",
+		"environment": "使用环境或调用方",
+		"version": "上报版本",
+		"not_reported": "无法识别",
+		"browser": "浏览器标识",
+		"empty": "所选时段没有调用记录。",
+		"method": "调用次数包含失败和限流。渠道由服务端记录，产品、版本和使用环境来自请求方上报的标识。账号数在每个统计范围内按可关联的账号 ID 去重；匿名访问计入调用总数。早期记录可能缺少客户端标识。",
+		"sort": "排序方式",
+		"by_calls": "按调用次数",
+		"by_accounts": "按去重账号数"
 	}
 }

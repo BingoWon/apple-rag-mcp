@@ -1000,5 +1000,33 @@
 		"designation_3": "Senior iOS Architect",
 		"designation_4": "Freelance App Developer",
 		"designation_5": "MCP Platform Expert"
+	},
+	"client_stats": {
+		"title": "Client usage",
+		"all": "All time",
+		"calls": "Tool calls",
+		"identified": "Calls reporting a known product",
+		"accounts": "Distinct accounts",
+		"cli_note": "CLI requests identify the caller or HTTP tool. The CLI does not report which agent launched it.",
+		"client": "Reported client",
+		"share": "Channel share",
+		"probe": "Directory and monitoring probes",
+		"http": "HTTP tools and browsers",
+		"missing": "No client label recorded",
+		"unrecognized": "Unclassified client labels",
+		"account_calls": "Calls linked to accounts",
+		"other_calls": "Calls without a linked account",
+		"ok": "HTTP 2xx",
+		"limited": "Rate limited (429)",
+		"other_status": "Other responses",
+		"environment": "Environment or caller",
+		"version": "Reported version",
+		"not_reported": "Not identified",
+		"browser": "Browser signature",
+		"empty": "No recorded calls in this period.",
+		"method": "Counts include failures and rate limits. The server records the channel. Product, version and environment come from self-reported request headers. Distinct accounts count matching account IDs once in each scope. Anonymous traffic is included in call totals. Older records may have no client label.",
+		"sort": "Sort clients",
+		"by_calls": "Most calls",
+		"by_accounts": "Most accounts"
 	}
 }

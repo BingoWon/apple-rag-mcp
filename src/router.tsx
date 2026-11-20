@@ -19,6 +19,7 @@ const BillingPage = lazy(() => import("@/pages/dashboard/BillingPage"));
 const SuccessPage = lazy(() => import("@/pages/SuccessPage"));
 const NotFoundPage = lazy(() => import("@/pages/NotFoundPage"));
 const AdminDashboard = lazy(() => import("@/pages/admin/AdminDashboard"));
+const AdminClientsPage = lazy(() => import("@/pages/admin/ClientsPage"));
 const AdminUsersPage = lazy(() => import("@/pages/admin/UsersPage"));
 const AdminMCPTokensPage = lazy(() => import("@/pages/admin/MCPTokensPage"));
 const AdminAuthorizedIPsPage = lazy(() => import("@/pages/admin/AuthorizedIPsPage"));
@@ -133,6 +134,7 @@ export function AppRouter() {
 				{/* Admin */}
 				<Route path="/admin" element={<AdminLayout />}>
 					<Route index element={<AdminDashboard />} />
+					<Route path="clients" element={<AdminClientsPage />} />
 					<Route path="users" element={<AdminUsersPage />} />
 					<Route path="mcp-tokens" element={<AdminMCPTokensPage />} />
 					<Route path="authorized-ips" element={<AdminAuthorizedIPsPage />} />

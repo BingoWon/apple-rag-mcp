@@ -6,6 +6,7 @@ import { logger } from "../../utils/logger.js";
 import { createOpenAPIApp } from "../../utils/openapi";
 import authorizedIPsAdmin from "./authorized-ips";
 import billingSync from "./billing-sync";
+import clientsAdmin from "./clients";
 import contactMessagesAdmin from "./contact-messages";
 import fetchLogsAdmin from "./fetch-logs";
 import mcpTokensAdmin from "./mcp-tokens";
@@ -60,6 +61,7 @@ app.use("*", async (c, next) => {
 // Mount admin routes
 app.route("/users", usersAdmin);
 app.route("/stats", statsAdmin);
+app.route("/clients", clientsAdmin);
 app.route("/billing-sync", billingSync);
 app.route("/mcp-tokens", mcpTokensAdmin);
 app.route("/authorized-ips", authorizedIPsAdmin);
@@ -78,6 +80,7 @@ app.get("/", (c) => {
 			endpoints: [
 				"/admin/users",
 				"/admin/stats",
+				"/admin/clients",
 				"/admin/mcp-tokens",
 				"/admin/authorized-ips",
 				"/admin/search-logs",
