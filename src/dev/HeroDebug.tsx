@@ -1,7 +1,7 @@
 import { type RefObject, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/Button";
-import { MacbookScroll } from "@/components/ui/macbook-scroll";
+import { HERO_VIDEO_END_PERCENT, MacbookScroll } from "@/components/ui/macbook-scroll";
 import { copyText } from "@/utils/clipboard";
 import { type HeroPreview, loadPreview, original, storageKey } from "./hero-preview";
 
@@ -101,7 +101,7 @@ function Panel({
 	}
 	function mark(which: "start" | "end") {
 		const pct = measure(host.current).heroPercent;
-		const [start, end] = value.range ?? [0, 100];
+		const [start, end] = value.range ?? [0, HERO_VIDEO_END_PERCENT];
 		const range: [number, number] = which === "start" ? [pct, end] : [start, pct];
 		if (range[0] >= range[1]) {
 			setMessage("起点必须早于终点，请换一个滚动位置。");
@@ -113,14 +113,15 @@ function Panel({
 		const json = JSON.stringify(
 			{
 				preset: "apple-rag-macbook-hero/v1",
-				baseline: "5.14.2",
+				baseline: "5.14.6",
 				playback: value.range
 					? { mode: "linear-hero-percent", start: value.range[0], end: value.range[1] }
-					: { mode: "original" },
+					: { mode: "auto-start", end: HERO_VIDEO_END_PERCENT },
 				uprightHeroPercent: value.upright,
 				minHeroHeightVh: value.height,
 				screenAspect: value.aspect === "video" ? "1280:848" : "4:3",
 				objectFit: value.fit,
+				objectPosition: "center bottom",
 				measured: measure(host.current),
 			},
 			null,
@@ -156,9 +157,11 @@ function Panel({
 					<select
 						className={field}
 						value={value.range ? "custom" : "original"}
-						onChange={(e) => update({ range: e.target.value === "original" ? null : [0, 100] })}
+						onChange={(e) =>
+							update({ range: e.target.value === "original" ? null : [0, HERO_VIDEO_END_PERCENT] })
+						}
 					>
-						<option value="original">原版曲线（5.14.2）</option>
+						<option value="original">线上默认（自动起点，{HERO_VIDEO_END_PERCENT}% 结束）</option>
 						<option value="custom">自定起点和终点</option>
 					</select>
 				</label>

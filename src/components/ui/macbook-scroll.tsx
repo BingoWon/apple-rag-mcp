@@ -33,6 +33,8 @@ import { HeroContent } from "@/components/sections/HeroContent";
 import type { HeroPreview } from "@/dev/hero-preview";
 import { cn } from "@/lib/utils";
 
+export const HERO_VIDEO_END_PERCENT = 70;
+
 export const MacbookScroll = ({ preview }: { preview?: HeroPreview }) => {
 	const ref = useRef<HTMLDivElement>(null);
 	const laptop = useRef<HTMLDivElement>(null);
@@ -40,33 +42,43 @@ export const MacbookScroll = ({ preview }: { preview?: HeroPreview }) => {
 		target: ref,
 		offset: ["start start", "end start"],
 	});
-	const { scrollYProgress: screenProgress } = useScroll({
-		target: laptop,
-		offset: ["start 65%", "end 45%"],
-	});
+	const [autoStart, setAutoStart] = useState(0);
+	const [start, end] = (import.meta.env.DEV && preview?.range) || [
+		autoStart,
+		HERO_VIDEO_END_PERCENT,
+	];
 	const videoProgress = useTransform(() => {
-		const hero = scrollYProgress.get();
-		const screen = screenProgress.get();
-		if (import.meta.env.DEV && preview?.range) {
-			const [start, end] = preview.range;
-			return Math.max(0, Math.min(1, (hero * 100 - start) / (end - start)));
-		}
-		return Math.min(screen, hero * 3);
+		const percent = scrollYProgress.get() * 100;
+		if (percent >= end) return 1;
+		if (percent <= start) return 0;
+		return (percent - start) / (end - start);
 	});
 
 	const [isMobile, setIsMobile] = useState(false);
 	const [lidTravel, setLidTravel] = useState(1000);
 
 	useEffect(() => {
+		const hero = ref.current;
+		const model = laptop.current;
+		if (!hero || !model) return;
 		const resize = () => {
+			// Preserve the entrance cue: the Hero has started and the laptop has reached 65% of the viewport.
+			const entrance = model.offsetTop - document.documentElement.clientHeight * 0.65;
+			setAutoStart(Math.max(0, (entrance / hero.clientHeight) * 100));
 			const mobile = window.innerWidth < 768;
 			setIsMobile(mobile);
 			// Leave room to see the open lid even in a short landscape viewport.
 			setLidTravel(Math.min(mobile ? 1500 : 1000, 2 * Math.max(0, window.innerHeight - 384)));
 		};
 		resize();
+		const observer = new ResizeObserver(resize);
+		observer.observe(hero);
+		if (model.previousElementSibling) observer.observe(model.previousElementSibling);
 		window.addEventListener("resize", resize);
-		return () => window.removeEventListener("resize", resize);
+		return () => {
+			observer.disconnect();
+			window.removeEventListener("resize", resize);
+		};
 	}, []);
 
 	const upright = import.meta.env.DEV && preview ? preview.upright / 100 : 0.3;
@@ -148,7 +160,8 @@ export const Lid = ({
 	const reducedMotion = useReducedMotion();
 	const [failed, setFailed] = useState(false);
 	const poster = "/iphone-duo-hero.webp";
-	const mediaClass = "absolute inset-0 block h-full w-full rounded-lg bg-white object-contain";
+	const mediaClass =
+		"absolute inset-0 block h-full w-full rounded-lg bg-white object-contain object-bottom";
 	const mediaStyle = import.meta.env.DEV && preview ? { objectFit: preview.fit } : undefined;
 	useEffect(() => {
 		const el = video.current;
@@ -178,7 +191,7 @@ export const Lid = ({
 		if (!el || el.readyState < 2 || el.seeking || !Number.isFinite(el.duration)) return;
 		// Seek to the center of a frame so scrolling back lands on the same image.
 		const lastFrame = Math.round(el.duration * 30) - 1;
-		const frame = Math.round(progress.get() * lastFrame);
+		const frame = Math.floor(progress.get() * lastFrame);
 		if (requestedFrame.current === frame) return;
 		requestedFrame.current = frame;
 		el.currentTime = (frame + 0.5) / 30;

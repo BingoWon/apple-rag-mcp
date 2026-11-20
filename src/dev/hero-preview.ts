@@ -19,7 +19,7 @@ export const original: HeroPreview = {
 	aspect: "original",
 	fit: "contain",
 };
-export const storageKey = "apple-rag.dev.hero.5.14.2.v1";
+export const storageKey = "apple-rag.dev.hero.5.14.6.v1";
 export function loadPreview(): HeroPreview {
 	try {
 		const result = settings.safeParse(JSON.parse(localStorage.getItem(storageKey) ?? "null"));
