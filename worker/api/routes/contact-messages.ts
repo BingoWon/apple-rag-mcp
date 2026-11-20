@@ -32,7 +32,6 @@ type MessageHistoryRow = {
 const ContactMessageSchema = z.object({
 	email: z.string().optional(),
 	message: z.string().min(1, "Message is required").max(2000, "Message too long"),
-	userId: z.string().optional(),
 });
 
 const ContactMessageResponseSchema = z.object({
@@ -103,8 +102,8 @@ const submitContactMessageRoute = createRoute({
 
 app.openapi(submitContactMessageRoute, async (c) => {
 	try {
-		const { email, message, userId } = c.req.valid("json");
-		const authenticatedUserId = c.get("userId") || null;
+		const { email, message } = c.req.valid("json");
+		const userIdValue = c.get("userId") || null;
 
 		// Validate email format if provided
 		if (email && !isValidEmail(email)) {
@@ -131,11 +130,8 @@ app.openapi(submitContactMessageRoute, async (c) => {
 		const messageId = crypto.randomUUID();
 
 		// Insert contact message
-		// Use authenticated user ID if available, otherwise use provided userId
+		// Anonymous messages have no account owner.
 		const emailValue = email && typeof email === "string" && email.trim() ? email.trim() : null;
-		const userIdValue =
-			authenticatedUserId ||
-			(userId && typeof userId === "string" && userId.trim() ? userId.trim() : null);
 
 		const now = new Date().toISOString();
 		await c.env.DB.prepare(

@@ -8,6 +8,7 @@ import { OAUTH_SUBSCRIPTION_QUOTAS } from "../types/permissions";
 import { logger } from "../utils/logger.js";
 import { createOpenAPIApp } from "../utils/openapi";
 import { createStripeClient } from "../utils/stripe-client";
+import { effectivePlanType } from "../utils/subscription";
 import { recordSubscriptionReceipt } from "../utils/subscription-receipts";
 import { notifyTelegram } from "../utils/telegram-notifier";
 
@@ -34,37 +35,6 @@ function extractSubscriptionPeriod(subscription: Stripe.Subscription) {
 		: null;
 
 	return { start, end };
-}
-
-async function extractSubscriptionPricing(subscription: Stripe.Subscription, stripeClient: Stripe) {
-	const firstItem = subscription.items?.data?.[0];
-	if (!firstItem) {
-		logger.warn(`[STRIPE] No subscription items found for ${subscription.id}`);
-		return { price: 0, billingInterval: "month", priceId: null };
-	}
-
-	try {
-		const priceObject = await stripeClient.prices.retrieve(firstItem.price.id);
-		const price = priceObject.unit_amount ? priceObject.unit_amount / 100 : 0;
-		const billingInterval = formatBillingInterval(
-			priceObject.recurring?.interval || "month",
-			priceObject.recurring?.interval_count || 1,
-		);
-
-		return { price, billingInterval, priceId: priceObject.id };
-	} catch (error) {
-		await logger.error(
-			`[STRIPE] Error fetching price for ${firstItem.price.id}: ${error instanceof Error ? error.message : "Unknown error"}`,
-		);
-
-		const price = firstItem.price.unit_amount ? firstItem.price.unit_amount / 100 : 0;
-		const billingInterval = formatBillingInterval(
-			firstItem.price.recurring?.interval || "month",
-			firstItem.price.recurring?.interval_count || 1,
-		);
-
-		return { price, billingInterval, priceId: firstItem.price.id };
-	}
 }
 
 // Apply auth middleware to protected routes BEFORE defining routes
@@ -210,22 +180,29 @@ stripe.openapi(
 			const isOneTime = priceId.startsWith("onetime_");
 
 			const existing = await c.env.DB.prepare(
-				"SELECT payment_type, status, current_period_end, plan_type FROM user_subscriptions WHERE user_id = ?",
+				"SELECT payment_type, status, current_period_end, plan_type,stripe_subscription_id,stripe_customer_id FROM user_subscriptions WHERE user_id = ?",
 			)
 				.bind(user.id)
 				.first();
 
 			if (existing) {
 				const hasActiveSubscription =
-					existing.payment_type === "subscription" &&
-					existing.status === "active" &&
-					existing.plan_type !== "hobby";
+					existing.payment_type === "subscription" && !!existing.stripe_subscription_id;
 				const hasActiveOneTime =
 					existing.payment_type === "one_time" &&
 					existing.current_period_end &&
 					new Date(existing.current_period_end as string) > new Date();
 
-				if (hasActiveSubscription && isOneTime) {
+				if (hasActiveSubscription && !isOneTime && existing.stripe_customer_id) {
+					const portal = await createStripeClient(
+						c.env.STRIPE_SECRET_KEY,
+					).billingPortal.sessions.create({
+						customer: String(existing.stripe_customer_id),
+						return_url: new URL("/billing", c.req.url).href,
+					});
+					return c.json({ success: true as const, data: { url: portal.url } }, 200);
+				}
+				if (hasActiveSubscription) {
 					return c.json(
 						{
 							success: false,
@@ -253,7 +230,8 @@ stripe.openapi(
 			}
 
 			const origin = new URL(c.req.url).origin;
-			const finalCancelUrl = cancelUrl || `${origin}/#pricing`;
+			const back = new URL(cancelUrl || "/#pricing", origin);
+			const finalCancelUrl = back.origin === origin ? back.href : origin + "/#pricing";
 
 			const stripeClient = createStripeClient(c.env.STRIPE_SECRET_KEY);
 
@@ -263,7 +241,9 @@ stripe.openapi(
 				success_url: `${origin}/success?session_id={CHECKOUT_SESSION_ID}`,
 				cancel_url: finalCancelUrl,
 				client_reference_id: user.id,
-				customer_email: user.email,
+				...(existing?.stripe_customer_id
+					? { customer: String(existing.stripe_customer_id) }
+					: { customer_email: user.email }),
 				metadata: {
 					userId: user.id,
 					planType: "pro",
@@ -284,7 +264,21 @@ stripe.openapi(
 				};
 			}
 
-			const session = await stripeClient.checkout.sessions.create(sessionParams);
+			const session = await checkoutSession(
+				c.env.DB,
+				stripeClient,
+				user.id,
+				priceIdValue,
+				sessionParams,
+			);
+			if (!session)
+				return c.json(
+					{
+						success: false,
+						error: { code: ApiErrorCode.RESOURCE_CONFLICT, message: "CHECKOUT_PENDING" },
+					},
+					400,
+				);
 
 			return c.json({ success: true as const, data: { url: session.url! } }, 200);
 		} catch (error) {
@@ -302,6 +296,94 @@ stripe.openapi(
 		}
 	},
 );
+
+// A single durable attempt binds concurrent checkout requests to one Stripe session.
+async function checkoutSession(
+	db: D1Database,
+	client: Stripe,
+	userId: string,
+	priceId: string,
+	params: Stripe.Checkout.SessionCreateParams,
+) {
+	type Attempt = {
+		attempt_id: string;
+		price_id: string;
+		expires_at: number;
+		session_id: string | null;
+		parameters: string;
+	};
+	for (let retry = 0; retry < 3; retry++) {
+		const id = crypto.randomUUID(),
+			expires = Math.floor(Date.now() / 1000) + 3600;
+		await db
+			.prepare(
+				"INSERT INTO checkout_attempts(user_id,attempt_id,price_id,expires_at,parameters) SELECT ?,?,?,?,? WHERE NOT EXISTS(SELECT 1 FROM user_subscriptions WHERE user_id=? AND ((stripe_subscription_id IS NOT NULL) OR (?='subscription' AND payment_type='one_time' AND julianday(current_period_end)>julianday('now')))) ON CONFLICT(user_id) DO NOTHING",
+			)
+			.bind(userId, id, priceId, expires, JSON.stringify(params), userId, params.mode)
+			.run();
+		const attempt = await db
+			.prepare("SELECT * FROM checkout_attempts WHERE user_id=?")
+			.bind(userId)
+			.first<Attempt>();
+		if (!attempt) return null;
+		let session: Stripe.Checkout.Session | undefined;
+		if (attempt.session_id) session = await client.checkout.sessions.retrieve(attempt.session_id);
+		else {
+			if (attempt.expires_at <= Math.floor(Date.now() / 1000)) {
+				// If creation was acknowledged only by Stripe, recover the session before opening another checkout.
+				for await (const candidate of client.checkout.sessions.list({
+					created: { gte: attempt.expires_at - 3601, lte: attempt.expires_at },
+					limit: 100,
+				})) {
+					if (candidate.metadata?.attempt === attempt.attempt_id) {
+						session = candidate;
+						break;
+					}
+				}
+				if (!session) {
+					await db
+						.prepare("DELETE FROM checkout_attempts WHERE attempt_id=?")
+						.bind(attempt.attempt_id)
+						.run();
+					continue;
+				}
+			} else {
+				const stored = JSON.parse(attempt.parameters) as Stripe.Checkout.SessionCreateParams;
+				stored.expires_at = attempt.expires_at;
+				stored.metadata = { ...stored.metadata, attempt: attempt.attempt_id };
+				if (stored.subscription_data)
+					stored.subscription_data.metadata = {
+						...stored.subscription_data.metadata,
+						attempt: attempt.attempt_id,
+					};
+				try {
+					session = await client.checkout.sessions.create(stored, {
+						idempotencyKey: attempt.attempt_id,
+					});
+				} catch (error) {
+					if (error instanceof Error && "param" in error && error.param === "expires_at")
+						return null;
+					throw error;
+				}
+			}
+			const attached = await db
+				.prepare(
+					"UPDATE checkout_attempts SET session_id=? WHERE attempt_id=? RETURNING attempt_id",
+				)
+				.bind(session.id, attempt.attempt_id)
+				.first();
+			if (!attached) return null;
+		}
+		if (session.status === "complete") return null;
+		if (session.status === "open" && attempt.price_id === priceId) return session;
+		if (session.status === "open") await client.checkout.sessions.expire(session.id);
+		await db
+			.prepare("DELETE FROM checkout_attempts WHERE attempt_id=?")
+			.bind(attempt.attempt_id)
+			.run();
+	}
+	return null;
+}
 
 // Create billing portal session
 stripe.openapi(
@@ -449,6 +531,7 @@ stripe.openapi(
 								weekly_quota: z.number(),
 								minute_quota: z.number(),
 								price: z.number(),
+								currency: z.string().nullable(),
 								billing_interval: z.string(),
 								payment_type: z.enum(["subscription", "one_time"]),
 								stripe_customer_id: z.string().optional(),
@@ -484,7 +567,8 @@ stripe.openapi(
 			status = "inactive";
 		}
 
-		const quota = OAUTH_SUBSCRIPTION_QUOTAS[planType] || OAUTH_SUBSCRIPTION_QUOTAS.hobby;
+		const quota =
+			OAUTH_SUBSCRIPTION_QUOTAS[effectivePlanType(result)] || OAUTH_SUBSCRIPTION_QUOTAS.hobby;
 		const price = result?.price ?? 0;
 		const billingInterval = result?.billing_interval ?? "month";
 
@@ -513,6 +597,7 @@ stripe.openapi(
 				weekly_quota: quota.week,
 				minute_quota: quota.minute,
 				price: Number(price),
+				currency: result?.currency ? String(result.currency) : null,
 				billing_interval: String(billingInterval),
 				payment_type: paymentType as "subscription" | "one_time",
 				stripe_customer_id: result?.stripe_customer_id
@@ -530,7 +615,9 @@ stripe.post("/webhook", async (c) => {
 		const { event, stripeClient } = await validateWebhook(c);
 		const objectId = getEventObjectId(event);
 
-		if (await hasProcessedEvent(c.env.DB, event, objectId)) {
+		if (
+			await c.env.DB.prepare("SELECT 1 FROM stripe_events WHERE event_id=?").bind(event.id).first()
+		) {
 			return c.json({
 				received: true,
 				eventId: event.id,
@@ -579,24 +666,6 @@ function getEventObjectId(event: Stripe.Event): string {
 	return object.id || event.id;
 }
 
-async function hasProcessedEvent(
-	db: D1Database,
-	event: Stripe.Event,
-	objectId: string,
-): Promise<boolean> {
-	const existing = await db
-		.prepare(
-			`SELECT 1 FROM stripe_events
-			 WHERE event_id = ?
-			    OR (event_type = 'checkout.session.completed' AND event_type = ? AND object_id = ?)
-			 LIMIT 1`,
-		)
-		.bind(event.id, event.type, objectId)
-		.first();
-
-	return Boolean(existing);
-}
-
 async function recordProcessedEvent(
 	db: D1Database,
 	event: Stripe.Event,
@@ -605,7 +674,7 @@ async function recordProcessedEvent(
 	await db
 		.prepare(
 			`INSERT INTO stripe_events (event_id, event_type, object_id, created_at, processed_at)
-			 VALUES (?, ?, ?, ?, ?)`,
+			 VALUES (?, ?, ?, ?, ?) ON CONFLICT(event_id) DO NOTHING`,
 		)
 		.bind(event.id, event.type, objectId, event.created, new Date().toISOString())
 		.run();
@@ -657,7 +726,17 @@ async function processWebhookEvent(
 			return await handleSubscriptionDeletion(event, db);
 
 		case "checkout.session.completed":
+		case "checkout.session.async_payment_succeeded":
 			return await handleCheckoutCompleted(event, db);
+		case "checkout.session.expired":
+		case "checkout.session.async_payment_failed": {
+			const checkout = event.data.object as Stripe.Checkout.Session;
+			await db
+				.prepare("DELETE FROM checkout_attempts WHERE attempt_id=?")
+				.bind(checkout.metadata?.attempt ?? "")
+				.run();
+			return { success: true, message: "Checkout closed" };
+		}
 
 		default:
 			return {
@@ -688,24 +767,21 @@ async function handleSubscriptionEvent(
 			};
 		}
 
-		const existing = await db
-			.prepare(
-				"SELECT stripe_subscription_id, stripe_event_created FROM user_subscriptions WHERE user_id = ?",
-			)
+		const previous = await db
+			.prepare("SELECT billing_revision FROM user_subscriptions WHERE user_id=?")
 			.bind(userId)
 			.first();
-
-		if (
-			existing?.stripe_subscription_id === subscription.id &&
-			event.created <= Number(existing.stripe_event_created || 0)
-		) {
-			return {
-				success: true,
-				message: `Stale event for subscription ${subscription.id} ignored`,
-			};
-		}
-
-		await saveSubscription(db, userId, subscription, stripeClient, event.type, event.created);
+		const current = await stripeClient.subscriptions.retrieve(subscription.id);
+		if (current.status === "canceled" || current.status === "incomplete_expired")
+			return handleSubscriptionDeletion(event, db);
+		await saveSubscription(
+			db,
+			userId,
+			current,
+			event.type,
+			event.created,
+			Number(previous?.billing_revision ?? -1),
+		);
 
 		return {
 			success: true,
@@ -729,48 +805,20 @@ async function handleSubscriptionDeletion(
 	const subscription = event.data.object as Stripe.Subscription;
 
 	try {
-		const userId = await findUserForSubscription(subscription, db);
-
-		if (!userId) {
-			return {
-				success: true,
-				message: `Deleted subscription ${subscription.id} has no local user`,
-			};
-		}
-
-		const existing = await db
-			.prepare("SELECT stripe_event_created FROM user_subscriptions WHERE user_id = ?")
-			.bind(userId)
-			.first();
-
-		if (event.created <= Number(existing?.stripe_event_created || 0)) {
-			return {
-				success: true,
-				message: `Stale deletion for subscription ${subscription.id} ignored`,
-			};
-		}
-
-		await db
-			.prepare(`
-	      INSERT INTO user_subscriptions
-	      (user_id, plan_type, status, stripe_subscription_id, stripe_event_created, updated_at)
-	      VALUES (?, 'hobby', 'active', NULL, ?, ?)
-	      ON CONFLICT(user_id) DO UPDATE SET
-	        plan_type = excluded.plan_type,
-	        status = excluded.status,
-	        stripe_subscription_id = NULL,
-	        cancel_at_period_end = FALSE,
-	        price = 0,
-	        stripe_price_id = NULL,
-	        stripe_event_created = excluded.stripe_event_created,
-	        updated_at = excluded.updated_at
-	    `)
-			.bind(userId, event.created, new Date().toISOString())
-			.run();
+		await db.batch([
+			db
+				.prepare("INSERT OR IGNORE INTO ended_subscriptions(subscription_id) VALUES(?)")
+				.bind(subscription.id),
+			db
+				.prepare(
+					"UPDATE user_subscriptions SET plan_type='hobby',status='active',stripe_subscription_id=NULL,cancel_at_period_end=0,price=0,stripe_price_id=NULL,currency=NULL,billing_revision=billing_revision+1,stripe_event_created=?,updated_at=? WHERE stripe_subscription_id=?",
+				)
+				.bind(event.created, new Date().toISOString(), subscription.id),
+		]);
 
 		return {
 			success: true,
-			message: `User ${userId} downgraded to hobby plan`,
+			message: `Processed end of subscription ${subscription.id}`,
 		};
 	} catch (error) {
 		return {
@@ -808,24 +856,29 @@ async function saveSubscription(
 	db: D1Database,
 	userId: string,
 	subscription: Stripe.Subscription,
-	stripeClient: Stripe,
+
 	eventType: string,
 	eventCreated: number,
+	previousRevision: number,
 ): Promise<void> {
 	const { start: periodStart, end: periodEnd } = extractSubscriptionPeriod(subscription);
-	const { price, billingInterval, priceId } = await extractSubscriptionPricing(
-		subscription,
-		stripeClient,
-	);
+	const item = subscription.items.data[0]?.price;
+	if (!item) throw Error("Subscription pricing missing");
+	const price = (item.unit_amount ?? 0) / 100,
+		priceId = item.id,
+		billingInterval = formatBillingInterval(
+			item.recurring?.interval ?? "month",
+			item.recurring?.interval_count ?? 1,
+		);
 	const status = mapStripeStatus(subscription.status);
 
-	await db
+	const saved = await db
 		.prepare(`
 	      INSERT INTO user_subscriptions
 	      (user_id, stripe_customer_id, stripe_subscription_id, plan_type, status,
 	       current_period_start, current_period_end, cancel_at_period_end,
-	       price, billing_interval, stripe_price_id, payment_type, stripe_event_created, updated_at)
-	      VALUES (?, ?, ?, 'pro', ?, ?, ?, ?, ?, ?, ?, 'subscription', ?, ?)
+	       price, billing_interval, stripe_price_id, payment_type, stripe_event_created, updated_at,currency)
+          SELECT ?, ?, ?, 'pro', ?, ?, ?, ?, ?, ?, ?, 'subscription', ?, ?, ? WHERE NOT EXISTS(SELECT 1 FROM ended_subscriptions WHERE subscription_id=?)
 	      ON CONFLICT(user_id) DO UPDATE SET
 	        stripe_customer_id = excluded.stripe_customer_id,
 	        stripe_subscription_id = excluded.stripe_subscription_id,
@@ -839,8 +892,10 @@ async function saveSubscription(
 	        stripe_price_id = excluded.stripe_price_id,
 	        payment_type = excluded.payment_type,
 	        stripe_event_created = excluded.stripe_event_created,
-	        updated_at = excluded.updated_at
-	    `)
+	        updated_at = excluded.updated_at,currency=excluded.currency,billing_revision=billing_revision+1
+            WHERE billing_revision=? AND (payment_type!='one_time' OR coalesce(julianday(current_period_end),0)<=julianday('now')) AND (user_subscriptions.stripe_subscription_id IS NULL OR user_subscriptions.stripe_subscription_id=excluded.stripe_subscription_id)
+            RETURNING user_id
+        `)
 		.bind(
 			userId,
 			subscription.customer,
@@ -848,15 +903,31 @@ async function saveSubscription(
 			status,
 			periodStart,
 			periodEnd,
-			subscription.cancel_at_period_end || false,
+			Number(subscription.cancel_at_period_end),
 			price,
 			billingInterval,
 			priceId,
 			eventCreated,
 			new Date().toISOString(),
+			item.currency.toUpperCase(),
+			subscription.id,
+			previousRevision,
 		)
+		.first();
+	if (!saved) {
+		if (
+			await db
+				.prepare("SELECT 1 FROM ended_subscriptions WHERE subscription_id=?")
+				.bind(subscription.id)
+				.first()
+		)
+			return;
+		throw Error("Subscription state changed during reconciliation");
+	}
+	await db
+		.prepare("DELETE FROM checkout_attempts WHERE user_id=? AND attempt_id=?")
+		.bind(userId, subscription.metadata?.attempt ?? "")
 		.run();
-
 	if (eventType === "customer.subscription.created") {
 		try {
 			const userResult = await db
@@ -868,7 +939,7 @@ async function saveSubscription(
 				const telegramMessage = `💳 New Subscription Payment
 Email: ${userResult.email}
 Plan: Pro Plan
-Amount: $${price}
+Amount: ${item.currency.toUpperCase()} ${price}
 Billing: ${billingInterval}`;
 
 				await notifyTelegram(telegramMessage, "alerts");
@@ -895,6 +966,8 @@ async function handleCheckoutCompleted(
 		};
 	}
 
+	if (session.payment_status !== "paid" && session.payment_status !== "no_payment_required")
+		return { success: true, message: "Waiting for payment confirmation" };
 	return await handleOneTimePayment(session, db);
 }
 
@@ -925,62 +998,57 @@ async function handleOneTimePayment(
 			};
 		}
 
-		const existing = await db
-			.prepare("SELECT current_period_end, payment_type FROM user_subscriptions WHERE user_id = ?")
-			.bind(userId)
-			.first();
-
-		const now = new Date();
-		let periodStart: Date;
-
-		if (
-			existing?.payment_type === "one_time" &&
-			existing?.current_period_end &&
-			new Date(existing.current_period_end as string) > now
-		) {
-			periodStart = new Date(existing.current_period_end as string);
-		} else {
-			periodStart = now;
-		}
-
-		const periodEnd = new Date(periodStart.getTime() + durationDays * 24 * 60 * 60 * 1000);
-
-		const price = session.amount_total ? session.amount_total / 100 : 0;
-		const billingInterval = (priceId && ONETIME_INTERVALS[priceId]) || "month";
-
-		await db
-			.prepare(`
-					INSERT INTO user_subscriptions
-					(user_id, stripe_customer_id, stripe_subscription_id, plan_type, status,
-					 current_period_start, current_period_end, cancel_at_period_end,
-					 price, billing_interval, stripe_price_id, payment_type, stripe_event_created, updated_at)
-					VALUES (?, ?, NULL, 'pro', 'active', ?, ?, FALSE, ?, ?, ?, 'one_time', 0, ?)
-					ON CONFLICT(user_id) DO UPDATE SET
-					  stripe_customer_id = excluded.stripe_customer_id,
-					  stripe_subscription_id = NULL,
-					  plan_type = excluded.plan_type,
-					  status = excluded.status,
-					  current_period_start = excluded.current_period_start,
-					  current_period_end = excluded.current_period_end,
-					  cancel_at_period_end = excluded.cancel_at_period_end,
-					  price = excluded.price,
-					  billing_interval = excluded.billing_interval,
-					  stripe_price_id = excluded.stripe_price_id,
-					  payment_type = excluded.payment_type,
-					  stripe_event_created = 0,
-					  updated_at = excluded.updated_at
-				`)
+		const price = (session.amount_total ?? 0) / 100;
+		const currency = session.currency?.toUpperCase();
+		if (!currency) throw Error("Missing payment currency");
+		const now = new Date().toISOString();
+		const receipt = db
+			.prepare("INSERT INTO fulfilled_passes(session_id,user_id,fulfilled_at) VALUES(?,?,?)")
+			.bind(session.id, userId, now);
+		const grant = db
+			.prepare(`INSERT INTO user_subscriptions(user_id,stripe_customer_id,stripe_subscription_id,plan_type,status,current_period_start,current_period_end,cancel_at_period_end,price,billing_interval,stripe_price_id,payment_type,stripe_event_created,updated_at,currency)
+ VALUES(?,?,NULL,'pro','active',?,strftime('%Y-%m-%dT%H:%M:%fZ',?,?),0,?,?,?,'one_time',0,?,?)
+ ON CONFLICT(user_id) DO UPDATE SET stripe_customer_id=coalesce(excluded.stripe_customer_id,user_subscriptions.stripe_customer_id),plan_type='pro',status='active',current_period_start=excluded.current_period_start,
+ current_period_end=strftime('%Y-%m-%dT%H:%M:%fZ',max(julianday(excluded.current_period_start),CASE WHEN payment_type='one_time' THEN coalesce(julianday(current_period_end),0) ELSE 0 END),?),
+ price=excluded.price,billing_interval=excluded.billing_interval,stripe_price_id=excluded.stripe_price_id,payment_type='one_time',billing_revision=billing_revision+1,updated_at=excluded.updated_at,currency=excluded.currency
+ WHERE user_subscriptions.stripe_subscription_id IS NULL RETURNING current_period_end`)
 			.bind(
 				userId,
 				session.customer || null,
-				now.toISOString(),
-				periodEnd.toISOString(),
+				now,
+				now,
+				"+" + durationDays + " days",
 				price,
-				billingInterval,
+				ONETIME_INTERVALS[priceId!],
 				priceId,
-				new Date().toISOString(),
+				now,
+				currency,
+				"+" + durationDays + " days",
+			);
+		let expires: string;
+		try {
+			const results = await db.batch([
+				receipt,
+				grant,
+				db
+					.prepare("DELETE FROM checkout_attempts WHERE attempt_id=?")
+					.bind(session.metadata?.attempt ?? ""),
+			]);
+			expires = String(
+				(results[1].results[0] as { current_period_end: string } | undefined)?.current_period_end ??
+					"",
+			);
+			if (!expires) throw Error("Existing recurring entitlement conflicts with paid pass");
+		} catch (error) {
+			if (
+				await db
+					.prepare("SELECT 1 FROM fulfilled_passes WHERE session_id=?")
+					.bind(session.id)
+					.first()
 			)
-			.run();
+				return { success: true, message: "Pass already fulfilled" };
+			throw error;
+		}
 
 		try {
 			const userResult = await db
@@ -989,8 +1057,7 @@ async function handleOneTimePayment(
 				.first();
 
 			if (userResult?.email) {
-				const currencySymbol = session.currency?.toUpperCase() === "CNY" ? "¥" : "$";
-				const telegramMessage = `💳 New One-time Payment\nEmail: ${userResult.email}\nPlan: Pro Pass\nAmount: ${currencySymbol}${price}\nDuration: ${durationDays} days\nExpires: ${periodEnd.toISOString().split("T")[0]}`;
+				const telegramMessage = `💳 New One-time Payment\nEmail: ${userResult.email}\nPlan: Pro Pass\nAmount: ${currency} ${price}\nDuration: ${durationDays} days\nExpires: ${expires.split("T")[0]}`;
 				await notifyTelegram(telegramMessage, "alerts");
 			}
 		} catch (_notificationError) {
@@ -999,7 +1066,7 @@ async function handleOneTimePayment(
 
 		return {
 			success: true,
-			message: `One-time payment processed: user ${userId} has Pro access until ${periodEnd.toISOString()}`,
+			message: `One-time payment processed: user ${userId} has Pro access until ${expires}`,
 		};
 	} catch (error) {
 		return {

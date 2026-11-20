@@ -287,7 +287,7 @@ export function AppNavbar() {
 	// Homepage logout handler - stays on current page, only changes navbar state
 	const handleLogout = useCallback(async () => {
 		try {
-			logout();
+			await logout();
 			toast.success(t("nav.logout_success"));
 			setIsMobileMenuOpen(false);
 		} catch (error) {

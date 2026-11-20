@@ -5,8 +5,6 @@ import { normalizeEmail } from "@/utils/email";
 import type { ToolActivity, UsagePeriod } from "../../shared/tool-activity";
 import { ADMIN_PASSWORD_HEADER, ADMIN_SESSION_KEY } from "./constants";
 
-let isLoggingOut = false;
-
 function extractErrorMessage(data: unknown): string | null {
 	if (Array.isArray(data) && data.length > 0 && typeof data[0]?.message === "string") {
 		return data[0].message;
@@ -32,7 +30,8 @@ class ApiClient {
 				const raw = localStorage.getItem("auth-storage");
 				if (raw) {
 					const token = JSON.parse(raw).state?.token;
-					if (token) config.headers.Authorization = `Bearer ${token}`;
+					if (token && !config.headers.Authorization)
+						config.headers.Authorization = `Bearer ${token}`;
 				}
 			} catch {}
 
@@ -54,27 +53,17 @@ class ApiClient {
 				if ((status === 401 || status === 403) && !isAuthEndpoint) {
 					if (url.includes("/admin/")) {
 						localStorage.removeItem(ADMIN_SESSION_KEY);
-					} else if (!isLoggingOut) {
-						isLoggingOut = true;
-						import("@/stores/auth").then(({ useAuthStore }) => {
-							useAuthStore.getState().logout();
-							setTimeout(() => {
-								isLoggingOut = false;
-							}, 2000);
+					} else if (status === 401 && error.config?.headers.Authorization) {
+						const rejected = error.config.headers.Authorization;
+						void import("@/stores/auth").then(({ useAuthStore }) => {
+							const state = useAuthStore.getState();
+							if (rejected === "Bearer " + state.token) state.clearSession();
 						});
 					}
 				}
 				return Promise.reject(error);
 			},
 		);
-	}
-
-	setAuthToken(token: string) {
-		this.client.defaults.headers.common.Authorization = `Bearer ${token}`;
-	}
-
-	clearAuthToken() {
-		delete this.client.defaults.headers.common.Authorization;
 	}
 
 	// HTTP methods
@@ -157,7 +146,7 @@ class ApiClient {
 
 	// Auth endpoints with modern email normalization
 	async login(credentials: { email: string; password: string; remember_me?: boolean }) {
-		return this.post("/auth/login", {
+		return this.post<{ token: string }>("/auth/login", {
 			...credentials,
 			email: normalizeEmail(credentials.email),
 		});
@@ -169,7 +158,7 @@ class ApiClient {
 		password: string;
 		terms_accepted: boolean;
 	}) {
-		return this.post("/auth/register", {
+		return this.post<{ token: string }>("/auth/register", {
 			...userData,
 			email: normalizeEmail(userData.email),
 		});
@@ -197,12 +186,12 @@ class ApiClient {
 		return this.post("/auth/refresh");
 	}
 
-	async getGoogleAuthUrl(state?: string) {
-		return this.post("/oauth/google", { state });
+	async getGoogleAuthUrl() {
+		return this.post("/oauth/google", {});
 	}
 
-	async getGitHubAuthUrl(state?: string) {
-		return this.post("/oauth/github", { state });
+	async getGitHubAuthUrl() {
+		return this.post("/oauth/github", {});
 	}
 
 	// MCP Tokens
@@ -321,7 +310,7 @@ class ApiClient {
 	}
 
 	// Contact message submission
-	async submitContactMessage(data: { email?: string; message: string; userId?: string }) {
+	async submitContactMessage(data: { email?: string; message: string }) {
 		return this.post("/contact-messages", data);
 	}
 

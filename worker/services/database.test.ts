@@ -54,6 +54,21 @@ test("PostgreSQL cache expiry, alias deduplication, capacity, budget races and i
 			await connection.release();
 		}
 		await sql`CREATE TABLE pages (id uuid DEFAULT gen_random_uuid(), url text UNIQUE, title text, content text DEFAULT '', collect_count integer NOT NULL)`;
+		await sql`CREATE TABLE chunks(id integer PRIMARY KEY,url text,title text,content text,chunk_index integer,total_chunks integer)`;
+		await sql`INSERT INTO chunks SELECT i,'https://example.test/'||i,'Article: Nearby','Using NavigationStack',0,1 FROM generate_series(1,128) i`;
+		await sql`INSERT INTO chunks VALUES(129,'https://example.test/navigationstack','Structure: NavigationStack'||chr(10)||'Description','Generic container',0,1)`;
+		await sql.unsafe(
+			readFileSync(
+				new URL("../../ops/server/postgresql_keyword_symbols.sql", import.meta.url),
+				"utf8",
+			)
+				.replace(/^.*\n/, "")
+				.replace("public.chunks", "chunks"),
+		);
+		const matches = await db.keywordSearch("NavigationStack", { resultCount: 3 });
+		assert.equal(matches.length, 3);
+		assert.equal(matches[0].url, "https://example.test/navigationstack");
+		assert.equal(new Set(matches.map((r) => r.id)).size, 3);
 		await db.cachePage("https://docs.example.com/old", page);
 		assert.deepEqual(await db.getCachedPage("https://docs.example.com/old"), page);
 		assert.equal((await sql`SELECT count(*) FROM web_page_cache`)[0].count, "1");

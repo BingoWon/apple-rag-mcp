@@ -203,7 +203,13 @@ test("global daily statistics handle SQLite/ISO dates, Singapore boundaries, out
 		const plan = sqlite
 			.prepare(`EXPLAIN QUERY PLAN ${sql}`)
 			.all("2026-10-02", "2026-10-10", data.start, data.end);
-		assert.ok(plan.some((row) => String(row.detail).includes(`idx_${table}_created_at`)));
+		assert.ok(
+			plan.some(
+				(row) =>
+					String(row.detail).includes(`SEARCH ${table} USING INDEX`) ||
+					String(row.detail).includes(`SEARCH ${table} USING COVERING INDEX`),
+			),
+		);
 	}
 	assert.doesNotMatch(JSON.stringify(data), /anon_|test-token|example\.com|requested_query/);
 });

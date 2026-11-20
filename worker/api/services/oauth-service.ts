@@ -4,10 +4,9 @@
 
 import type { Env } from "../../shared/types.js";
 import type { User } from "../types";
-import { generateTokenPair } from "../utils/jwt-simple";
-import { generateUUID } from "../utils/security";
 import { getPlanPermissions, getUserPlanType } from "../utils/subscription";
 import { notifyTelegram } from "../utils/telegram-notifier.js";
+import { issueWebSession } from "../utils/web-session";
 
 // OAuth provider response types
 interface GoogleUserInfo {
@@ -44,7 +43,7 @@ export class OAuthService {
 	/**
 	 * Returns OAuth authorization URL.
 	 */
-	getAuthUrl(provider: "google" | "github", state?: string): string {
+	getAuthUrl(provider: "google" | "github", state: string): string {
 		const redirectUri = `${this.origin}/api/oauth/${provider}/callback`;
 
 		console.log(`Website OAuth ${provider} redirect URI:`, redirectUri);
@@ -55,7 +54,7 @@ export class OAuthService {
 				redirect_uri: redirectUri,
 				response_type: "code",
 				scope: "email profile",
-				state: state || "",
+				state,
 			});
 			return `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
 		}
@@ -65,7 +64,7 @@ export class OAuthService {
 				client_id: this.env.GITHUB_CLIENT_ID!,
 				redirect_uri: redirectUri,
 				scope: "user:email read:user",
-				state: state || "",
+				state,
 			});
 			return `https://github.com/login/oauth/authorize?${params}`;
 		}
@@ -79,8 +78,6 @@ export class OAuthService {
 	async handleCallback(
 		provider: "google" | "github",
 		code: string,
-		userAgent?: string,
-		ipAddress?: string,
 	): Promise<{
 		success: boolean;
 		data?: {
@@ -94,7 +91,7 @@ export class OAuthService {
 			const tokens = await this.exchangeCodeForTokens(provider, code);
 			const userInfo = await this.getUserInfo(provider, tokens.access_token);
 			const user = await this.createOrUpdateUser(userInfo);
-			const jwtToken = await this.generateJwtToken(user, userAgent, ipAddress);
+			const jwtToken = await this.generateJwtToken(user);
 
 			return {
 				success: true,
@@ -272,10 +269,8 @@ export class OAuthService {
          email = ?, name = ?, avatar = ?, last_login = ?, updated_at = ?
          WHERE id = ?`,
 			)
-				.bind(normalizedEmail, userInfo.name, userInfo.avatar, now, now, existingUser.id)
+				.bind(normalizedEmail, userInfo.name, userInfo.avatar ?? null, now, now, existingUser.id)
 				.run();
-
-			const planType = await getUserPlanType(existingUser.id as string, this.env.DB);
 
 			const updatedUser = await this.env.DB.prepare(
 				"SELECT id, email, name, avatar, provider, provider_id, created_at, updated_at FROM users WHERE id = ?",
@@ -287,7 +282,7 @@ export class OAuthService {
 				...userInfo,
 				email: normalizedEmail,
 				id: existingUser.id as string,
-				plan_type: planType,
+
 				created_at: updatedUser?.created_at as string,
 				updated_at: updatedUser?.updated_at as string,
 			};
@@ -316,7 +311,7 @@ export class OAuthService {
 					userId,
 					normalizedEmail,
 					userInfo.name,
-					userInfo.avatar,
+					userInfo.avatar ?? null,
 					userInfo.provider,
 					userInfo.provider_id,
 					now,
@@ -356,16 +351,10 @@ Email: ${normalizedEmail}`);
 	/**
 	 * Generates JWT for website auth.
 	 */
-	private async generateJwtToken(
-		user: UserProfile,
-		_userAgent?: string,
-		_ipAddress?: string,
-	): Promise<{
+	private async generateJwtToken(user: UserProfile): Promise<{
 		token: string;
 		expiresAt: string;
 	}> {
-		const sessionId = generateUUID();
-
 		const planType = await getUserPlanType(user.id, this.env.DB);
 		const permissions = getPlanPermissions(planType);
 
@@ -379,17 +368,14 @@ Email: ${normalizedEmail}`);
 			updated_at: user.updated_at!,
 		};
 
-		const tokens = await generateTokenPair(
+		const session = await issueWebSession(
+			this.env.DB,
 			userForToken,
-			sessionId,
 			planType,
 			permissions,
-			this.env.JWT_SECRET!,
+			this.env.JWT_SECRET,
+			true,
 		);
-
-		return {
-			token: tokens.access_token,
-			expiresAt: tokens.expires_at,
-		};
+		return { token: session.token, expiresAt: session.expires_at };
 	}
 }

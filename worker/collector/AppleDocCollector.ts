@@ -9,14 +9,6 @@ import { BatchErrorHandler } from "./utils/batch-error-handler.js";
 import { logger } from "./utils/logger.js";
 import { notifyStats } from "./utils/telegram-notifier.js";
 
-interface ProcessBatchResult {
-	successRecords: DatabaseRecord[];
-	failureRecords: DatabaseRecord[];
-	deleteIds: string[];
-	extractedUrls: Set<string>;
-	totalChunks: number;
-}
-
 interface ProcessingPlanItem {
 	record: DatabaseRecord;
 	collectResult: BatchResult<unknown>;
@@ -111,7 +103,7 @@ class AppleDocCollector {
 		return { totalChunks: result.totalChunks };
 	}
 
-	private async processBatch(records: DatabaseRecord[]): Promise<ProcessBatchResult> {
+	private async processBatch(records: DatabaseRecord[]): Promise<{ totalChunks: number }> {
 		// Split records by type
 		const videoRecords = records.filter((r) => AppleAPIClient.isVideoUrl(r.url));
 		const docRecords = records.filter((r) => !AppleAPIClient.isVideoUrl(r.url));
@@ -228,6 +220,9 @@ class AppleDocCollector {
 		// Videos don't have raw JSON API response, only documents do
 		const isVideo = AppleAPIClient.isVideoUrl(record.url);
 		const newRawJson = isVideo ? null : JSON.stringify(collectResult.data);
+		if (!processResult?.data || (record.content?.trim() && !processResult.data.content.trim())) {
+			return { record, collectResult, hasChanged: false, error: "No usable replacement content" };
+		}
 		const comparison = this.compareContent(record, processResult);
 
 		this.logContentChanges(record.url, comparison);
@@ -264,12 +259,12 @@ class AppleDocCollector {
 			const changes = [];
 			if (titleChanged) changes.push(`Title: "${oldRecord.title}" → "${newTitle}"`);
 			if (contentChanged)
-				changes.push(`Content: ${oldRecord.content.length} → ${newContent.length} chars`);
+				changes.push(`Content: ${(oldRecord.content ?? "").length} → ${newContent.length} chars`);
 
 			return {
 				hasChanged,
 				difference: changes.join(", "),
-				oldContent: `Title: ${oldRecord.title}\nContent: ${oldRecord.content.substring(0, 200)}...`,
+				oldContent: `Title: ${oldRecord.title}\nContent: ${(oldRecord.content ?? "").substring(0, 200)}...`,
 				newContent: `Title: ${newTitle}\nContent: ${newContent.substring(0, 200)}...`,
 			};
 		}
@@ -298,7 +293,7 @@ class AppleDocCollector {
 
 	private async executeProcessingPlan(
 		processingPlan: ProcessingPlanItem[],
-	): Promise<ProcessBatchResult> {
+	): Promise<{ totalChunks: number }> {
 		const changedRecords = processingPlan.filter((r) => r.hasChanged && !r.error);
 		const unchangedRecords = processingPlan.filter((r) => !r.hasChanged && !r.error);
 		const errorRecords = processingPlan.filter((r) => r.error);
@@ -311,11 +306,11 @@ class AppleDocCollector {
 		const processResults = changedRecords.map((r) => r.processResult).filter(Boolean);
 
 		const { allChunks, embeddings } = await this.generateChunksAndEmbeddings(processResults);
-		const result = this.buildProcessingResult(processingPlan, allChunks);
-
-		// Keep the source page unchanged if link discovery cannot be saved, so it can be retried.
-		if (result.extractedUrls.size > 0) {
-			await this.dbManager.batchInsertUrls([...result.extractedUrls]).catch((error) => {
+		const extractedUrls = new Set(
+			processingPlan.flatMap((item) => item.processResult?.data?.extractedUrls ?? []),
+		);
+		if (extractedUrls.size) {
+			await this.dbManager.batchInsertUrls([...extractedUrls]).catch((error) => {
 				throw new Error(
 					`PostgreSQL discovered URL sync failed: ${error instanceof Error ? error.message : String(error)}`,
 					{ cause: error },
@@ -350,17 +345,14 @@ class AppleDocCollector {
 				}
 			}
 
-			if (allChunks.length > 0) {
-				const chunksWithEmbeddings = allChunks.map((item, index) => ({
-					url: item.url,
-					title: item.chunk.title,
-					content: item.chunk.content,
-					embedding: embeddings[index] || [],
-					chunk_index: item.chunk.chunk_index,
-					total_chunks: item.chunk.total_chunks,
-				}));
-				await this.dbManager.insertChunks(chunksWithEmbeddings);
-			}
+			const chunksWithEmbeddings = allChunks.map((item, index) => ({
+				url: item.url,
+				title: item.chunk.title,
+				content: item.chunk.content,
+				embedding: embeddings[index]!,
+				chunk_index: item.chunk.chunk_index,
+				total_chunks: item.chunk.total_chunks,
+			}));
 
 			await this.dbManager.batchUpdateFullRecords(
 				changedRecords.map((r) => {
@@ -372,6 +364,7 @@ class AppleDocCollector {
 						content: r.processResult?.data?.content || "",
 					};
 				}),
+				chunksWithEmbeddings,
 			);
 		}
 
@@ -402,7 +395,7 @@ class AppleDocCollector {
 			await logger.warn(`Temporary errors: ${temporaryErrorRecords.length} URLs\n${temporaryUrls}`);
 		}
 
-		return result;
+		return { totalChunks: allChunks.length };
 	}
 
 	private async generateChunksAndEmbeddings(
@@ -419,20 +412,17 @@ class AppleDocCollector {
 		}>;
 		embeddings: number[][];
 	}> {
-		const chunkResults =
-			processResults.length > 0
-				? this.chunker.chunkTexts(
-						processResults
-							.filter((r): r is NonNullable<typeof r> => r != null)
-							.filter((r) => r.data)
-							.map((r) => ({
-								url: r.url,
-								title: r?.data?.title ?? null,
-								content: r?.data?.content ?? "",
-							})),
-					)
-				: [];
-
+		const documents = processResults.flatMap((result) =>
+			result?.data?.content.trim()
+				? [{ url: result.url, title: result.data.title, content: result.data.content }]
+				: [],
+		);
+		const chunkResults = this.chunker.chunkTexts(documents);
+		if (
+			chunkResults.length !== documents.length ||
+			chunkResults.some((row) => !row.data?.length || row.error)
+		)
+			throw Error("Document chunking failed");
 		const allChunks = chunkResults.flatMap((r) =>
 			r.data ? r.data.map((chunk) => ({ url: r.url, chunk })) : [],
 		);
@@ -443,52 +433,9 @@ class AppleDocCollector {
 
 		const embeddings = await createEmbeddings(embeddingTexts, this.apiKey, this.recordUsage);
 
+		if (embeddings.length !== allChunks.length || embeddings.some((vector) => !vector?.length))
+			throw Error("Incomplete document embeddings");
 		return { allChunks, embeddings };
-	}
-
-	private buildProcessingResult(
-		processingPlan: ProcessingPlanItem[],
-		allChunks: Array<{
-			url: string;
-			chunk: {
-				title: string | null;
-				content: string;
-				chunk_index: number;
-				total_chunks: number;
-			};
-		}>,
-	): ProcessBatchResult {
-		const successRecords: DatabaseRecord[] = [];
-		const failureRecords: DatabaseRecord[] = [];
-		const extractedUrls = new Set<string>();
-
-		for (const planItem of processingPlan) {
-			const { record, collectResult, error } = planItem;
-
-			if (error) {
-				failureRecords.push(record);
-				continue;
-			}
-
-			successRecords.push(record);
-
-			if (collectResult?.data) {
-				const processResult = planItem.processResult;
-				if (processResult?.data?.extractedUrls) {
-					for (const url of processResult.data.extractedUrls) {
-						extractedUrls.add(url);
-					}
-				}
-			}
-		}
-
-		return {
-			successRecords,
-			failureRecords,
-			deleteIds: [],
-			extractedUrls,
-			totalChunks: allChunks.length,
-		};
 	}
 }
 

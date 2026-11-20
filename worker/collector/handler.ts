@@ -16,6 +16,10 @@ export async function handleScheduled(env: Env): Promise<void> {
 	try {
 		if (shouldRunHourlyMaintenance) {
 			await env.DB.prepare(
+				"DELETE FROM quota_reservations WHERE created_at<unixepoch()-86400",
+			).run();
+			await env.DB.prepare("DELETE FROM web_sessions WHERE expires_at<=unixepoch()").run();
+			await env.DB.prepare(
 				`DELETE FROM usage_counters
 				 WHERE (period = 'minute' AND window_start < datetime('now', '-2 days'))
 				    OR (period = 'weekly' AND window_start < datetime('now', '-14 days'))`,

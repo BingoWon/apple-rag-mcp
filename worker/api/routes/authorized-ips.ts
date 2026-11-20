@@ -3,6 +3,7 @@
  * Manages IP-based authentication for users
  */
 import { Hono } from "hono";
+import { canonicalIP } from "../../../shared/ip";
 import { ApiErrorCode } from "../constants/error-codes";
 import { authMiddleware } from "../middleware/auth";
 import type { User } from "../types";
@@ -13,10 +14,6 @@ const app = new Hono<AppEnv>();
 
 // Apply auth middleware to all routes first
 app.use("*", authMiddleware);
-
-// IP validation regex (IPv4 and IPv6)
-const IP_REGEX =
-	/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$|^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$|^::1$|^::$/;
 
 // List user's authorized IPs
 app.get("/", async (c) => {
@@ -60,10 +57,11 @@ app.post("/", async (c) => {
 
 	try {
 		const body = await c.req.json();
-		const { ip_address, name } = body;
+		const { name } = body;
+		const ip_address = canonicalIP(body.ip_address);
 
 		// Validate input
-		if (!ip_address || !name) {
+		if (!body.ip_address || !name) {
 			return c.json(
 				{
 					success: false,
@@ -77,7 +75,7 @@ app.post("/", async (c) => {
 		}
 
 		// Validate IP format
-		if (!IP_REGEX.test(ip_address)) {
+		if (!ip_address) {
 			return c.json(
 				{
 					success: false,

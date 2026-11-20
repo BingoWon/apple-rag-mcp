@@ -76,9 +76,9 @@ export class PageReader {
 			);
 		}
 		signal.throwIfAborted();
-		const stored = await this.database.getPageByUrl(url);
+		const stored = await this.indexed(url);
 		signal.throwIfAborted();
-		if (stored?.content.trim())
+		if (stored?.content?.trim())
 			return {
 				...stored,
 				source: isAppleUrl(stored.url) ? "apple" : "third_party",
@@ -87,12 +87,14 @@ export class PageReader {
 				pageId: stored.id,
 				cacheHit: false,
 			};
-		const cached = canCacheUrl(url)
-			? await this.database.getCachedPage(url).catch(() => {
-					logger.warn("Could not read the webpage cache.");
-					return null;
-				})
-			: null;
+		const indexAvailable = stored !== undefined;
+		const cached =
+			indexAvailable && canCacheUrl(url)
+				? await this.database.getCachedPage(url).catch(() => {
+						logger.warn("Could not read the webpage cache.");
+						return null;
+					})
+				: null;
 		signal.throwIfAborted();
 		if (cached) {
 			this.checkTarget(cached.status, cached.url, cached.provider, true);
@@ -102,11 +104,11 @@ export class PageReader {
 		let page: StoredWebPage;
 		try {
 			page = isAppleUrl(url)
-				? await this.readApple(url, deadline)
+				? await this.readApple(url, deadline, indexAvailable)
 				: await this.readWeb(url, deadline);
 		} catch (error) {
 			signal.throwIfAborted();
-			if (error instanceof PageReadError && error.reason === "PAGE_NOT_FOUND") {
+			if (indexAvailable && error instanceof PageReadError && error.reason === "PAGE_NOT_FOUND") {
 				await this.cache(url, {
 					url: error.url ?? url,
 					title: null,
@@ -132,13 +134,24 @@ export class PageReader {
 			);
 		}
 		signal.throwIfAborted();
-		await this.cache(url, page);
-		if (page.provider === "apple_json" && new URL(page.url).hostname === "developer.apple.com") {
+		if (indexAvailable) await this.cache(url, page);
+		if (
+			indexAvailable &&
+			page.provider === "apple_json" &&
+			new URL(page.url).hostname === "developer.apple.com"
+		) {
 			await this.database
 				.enqueuePage(page.url)
 				.catch(() => logger.warn("Could not schedule the official page for indexing."));
 		}
 		return { ...page, pageId: null, cacheHit: false };
+	}
+
+	private indexed(url: string) {
+		return this.database.getPageByUrl(url).catch(() => {
+			logger.warn("Page index unavailable; trying live retrieval.");
+			return undefined;
+		});
 	}
 
 	private async cache(requestedUrl: string, page: StoredWebPage): Promise<void> {
@@ -149,7 +162,11 @@ export class PageReader {
 		}
 	}
 
-	private async readApple(url: string, signal: AbortSignal): Promise<StoredWebPage> {
+	private async readApple(
+		url: string,
+		signal: AbortSignal,
+		indexAvailable: boolean,
+	): Promise<StoredWebPage> {
 		let finalUrl = url;
 		for (let hop = 0; ; hop++) {
 			const response = await fetch(finalUrl, { redirect: "manual", signal });
@@ -181,9 +198,9 @@ export class PageReader {
 			if (!response.ok) return this.readWeb(finalUrl, signal);
 			break;
 		}
-		if (finalUrl !== url) {
-			const stored = await this.database.getPageByUrl(finalUrl);
-			if (stored?.content.trim())
+		if (indexAvailable && finalUrl !== url) {
+			const stored = await this.indexed(finalUrl);
+			if (stored?.content?.trim())
 				return { ...stored, source: "apple", provider: "index", status: 200 };
 		}
 		if (

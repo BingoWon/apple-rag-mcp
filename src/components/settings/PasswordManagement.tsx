@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/Input";
 import { LoaderFive } from "@/components/ui/loader";
 import { api } from "@/lib/api";
+import { useAuthStore } from "@/stores/auth";
 
 interface AuthStatus {
 	provider: string;
@@ -65,11 +66,7 @@ export function PasswordManagement() {
 				toast.success(t("settings.password_changed"));
 				changeForm.reset();
 
-				// Refresh auth status
-				const statusResponse = await api.getAuthStatus();
-				if (statusResponse.success && statusResponse.data) {
-					setAuthStatus(statusResponse.data as AuthStatus);
-				}
+				useAuthStore.getState().clearSession();
 			} else {
 				throw new Error(response.error?.message || t("settings.password_change_error"));
 			}

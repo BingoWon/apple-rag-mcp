@@ -5,6 +5,7 @@
 import type { Env } from "../../shared/types.js";
 import type { User } from "../types";
 import type { ApiResponse } from "../types/api-response";
+import { issueWebSession } from "../utils/web-session";
 
 interface LoginRequest {
 	email: string;
@@ -19,7 +20,7 @@ interface RegisterRequest {
 }
 
 import { ResponseBuilder } from "../types/response";
-import { generateTokenPair, generateUUID, hashPassword, verifyPassword } from "../utils/security";
+import { hashPassword, verifyPassword } from "../utils/security";
 import { getPlanPermissions, getUserPlanType } from "../utils/subscription";
 import { EmailService } from "./email-service";
 
@@ -72,14 +73,14 @@ export class AuthService {
 			const passwordHash = await hashPassword(request.password);
 
 			// Create user with normalized email
-			const userId = generateUUID();
+			const userId = crypto.randomUUID();
 			const now = new Date().toISOString();
 			await this.db
 				.prepare(
 					`INSERT INTO users (id, email, password_hash, name, provider, created_at, updated_at)
            VALUES (?, ?, ?, ?, 'email', ?, ?)`,
 				)
-				.bind(userId, normalizedEmail, passwordHash, request.name, now, now)
+				.bind(userId, normalizedEmail, passwordHash, request.name ?? null, now, now)
 				.run();
 
 			// Get created user
@@ -99,22 +100,17 @@ export class AuthService {
 				throw new Error("User object is missing required fields");
 			}
 
-			// Generate tokens (stateless JWT - no session object needed)
-			const sessionId = generateUUID();
-
 			// Get user's subscription plan type
 			const planType = await getUserPlanType(user.id!, this.db);
 			const permissions = getPlanPermissions(planType);
 
-			const tokens = await generateTokenPair(
+			const tokens = await issueWebSession(
+				this.db,
 				user,
-				sessionId,
 				planType,
 				permissions,
 				this.env.JWT_SECRET!,
 			);
-
-			// Note: Using stateless JWT authentication - no session storage needed
 
 			return ResponseBuilder.success({
 				user: {
@@ -125,7 +121,7 @@ export class AuthService {
 					plan_type: planType,
 					created_at: user.created_at!,
 				},
-				token: tokens.access_token,
+				token: tokens.token,
 				expires_at: tokens.expires_at,
 			});
 		} catch (error) {
@@ -171,23 +167,18 @@ export class AuthService {
 				return ResponseBuilder.error("INVALID_CREDENTIALS", "Invalid email or password");
 			}
 
-			// Generate tokens (stateless JWT - no session object needed)
-			const sessionId = generateUUID();
-
 			// Get user's subscription plan type
 			const planType = await getUserPlanType(user.id!, this.db);
 			const permissions = getPlanPermissions(planType);
 
 			// Generate tokens
-			const tokens = await generateTokenPair(
+			const tokens = await issueWebSession(
+				this.db,
 				user,
-				sessionId,
 				planType,
 				permissions,
 				this.env.JWT_SECRET!,
 			);
-
-			// Note: Using stateless JWT authentication - no session storage needed
 
 			return {
 				success: true,
@@ -200,7 +191,7 @@ export class AuthService {
 						plan_type: planType,
 						created_at: user.created_at!,
 					},
-					token: tokens.access_token,
+					token: tokens.token,
 					expires_at: tokens.expires_at,
 				},
 			};
@@ -239,7 +230,7 @@ export class AuthService {
 			}
 
 			// Generate reset token
-			const resetToken = generateUUID();
+			const resetToken = crypto.randomUUID();
 			const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
 			// Save reset token to database
@@ -325,14 +316,13 @@ export class AuthService {
 			const passwordHash = await hashPassword(newPassword);
 
 			// Update password and clear reset token
-			await this.db
+			const updated = await this.db
 				.prepare(
-					`UPDATE users
-           SET password_hash = ?, reset_token = NULL, reset_token_expires_at = NULL, updated_at = ?
-           WHERE id = ?`,
+					"UPDATE users SET password_hash=?,reset_token=NULL,reset_token_expires_at=NULL,updated_at=? WHERE id=? AND reset_token=? AND julianday(reset_token_expires_at)>julianday('now') RETURNING id",
 				)
-				.bind(passwordHash, new Date().toISOString(), user.id)
-				.run();
+				.bind(passwordHash, new Date().toISOString(), user.id, token)
+				.first();
+			if (!updated) return ResponseBuilder.error("INVALID_TOKEN", "Invalid or expired reset token");
 
 			return {
 				success: true,
@@ -415,15 +405,20 @@ export class AuthService {
 			// Hash new password
 			const newPasswordHash = await hashPassword(newPassword);
 
-			// Update password in database
-			await this.db
+			// Require the same password version that was verified before hashing.
+			const changed = await this.db
 				.prepare(
 					`UPDATE users
-           SET password_hash = ?, updated_at = ?
-           WHERE id = ?`,
+           SET password_hash = ?, reset_token=NULL,reset_token_expires_at=NULL, updated_at = ?
+           WHERE id = ? AND password_hash=? RETURNING id`,
 				)
-				.bind(newPasswordHash, new Date().toISOString(), userId)
-				.run();
+				.bind(newPasswordHash, new Date().toISOString(), userId, user.password_hash)
+				.first();
+			if (!changed)
+				return ResponseBuilder.error(
+					"INVALID_PASSWORD",
+					"Sign in again before changing your password.",
+				);
 
 			return {
 				success: true,

@@ -108,15 +108,16 @@ export interface RateLimitResult {
 	minuteLimit?: number;
 	minuteRemaining?: number;
 	minuteResetAt?: string;
-	reservation?: {
-		identifier: string;
-		windows: Array<{ period: "weekly" | "minute"; windowStart: string }>;
-	};
+	reservation?: string;
 }
 
 export interface RateLimitService {
 	getStatus(clientIP: string, authContext: AuthContext): Promise<RateLimitResult>;
-	checkLimits(clientIP: string, authContext: AuthContext): Promise<RateLimitResult>;
+	checkLimits(
+		clientIP: string,
+		authContext: AuthContext,
+		requestId?: string,
+	): Promise<RateLimitResult>;
 	refund(result: RateLimitResult): Promise<void>;
 }
 

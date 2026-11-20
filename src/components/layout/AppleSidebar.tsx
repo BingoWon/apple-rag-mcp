@@ -212,7 +212,7 @@ const AppleSidebarComponent = ({ children }: { children: React.ReactNode }) => {
 
 	const handleLogout = useCallback(async () => {
 		try {
-			logout();
+			await logout();
 			toast.success(t("nav.logout_success"));
 			setTimeout(() => {
 				navigate("/login");

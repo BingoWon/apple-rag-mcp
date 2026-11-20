@@ -73,6 +73,11 @@ test("failed URL sync leaves the source unchanged and a later collection retries
 	events.length = 0;
 	await collector.execute();
 	assert.deepEqual(events, ["claim", "sync"]);
+	stored = { ...stored, content: "Last good indexed document" };
+	events.length = 0;
+	await collector.execute();
+	assert.equal(stored.content, "Last good indexed document");
+	assert.deepEqual(events, ["claim"]);
 });
 
 test("claim failures keep their cause and identify the database stage", async () => {

@@ -31,12 +31,13 @@ The existing entitlement and checkout flows remain the source of access decision
 Stripe's signed `invoice.paid` webhook records new receipts as events arrive.
 The production Stripe destination must subscribe to that event for immediate updates.
 
-A separate Worker cron runs at seven minutes past each hour. Once per UTC day
-(normally 08:07 Singapore time), it reads all paid Stripe invoices in pages of 100
-and reconciles the receipt ledger. It uses the Worker's existing live key. A failed
-run is retried the next hour. Earlier pages can be replayed safely. The last
-page and the completion timestamp are committed together, including an empty
-final page. The job runs even when the admin page is closed.
+The hourly job at seven minutes past the hour starts a daily check using the
+Worker's live key. The first scan reads paid invoices. Subsequent scans use
+`invoice.paid` event time, so an older invoice paid today is included. Gaps
+of 25 days or more trigger a full invoice scan because Stripe retains events for
+30 days. Each run processes up to three pages. Receipts and the next cursor
+commit together. On completion the marker advances to the start of that scan.
+The next run overlaps this marker by five minutes.
 
 The dashboard reads the database on open, every five minutes while visible, and
 on return if its snapshot is stale. The timestamp beside the date controls is
@@ -50,6 +51,6 @@ Current paid accounts still come from the entitlement snapshot.
 
 Migration `0011_subscription_receipts.sql` created the ledger and completion
 marker. To investigate a delayed check, inspect the hourly cron execution in
-Workers logs and verify the Worker has a live Stripe key with invoice read access.
+Workers logs and verify the Worker has a live Stripe key with invoice and event read access.
 If daily reconciliation finds payments that were missing from the ledger, check
 delivery of `invoice.paid` on the production Stripe destination.

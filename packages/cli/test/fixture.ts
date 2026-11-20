@@ -5,7 +5,7 @@ import { Hono } from "hono";
 import usageLogs from "../../../worker/api/routes/usage-logs.js";
 import type { AppEnv } from "../../../worker/api/types/hono.js";
 import type { User } from "../../../worker/api/types/index.js";
-import { generateAccessToken } from "../../../worker/api/utils/jwt-simple.js";
+import { issueWebSession } from "../../../worker/api/utils/web-session.js";
 import { CLIAuthorization } from "../../../worker/cli/authorization.js";
 import { cliOAuthRoutes, createCLIRoutes } from "../../../worker/cli/routes.js";
 import { handleAccountRequest } from "../../../worker/mcp/account.js";
@@ -57,6 +57,9 @@ export async function fixture() {
 					return { success: true, results: sql.prepare(query).all(...values) };
 				},
 				async run() {
+					return this.execute();
+				},
+				execute() {
 					const statement = sql.prepare(query);
 					if (statement.columns().length)
 						return { success: true, results: statement.all(...values) };
@@ -64,11 +67,11 @@ export async function fixture() {
 				},
 			};
 		},
-		async batch(statements: { run: () => Promise<unknown> }[]) {
+		async batch(statements: { execute: () => unknown }[]) {
 			sql.exec("BEGIN");
 			try {
 				const result = [];
-				for (const statement of statements) result.push(await statement.run());
+				for (const statement of statements) result.push(statement.execute());
 				sql.exec("COMMIT");
 				return result;
 			} catch (error) {
@@ -206,9 +209,9 @@ export async function fixture() {
 	const endpoint = `http://127.0.0.1:${(server.address() as { port: number }).port}`;
 	const authorization = new CLIAuthorization(DB, env.JWT_SECRET, endpoint);
 	const cliKey = (await authorization.createKey("reader", "Fixture automation", 30)).token;
-	const webToken = await generateAccessToken(
+	const { token: webToken } = await issueWebSession(
+		DB,
 		{ id: "reader", email: "reader@example.com", name: "Reader", created_at: "2026-01-01" } as User,
-		"fixture",
 		"hobby",
 		[],
 		env.JWT_SECRET!,

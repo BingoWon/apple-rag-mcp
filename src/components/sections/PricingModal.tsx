@@ -24,6 +24,7 @@ const getDiscountBadgeColor = (index: number): string => {
 
 const CONFLICT_MESSAGES: Record<string, string> = {
 	CONFLICT_SUBSCRIPTION_ACTIVE: "pricing.conflict_subscription_active",
+	CHECKOUT_PENDING: "pricing.checkout_pending",
 	CONFLICT_ONETIME_ACTIVE: "pricing.conflict_onetime_active",
 };
 
@@ -275,7 +276,11 @@ export function PricingModal({ planName, defaultTab = "subscription" }: PricingM
 							className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-medium text-white bg-[#635BFF] hover:bg-[#635BFF]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
 						>
 							<IconCreditCard className="w-4 h-4" />
-							{isLoading ? t("common.processing") : t("pricing.subscribe_now")}
+							{isLoading
+								? t("common.processing")
+								: hasActiveSubscription
+									? t("pricing.manage_subscription")
+									: t("pricing.subscribe_now")}
 						</button>
 					)}
 				</div>

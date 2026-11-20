@@ -34,6 +34,11 @@ interface DashboardState {
 	fetchSubscription: () => Promise<boolean>;
 }
 
+let generation = 0;
+export function resetDashboard() {
+	generation++;
+	useDashboardStore.setState(useDashboardStore.getInitialState(), true);
+}
 export const useDashboardStore = create<DashboardState>((set, get) => ({
 	// Initial state
 	mcpTokens: [],
@@ -54,6 +59,7 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
 	},
 
 	fetchMCPTokens: async (): Promise<boolean> => {
+		const owner = generation;
 		set({
 			isLoadingTokens: true,
 			errors: { ...get().errors, tokens: null },
@@ -61,6 +67,7 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
 
 		try {
 			const response = await api.getMCPTokens();
+			if (owner !== generation) return false;
 			if (!response.success || !response.data) {
 				throw new Error(response.error?.message || "Failed to fetch MCP tokens");
 			}
@@ -71,6 +78,7 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
 			});
 			return true;
 		} catch (error) {
+			if (owner !== generation) return false;
 			const errorMessage = error instanceof Error ? error.message : "Failed to fetch MCP tokens";
 			set({
 				isLoadingTokens: false,
@@ -82,18 +90,13 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
 	},
 
 	createMCPToken: async (data): Promise<MCPToken | null> => {
+		const owner = generation;
 		try {
 			const response = await api.createMCPToken(data);
+			if (owner !== generation) return null;
 
-			// Check if the response indicates an error
-			if (!response.success) {
-				const errorMessage = response.error?.message || "Failed to create MCP token";
-				set((state) => ({
-					errors: { ...state.errors, tokens: errorMessage },
-				}));
-				throw new Error(errorMessage);
-			}
-
+			if (!response.success || !response.data)
+				throw Error(response.error?.message ?? "Failed to create MCP token");
 			const newToken = response.data as MCPToken;
 
 			set((state) => ({
@@ -104,11 +107,12 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
 			// Track MCP token creation
 			trackEvent("MCP_TOKEN_CREATE", {
 				token_name: newToken.name,
-				token_count: get().mcpTokens.length + 1,
+				token_count: get().mcpTokens.length,
 			});
 
 			return newToken;
 		} catch (error) {
+			if (owner !== generation) return null;
 			const errorMessage = error instanceof Error ? error.message : "Failed to create MCP token";
 			set((state) => ({
 				errors: { ...state.errors, tokens: errorMessage },
@@ -119,14 +123,18 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
 	},
 
 	updateMCPToken: async (id, name): Promise<void> => {
+		const owner = generation;
 		try {
-			await api.updateMCPToken(id, name);
+			const result = await api.updateMCPToken(id, name);
+			if (owner !== generation) return;
+			if (!result.success) throw Error(result.error?.message ?? "Token update failed");
 
 			set((state) => ({
 				mcpTokens: state.mcpTokens.map((token) => (token.id === id ? { ...token, name } : token)),
 				errors: { ...state.errors, tokens: null },
 			}));
 		} catch (error) {
+			if (owner !== generation) return;
 			const errorMessage = error instanceof Error ? error.message : "Failed to update MCP token";
 			set((state) => ({
 				errors: { ...state.errors, tokens: errorMessage },
@@ -137,11 +145,14 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
 	},
 
 	deleteMCPToken: async (id): Promise<void> => {
+		const owner = generation;
 		try {
 			// Get token info before deletion for tracking
 			const tokenToDelete = get().mcpTokens.find((token) => token.id === id);
 
-			await api.deleteMCPToken(id);
+			const result = await api.deleteMCPToken(id);
+			if (owner !== generation) return;
+			if (!result.success) throw Error(result.error?.message ?? "Token update failed");
 
 			set((state) => ({
 				mcpTokens: state.mcpTokens.filter((token) => token.id !== id),
@@ -156,6 +167,7 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
 				});
 			}
 		} catch (error) {
+			if (owner !== generation) return;
 			const errorMessage = error instanceof Error ? error.message : "Failed to delete MCP token";
 			set((state) => ({
 				errors: { ...state.errors, tokens: errorMessage },
@@ -166,6 +178,7 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
 	},
 
 	fetchCurrentUsage: async (): Promise<boolean> => {
+		const owner = generation;
 		set({
 			isLoadingQuota: true,
 			errors: { ...get().errors, quota: null },
@@ -173,6 +186,7 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
 
 		try {
 			const response = await api.getUserQuota();
+			if (owner !== generation) return false;
 
 			if (response.success && response.data) {
 				set({
@@ -185,6 +199,7 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
 				throw new Error("Failed to fetch current usage");
 			}
 		} catch (error) {
+			if (owner !== generation) return false;
 			const errorMessage = error instanceof Error ? error.message : "Failed to fetch current usage";
 			console.error("Failed to fetch current usage:", error);
 			set({
@@ -197,6 +212,7 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
 	},
 
 	fetchSubscription: async (): Promise<boolean> => {
+		const owner = generation;
 		set({
 			isLoadingSubscription: true,
 			errors: { ...get().errors, subscription: null },
@@ -204,6 +220,7 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
 
 		try {
 			const response = await api.getUserSubscription();
+			if (owner !== generation) return false;
 			if (!response.success || !response.data) {
 				throw new Error(response.error?.message || "Failed to fetch subscription");
 			}
@@ -214,6 +231,7 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
 			});
 			return true;
 		} catch (error) {
+			if (owner !== generation) return false;
 			const errorMessage = error instanceof Error ? error.message : "Failed to fetch subscription";
 			console.error("Failed to fetch subscription:", error);
 			set({

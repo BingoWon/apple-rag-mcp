@@ -1,3 +1,4 @@
+import { canonicalIP } from "../../shared/ip";
 import type { AuthContext, RateLimitResult } from "../services/types.js";
 import { FREE_ACCESS_GUIDANCE, PRO_UPGRADE_GUIDANCE } from "./access-guidance.js";
 
@@ -10,11 +11,7 @@ export interface ClientInfo {
  * Extract client IP and country code from Cloudflare Worker request
  */
 export function extractClientInfo(request: Request): ClientInfo {
-	const ip =
-		request.headers.get("cf-connecting-ip") ||
-		request.headers.get("x-forwarded-for") ||
-		request.headers.get("x-real-ip") ||
-		"unknown";
+	const ip = canonicalIP(request.headers.get("cf-connecting-ip")) ?? "unknown";
 	const country = (request as Request & { cf?: { country?: string } }).cf?.country || null;
 	return { ip, country };
 }

@@ -1,25 +1,10 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { api } from "@/lib/api";
-import type {
-	AuthResponseData,
-	AuthTokens,
-	ExtractedAuthData,
-	LoginCredentials,
-	RegisterData,
-	User,
-} from "@/types";
+import type { ApiResponse, LoginCredentials, RegisterData, User } from "@/types";
 import { getFriendlyErrorMessage } from "@/utils/errorMessages";
-
-function isTokenExpired(token: string): boolean {
-	try {
-		const base64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
-		const payload = JSON.parse(atob(base64));
-		return payload.exp ? payload.exp * 1000 < Date.now() : false;
-	} catch {
-		return true;
-	}
-}
+import { extractUserFromJWTToken, isJWTTokenExpired } from "@/utils/mcpTokenUtils";
+import { resetDashboard } from "./dashboard";
 
 interface AuthState {
 	user: User | null;
@@ -27,202 +12,93 @@ interface AuthState {
 	isAuthenticated: boolean;
 	isLoading: boolean;
 	isHydrated: boolean;
-
 	login: (credentials: LoginCredentials) => Promise<void>;
-	loginWithToken: (token: string) => Promise<void>;
-	register: (userData: RegisterData) => Promise<void>;
-	logout: () => void;
-	refreshUser: () => Promise<void>;
+	register: (data: RegisterData) => Promise<void>;
+	loginWithToken: (token: string) => void;
+	logout: () => Promise<void>;
+	clearSession: () => void;
 	updateUser: (updates: Partial<User>) => void;
-	setHydrated: (hydrated: boolean) => void;
+	setHydrated: (value: boolean) => void;
 }
-
-const extractTokenFromTokens = (tokens: AuthTokens | string): string | null => {
-	if (typeof tokens === "string") return tokens;
-	return tokens.access_token || tokens.token || null;
-};
-
-const extractAuthData = (responseData: AuthResponseData): ExtractedAuthData | null => {
-	// Direct token structure
-	if (responseData.data?.user && responseData.data?.token) {
-		return { user: responseData.data.user, token: responseData.data.token };
-	}
-	if (responseData.user && responseData.token) {
-		return { user: responseData.user, token: responseData.token };
-	}
-
-	// Tokens object structure
-	if (responseData.user && responseData.tokens) {
-		const token = extractTokenFromTokens(responseData.tokens);
-		return token ? { user: responseData.user, token } : null;
-	}
-	if (responseData.data?.user && responseData.data?.tokens) {
-		const token = extractTokenFromTokens(responseData.data.tokens);
-		return token ? { user: responseData.data.user, token } : null;
-	}
-
-	return null;
-};
-
 export const useAuthStore = create<AuthState>()(
 	persist(
-		(set, get) => ({
-			user: null,
-			token: null,
-			isAuthenticated: false,
-			isLoading: false,
-			isHydrated: false,
-
-			login: async (credentials) => {
+		(set, get) => {
+			async function authenticate(request: Promise<ApiResponse<{ token: string }>>) {
 				set({ isLoading: true });
-
 				try {
-					const response = await api.login(credentials);
-
-					if (response.success && response.data) {
-						const authData = extractAuthData(response.data);
-
-						if (!authData?.token || !authData?.user) {
-							throw new Error("Invalid authentication response");
-						}
-
-						api.setAuthToken(authData.token);
-
-						set({
-							user: authData.user,
-							token: authData.token,
-							isAuthenticated: true,
-							isLoading: false,
-						});
-					} else {
-						// 使用友好的错误信息
-						const errorCode = response.error?.code;
-						const errorMessage = response.error?.message ?? "Login failed";
-						const friendlyMessage = getFriendlyErrorMessage(errorCode, errorMessage);
-						throw new Error(friendlyMessage);
-					}
-				} catch (error) {
+					const result = await request;
+					if (!result.success || !result.data)
+						throw Error(
+							getFriendlyErrorMessage(result.error?.code, result.error?.message ?? "Login failed"),
+						);
+					get().loginWithToken(result.data.token);
+				} finally {
 					set({ isLoading: false });
-					throw error;
 				}
-			},
-
-			register: async (userData) => {
-				set({ isLoading: true });
-
-				try {
-					const response = await api.register(userData);
-
-					if (response.success && response.data) {
-						const authData = extractAuthData(response.data);
-
-						if (!authData?.token || !authData?.user) {
-							throw new Error("Invalid registration response");
-						}
-
-						api.setAuthToken(authData.token);
-
-						set({
-							user: authData.user,
-							token: authData.token,
-							isAuthenticated: true,
-							isLoading: false,
+			}
+			return {
+				user: null,
+				token: null,
+				isAuthenticated: false,
+				isLoading: false,
+				isHydrated: false,
+				login: (input) => authenticate(api.login(input)),
+				register: (input) => authenticate(api.register(input)),
+				loginWithToken: (token) => {
+					if (isJWTTokenExpired(token)) throw Error("Login expired");
+					set({ user: extractUserFromJWTToken(token), token, isAuthenticated: true });
+				},
+				clearSession: () =>
+					set({ user: null, token: null, isAuthenticated: false, isLoading: false }),
+				logout: async () => {
+					const token = get().token;
+					if (token) {
+						const r = await api.post("/auth/logout", undefined, {
+							headers: { Authorization: "Bearer " + token },
 						});
-					} else {
-						// 使用友好的错误信息
-						const errorCode = response.error?.code;
-						const errorMessage = response.error?.message ?? "Registration failed";
-						const friendlyMessage = getFriendlyErrorMessage(errorCode, errorMessage);
-						throw new Error(friendlyMessage);
+						if (!r.success && r.error?.code !== "INVALID_TOKEN")
+							throw Error(r.error?.message ?? "Logout failed");
 					}
-				} catch (error) {
-					set({ isLoading: false });
-					throw error;
-				}
-			},
-
-			loginWithToken: async (token: string) => {
-				set({ token, isLoading: true });
-				api.setAuthToken(token);
-
-				try {
-					const { extractUserFromJWTToken, isJWTTokenExpired } = await import(
-						"@/utils/mcpTokenUtils"
-					);
-
-					if (isJWTTokenExpired(token)) {
-						throw new Error("JWT Token has expired");
-					}
-
-					const user = extractUserFromJWTToken(token);
-
-					set({
-						user,
-						isAuthenticated: true,
-						isLoading: false,
-					});
-				} catch (error) {
-					set({ token: null, isAuthenticated: false, isLoading: false });
-					api.clearAuthToken();
-					throw error;
-				}
-			},
-
-			logout: () => {
-				api.clearAuthToken();
-				set({
-					user: null,
-					token: null,
-					isAuthenticated: false,
-					isLoading: false,
-				});
-			},
-
-			refreshUser: async () => {
-				const { token } = get();
-				if (!token) return;
-
-				try {
-					const { extractUserFromJWTToken, isJWTTokenExpired } = await import(
-						"@/utils/mcpTokenUtils"
-					);
-
-					if (isJWTTokenExpired(token)) {
-						get().logout();
-						return;
-					}
-
-					const user = extractUserFromJWTToken(token);
-
-					set({ user });
-				} catch (_error) {
-					get().logout();
-				}
-			},
-
-			updateUser: (updates: Partial<User>) => {
-				const { user } = get();
-				if (user) {
-					set({ user: { ...user, ...updates } });
-				}
-			},
-
-			setHydrated: (hydrated: boolean) => set({ isHydrated: hydrated }),
-		}),
+					if (get().token === token) get().clearSession();
+				},
+				updateUser: (updates) => {
+					const user = get().user;
+					if (user) set({ user: { ...user, ...updates } });
+				},
+				setHydrated: (isHydrated) => set({ isHydrated }),
+			};
+		},
 		{
 			name: "auth-storage",
-			partialize: (state) => ({
-				user: state.user,
-				token: state.token,
-				isAuthenticated: state.isAuthenticated,
-			}),
+			version: 1,
+			migrate: () => ({ user: null, token: null, isAuthenticated: false }),
+			partialize: ({ user, token, isAuthenticated }) => ({ user, token, isAuthenticated }),
 			onRehydrateStorage: () => (state) => {
-				if (!state) return;
-				if (state.token && isTokenExpired(state.token)) {
-					state.logout();
+				if (!state) {
+					queueMicrotask(() => {
+						const auth = useAuthStore.getState();
+						auth.clearSession();
+						auth.setHydrated(true);
+					});
+					return;
 				}
-				state.setHydrated(true);
+				if (state.token && isJWTTokenExpired(state.token)) state.clearSession();
+				if (!state.isHydrated) state.setHydrated(true);
 			},
 		},
 	),
 );
+useAuthStore.subscribe((state, previous) => {
+	if (state.token !== previous.token) resetDashboard();
+});
+if (typeof window !== "undefined")
+	window.addEventListener?.("storage", (event) => {
+		if (event.key === null) {
+			useAuthStore.getState().clearSession();
+			return;
+		}
+		if (event.key === "auth-storage") {
+			if (event.newValue === null) useAuthStore.getState().clearSession();
+			else void useAuthStore.persist.rehydrate();
+		}
+	});

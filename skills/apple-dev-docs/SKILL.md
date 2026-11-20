@@ -4,7 +4,7 @@ description: Use when exploring SwiftUI or UIKit topics, verifying Apple API beh
 license: MIT
 compatibility: Requires Apple RAG remote MCP tools, or apple-rag-cli with Node.js 22.20+. Anonymous trial, signed-in free and Pro access share service quotas.
 metadata:
-  version: "2.1.2"
+  version: "2.1.3"
 ---
 
 # Apple Developer Documentation

@@ -3,18 +3,15 @@
  * Unified OAuth handling for Google and GitHub
  */
 import { createRoute, z } from "@hono/zod-openapi";
+import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { OAuthService } from "../services/oauth-service";
 import { createOpenAPIApp } from "../utils/openapi";
+import { verifyWebToken } from "../utils/web-session";
 
 const app = createOpenAPIApp();
 
 // Unified OAuth provider type
 const OAuthProvider = z.enum(["google", "github"]);
-
-// Unified OAuth request schema
-const OAuthRequestSchema = z.object({
-	state: z.string().optional(),
-});
 
 // Unified OAuth callback query schema
 const OAuthCallbackSchema = z.object({
@@ -35,13 +32,13 @@ const oauthInitRoute = createRoute({
 	method: "post",
 	path: "/{provider}",
 	request: {
-		param: z.object({
+		params: z.object({
 			provider: OAuthProvider,
 		}),
 		body: {
 			content: {
 				"application/json": {
-					schema: OAuthRequestSchema,
+					schema: z.object({}),
 				},
 			},
 		},
@@ -60,8 +57,15 @@ const oauthInitRoute = createRoute({
 });
 
 app.openapi(oauthInitRoute, async (c) => {
-	const provider = c.req.param("provider") as "google" | "github";
-	const { state } = c.req.valid("json");
+	const provider = c.req.valid("param").provider;
+	const state = crypto.randomUUID();
+	setCookie(c, "oauth_state_" + provider, state, {
+		httpOnly: true,
+		secure: new URL(c.req.url).protocol === "https:",
+		sameSite: "Lax",
+		path: "/api/oauth",
+		maxAge: 600,
+	});
 	const origin = new URL(c.req.url).origin;
 	const oauthService = new OAuthService(c.env, origin);
 
@@ -78,7 +82,7 @@ const oauthCallbackRoute = createRoute({
 	method: "get",
 	path: "/{provider}/callback",
 	request: {
-		param: z.object({
+		params: z.object({
 			provider: OAuthProvider,
 		}),
 		query: OAuthCallbackSchema,
@@ -92,32 +96,51 @@ const oauthCallbackRoute = createRoute({
 });
 
 app.openapi(oauthCallbackRoute, async (c) => {
-	const provider = c.req.param("provider") as "google" | "github";
-	const { code } = c.req.valid("query");
+	const provider = c.req.valid("param").provider;
+	const { code, state } = c.req.valid("query");
+	const expected = getCookie(c, "oauth_state_" + provider);
+	deleteCookie(c, "oauth_state_" + provider, { path: "/api/oauth" });
+	if (!state || !expected || state !== expected)
+		return c.redirect("/login?error=Invalid%20login%20state");
 	const origin = new URL(c.req.url).origin;
 	const oauthService = new OAuthService(c.env, origin);
 
-	const userAgent = c.req.header("User-Agent");
-	const ipAddress = c.req.header("CF-Connecting-IP") || c.req.header("X-Forwarded-For");
-
-	const result = await oauthService.handleCallback(provider, code, userAgent, ipAddress);
+	const result = await oauthService.handleCallback(provider, code);
 
 	if (result.success && result.data) {
-		const authData = {
-			userId: result.data.user.id,
-			email: result.data.user.email,
-			name: result.data.user.name,
-			avatar: result.data.user.avatar,
-			plan_type: result.data.user.plan_type || "hobby",
-			jwtToken: result.data.jwtToken,
-		};
-
-		const redirectUrl = `${origin}/overview?auth=${encodeURIComponent(btoa(JSON.stringify(authData)))}`;
-		return c.redirect(redirectUrl);
+		setCookie(c, "oauth_handoff", result.data.jwtToken, {
+			httpOnly: true,
+			secure: new URL(origin).protocol === "https:",
+			sameSite: "Strict",
+			path: "/api/oauth/session/exchange",
+			maxAge: 60,
+		});
+		c.header("Cache-Control", "no-store");
+		return c.redirect(origin + "/overview?login=complete");
 	} else {
 		const errorMessage = encodeURIComponent(result.error || "OAuth authentication failed");
 		return c.redirect(`${origin}/login?error=${errorMessage}`);
 	}
+});
+
+app.post("/session/exchange", async (c) => {
+	c.header("Cache-Control", "no-store");
+	const token = getCookie(c, "oauth_handoff");
+	deleteCookie(c, "oauth_handoff", { path: "/api/oauth/session/exchange" });
+	const session = token && (await verifyWebToken(token, c.env.JWT_SECRET).catch(() => null));
+	if (
+		!session ||
+		!(await c.env.DB.prepare(
+			"UPDATE web_sessions SET handoff_until=NULL WHERE id=? AND user_id=? AND handoff_until>unixepoch() RETURNING id",
+		)
+			.bind(session.id, session.userId)
+			.first())
+	)
+		return c.json(
+			{ success: false, error: { code: "INVALID_TOKEN", message: "Sign in again." } },
+			401,
+		);
+	return c.json({ success: true, data: { token } });
 });
 
 export { app as oauthRoutes };

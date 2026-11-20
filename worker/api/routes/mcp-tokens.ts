@@ -391,14 +391,12 @@ app.openapi(updateMCPTokenRoute, async (c) => {
 
 		logger.info(`Updating MCP token ${id} to "${name}" for user ${user.id}`);
 
-		// Check if token exists and belongs to user
-		const existingToken = await c.env.DB.prepare(
-			`SELECT id, name FROM mcp_tokens WHERE id = ? AND user_id = ?`,
+		const updatedToken = await c.env.DB.prepare(
+			"UPDATE mcp_tokens SET name=?,updated_at=? WHERE id=? AND user_id=? RETURNING id,name,last_used_at,created_at",
 		)
-			.bind(id, user.id)
-			.first();
-
-		if (!existingToken) {
+			.bind(name, new Date().toISOString(), id, user.id)
+			.first<{ id: string; name: string; last_used_at: string | null; created_at: string }>();
+		if (!updatedToken) {
 			return c.json(
 				{
 					success: false,
@@ -410,23 +408,6 @@ app.openapi(updateMCPTokenRoute, async (c) => {
 				404,
 			);
 		}
-
-		// Update token name
-		await c.env.DB.prepare(
-			`UPDATE mcp_tokens SET name = ?, updated_at = ? WHERE id = ? AND user_id = ?`,
-		)
-			.bind(name, new Date().toISOString(), id, user.id)
-			.run();
-
-		// Return updated token data (without token value)
-		const updatedToken = {
-			id: String(id),
-			name: String(name),
-			last_used_at: existingToken.last_used_at ? String(existingToken.last_used_at) : null,
-			created_at: existingToken.created_at
-				? String(existingToken.created_at)
-				: new Date().toISOString(),
-		};
 
 		return c.json({ success: true, data: updatedToken }, 200);
 	} catch (error) {
@@ -522,14 +503,12 @@ app.openapi(deleteMCPTokenRoute, async (c) => {
 
 		logger.info(`Deleting MCP token ${id} for user ${user.id}`);
 
-		// Check if token exists and belongs to user
-		const existingToken = await c.env.DB.prepare(
-			`SELECT id FROM mcp_tokens WHERE id = ? AND user_id = ?`,
+		const deleted = await c.env.DB.prepare(
+			"DELETE FROM mcp_tokens WHERE id=? AND user_id=? RETURNING id",
 		)
 			.bind(id, user.id)
 			.first();
-
-		if (!existingToken) {
+		if (!deleted) {
 			return c.json(
 				{
 					success: false,
@@ -541,11 +520,6 @@ app.openapi(deleteMCPTokenRoute, async (c) => {
 				404,
 			);
 		}
-
-		// Delete token permanently for security
-		await c.env.DB.prepare(`DELETE FROM mcp_tokens WHERE id = ? AND user_id = ?`)
-			.bind(id, user.id)
-			.run();
 
 		return c.json(
 			{

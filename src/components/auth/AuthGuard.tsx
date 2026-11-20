@@ -7,7 +7,7 @@ function AuthGuardInner({ children }: { children: React.ReactNode }) {
 	const { isAuthenticated, isHydrated } = useAuth();
 	const navigate = useNavigate();
 	const [searchParams] = useSearchParams();
-	const isOAuthCallback = searchParams.has("auth");
+	const isOAuthCallback = searchParams.get("login") === "complete";
 
 	useEffect(() => {
 		if (isHydrated && !isAuthenticated && !isOAuthCallback) {

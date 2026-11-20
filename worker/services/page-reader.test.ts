@@ -272,3 +272,20 @@ test("DNS service failures are operational failures, not invalid user URLs", asy
 	);
 	assert.equal(s.reservations(), 0);
 });
+
+test("an unavailable index still allows an official JSON read and preserves the paid-provider budget check", async (t) => {
+	const s = setup(t, (url) =>
+		url.endsWith(".json") ? Response.json(document) : new Response("HTML"),
+	);
+	t.mock.method(s.db, "getPageByUrl", async () => {
+		throw Error("Index offline");
+	});
+	const page = await s.reader.getPage(apple, signal());
+	assert.equal(page.provider, "apple_json");
+	assert.equal(s.queued.length, 0);
+	t.mock.method(s.db, "reserveWebFetch", async () => {
+		throw Error("Budget unavailable");
+	});
+	await assert.rejects(s.reader.getPage(external, signal()));
+	assert.ok(!s.calls.some((url) => url.includes("firecrawl.dev")));
+});

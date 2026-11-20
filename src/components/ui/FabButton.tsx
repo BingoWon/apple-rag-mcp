@@ -236,7 +236,6 @@ export function FabButton({ className }: FabButtonProps) {
 			const response = await api.submitContactMessage({
 				email: email.trim() || undefined,
 				message: message.trim(),
-				userId: user?.id || undefined,
 			});
 
 			if (response.success) {

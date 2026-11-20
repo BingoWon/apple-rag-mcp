@@ -47,18 +47,21 @@ test("write recovery uses fresh pools, stops after three failures and preserves 
 		} as unknown as postgres.Sql;
 	});
 	await assert.rejects(
-		manager.batchUpdateFullRecords([
-			{
-				id: "unused",
-				url: "https://developer.apple.com/documentation/test",
-				title: "Updated",
-				content: "",
-				raw_json: "{}",
-				collect_count: 1,
-				created_at: new Date(0),
-				updated_at: new Date(1),
-			},
-		]),
+		manager.batchUpdateFullRecords(
+			[
+				{
+					id: "unused",
+					url: "https://developer.apple.com/documentation/test",
+					title: "Updated",
+					content: "",
+					raw_json: "{}",
+					collect_count: 1,
+					created_at: new Date(0),
+					updated_at: new Date(1),
+				},
+			],
+			[],
+		),
 		(error: unknown) =>
 			error instanceof Error &&
 			error.message.includes("PostgreSQL page updates failed") &&
@@ -636,7 +639,7 @@ test("collector database operations remain safe under concurrency and interrupte
 				updated_at: updatedAt,
 			}));
 			const fault = disconnectOnce(subtest, false);
-			await fault.manager.batchUpdateFullRecords(update);
+			await fault.manager.batchUpdateFullRecords(update, []);
 			assert.equal(fault.injectedFailures(), 1);
 			assert.equal(fault.connections(), 2);
 			const rows = await observer`SELECT title, content, raw_json, collect_count, updated_at
@@ -669,7 +672,15 @@ test("collector database operations remain safe under concurrency and interrupte
 				total_chunks: 2,
 			}));
 			const fault = disconnectOnce(subtest, true);
-			await fault.manager.insertChunks(replacement);
+			const [record] = await observer`SELECT * FROM pages WHERE url=${url}`;
+			await fault.manager.batchUpdateFullRecords(
+				[
+					{ ...record, raw_json: JSON.stringify(record.raw_json) } as Parameters<
+						PostgreSQLManager["batchUpdateFullRecords"]
+					>[0][number],
+				],
+				replacement,
+			);
 			assert.equal(fault.connections(), 2);
 			const rows =
 				await observer`SELECT title, content, chunk_index, total_chunks FROM chunks ORDER BY chunk_index`;

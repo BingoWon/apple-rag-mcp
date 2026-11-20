@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { AdminUserLabel } from "@/components/admin/AdminUserLabel";
 import { api } from "@/lib/api";
+import { formatCurrency } from "@/lib/utils";
 import type { AdminUserIdentity } from "../../../worker/shared/admin-user";
 
 interface AdminUserSubscription {
@@ -17,6 +18,7 @@ interface AdminUserSubscription {
 	current_period_end: string | null;
 	cancel_at_period_end: boolean;
 	price: number;
+	currency: string | null;
 	billing_interval: string;
 	updated_at: string;
 }
@@ -34,7 +36,13 @@ export default function AdminUserSubscriptionsPage() {
 			},
 			{ key: "plan_type", label: t("admin.col_plan"), width: 96 },
 			{ key: "status", label: t("admin.col_status"), width: 112 },
-			{ key: "price", label: t("admin.col_price"), width: 96 },
+			{
+				key: "price",
+				label: t("admin.col_price"),
+				width: 96,
+				render: (_value: unknown, row: AdminUserSubscription) =>
+					formatCurrency(row.price, row.currency),
+			},
 			{ key: "billing_interval", label: t("admin.col_billing"), width: 96 },
 			{ key: "current_period_start", label: t("admin.col_period_start"), width: 144 },
 			{ key: "current_period_end", label: t("admin.col_period_end"), width: 144 },

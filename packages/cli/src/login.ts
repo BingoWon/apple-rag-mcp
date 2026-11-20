@@ -204,9 +204,13 @@ export async function login(
 	else await browserLogin(client, options.browser, name);
 }
 async function saveCredentials(client: AppleRagClient, credentials: CLICredentials): Promise<void> {
-	const previous = await client.store.read();
+	let previous: CLICredentials | undefined;
 	try {
-		await client.store.locked(client.signal, () => client.store.save(credentials));
+		previous = await client.store.locked(client.signal, async () => {
+			const replaced = await client.store.read();
+			await client.store.save(credentials);
+			return replaced;
+		});
 	} catch (error) {
 		await client.revoke(credentials.refresh_token!).catch(() => {});
 		throw error;

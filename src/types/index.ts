@@ -169,21 +169,6 @@ export interface UsageLogItem {
 	created_at: string;
 }
 
-/**
- * Stripe checkout plan shape — distinct from the UI PricingPlan in types/pricing.ts
- */
-export interface CheckoutPlan {
-	id: string;
-	name: string;
-	description: string;
-	price: number;
-	currency: string;
-	interval: "month" | "year";
-	quota: number;
-	features: string[];
-	popular?: boolean;
-}
-
 export interface Subscription {
 	id: string;
 	plan_id: string;
@@ -193,30 +178,9 @@ export interface Subscription {
 	current_period_end: string;
 	cancel_at_period_end: boolean;
 	weekly_quota: number;
+	currency: string | null;
 	price: number;
 	billing_interval: string;
 	payment_type?: "subscription" | "one_time";
 	stripe_customer_id?: string;
-}
-
-export interface AuthTokens {
-	access_token?: string;
-	token?: string;
-	refresh_token?: string;
-}
-
-export interface AuthResponseData {
-	user?: User;
-	token?: string;
-	tokens?: AuthTokens;
-	data?: {
-		user?: User;
-		token?: string;
-		tokens?: AuthTokens;
-	};
-}
-
-export interface ExtractedAuthData {
-	user: User;
-	token: string;
 }

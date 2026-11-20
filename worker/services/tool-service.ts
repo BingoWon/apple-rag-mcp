@@ -86,7 +86,7 @@ export class ToolService {
 		let quota: RateLimitResult | undefined;
 		try {
 			signal.throwIfAborted();
-			quota = await this.services.rateLimit.checkLimits(ip, auth);
+			quota = await this.services.rateLimit.checkLimits(ip, auth, context.requestId);
 			signal.throwIfAborted();
 			if (!quota.allowed) {
 				log({ outcome: "limited", statusCode: 429, reason: "RATE_LIMIT_EXCEEDED" });
@@ -146,7 +146,10 @@ export class ToolService {
 			}
 			return { ...result, request_id: context.requestId };
 		} catch (error) {
-			if (quota?.allowed) await this.services.rateLimit.refund(quota);
+			if (quota?.allowed)
+				await this.services.rateLimit
+					.refund(quota)
+					.catch(() => console.error("Quota refund failed for request", context.requestId));
 			if (signal.aborted) {
 				log({ outcome: "cancelled", statusCode: 499, reason: "REQUEST_CANCELLED" });
 				signal.throwIfAborted();
@@ -215,6 +218,18 @@ export class ToolService {
 	}
 }
 
+function logUrl(value: unknown): string {
+	if (typeof value !== "string") return "";
+	try {
+		const url = new URL(value);
+		return ["http:", "https:"].includes(url.protocol)
+			? (url.origin + url.pathname).slice(0, 2048)
+			: "";
+	} catch {
+		return "";
+	}
+}
+
 function logOperation(
 	logger: Services["logger"],
 	name: Operation,
@@ -258,11 +273,11 @@ function logOperation(
 		} catch {}
 		logger?.logBrowse({ ...common, requestedUrl: url, resultCount: details.resultCount ?? 0 });
 	} else {
-		const url = "url" in value && typeof value.url === "string" ? value.url.slice(0, 2048) : "";
+		const url = logUrl("url" in value ? value.url : undefined);
 		logger?.logFetch({
 			...common,
 			requestedUrl: url,
-			actualUrl: details.actualUrl ?? url,
+			actualUrl: logUrl(details.actualUrl) || url,
 		});
 	}
 }

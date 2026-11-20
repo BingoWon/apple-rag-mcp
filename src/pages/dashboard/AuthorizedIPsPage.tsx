@@ -19,10 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { trackEvent } from "@/lib/analytics";
 import { api } from "@/lib/api";
-
-// IP validation regex (IPv4 and IPv6)
-const IP_REGEX =
-	/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$|^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$|^::1$|^::$/;
+import { canonicalIP } from "../../../shared/ip";
 
 interface AuthorizedIP {
 	id: string;
@@ -36,7 +33,7 @@ interface AuthorizedIP {
 export default function AuthorizedIPsPage() {
 	const { t } = useTranslation();
 	const authorizedIPSchema = z.object({
-		ip_address: z.string().regex(IP_REGEX, t("ips.invalid_ip")),
+		ip_address: z.string().refine((value) => !!canonicalIP(value), t("ips.invalid_ip")),
 		name: z.string().min(1, t("ips.name_required")).max(50, t("ips.name_too_long")),
 	});
 	type AuthorizedIPFormData = z.infer<typeof authorizedIPSchema>;

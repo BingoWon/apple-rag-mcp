@@ -101,11 +101,23 @@ export class DatabaseService {
 		try {
 			const results = await this.withReconnect(
 				(sql) => sql`
-	        SELECT id, url, title, content, chunk_index, total_chunks
-	        FROM chunks
-	        WHERE to_tsvector('simple', COALESCE(title, '') || ' ' || content)
-	              @@ plainto_tsquery('simple', ${query})
-	        LIMIT ${resultCount}
+	        WITH exact AS MATERIALIZED (
+ SELECT id,url,title,content,chunk_index,total_chunks FROM chunks
+ WHERE chunk_index=0 AND title IS NOT NULL AND lower(split_part(regexp_replace(split_part(title, chr(10), 1), '^[^:]+: ', ''), '(', 1))=lower(split_part(trim(${query}::text),'(',1))
+ ORDER BY length(url),url,id LIMIT ${resultCount}
+ ), candidates AS MATERIALIZED (
+ SELECT id,url,title,content,chunk_index,total_chunks FROM chunks
+ WHERE to_tsvector('simple',COALESCE(title,'') || ' ' || content) @@ plainto_tsquery('simple',${query})
+ AND (SELECT count(*) FROM exact)<${resultCount}
+ LIMIT ${Math.max(64, resultCount * 8)}
+ ), ranked AS (
+ SELECT exact.*,true AS symbol,0::real AS score FROM exact
+ UNION ALL
+ SELECT c.*,false,ts_rank_cd(to_tsvector('simple',COALESCE(c.title,'') || ' ' || c.content),plainto_tsquery('simple',${query}))
+ FROM candidates c WHERE NOT EXISTS(SELECT 1 FROM exact WHERE exact.id=c.id)
+ )
+ SELECT id,url,title,content,chunk_index,total_chunks FROM ranked
+ ORDER BY symbol DESC,score DESC,length(url),url,chunk_index,id LIMIT ${resultCount}
 	      `,
 			);
 
@@ -197,10 +209,8 @@ export class DatabaseService {
 				content: row.content as string,
 			};
 		} catch (error) {
-			logger.error(
-				`Database page lookup failed (operation: page_lookup, url: ${url.substring(0, 100)}, normalizedUrl: ${this.normalizeUrl(url).substring(0, 100)}): ${String(error)}`,
-			);
-			throw new Error(`Page lookup failed: ${error}`);
+			logger.error("Database page lookup failed");
+			throw new Error("Page lookup failed", { cause: error });
 		}
 	}
 

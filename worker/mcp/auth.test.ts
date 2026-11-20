@@ -68,7 +68,10 @@ test("valid token, missing-token IP authentication and anonymous access stay dis
 		const { auth, lookups, writes } = setup(tokenFound, ipFound);
 		const result = await auth.optionalAuth(
 			new Request("https://mcp.apple-rag.com", {
-				headers: header ? { Authorization: header } : {},
+				headers: {
+					"cf-connecting-ip": "203.0.113.9",
+					...(header ? { Authorization: header } : {}),
+				},
 			}),
 		);
 		assert.equal(result.isAuthenticated, expected);

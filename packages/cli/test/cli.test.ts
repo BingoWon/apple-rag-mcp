@@ -388,3 +388,32 @@ test("browse reaches the independent CLI route, shares quota, and records only a
 	assert.equal((await run(["browse", "--limit", "0"])).code, 2);
 	assert.equal((await run(["browse", "--json"], { APPLE_RAG_TOKEN: TOKEN })).code, 3);
 });
+
+test("simultaneous browser logins leave a single usable device session", async (t) => {
+	const { login, server, run } = await setup(t);
+	const logins = await Promise.all([login(), login()]);
+	assert.deepEqual(
+		logins.map((r) => r.code),
+		[0, 0],
+	);
+	assert.equal(
+		server.sql
+			.prepare("SELECT count(*) AS n FROM cli_sessions WHERE kind='device' AND revoked_at IS NULL")
+			.get()?.n,
+		1,
+	);
+	assert.equal((await run(["auth", "status", "--json"])).code, 0);
+});
+
+test("fetch preserves signed input for the reader but stores only a public URL in logs", async (t) => {
+	const { run, server } = await setup(t);
+	const signed = "https://example.com/manual?signature=local-fixture#fragment";
+	const r = await run(["fetch", signed, "--json"], { APPLE_RAG_TOKEN: server.cliKey });
+	assert.equal(r.code, 0, r.stderr);
+	await server.flush();
+	const row = server.sql
+		.prepare("SELECT requested_url,actual_url FROM fetch_logs WHERE request_id=?")
+		.get(JSON.parse(r.stdout).request_id);
+	assert.equal(row?.requested_url, "https://example.com/manual");
+	assert.equal(row?.actual_url, "https://example.com/final");
+});

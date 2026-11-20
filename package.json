@@ -1,6 +1,6 @@
 {
 	"name": "apple-rag-mcp",
-	"version": "5.14.13",
+	"version": "5.15.0",
 	"mcpName": "com.apple-rag/mcp-server",
 	"private": true,
 	"license": "MIT",
@@ -33,8 +33,6 @@
 		"@radix-ui/react-label": "^2.1.7",
 		"@radix-ui/react-slot": "^1.2.4",
 		"@react-three/fiber": "^9.4.0",
-		"@stripe/react-stripe-js": "^6.8.2",
-		"@stripe/stripe-js": "^9.15.0",
 		"@tabler/icons-react": "^3.34.1",
 		"@thesvg/react": "4.0.12",
 		"apexcharts": "^5.3.2",

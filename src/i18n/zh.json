@@ -155,6 +155,7 @@
 		"onetime_duration_6months": "半年",
 		"onetime_duration_year": "一年",
 		"conflict_subscription_active": "你当前有生效中的订阅，请先取消订阅后再购买单次通行证。",
+		"checkout_pending": "上一笔订单仍在处理中，请稍后再试。",
 		"conflict_onetime_active": "你当前有生效中的单次通行证，到期后即可订阅。",
 		"tab_disabled_has_subscription": "请先取消订阅",
 		"tab_disabled_has_onetime": "到期后可用",

@@ -31,7 +31,7 @@ export function DeleteAccount() {
 
 	const [isLoading, setIsLoading] = useState(false);
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
-	const { logout } = useAuth();
+	const { clearSession } = useAuth();
 	const navigate = useNavigate();
 
 	const confirmForm = useForm<DeleteConfirmationData>({
@@ -49,11 +49,8 @@ export function DeleteAccount() {
 				// Close dialog
 				setIsDialogOpen(false);
 
-				// Logout and redirect after a short delay
-				setTimeout(async () => {
-					await logout();
-					navigate("/");
-				}, 2000);
+				clearSession();
+				navigate("/", { replace: true });
 			} else {
 				throw new Error(response.error?.message || t("settings.delete_error"));
 			}

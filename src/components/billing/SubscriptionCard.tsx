@@ -110,7 +110,9 @@ export function SubscriptionCard({ subscription, usage }: SubscriptionCardProps)
 					</div>
 					<div className="text-right">
 						<div className="text-2xl font-bold">
-							{subscription.price > 0 ? formatCurrency(subscription.price) : t("common.free")}
+							{subscription.price > 0
+								? formatCurrency(subscription.price, subscription.currency)
+								: t("common.free")}
 						</div>
 						{subscription.price > 0 && !isOneTime && (
 							<div className="text-sm text-faint">{t(`pricing.${interval.perKey}`)}</div>

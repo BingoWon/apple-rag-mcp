@@ -155,6 +155,7 @@
 		"onetime_duration_6months": "6 months",
 		"onetime_duration_year": "1 year",
 		"conflict_subscription_active": "You have an active subscription. Please cancel it first before purchasing a one-time pass.",
+		"checkout_pending": "Your previous checkout is still processing. Try again shortly.",
 		"conflict_onetime_active": "You have an active one-time pass. You can subscribe after it expires.",
 		"tab_disabled_has_subscription": "Cancel your subscription first",
 		"tab_disabled_has_onetime": "Available after your pass expires",

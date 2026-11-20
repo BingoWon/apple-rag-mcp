@@ -58,7 +58,11 @@ export const parseJWTToken = (jwtToken: string): JWTPayload => {
 		const [, payload] = jwtToken.split(".");
 		if (!payload) throw new Error("Invalid JWT format");
 
-		const decoded = atob(payload.replace(/-/g, "+").replace(/_/g, "/"));
+		const decoded = new TextDecoder().decode(
+			Uint8Array.from(atob(payload.replace(/-/g, "+").replace(/_/g, "/")), (char) =>
+				char.charCodeAt(0),
+			),
+		);
 		return JSON.parse(decoded) as JWTPayload;
 	} catch (error) {
 		throw new Error(
@@ -73,7 +77,7 @@ export const parseJWTToken = (jwtToken: string): JWTPayload => {
 export const isJWTTokenExpired = (jwtToken: string): boolean => {
 	try {
 		const { exp } = parseJWTToken(jwtToken);
-		return exp < Math.floor(Date.now() / 1000);
+		return !Number.isFinite(exp) || exp <= Math.floor(Date.now() / 1000);
 	} catch {
 		return true;
 	}

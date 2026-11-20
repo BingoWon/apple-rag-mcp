@@ -33,20 +33,6 @@ export const createMCPTokenSchema = z.object({
 	name: z.string().min(1, "Name is required").max(100, "Name too long"),
 });
 
-// Subscription checkout validation
-export const createCheckoutSessionSchema = z.object({
-	plan_id: z.enum(["pro", "enterprise"], {
-		message: "Valid plan ID required",
-	}),
-	billing_cycle: z.enum(["monthly", "yearly"]).optional(),
-});
-
-// Subscription update validation
-export const updateSubscriptionSchema = z.object({
-	plan_id: z.string().optional(),
-	cancel_at_period_end: z.boolean().optional(),
-});
-
 // Usage stats validation
 export const usageStatsSchema = z.object({
 	period: z

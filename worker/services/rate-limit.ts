@@ -2,7 +2,6 @@ import { OAUTH_SUBSCRIPTION_QUOTAS } from "../api/types/permissions.js";
 import { getUserPlanType } from "../api/utils/subscription.js";
 import { withD1Timeout } from "../services/d1-utils.js";
 import type { AuthContext, RateLimitResult } from "../services/types.js";
-import { logger } from "../shared/logger.js";
 
 type Period = "weekly" | "minute";
 
@@ -48,98 +47,78 @@ export class RateLimitService {
 		);
 	}
 
-	async checkLimits(clientIP: string, authContext: AuthContext): Promise<RateLimitResult> {
-		const identifier = authContext.userId || `anon_${clientIP}`;
-		const planType = await this.plan(authContext);
-		const quota = OAUTH_SUBSCRIPTION_QUOTAS[planType] || OAUTH_SUBSCRIPTION_QUOTAS.hobby;
-		const weeklyWindow = this.getWeekStartTime().toISOString();
-		const minuteWindow = this.getMinuteStartTime().toISOString();
-		const windows: Array<{ period: Period; windowStart: string }> = [];
-
-		const weeklyCount = await this.consume(identifier, "weekly", weeklyWindow, quota.week);
-		if (weeklyCount === null) {
-			return this.result(false, "weekly", planType, quota, quota.week, 0);
+	async checkLimits(
+		clientIP: string,
+		auth: AuthContext,
+		id: string = crypto.randomUUID(),
+	): Promise<RateLimitResult> {
+		const identifier = auth.userId || `anon_${clientIP}`;
+		const plan = await this.plan(auth);
+		const quota = OAUTH_SUBSCRIPTION_QUOTAS[plan] || OAUTH_SUBSCRIPTION_QUOTAS.hobby;
+		const weekly = this.getWeekStartTime().toISOString(),
+			minute = this.getMinuteStartTime().toISOString();
+		if (quota.week === -1 && quota.minute === -1)
+			return this.result(true, "weekly", plan, quota, -1, -1);
+		const reserve = this.d1
+			.prepare(`INSERT INTO quota_reservations(id,identifier,weekly,minute)
+ SELECT ?,?,?,? WHERE (?=-1 OR COALESCE((SELECT count FROM usage_counters WHERE identifier=? AND period='weekly' AND window_start=?),0)<?)
+ AND (?=-1 OR COALESCE((SELECT count FROM usage_counters WHERE identifier=? AND period='minute' AND window_start=?),0)<?)
+ ON CONFLICT(id) DO NOTHING RETURNING id`)
+			.bind(
+				id,
+				identifier,
+				quota.week === -1 ? null : weekly,
+				quota.minute === -1 ? null : minute,
+				quota.week,
+				identifier,
+				weekly,
+				quota.week,
+				quota.minute,
+				identifier,
+				minute,
+				quota.minute,
+			);
+		const counts = this.d1
+			.prepare(
+				"SELECT period,count FROM usage_counters WHERE identifier=? AND ((period='weekly' AND window_start=?) OR (period='minute' AND window_start=?))",
+			)
+			.bind(identifier, weekly, minute);
+		let outcome: D1Result<{ period: Period; count: number }>[];
+		try {
+			outcome = await this.d1.batch<{ period: Period; count: number }>([reserve, counts]);
+		} catch (error) {
+			// A lost acknowledgement may follow a commit. The tombstone also blocks a late reservation.
+			await this.d1
+				.prepare(
+					"INSERT INTO quota_reservations(id,identifier,refunded) VALUES(?,?,1) ON CONFLICT(id) DO UPDATE SET refunded=1",
+				)
+				.bind(id, identifier)
+				.run();
+			throw error;
 		}
-		if (quota.week !== -1) {
-			windows.push({ period: "weekly", windowStart: weeklyWindow });
-		}
-
-		const minuteCount = await this.consume(identifier, "minute", minuteWindow, quota.minute);
-		if (minuteCount === null) {
-			await this.refundWindows(identifier, windows);
-			const refundedWeeklyCount = weeklyCount === -1 ? -1 : weeklyCount - 1;
-			return this.result(false, "minute", planType, quota, refundedWeeklyCount, quota.minute);
-		}
-		if (quota.minute !== -1) {
-			windows.push({ period: "minute", windowStart: minuteWindow });
-		}
-
+		const allowed = outcome[0].results.length > 0;
+		const used = (period: Period) =>
+			Number(outcome[1].results.find((row) => row.period === period)?.count ?? 0);
+		const weekUsed = used("weekly"),
+			minuteUsed = used("minute");
 		return {
-			...this.result(true, "weekly", planType, quota, weeklyCount, minuteCount),
-			reservation: windows.length > 0 ? { identifier, windows } : undefined,
+			...this.result(
+				allowed,
+				!allowed && quota.minute !== -1 && minuteUsed >= quota.minute ? "minute" : "weekly",
+				plan,
+				quota,
+				weekUsed,
+				minuteUsed,
+			),
+			reservation: allowed ? id : undefined,
 		};
 	}
-
 	async refund(result: RateLimitResult): Promise<void> {
 		if (!result.reservation) return;
-		await this.refundWindows(result.reservation.identifier, result.reservation.windows);
-	}
-
-	private async consume(
-		identifier: string,
-		period: Period,
-		windowStart: string,
-		limit: number,
-	): Promise<number | null> {
-		if (limit === -1) return -1;
-
-		const result = await withD1Timeout(
-			() =>
-				this.d1
-					.prepare(
-						`INSERT INTO usage_counters
-						 (identifier, period, window_start, count, updated_at)
-						 VALUES (?, ?, ?, 1, ?)
-						 ON CONFLICT(identifier, period, window_start) DO UPDATE SET
-						   count = usage_counters.count + 1,
-						   updated_at = excluded.updated_at
-						 WHERE usage_counters.count < ?
-						 RETURNING count`,
-					)
-					.bind(identifier, period, windowStart, new Date().toISOString(), limit)
-					.first<{ count: number }>(),
-			`consume_${period}_quota`,
-		);
-
-		if (!result) {
-			logger.info(`Rate limit reached: ${identifier} ${period}=${limit}`);
-			return null;
-		}
-
-		return Number(result.count);
-	}
-
-	private async refundWindows(
-		identifier: string,
-		windows: Array<{ period: Period; windowStart: string }>,
-	): Promise<void> {
-		if (windows.length === 0) return;
-
-		await withD1Timeout(
-			() =>
-				this.d1.batch(
-					windows.map(({ period, windowStart }) =>
-						this.d1
-							.prepare(
-								`UPDATE usage_counters
-								 SET count = MAX(0, count - 1), updated_at = ?
-								 WHERE identifier = ? AND period = ? AND window_start = ?`,
-							)
-							.bind(new Date().toISOString(), identifier, period, windowStart),
-					),
-				),
-			"refund_quota",
-		);
+		const statement = this.d1
+			.prepare("UPDATE quota_reservations SET refunded=1 WHERE id=? AND refunded=0")
+			.bind(result.reservation);
+		await statement.run().catch(() => statement.run());
 	}
 
 	private result(

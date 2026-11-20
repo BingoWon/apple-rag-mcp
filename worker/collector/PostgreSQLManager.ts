@@ -245,10 +245,29 @@ class PostgreSQLManager {
 	}
 	async batchUpdateFullRecords(
 		records: Array<DatabaseRecord & { readonly raw_json: string | null }>,
+		chunks: Array<{
+			url: string;
+			title: string | null;
+			content: string;
+			embedding: number[];
+			chunk_index: number;
+			total_chunks: number;
+		}>,
 	): Promise<void> {
 		if (records.length === 0) return;
 
 		await this.withTransaction("page updates", async (sql) => {
+			const urls = records.map((row) => row.url);
+			// Serialize replacement for overlapping collector batches, even when there are no old chunks.
+			const locked =
+				await sql`SELECT id FROM pages WHERE id=ANY(${records.map((r) => r.id)}) ORDER BY id FOR UPDATE`;
+			if (locked.length !== records.length)
+				throw Error("Page disappeared before index replacement");
+			await sql`DELETE FROM chunks WHERE url=ANY(${urls})`;
+			for (const chunk of chunks) {
+				await sql`INSERT INTO chunks(url,title,content,embedding,chunk_index,total_chunks) VALUES(${chunk.url},${chunk.title},${chunk.content},${"[" + chunk.embedding.join(",") + "]"},${chunk.chunk_index},${chunk.total_chunks})`;
+			}
+
 			for (const record of records) {
 				await sql`
           UPDATE pages
@@ -281,40 +300,6 @@ class PostgreSQLManager {
 		logger.info(
 			`🗑️ Deleted permanent error records: ${deleted.pages} pages, ${deleted.chunks} chunks`,
 		);
-	}
-
-	async insertChunks(
-		chunks: Array<{
-			url: string;
-			title: string | null;
-			content: string;
-			embedding: number[];
-			chunk_index: number;
-			total_chunks: number;
-		}>,
-	): Promise<void> {
-		if (chunks.length === 0) return;
-
-		const urls = [...new Set(chunks.map((c) => c.url))];
-		const deletedCount = await this.withTransaction("chunk replacement", async (sql) => {
-			let deleted = 0;
-
-			if (urls.length > 0) {
-				const deleteResult = await sql`
-          DELETE FROM chunks WHERE url = ANY(${urls})
-        `;
-				deleted = deleteResult.count || 0;
-			}
-
-			for (const chunk of chunks) {
-				await sql`
-          INSERT INTO chunks (url, title, content, embedding, chunk_index, total_chunks)
-          VALUES (${chunk.url}, ${chunk.title}, ${chunk.content}, ${`[${chunk.embedding.join(",")}]`}, ${chunk.chunk_index}, ${chunk.total_chunks})
-        `;
-			}
-			return deleted;
-		});
-		logger.info(`🗑️ Deleted ${deletedCount} existing chunks for ${urls.length} URLs`);
 	}
 
 	async close(): Promise<void> {

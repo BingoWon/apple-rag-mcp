@@ -49,7 +49,6 @@ export class EmailService {
 			if (!this.resend) {
 				logger.warn("[EmailService] Resend API key not configured, skipping email send");
 				logger.info(`📧 Password reset email would be sent to: ${to}`);
-				logger.info(`📧 Reset URL: ${frontendUrl}/reset-password?token=${resetToken}`);
 				return false;
 			}
 

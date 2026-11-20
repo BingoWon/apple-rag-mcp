@@ -134,13 +134,13 @@ class AppleAPIClient {
 					return { title: title || null, content: hlsTranscript };
 				} catch (error) {
 					if (error instanceof HlsSubtitleUnavailableError) {
-						throw new Error(`PERMANENT_ERROR:NO_SUBTITLES:${videoUrl}`);
+						throw new Error(`NO_SUBTITLES:${videoUrl}`);
 					}
 					throw error;
 				}
 			}
 
-			throw new Error(`PERMANENT_ERROR:EMPTY_TRANSCRIPT:${videoUrl}`);
+			throw new Error(`EMPTY_TRANSCRIPT:${videoUrl}`);
 		});
 	}
 

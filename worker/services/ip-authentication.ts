@@ -1,3 +1,4 @@
+import { canonicalIP } from "../../shared/ip";
 /**
  * IP Authentication Service with D1 timeout protection
  */
@@ -18,11 +19,13 @@ export class IPAuthenticationService {
 	) {}
 
 	async checkIPAuthentication(clientIP: string): Promise<UserTokenData | null> {
-		const user = await withD1Timeout(() => this.queryIP(clientIP), "ip_auth");
+		const ip = canonicalIP(clientIP);
+		if (!ip) return null;
+		const user = await withD1Timeout(() => this.queryIP(ip), "ip_auth");
 
 		if (!user) return null;
 
-		backgroundD1Write(this.ctx, () => this.updateLastUsed(clientIP, user.user_id), "ip_last_used");
+		backgroundD1Write(this.ctx, () => this.updateLastUsed(ip, user.user_id), "ip_last_used");
 
 		return {
 			userId: user.user_id,
@@ -37,12 +40,12 @@ export class IPAuthenticationService {
 				`SELECT uai.user_id, u.email, u.name
          FROM user_authorized_ips uai
          JOIN users u ON uai.user_id = u.id
-         WHERE uai.ip_address = ?`,
+         WHERE uai.ip_address = ? LIMIT 2`,
 			)
 			.bind(clientIP)
-			.all();
+			.all<UserRecord>();
 
-		return (result.results?.[0] as unknown as UserRecord | undefined) ?? null;
+		return result.results?.length === 1 ? result.results[0] : null;
 	}
 
 	private async updateLastUsed(ipAddress: string, userId: string): Promise<void> {

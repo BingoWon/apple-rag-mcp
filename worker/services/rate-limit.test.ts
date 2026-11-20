@@ -1,60 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { fixture } from "../../packages/cli/test/fixture";
 import { RateLimitService } from "./rate-limit.js";
 
-class FakeStatement {
-	private values: unknown[] = [];
-
-	constructor(
-		private sql: string,
-		private counters: Map<string, number>,
-	) {}
-
-	bind(...values: unknown[]) {
-		this.values = values;
-		return this;
-	}
-
-	async first<T>(): Promise<T | null> {
-		if (!this.sql.includes("INSERT INTO usage_counters")) {
-			return null;
-		}
-
-		const [identifier, period, windowStart, , limit] = this.values;
-		const key = `${identifier}:${period}:${windowStart}`;
-		const count = this.counters.get(key) || 0;
-		if (count >= Number(limit)) return null;
-
-		const next = count + 1;
-		this.counters.set(key, next);
-		return { count: next } as T;
-	}
-
-	async run(): Promise<void> {
-		if (!this.sql.includes("UPDATE usage_counters")) return;
-
-		const [, identifier, period, windowStart] = this.values;
-		const key = `${identifier}:${period}:${windowStart}`;
-		this.counters.set(key, Math.max(0, (this.counters.get(key) || 0) - 1));
-	}
-}
-
-class FakeD1 {
-	readonly counters = new Map<string, number>();
-
-	prepare(sql: string) {
-		return new FakeStatement(sql, this.counters);
-	}
-
-	async batch(statements: FakeStatement[]) {
-		await Promise.all(statements.map((statement) => statement.run()));
-		return [];
-	}
-}
-
-test("atomically enforces and refunds anonymous minute quotas", async () => {
-	const db = new FakeD1();
-	const service = new RateLimitService(db as never);
+test("atomically enforces and refunds anonymous minute quotas", async (t) => {
+	const f = await fixture();
+	t.after(() => f.close());
+	const service = new RateLimitService(f.env.DB);
 	const decisions = [];
 
 	for (let index = 0; index < 3; index++) {
@@ -67,6 +19,27 @@ test("atomically enforces and refunds anonymous minute quotas", async () => {
 	assert.equal(limited.limitType, "minute");
 
 	await service.refund(decisions[0]);
+	await service.refund(decisions[0]);
+	assert.equal(
+		(await service.getStatus("203.0.113.1", { isAuthenticated: false })).minuteRemaining,
+		1,
+	);
 	const afterRefund = await service.checkLimits("203.0.113.1", { isAuthenticated: false });
 	assert.equal(afterRefund.allowed, true);
+});
+
+test("a lost commit acknowledgement refunds both counts exactly once", async (t) => {
+	const f = await fixture();
+	t.after(() => f.close());
+	const batch = f.env.DB.batch.bind(f.env.DB);
+	t.mock.method(f.env.DB, "batch", async (stmts: D1PreparedStatement[]) => {
+		await batch(stmts);
+		throw Error("lost acknowledgement");
+	});
+	const service = new RateLimitService(f.env.DB);
+	await assert.rejects(
+		service.checkLimits("203.0.113.1", { isAuthenticated: false }),
+		/lost acknowledgement/,
+	);
+	assert.equal(f.sql.prepare("SELECT sum(count) AS n FROM usage_counters").get()?.n, 0);
 });

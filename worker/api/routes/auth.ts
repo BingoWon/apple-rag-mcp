@@ -32,6 +32,13 @@ const AuthDataSchema = z.object({
 	expires_at: z.string(),
 });
 
+app.post("/logout", authMiddleware, async (c) => {
+	await c.env.DB.prepare("DELETE FROM web_sessions WHERE id=? AND user_id=?")
+		.bind(c.get("webSessionId"), c.get("userId"))
+		.run();
+	return c.json({ success: true });
+});
+
 // Register route (modernized)
 const registerRoute = createRoute({
 	method: "post",

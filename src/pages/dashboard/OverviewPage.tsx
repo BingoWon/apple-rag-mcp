@@ -5,7 +5,9 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { AccountActivity } from "@/components/dashboard/AccountActivity";
 import StatsCards from "@/components/dashboard/StatsCards";
 import { useAuth } from "@/hooks/useAuth";
+import { api } from "@/lib/api";
 import { authReturnPath, clearAuthReturn } from "@/lib/auth-return";
+import { useAuthStore } from "@/stores/auth";
 
 const AgentUsageGuide = lazy(() =>
 	import("@/components/dashboard/AgentUsageGuide").then(({ AgentUsageGuide }) => ({
@@ -23,20 +25,21 @@ function DashboardOverviewContent() {
 	// Consume the login callback once before loading private data.
 	useEffect(() => {
 		const handleAuthReturn = async () => {
-			const authParam = searchParams.get("auth");
+			const authParam = searchParams.get("login") === "complete";
 
 			// Handle OAuth callback if present (prevent duplicate processing)
 			if (authParam && !processedAuth.current) {
 				processedAuth.current = true;
 				try {
-					const authData = JSON.parse(atob(decodeURIComponent(authParam)));
-					await loginWithToken(authData.jwtToken);
+					const response = await api.post<{ token: string }>("/oauth/session/exchange");
+					if (!response.success || !response.data) throw Error("Login expired");
+					await loginWithToken(response.data.token);
 
-					toast.success(t("dashboard.welcome_oauth", { name: authData.name }));
+					toast.success(t("dashboard.welcome_oauth", { name: useAuthStore.getState().user?.name }));
 
 					// Clean URL parameters
 					const url = new URL(window.location.href);
-					url.searchParams.delete("auth");
+					url.searchParams.delete("login");
 					window.history.replaceState({}, "", url.toString());
 					const returnPath = authReturnPath();
 					clearAuthReturn();
@@ -46,6 +49,7 @@ function DashboardOverviewContent() {
 					}
 				} catch (_error) {
 					toast.error(t("dashboard.auth_failed"));
+					navigate("/login", { replace: true });
 				}
 			}
 		};

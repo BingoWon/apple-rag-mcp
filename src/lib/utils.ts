@@ -7,7 +7,8 @@ export function cn(...inputs: ClassValue[]) {
 
 export { formatDate } from "./datetime";
 
-export function formatCurrency(amount: number, currency = "USD") {
+export function formatCurrency(amount: number, currency: string | null) {
+	if (!currency) return String(amount);
 	return new Intl.NumberFormat("en-US", {
 		style: "currency",
 		currency,

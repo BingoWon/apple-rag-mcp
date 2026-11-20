@@ -1,29 +1,14 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { DatabaseSync } from "node:sqlite";
 import test from "node:test";
 import Stripe from "stripe";
+import { fixture } from "../../packages/cli/test/fixture";
 import { reconcileBilling } from "./billing-reconciliation";
 
 test("scheduled invoice reconciliation retries incomplete history and counts each paid invoice once", async (t) => {
-	const sql = new DatabaseSync(":memory:");
-	t.after(() => sql.close());
-	sql.exec(
-		readFileSync(
-			new URL("../../migrations/0011_subscription_receipts.sql", import.meta.url),
-			"utf8",
-		),
-	);
-	const db = {
-		prepare: (query: string) => ({
-			bind: (...values: (string | number)[]) => ({
-				first: async () => sql.prepare(query).get(...values),
-				run: () => sql.prepare(query).run(...values),
-			}),
-		}),
-		batch: async (statements: { run: () => unknown }[]) => statements.map((s) => s.run()),
-	};
-	const env = { STRIPE_SECRET_KEY: "sk_live_fixture", DB: db as unknown as D1Database };
+	const f = await fixture();
+	t.after(() => f.close());
+	const sql = f.sql;
+	const env = { STRIPE_SECRET_KEY: "sk_live_fixture", DB: f.env.DB };
 	const now = Date.now();
 	const invoice = {
 		id: "in_A",
@@ -68,6 +53,28 @@ test("scheduled invoice reconciliation retries incomplete history and counts eac
 	await reconcileBilling(env, now);
 	assert.equal(list.mock.callCount(), calls);
 
+	const events = t.mock.method(
+		Stripe.resources.Events.prototype,
+		"list",
+		async (filter: { type: string; created: { gte: number } }) => {
+			assert.equal(filter.type, "invoice.paid");
+			assert.ok(filter.created.gte < Math.floor(now / 1000));
+			return {
+				has_more: false,
+				data: [
+					{
+						id: "evt_late",
+						type: "invoice.paid",
+						api_version: "2025-08-27.basil",
+						data: { object: { ...invoice, id: "in_old_settled_today" } },
+					},
+				],
+			};
+		},
+	);
+	await reconcileBilling(env, now + 86400000);
+	assert.equal(events.mock.callCount(), 1);
+	assert.equal(total(), 300);
 	sql.exec("UPDATE billing_history_sync SET completed_at='2000-01-01T00:00:00.000Z'");
 	list.mock.mockImplementation(async () => ({
 		data: [{ ...invoice, livemode: false }],
@@ -80,5 +87,5 @@ test("scheduled invoice reconciliation retries incomplete history and counts eac
 	list.mock.mockImplementation(async () => ({ data: [], has_more: false }));
 	await reconcileBilling(env, now);
 	assert.notEqual(completedAt(), "2000-01-01T00:00:00.000Z");
-	assert.equal(total(), 200);
+	assert.equal(total(), 300);
 });
