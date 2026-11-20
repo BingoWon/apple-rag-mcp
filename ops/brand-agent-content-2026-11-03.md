@@ -7,6 +7,9 @@ and page reads. The CLI is not positioned as a manual research tool for people.
 
 ## Editorial rules
 
+- Both root READMEs open with the owner-supplied [hero image](../docs/assets/readme-hero.png).
+  Keep the original file. Generating, editing or substituting this artwork requires
+  the owner's explicit request. Website social previews use their own asset.
 - Use **Apple RAG** for the brand, account, subscription, navigation and email.
   Use **MCP / CLI** for compact labels; write “MCP or CLI” in English sentences.
   Connection-specific instructions can use “Apple RAG via MCP” or “Apple RAG CLI”.

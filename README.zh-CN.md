@@ -1,5 +1,7 @@
 <div align="center">
 
+<a href="https://apple-rag.com"><img src="./docs/assets/readme-hero.png" alt="通过 MCP 或 CLI，让智能体查阅 Apple 开发者文档" width="800"></a>
+
 <img src="https://apple-rag.com/logo.svg" alt="Apple RAG" width="64">
 
 # Apple RAG
@@ -11,8 +13,6 @@
 [官网](https://apple-rag.com) · 由 [<img src="./public/typesafe-logo.webp" alt="" width="18" height="18"> Jev](https://typesafe.ai/) 驱动
 
 [![CI](https://github.com/BingoWon/apple-rag-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/BingoWon/apple-rag-mcp/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) · [English](./README.md) | **中文**
-
-<a href="https://apple-rag.com"><img src="https://apple-rag.com/og-image.png" alt="Apple RAG — MCP / CLI 智能体接入" width="800"></a>
 
 </div>
 
