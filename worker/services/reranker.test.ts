@@ -152,9 +152,7 @@ test("cancelled embeddings do not retry or send provider failure alerts", async 
 		assert.equal(signal.aborted, true);
 		throw signal.reason;
 	});
-	const embedding = new EmbeddingService(keys.DEEPINFRA_API_KEY, (_key, message) =>
-		alerts.push(message),
-	);
+	const embedding = new EmbeddingService(keys, (_key, message) => alerts.push(message));
 	await assert.rejects(embedding.createEmbedding("query", controller.signal), reason);
 	assert.equal(calls, 1);
 	assert.deepEqual(alerts, []);
@@ -297,9 +295,7 @@ test("DeepInfra embedding failures use the same alert callback", async (t) => {
 		calls++;
 		return Response.json({ error: "insufficient balance" }, { status: 402 });
 	});
-	const embedding = new EmbeddingService(keys.DEEPINFRA_API_KEY, (_key, message) =>
-		alerts.push(message),
-	);
+	const embedding = new EmbeddingService(keys, (_key, message) => alerts.push(message));
 	await assert.rejects(() => embedding.createEmbedding("query"), /HTTP 402/);
 	assert.equal(calls, 1);
 	assert.match(alerts[0], /Embedding generation failed/);

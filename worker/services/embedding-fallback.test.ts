@@ -1,132 +1,182 @@
 import assert from "node:assert/strict";
-import test from "node:test";
-import type { EmbeddingService as IEmbeddingService } from "../services/types.js";
-import {
-	EmbeddingService,
-	FallbackEmbeddingService,
-	SiliconFlowEmbeddingService,
-} from "./embedding.js";
+import test, { type TestContext } from "node:test";
+import { EmbeddingService } from "./embedding.js";
 import type { ModelUsageEvent } from "./model-usage.js";
 
-const vector = [0.6, 0.8];
+const keys = { SILICONFLOW_API_KEY: "sf-key", DEEPINFRA_API_KEY: "di-key" };
+const vector = [3, 4, ...Array(2558).fill(0)];
+const success = () => Response.json({ data: [{ embedding: vector }], usage: { prompt_tokens: 5 } });
+const unavailable = () => new Response(null, { status: 503 });
 
-function provider(result: number[] | Error, calls?: { count: number }): IEmbeddingService {
+function harness(
+	t: TestContext,
+	reply: (index: number, init: RequestInit) => Response | Promise<Response>,
+	env = keys,
+) {
+	const calls: string[] = [];
+	const timers: { ms: number; controller: AbortController }[] = [];
+	const alerts: string[] = [];
+	const reasons: string[] = [];
+	const usage: ModelUsageEvent[] = [];
+	t.mock.method(AbortSignal, "timeout", (ms: number) => {
+		const controller = new AbortController();
+		timers.push({ ms, controller });
+		return controller.signal;
+	});
+	t.mock.method(globalThis, "fetch", async (url, init: RequestInit) => {
+		const sf = new URL(String(url)).hostname === "api.siliconflow.cn";
+		assert.equal(
+			String(url),
+			sf
+				? "https://api.siliconflow.cn/v1/embeddings"
+				: "https://api.deepinfra.com/v1/openai/embeddings",
+		);
+		assert.equal(
+			new Headers(init.headers).get("authorization"),
+			`Bearer ${sf ? keys.SILICONFLOW_API_KEY : keys.DEEPINFRA_API_KEY}`,
+		);
+		assert.deepEqual(JSON.parse(String(init.body)), {
+			model: "Qwen/Qwen3-Embedding-4B",
+			input: "query",
+			encoding_format: "float",
+			...(sf ? { dimensions: 2560 } : {}),
+		});
+		calls.push(sf ? "A" : "B");
+		return reply(calls.length, init);
+	});
+	const service = new EmbeddingService(
+		env,
+		(_key, message) => alerts.push(message),
+		(event) => usage.push(event),
+	);
 	return {
-		createEmbedding: async () => {
-			if (calls) calls.count++;
-			if (result instanceof Error) throw result;
-			return result;
-		},
+		calls,
+		timers,
+		usage,
+		alerts,
+		reasons,
+		run: (signal?: AbortSignal) =>
+			service.createEmbedding(" query ", signal, (reason) => reasons.push(reason)),
 	};
 }
 
-test("uses the primary provider when it succeeds", async () => {
-	const fallbackCalls = { count: 0 };
-	const service = new FallbackEmbeddingService(provider(vector), provider([1], fallbackCalls));
-	assert.deepEqual(await service.createEmbedding("query"), vector);
-	assert.equal(fallbackCalls.count, 0);
-});
-
-test("falls back to DeepInfra when the primary provider fails", async () => {
-	const service = new FallbackEmbeddingService(
-		provider(new Error("primary unavailable")),
-		provider(vector),
-	);
-	assert.deepEqual(await service.createEmbedding("query"), vector);
-});
-
-test("throws the fallback error when both providers fail", async () => {
-	const service = new FallbackEmbeddingService(
-		provider(new Error("primary unavailable")),
-		provider(new Error("fallback unavailable")),
-	);
-	await assert.rejects(() => service.createEmbedding("query"), /fallback unavailable/);
-});
-
-test("does not fall back after cancellation", async () => {
-	const controller = new AbortController();
-	const reason = new Error("User cancelled");
-	controller.abort(reason);
-	const fallbackCalls = { count: 0 };
-	const service = new FallbackEmbeddingService(
-		{
-			createEmbedding: async (_text, signal) => {
-				signal?.throwIfAborted();
-				throw new Error("should not reach fallback");
-			},
-		},
-		provider(vector, fallbackCalls),
-	);
-	await assert.rejects(() => service.createEmbedding("query", controller.signal), reason);
-	assert.equal(fallbackCalls.count, 0);
-});
-
-test("SiliconFlow uses the OpenAI-compatible endpoint and 2560 dimensions", async (t) => {
-	let requestUrl = "";
-	let requestBody: Record<string, unknown> = {};
-	let authorization = "";
-	const usage: ModelUsageEvent[] = [];
-	t.mock.method(globalThis, "fetch", async (input, init) => {
-		requestUrl = String(input);
-		requestBody = JSON.parse(String(init?.body));
-		authorization = new Headers(init?.headers).get("authorization") ?? "";
-		return Response.json({ data: [{ embedding: [1, 0] }], usage: { prompt_tokens: 5 } });
-	});
-	const service = new SiliconFlowEmbeddingService(
-		"sf-key",
-		() => {},
-		(event) => usage.push(event),
-	);
-	assert.deepEqual(await service.createEmbedding("query"), [1, 0]);
-	assert.equal(requestUrl, "https://api.siliconflow.cn/v1/embeddings");
-	assert.equal(authorization, "Bearer sf-key");
-	assert.equal(requestBody.model, "Qwen/Qwen3-Embedding-4B");
-	assert.equal(requestBody.dimensions, 2560);
-	assert.deepEqual(usage, [
-		{
-			category: "embedding",
-			inputTokens: 5,
-			currency: "CNY",
-			costNanos: 700,
-			costSource: "estimated",
-		},
-	]);
-});
-
-test("SiliconFlow failure falls back to DeepInfra with provider-specific alerts", async (t) => {
-	const calls: string[] = [];
-	const alerts: string[] = [];
-	const usage: ModelUsageEvent[] = [];
-	const record = (event: ModelUsageEvent) => usage.push(event);
-	t.mock.method(globalThis, "fetch", async (input) => {
-		const url = String(input);
-		calls.push(url);
-		if (url.startsWith("https://api.siliconflow.cn")) {
-			return Response.json({ error: "insufficient balance" }, { status: 402 });
+for (const successfulAttempt of [1, 2, 3, 4, 0]) {
+	test(`serial attempts stop on ${successfulAttempt || "exhaustion"} with one charge record per dispatch`, async (t) => {
+		const h = harness(t, (i) => (i === successfulAttempt ? success() : unavailable()));
+		if (successfulAttempt) {
+			const result = await h.run();
+			assert.deepEqual(result.slice(0, 2), [0.6, 0.8]);
+			assert.equal(result.length, 2560);
+		} else {
+			await assert.rejects(h.run(), /HTTP 503/);
 		}
-		assert.equal(url, "https://api.deepinfra.com/v1/openai/embeddings");
-		return Response.json({ data: [{ embedding: [0.6, 0.8] }], usage: { prompt_tokens: 5 } });
+		const count = successfulAttempt || 4;
+		assert.equal(h.calls.join(""), "ABAB".slice(0, count));
+		assert.deepEqual(
+			h.timers.map((t) => t.ms),
+			[16000, ...[3000, 3000, 5000, 5000].slice(0, count)],
+		);
+		assert.deepEqual(h.reasons, count > 1 ? ["EMBEDDING_FALLBACK"] : []);
+		assert.equal(h.usage.length, count);
+		assert.equal(
+			h.usage.filter((e) => e.costNanos !== undefined).length,
+			successfulAttempt ? 1 : 0,
+		);
+		if (successfulAttempt) {
+			const last = h.usage.at(-1);
+			assert.equal(last?.currency, count % 2 ? "CNY" : "USD");
+			assert.equal(last?.costNanos, count % 2 ? 700 : 100);
+		}
 	});
-	const service = new FallbackEmbeddingService(
-		new SiliconFlowEmbeddingService("sf-key", (_key, message) => alerts.push(message), record),
-		new EmbeddingService("di-key", (_key, message) => alerts.push(message), record),
+}
+
+test("an individual timeout switches provider; expiring the overall deadline stops the in-flight body and prevents more calls", async (t) => {
+	const h = harness(t, async (i, init) => {
+		const deadline = h.timers[i === 1 ? 1 : 0].controller;
+		await Promise.resolve();
+		deadline.abort(new DOMException("deadline", "TimeoutError"));
+		assert.ok(init.signal?.aborted);
+		init.signal.throwIfAborted();
+		return success();
+	});
+	await assert.rejects(h.run(), { name: "TimeoutError" });
+	assert.deepEqual(h.calls, ["A", "B"]);
+	assert.equal(h.usage.length, 2);
+});
+
+for (const at of [0, 1, 2, 3, 4]) {
+	test(`caller cancellation at attempt ${at} starts no further work`, async (t) => {
+		const controller = new AbortController();
+		const reason = new Error("Client disconnected");
+		const h = harness(t, (i, init) => {
+			if (i === at) {
+				controller.abort(reason);
+				assert.ok(init.signal?.aborted);
+				throw reason;
+			}
+			return unavailable();
+		});
+		if (!at) controller.abort(reason);
+		await assert.rejects(h.run(controller.signal), reason);
+		assert.equal(h.calls.length, at);
+		assert.equal(h.usage.length, at);
+		assert.equal(h.alerts.length, Math.max(0, at - 1));
+	});
+}
+
+test("an invalid key and an explicit retry-after skip only the affected provider", async (t) => {
+	for (const [status, headers] of [
+		[401, {}],
+		[429, { "Retry-After": "60" }],
+		[503, { "Retry-After": new Date(Date.now() + 60_000).toUTCString() }],
+	] as const) {
+		await t.test(String(status), async (st) => {
+			const h = harness(st, (i) =>
+				i === 1 ? new Response(null, { status, headers }) : i === 2 ? unavailable() : success(),
+			);
+			await h.run();
+			assert.equal(h.calls.join(""), "ABB");
+			assert.deepEqual(h.reasons, ["EMBEDDING_FALLBACK"]);
+			assert.match(h.alerts[0], /SiliconFlow Embedding generation failed/);
+		});
+	}
+});
+
+test("a single configured provider gets one attempt per round", async (t) => {
+	for (const primary of [false, true]) {
+		await t.test(primary ? "SiliconFlow" : "DeepInfra", async (st) => {
+			const h = harness(
+				st,
+				(i) => (i === 1 ? unavailable() : success()),
+				primary ? { ...keys, DEEPINFRA_API_KEY: "" } : { ...keys, SILICONFLOW_API_KEY: "" },
+			);
+			await h.run();
+			assert.equal(h.calls.join(""), primary ? "AA" : "BB");
+			assert.deepEqual(
+				h.timers.map((t) => t.ms),
+				[16000, 3000, 5000],
+			);
+			assert.deepEqual(h.reasons, []);
+		});
+	}
+});
+test("unconfigured providers are never dispatched or metered", async (t) => {
+	const h = harness(t, success, { SILICONFLOW_API_KEY: "", DEEPINFRA_API_KEY: "" });
+	await assert.rejects(h.run(), /No embedding provider/);
+	assert.equal(h.calls.length, 0);
+	assert.equal(h.usage.length, 0);
+});
+test("a response must contain a usable vector before stopping the schedule", async (t) => {
+	const invalid = [[1], Array(2560).fill(0), Array(2560).fill("1")];
+	const h = harness(t, (i) =>
+		i === 4
+			? success()
+			: Response.json({ data: [{ embedding: invalid[i - 1] }], usage: { prompt_tokens: 3 } }),
 	);
-	const reasons: string[] = [];
+	await h.run();
+	assert.equal(h.calls.join(""), "ABAB");
 	assert.deepEqual(
-		await service.createEmbedding("query", undefined, (reason) => reasons.push(reason)),
-		[0.6, 0.8],
+		h.usage.map((e) => e.inputTokens),
+		[3, 3, 3, 5],
 	);
-	assert.deepEqual(reasons, ["EMBEDDING_FALLBACK"]);
-	assert.equal(calls.length, 2);
-	assert.equal(calls[0], "https://api.siliconflow.cn/v1/embeddings");
-	assert.match(alerts[0], /SiliconFlow Embedding generation failed/);
-	assert.equal(usage.length, 2);
-	assert.equal(usage[0]?.costNanos, undefined);
-	assert.deepEqual(usage[1], {
-		category: "embedding",
-		inputTokens: 5,
-		currency: "USD",
-		costNanos: 100,
-		costSource: "estimated",
-	});
 });

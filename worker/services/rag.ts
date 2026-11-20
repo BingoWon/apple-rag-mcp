@@ -10,11 +10,7 @@ import type {
 import { logger } from "../shared/logger.js";
 import type { Env } from "../shared/types.js";
 import { DatabaseService } from "./database.js";
-import {
-	EmbeddingService,
-	FallbackEmbeddingService,
-	SiliconFlowEmbeddingService,
-} from "./embedding.js";
+import { EmbeddingService } from "./embedding.js";
 import { createModelUsageRecorder } from "./model-usage.js";
 import { RerankerService } from "./reranker.js";
 import { type RankedSearchResult, SearchEngine } from "./search-engine.js";
@@ -34,17 +30,7 @@ export class RAGService {
 		const reportFailure = createModelAlertReporter(env, ctx);
 		this.usage = createModelUsageRecorder(env.DB, channel);
 		this.database = new DatabaseService(config);
-		const deepInfra = new EmbeddingService(env.DEEPINFRA_API_KEY, reportFailure, this.usage.record);
-		this.embedding = env.SILICONFLOW_API_KEY
-			? new FallbackEmbeddingService(
-					new SiliconFlowEmbeddingService(
-						env.SILICONFLOW_API_KEY,
-						reportFailure,
-						this.usage.record,
-					),
-					deepInfra,
-				)
-			: deepInfra;
+		this.embedding = new EmbeddingService(env, reportFailure, this.usage.record);
 		const reranker = new RerankerService(env, reportFailure, this.usage.record);
 		this.searchEngine = new SearchEngine(this.database, this.embedding, reranker);
 	}

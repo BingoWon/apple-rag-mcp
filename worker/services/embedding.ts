@@ -1,13 +1,15 @@
-/**
- * Embedding providers with SiliconFlow primary and DeepInfra fallback.
- */
-
-import type { EmbeddingService as IEmbeddingService } from "../services/types.js";
-import { logger } from "../shared/logger.js";
-import { DEEPINFRA_CONFIG, DeepInfraService } from "./deepinfra-base.js";
-import { pricedModelUsage } from "./model-usage.js";
+import type { Env } from "../shared/types.js";
+import type { ModelAlertReporter } from "./model-alerts.js";
+import {
+	DEEPINFRA_CONFIG,
+	ModelRequestError,
+	modelTimeout,
+	postModelJson,
+} from "./model-request.js";
+import { type ModelUsageRecorder, pricedModelUsage } from "./model-usage.js";
 
 const EMBEDDING_PRICE_NANOS = { USD: 20, CNY: 140 } as const;
+const DIMENSIONS = 2560;
 
 export function embeddingUsage(
 	inputTokens: unknown,
@@ -16,125 +18,54 @@ export function embeddingUsage(
 	return pricedModelUsage("embedding", inputTokens, currency, EMBEDDING_PRICE_NANOS[currency]);
 }
 
-interface EmbeddingInput {
-	text: string;
-}
-
-interface EmbeddingPayload {
-	model: "Qwen/Qwen3-Embedding-4B";
-	input: string;
-	encoding_format: "float";
-	dimensions?: number;
-}
-
+const PROVIDERS = [
+	{
+		name: "SiliconFlow",
+		key: "SILICONFLOW_API_KEY",
+		url: "https://api.siliconflow.cn/v1/embeddings",
+		currency: "CNY",
+	},
+	{
+		name: "DeepInfra",
+		key: "DEEPINFRA_API_KEY",
+		url: `${DEEPINFRA_CONFIG.BASE_URL}/v1/openai/embeddings`,
+		currency: "USD",
+	},
+] as const;
+type Provider = (typeof PROVIDERS)[number];
 interface EmbeddingResponse {
-	data: Array<{
-		embedding: number[];
-	}>;
+	data?: { embedding?: number[] }[];
 	usage?: { prompt_tokens?: number };
 }
 
-export class EmbeddingService
-	extends DeepInfraService<EmbeddingInput, EmbeddingResponse, number[]>
-	implements IEmbeddingService
-{
-	protected readonly endpoint: string = "/v1/openai/embeddings";
-	protected readonly billingCurrency: keyof typeof EMBEDDING_PRICE_NANOS = "USD";
-
-	protected override async singleRequest(
-		endpoint: string,
-		payload: unknown,
-		signal?: AbortSignal,
-	): Promise<EmbeddingResponse> {
-		if (!this.recordUsage || !this.apiKey) return super.singleRequest(endpoint, payload, signal);
-		signal?.throwIfAborted();
-		let response: EmbeddingResponse | undefined;
-		try {
-			response = await super.singleRequest(endpoint, payload, signal);
-			return response;
-		} finally {
-			this.recordUsage(embeddingUsage(response?.usage?.prompt_tokens, this.billingCurrency));
-		}
+function normalizedVector(response: EmbeddingResponse) {
+	const vector = response?.data?.[0]?.embedding;
+	if (
+		response?.data?.length !== 1 ||
+		!Array.isArray(vector) ||
+		vector.length !== DIMENSIONS ||
+		!vector.every(Number.isFinite)
+	) {
+		throw new ModelRequestError("Invalid embedding vector", true);
 	}
-
-	/**
-	 * Create embedding (single provider)
-	 */
-	async createEmbedding(text: string, signal?: AbortSignal): Promise<number[]> {
-		if (!text?.trim()) {
-			throw new Error("Text cannot be empty for embedding generation");
-		}
-
-		const input: EmbeddingInput = { text: text.trim() };
-		return this.call(input, "Embedding generation", signal);
-	}
-
-	/**
-	 * Build API payload from request
-	 */
-	protected buildPayload(input: EmbeddingInput): EmbeddingPayload {
-		return {
-			model: DEEPINFRA_CONFIG.EMBEDDING_MODEL,
-			input: input.text,
-			encoding_format: "float",
-		};
-	}
-
-	/**
-	 * Process API response and return normalized embedding
-	 */
-	protected processResponse(response: EmbeddingResponse, _input: EmbeddingInput): number[] {
-		const embedding = this.extractEmbedding(response);
-		return this.normalizeL2(embedding);
-	}
-
-	/**
-	 * Extract embedding from API response
-	 */
-	private extractEmbedding(response: EmbeddingResponse): number[] {
-		const embedding = response.data?.[0]?.embedding;
-
-		if (!embedding || !Array.isArray(embedding)) {
-			throw new Error("No embedding data received from DeepInfra API");
-		}
-
-		if (embedding.length === 0) {
-			throw new Error("Empty embedding received from DeepInfra API");
-		}
-
-		return embedding;
-	}
-
-	/**
-	 * L2 normalization for optimal vector search performance
-	 */
-	private normalizeL2(embedding: number[]): number[] {
-		const norm = Math.sqrt(embedding.reduce((sum, val) => sum + val * val, 0));
-
-		if (norm === 0) {
-			logger.warn("Zero norm embedding detected, returning original");
-			return [...embedding];
-		}
-
-		return embedding.map((val) => val / norm);
-	}
+	const norm = Math.hypot(...vector);
+	if (!norm || !Number.isFinite(norm)) throw new ModelRequestError("Invalid embedding norm", true);
+	return vector.map((value) => value / norm);
 }
 
-export class SiliconFlowEmbeddingService extends EmbeddingService {
-	protected readonly baseUrl = "https://api.siliconflow.cn";
-	protected readonly endpoint = "/v1/embeddings";
-	protected readonly providerName = "SiliconFlow";
-	protected readonly billingCurrency = "CNY";
-
-	protected override buildPayload(input: EmbeddingInput): EmbeddingPayload {
-		return { ...super.buildPayload(input), dimensions: 2560 };
-	}
+function failureOutcome(error: unknown, timeout: AbortSignal, caller?: AbortSignal) {
+	if (caller?.aborted) return "cancelled";
+	if (timeout.aborted) return "timeout";
+	if (error instanceof ModelRequestError && error.status) return "http_error";
+	if (error instanceof ModelRequestError || error instanceof SyntaxError) return "invalid_response";
+	return "network_error";
 }
 
-export class FallbackEmbeddingService implements IEmbeddingService {
+export class EmbeddingService {
 	constructor(
-		private readonly primary: IEmbeddingService,
-		private readonly fallback: IEmbeddingService,
+		private readonly env: Pick<Env, Provider["key"]>,
+		private readonly reportFailure: ModelAlertReporter,
+		private readonly recordUsage?: ModelUsageRecorder,
 	) {}
 
 	async createEmbedding(
@@ -142,18 +73,71 @@ export class FallbackEmbeddingService implements IEmbeddingService {
 		signal?: AbortSignal,
 		onFallback?: (reason: string) => void,
 	): Promise<number[]> {
-		if (!text?.trim()) {
-			throw new Error("Text cannot be empty for embedding generation");
+		signal?.throwIfAborted();
+		const input = text?.trim();
+		if (!input) throw new Error("Text cannot be empty for embedding generation");
+
+		const budget = modelTimeout(16_000, signal);
+		const retryAt = new Map<Provider, number>();
+		let attempts = 0;
+		let lastError = new Error("No embedding provider is configured");
+		for (const timeoutMs of [3_000, 5_000]) {
+			for (const provider of PROVIDERS) {
+				const apiKey = this.env[provider.key];
+				if (!apiKey || budget.aborted || Date.now() < (retryAt.get(provider) ?? 0)) continue;
+				if (provider.name === "DeepInfra" && attempts === 1 && this.env.SILICONFLOW_API_KEY)
+					onFallback?.("EMBEDDING_FALLBACK");
+				const attemptSignal = modelTimeout(timeoutMs, budget);
+				const started = Date.now();
+				const event = {
+					message: "embedding_attempt",
+					provider: provider.name,
+					attempt: ++attempts,
+					timeout_ms: timeoutMs,
+				};
+				let response: EmbeddingResponse | undefined;
+				try {
+					response = await postModelJson<EmbeddingResponse>(
+						provider.url,
+						apiKey,
+						{
+							model: DEEPINFRA_CONFIG.EMBEDDING_MODEL,
+							input,
+							encoding_format: "float",
+							...(provider.name === "SiliconFlow" ? { dimensions: DIMENSIONS } : {}),
+						},
+						attemptSignal,
+					);
+					const vector = normalizedVector(response);
+					attemptSignal.throwIfAborted();
+					console.log({ ...event, elapsed_ms: Date.now() - started, outcome: "success" });
+					return vector;
+				} catch (error) {
+					const httpStatus = error instanceof ModelRequestError ? error.status : undefined;
+					const outcome = failureOutcome(error, attemptSignal, signal);
+					console.warn({
+						...event,
+						elapsed_ms: Date.now() - started,
+						outcome,
+						http_status: httpStatus,
+					});
+					signal?.throwIfAborted();
+					lastError = error instanceof Error ? error : new Error(String(error));
+					if (error instanceof ModelRequestError)
+						retryAt.set(provider, error.retryable ? (error.retryAt ?? 0) : Infinity);
+					this.reportFailure(
+						`embedding:${provider.name}:${httpStatus ?? outcome}`,
+						`${provider.name} Embedding generation failed (${httpStatus ?? outcome}).`,
+					);
+				} finally {
+					this.recordUsage?.(embeddingUsage(response?.usage?.prompt_tokens, provider.currency));
+				}
+			}
 		}
-		try {
-			return await this.primary.createEmbedding(text, signal);
-		} catch (error) {
-			signal?.throwIfAborted();
-			logger.warn(
-				`Primary embedding provider failed; using DeepInfra fallback: ${error instanceof Error ? error.message : String(error)}`,
-			);
-			onFallback?.("EMBEDDING_FALLBACK");
-			return this.fallback.createEmbedding(text, signal);
-		}
+		signal?.throwIfAborted();
+		if (attempts === 0) this.reportFailure("embedding:config", lastError.message);
+		console.warn({ message: "embedding_exhausted", attempts });
+		budget.throwIfAborted();
+		throw lastError;
 	}
 }

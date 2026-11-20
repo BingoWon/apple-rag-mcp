@@ -1,7 +1,12 @@
 import type { ModelAlertReporter } from "../services/model-alerts.js";
 import { logger } from "../shared/logger.js";
 import type { Env } from "../shared/types.js";
-import { DEEPINFRA_CONFIG, DeepInfraService, ModelRequestError } from "./deepinfra-base.js";
+import {
+	DEEPINFRA_CONFIG,
+	ModelRequestError,
+	modelTimeout,
+	postModelJson,
+} from "./model-request.js";
 import { type ModelUsageRecorder, pricedModelUsage } from "./model-usage.js";
 
 export interface RerankDocument {
@@ -81,20 +86,12 @@ function excerpt(content: string, query: string, bytes: number): string {
 	);
 }
 
-export class RerankerService extends DeepInfraService<
-	RerankerInput,
-	RerankerResponse,
-	RankedDocument[]
-> {
-	protected readonly endpoint = `/v1/inference/${DEEPINFRA_CONFIG.RERANKER_MODEL}`;
-
+export class RerankerService {
 	constructor(
 		private readonly env: Pick<Env, "DEEPINFRA_API_KEY" | "TYPESAFE_API_KEY" | "ZENMUX_API_KEY">,
-		reportFailure: ModelAlertReporter,
-		recordUsage?: ModelUsageRecorder,
-	) {
-		super(env.DEEPINFRA_API_KEY, reportFailure, recordUsage);
-	}
+		private readonly reportFailure: ModelAlertReporter,
+		private readonly recordUsage?: ModelUsageRecorder,
+	) {}
 
 	async rerank(
 		query: string,
@@ -106,18 +103,12 @@ export class RerankerService extends DeepInfraService<
 		if (!query.trim() || !documents.length || !Number.isInteger(topN) || topN <= 0) {
 			throw new Error("Invalid reranking input");
 		}
-		return this.call(
-			{ query: query.trim(), documents, topN: Math.min(topN, documents.length), onFallback },
-			"Reranking",
-			signal,
-		);
-	}
-
-	protected override async call(
-		input: RerankerInput,
-		operationName: string,
-		signal?: AbortSignal,
-	): Promise<RankedDocument[]> {
+		const input: RerankerInput = {
+			query: query.trim(),
+			documents,
+			topN: Math.min(topN, documents.length),
+			onFallback,
+		};
 		signal?.throwIfAborted();
 		const started = Date.now();
 		const failures: Array<{ provider: JevProvider["name"]; error: Error }> = [];
@@ -174,7 +165,7 @@ export class RerankerService extends DeepInfraService<
 			const backupError = this.safeError(error);
 			const message = `Jev failed: ${failureSummary}\nFallback Qwen3-Reranker-8B failed: ${backupError.message}\nBoth rerankers failed. Search will return the original candidate order.`;
 			this.reportFailure(`rerank:jev:${failureKey}:qwen:${this.signature(backupError)}`, message);
-			throw new Error(`${operationName}: ${message}`);
+			throw new Error(`Reranking: ${message}`);
 		}
 	}
 
@@ -250,12 +241,11 @@ export class RerankerService extends DeepInfraService<
 		signal?.throwIfAborted();
 		let data: JevResponse | null = null;
 		try {
-			const timeout = AbortSignal.timeout(DEEPINFRA_CONFIG.TIMEOUT_MS);
 			const response = await fetch(provider.endpoint, {
 				method: "POST",
 				headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
 				body: JSON.stringify({ model: provider.model, ...payload }),
-				signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
+				signal: modelTimeout(DEEPINFRA_CONFIG.TIMEOUT_MS, signal),
 			});
 			if (!response.ok) {
 				const reason = (await response.text().catch(() => ""))
@@ -294,10 +284,17 @@ export class RerankerService extends DeepInfraService<
 		signal?.throwIfAborted();
 		let response: RerankerResponse | undefined;
 		try {
-			response = await this.singleRequest(this.endpoint, this.buildPayload(input), signal);
+			if (!this.env.DEEPINFRA_API_KEY)
+				throw new ModelRequestError("DEEPINFRA_API_KEY is not configured", false);
+			response = await postModelJson<RerankerResponse>(
+				`${DEEPINFRA_CONFIG.BASE_URL}/v1/inference/${DEEPINFRA_CONFIG.RERANKER_MODEL}`,
+				this.env.DEEPINFRA_API_KEY,
+				this.buildPayload(input),
+				modelTimeout(DEEPINFRA_CONFIG.TIMEOUT_MS, signal),
+			);
 			return response;
 		} finally {
-			if (this.apiKey && this.recordUsage) {
+			if (this.env.DEEPINFRA_API_KEY && this.recordUsage) {
 				const usage = pricedModelUsage(
 					"reranking",
 					response?.input_tokens ?? response?.inference_status?.tokens_input,
@@ -315,7 +312,7 @@ export class RerankerService extends DeepInfraService<
 		}
 	}
 
-	protected buildPayload(input: RerankerInput): unknown {
+	private buildPayload(input: RerankerInput): unknown {
 		return {
 			queries: [input.query],
 			documents: input.documents.map((document) => `${document.title ?? ""}\n${document.content}`),
@@ -323,7 +320,7 @@ export class RerankerService extends DeepInfraService<
 		};
 	}
 
-	protected processResponse(response: RerankerResponse, input: RerankerInput): RankedDocument[] {
+	private processResponse(response: RerankerResponse, input: RerankerInput): RankedDocument[] {
 		if (
 			!Array.isArray(response?.scores) ||
 			response.scores.length !== input.documents.length ||

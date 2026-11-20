@@ -59,3 +59,31 @@ The chart stores amounts in original currencies at billionth-unit precision.
 The USD total estimates CNY conversion at the configured `MODEL_COST_CNY_PER_USD`
 reference rate. The initial rate is 6.7152 from the [November 13, 2026 CFETS
 central parity](https://www.chinamoney.com.cn/english/bmkcpr/index.html?tab=2).
+
+## Online search embedding retries
+
+MCP and CLI search try SiliconFlow, then DeepInfra, with up to 3 seconds for
+each request. If neither returns a usable 2560-dimensional vector, they repeat
+the same order with up to 5 seconds each. A single 16-second deadline covers
+both rounds. Each step makes one HTTP request. Missing credentials, permanent
+HTTP errors and an upstream retry-after that is still in effect skip that
+provider. Client cancellation stops the entire search. If embedding is
+exhausted, search can continue with the keyword results already fetched in
+parallel. The collector uses its separate 30-second batch timeout.
+
+Each dispatched request emits a Worker log with message `embedding_attempt`,
+provider, attempt number, timeout and elapsed milliseconds, outcome and any
+upstream HTTP error status. It records one model usage event, including when
+the response has no token count. `embedding_exhausted` identifies searches that
+ran out of embedding options. `EMBEDDING_FALLBACK` in search logs indicates
+that the alternate provider was tried, even when the primary subsequently
+recovered. `SEMANTIC_UNAVAILABLE` identifies searches that lost the semantic
+branch, which can also happen if vector lookup in PostgreSQL fails.
+
+Compare equal UTC windows before and after a release. Use the 99th percentile
+of `search_logs.response_time_ms` for served searches (success, degraded or
+no_content), the proportion of those searches with `SEMANTIC_UNAVAILABLE`,
+and the number of online embedding attempts in `model_usage_events` divided
+by the served search count. Filter model usage to MCP and CLI to exclude
+collector batches. Failed and cancelled searches can also consume attempts;
+check their counts alongside the ratio.
