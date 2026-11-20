@@ -9,12 +9,12 @@ export const SITE_PAGES: Record<string, SitePage> = {
 	"/": {
 		title: "Apple RAG — Apple Developer Knowledge for AI Agents",
 		description:
-			"Give your AI agent access to Apple developer documentation and WWDC transcripts. Search and read sources via MCP or CLI, with one account and subscription.",
+			"Connect your AI agent via MCP or CLI to search Apple docs and WWDC transcripts, browse SwiftUI and UIKit by topic, and read source pages.",
 		indexable: true,
 		zh: {
 			title: "Apple RAG — 面向智能体的 Apple 开发知识服务",
 			description:
-				"为智能体提供 Apple 官方文档与 WWDC 字幕的搜索和读取能力。支持 MCP / CLI，共用账号与套餐。",
+				"通过 MCP 或 CLI，让智能体搜索 Apple 开发文档与 WWDC 字幕，按主题浏览 SwiftUI 和 UIKit，再读取所需原文。",
 		},
 	},
 	"/connect": {
@@ -78,9 +78,13 @@ export const SITE_PAGES: Record<string, SitePage> = {
 	},
 	"/overview": {
 		title: "Your Workspace — Apple RAG",
-		description: "Connect your agent and review shared MCP and CLI usage.",
+		description:
+			"Connect your agent, compare search, browse, and fetch activity, and check your remaining weekly allowance.",
 		indexable: false,
-		zh: { title: "控制台 — Apple RAG", description: "接入智能体，查看 MCP / CLI 的共享使用情况。" },
+		zh: {
+			title: "控制台 — Apple RAG",
+			description: "接入智能体，查看搜索、目录浏览和原文读取的用量趋势，以及本周剩余额度。",
+		},
 	},
 	"/settings": {
 		title: "Account Settings — Apple RAG",
@@ -99,9 +103,12 @@ export const SITE_PAGES: Record<string, SitePage> = {
 	},
 	"/usage": {
 		title: "Agent Usage — Apple RAG",
-		description: "Review search and page-reading activity across MCP and CLI.",
+		description: "Review search, browse, and fetch calls across MCP and CLI.",
 		indexable: false,
-		zh: { title: "使用记录 — Apple RAG", description: "查看 MCP / CLI 的搜索与页面读取记录。" },
+		zh: {
+			title: "使用记录 — Apple RAG",
+			description: "查看 MCP 与 CLI 的搜索、目录浏览和原文读取记录。",
+		},
 	},
 	"/mcp-tokens": {
 		title: "MCP Tokens — Apple RAG",
@@ -191,6 +198,7 @@ export function getSiteMetadata(pathname: string, language = "en") {
 							"Semantic Search",
 							"Keyword Search",
 							"Hybrid Search",
+							"SwiftUI and UIKit Topic Navigation",
 							"Apple Developer Documentation",
 							"WWDC Video Transcripts",
 							"MCP Access",

@@ -6,7 +6,7 @@
 
 ### Apple developer knowledge for your AI agent.
 
-*Apple docs. WWDC26 transcripts. RAG retrieval + [Jev](https://typesafe.ai/) relevance ranking. Connect via MCP / CLI.*
+*Give your agent Apple documentation and WWDC26 transcripts through MCP or CLI. RAG retrieval finds the sources, and [Jev](https://typesafe.ai/) ranks the results.*
 
 [Website](https://apple-rag.com) · Powered by [<img src="./public/typesafe-logo.webp" alt="" width="18" height="18"> Jev](https://typesafe.ai/)
 
@@ -18,11 +18,15 @@
 
 ---
 
-## Not Just Another Docs Tool
+## What your agent can do
 
-Hybrid retrieval combines keyword and semantic search to find Apple sources. [Jev](https://typesafe.ai/) then ranks the merged candidates for relevance to your question, bringing the best matches to your agent.
+| Tool | When to use it |
+| --- | --- |
+| `search` | Find an API or a WWDC discussion with an English query. Keyword and semantic search find relevant passages. |
+| `browse` | Explore SwiftUI or UIKit without guessing URLs. Follow Apple’s topic groups from a framework to its APIs. |
+| `fetch` | Read the source page for a search result or catalog entry, or open a URL you already have. |
 
-Agents can search for relevant excerpts, read source pages when they need more context, and cite the returned URLs. Choose MCP or CLI for the current environment.
+All three tools are available through MCP and the CLI. The [dashboard](https://apple-rag.com/overview) shows calls by tool, links to the corresponding logs, and your remaining weekly allowance.
 
 ### Powered by [<img src="./public/typesafe-logo.webp" alt="" width="22" height="22"> Jev](https://typesafe.ai/)
 
@@ -43,46 +47,26 @@ The [hosted service](https://apple-rag.com/) connects your agent to an Apple kno
 
 The hosted service operates the database, refreshes the corpus, and manages retrieval model credentials. The CLI is distributed separately; the application source is public.
 
-`browse` explores indexed SwiftUI and UIKit topics. Start at the catalog root or pass a documentation URL; follow relative links and use `fetch` to read a document.
-
-`search` retrieves the indexed Apple corpus. `fetch` reads indexed pages first,
-resolves Apple redirects, and uses official document JSON or Firecrawl when content
-is missing. Responses identify the original source and retrieval method. Public
-webpages are cached separately from the RAG corpus; arbitrary third-party pages
-never enter search automatically. See [web retrieval operations](ops/web-retrieval.md)
-for limits, setup, and log meanings.
+When reading a page, `fetch` checks the index first, follows Apple redirects, and can fall back to official document JSON or live extraction. Results identify the source and retrieval method. Third-party pages stay outside the Apple search index. See [web retrieval operations](ops/web-retrieval.md) for limits and log details.
 
 [Start free](https://apple-rag.com/). [Pro](https://apple-rag.com/#pricing) includes 50,000 tool calls/week and 50/minute for $1/week, shared by `search`, `browse`, and `fetch`.
 
 ---
 
-## Start in Seconds
+## Connect your agent
 
-**Agents with shell access:** use the [Apple RAG CLI](packages/cli/README.md):
+Open the [connection guide](https://apple-rag.com/connect), copy a setup prompt, and paste it into your agent’s conversation.
 
-```sh
-npm install -g apple-rag-cli
-apple-rag auth login
-apple-rag search "SwiftUI NavigationStack" --limit 3 --json
-```
+- **MCP** is the recommended choice for agents with native MCP support. To use your account allowance, copy the personalized prompt from your [dashboard](https://apple-rag.com/overview).
+- **CLI** gives shell-based agents the same tools. The [npm package](https://www.npmjs.com/package/apple-rag-cli) includes the CLI and an agent skill. You approve account access in your browser.
 
-The public client uses the same anonymous, free and Pro access as MCP, with shared
-account quotas. CLI 2.x opens the website for independent device authorization;
-MCP Tokens are not CLI credentials. Manage CLI devices/keys in Settings. `auth status` shows the live plan and remaining quota; `upgrade`
-links to the existing subscription page. First npm publication is owner-operated;
-see [release operations](ops/cli.md) for its status and setup.
-
-**Configure with your agent:** In the [dashboard](https://apple-rag.com/overview),
-select a token and click **Copy Install Prompt**. Paste it into your current
-agent to configure the connection and verify the tools.
-
-**One click:**
+### One-click setup for Cursor
 
 [![Install MCP Server](https://cursor.com/deeplink/mcp-install-light.svg)](https://cursor.com/en/install-mcp?name=apple-rag-mcp&config=eyJ1cmwiOiJodHRwczovL21jcC5hcHBsZS1yYWcuY29tIn0%3D)
 
 Open [Cursor](https://cursor.com) and confirm installation.
 
-### Option 2: Manual Setup for Other MCP Clients
+### Manual setup for other MCP clients
 
 **JSON Configuration (Copy & Paste):**
 This is a configuration example, not a universal client format. The dashboard

@@ -137,7 +137,7 @@ test("anonymous successful results recommend free registration with concrete sha
 		assert.ok(message.includes(FREE_ACCESS_GUIDANCE));
 		assert.match(message, /50 tool calls\/week and 5 tool calls\/minute/);
 		assert.match(message, /Register for a free account at https:\/\/apple-rag\.com\/ and/);
-		assert.match(message, /shared by search and fetch/);
+		assert.match(message, /shared by search, browse, and fetch/);
 		assert.doesNotMatch(message, /https:\/\/apple-rag\.com\/(?:register|billing)\b/);
 		assert.doesNotMatch(message, /higher limit|upgrade|subscribe|enterprise/i);
 	}

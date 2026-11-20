@@ -109,7 +109,7 @@ test("generates a localized agent prompt with literal URL and token", () => {
 		const prompt = generateInstallPrompt({ token: TOKEN, serverUrl: CUSTOM_URL }, language);
 		assert.ok(prompt.includes(CUSTOM_URL));
 		assert.ok(prompt.includes(`Authorization: Bearer ${TOKEN}`));
-		assert.match(prompt, /search.*fetch/);
+		assert.match(prompt, /search.*browse.*fetch/);
 		assert.match(prompt, /2026-07-28/);
 		assert.match(prompt, /initialize/);
 		assert.doesNotMatch(prompt, /\[https?:\/\//);

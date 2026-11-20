@@ -32,7 +32,7 @@ Usage:
 APPLE_RAG_TOKEN overrides saved credentials. CLI and MCP share account quotas, with separate credentials.
 APPLE_RAG_URL overrides the platform origin. MCP Tokens are not accepted.
 Browser authorization creates a separate CLI device session stored in the OS credential store.
-Login/status/doctor do not consume search/fetch quota. Doctor does not test retrieval.
+Login/status/doctor do not consume tool quota. Doctor does not test retrieval.
 Output files must not exist. No automatic tool retries.
 `;
 

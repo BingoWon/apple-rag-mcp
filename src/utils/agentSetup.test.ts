@@ -13,6 +13,7 @@ test("CLI setup gives agents bounded setup prompts without asking users to handl
 			"auth login --no-browser",
 			"auth login --device --no-browser",
 			"doctor --json",
+			"apple-rag browse",
 			"https://apple-rag.com/llms.txt",
 		])
 			assert.ok(prompt.includes(command));

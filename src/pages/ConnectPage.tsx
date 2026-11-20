@@ -54,7 +54,7 @@ export default function ConnectPage() {
 											language="bash"
 											filename="agent commands"
 											code={
-												'npm install -g apple-rag-cli\napple-rag auth login\napple-rag search "SwiftUI NavigationStack path binding" --limit 3 --json\napple-rag fetch "https://developer.apple.com/documentation/swiftui" --json'
+												'npm install -g apple-rag-cli\napple-rag auth login\napple-rag search "SwiftUI NavigationStack path binding" --limit 3 --json\napple-rag browse --json\napple-rag fetch "https://developer.apple.com/documentation/swiftui" --json'
 											}
 										/>
 									</div>

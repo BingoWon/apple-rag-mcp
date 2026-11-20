@@ -51,7 +51,7 @@ export function generateInstallPrompt(
 					"",
 					"使用当前客户端、当前版本支持的原生命令或配置格式，优先配置到个人用户范围，保留其他已有配置。",
 					"服务同时支持 MCP 2026-07-28 和客户端原有的 initialize 握手（2025-11-25、2025-06-18、2025-03-26）。不要因为客户端未发送 MCP-Protocol-Version 而判定不兼容。",
-					"完成后检查连接，列出工具，并分别验证 search 和 fetch。",
+					"完成后检查连接，通过 tools/list 确认有 search、browse 和 fetch 三项工具。仅在实际任务需要时调用。",
 					"若需要重启或重新加载，请明确说明。不要仅凭配置已写入就报告成功，也不要输出完整 Token。",
 				]
 			: [
@@ -66,7 +66,7 @@ export function generateInstallPrompt(
 					"",
 					"Use the native command or configuration format supported by this client version. Prefer user-level configuration and preserve other existing settings.",
 					"The server accepts both MCP 2026-07-28 and the client's existing initialize handshake (2025-11-25, 2025-06-18, and 2025-03-26). Do not treat a missing MCP-Protocol-Version header as incompatibility.",
-					"After configuration, check the connection, list tools, and verify both search and fetch.",
+					"After configuration, use tools/list to confirm that search, browse, and fetch are available. Call them when the task needs a source.",
 					"If a restart or reload is required, say so. Do not report success based only on writing configuration, and do not print the full token.",
 				]
 	).join("\n");

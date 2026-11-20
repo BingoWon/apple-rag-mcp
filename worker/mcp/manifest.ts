@@ -10,7 +10,7 @@ export const SERVER_MANIFEST = {
 	title: "Apple RAG — Apple Developer Knowledge for AI Agents",
 	version: SERVER_VERSION,
 	description:
-		"Apple docs and WWDC transcripts for AI agents, with RAG retrieval and Jev relevance ranking.",
+		"Browse and read Apple docs. Search docs and WWDC with RAG retrieval and Jev relevance ranking.",
 	protocolVersion: MCP_PROTOCOL_VERSION,
 	supportedProtocolVersions: ["2026-07-28", "2025-11-25", "2025-06-18", "2025-03-26"],
 	capabilities: {

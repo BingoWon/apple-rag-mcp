@@ -1,9 +1,6 @@
 # Apple RAG CLI
 
-Give a shell-enabled AI agent access to Apple developer documentation and WWDC
-transcripts. The CLI and MCP connect to the same Apple RAG service, with a shared
-account, subscription, and usage allowance. This guide is for agent integration
-and deployment; documentation lookups are performed by the agent. Requires Node.js 22.20+.
+Your shell-based agent can search Apple developer docs and WWDC transcripts, browse SwiftUI and UIKit by topic, and read full source pages. The CLI gives it the same three tools as MCP. Both connections share one account, subscription, and usage allowance. Requires Node.js 22.20+.
 
 ```sh
 npm install -g apple-rag-cli
@@ -67,11 +64,14 @@ does not import old plaintext MCP credentials. MCP itself continues to work.
 
 ```sh
 apple-rag search "StoreKit Transaction currentEntitlements" --limit 4
-apple-rag search "SwiftUI NavigationStack" --json
+apple-rag browse --json
+apple-rag browse "https://developer.apple.com/documentation/swiftui/view" --depth 1
 apple-rag fetch "https://developer.apple.com/documentation/swiftui"
 apple-rag fetch "https://developer.apple.com/documentation/swiftui" --output swiftui.md
 apple-rag fetch "https://example.com" --json
 ```
+
+Browse without a URL to see the current catalog. Pass a document or section URL to explore its children. Small branches expand by default. For longer lists, keep the URL and limit, increment `--page`, and pass the returned `--revision`. Resolve each `href` against its parent URL, applying the local `base` first.
 
 Search is English-only and covers indexed Apple content. Results indicate complete
 vs partial documents. Fetch preserves canonical URLs, source, provider and cache
@@ -100,8 +100,7 @@ file-write failure after successful retrieval still consumes that retrieval.
 ## Connection checks and agents
 
 `apple-rag doctor --json` checks identity and CLI API health without retrieval quota.
-It does not prove retrieval/database quota-write readiness. Verify those with one
-real search or fetch.
+It does not prove retrieval/database quota-write readiness. Use a retrieval command when the task calls for a source.
 
 The package includes `skills/apple-dev-docs/SKILL.md`. Copy it into your agent's
 skill directory. For Codex after a global install:
@@ -120,9 +119,4 @@ environment token applies to the configured endpoint. Redirects are rejected.
 
 This package contains compiled client code, manifest, README, license and skill.
 Hosted corpus, database credentials and service configuration stay on the server.
-Repository builds use pnpm; end users do not need it. Maintainers: see `ops/cli.md`
-for the owner-operated first npm publication and subsequent OIDC automation.
-
-## Browse documentation
-
-Run `apple-rag browse --json` to list the catalog, or `apple-rag browse 'https://developer.apple.com/documentation/swiftui/view' --depth 1` to list a page's sections. Small branches expand by default. Use `--page`, `--limit`, and `--revision` to continue a listing. Resolve relative links against the parent URL and any local base. Browsing shares the account's tool quota. The initial catalog covers SwiftUI and UIKit.
+Repository builds use pnpm.

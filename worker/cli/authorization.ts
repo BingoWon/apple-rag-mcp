@@ -137,7 +137,7 @@ export class CLIAuthorization {
 		if (input.client_id !== CLI_CLIENT_ID)
 			throw new OAuthError("invalid_client", "Unknown CLI client.");
 		if (input.scope !== undefined && input.scope !== CLI_SCOPE)
-			throw new OAuthError("invalid_scope", "Only documentation search and fetch are available.");
+			throw new OAuthError("invalid_scope", `Expected CLI scope: ${CLI_SCOPE}.`);
 		if (input.resource !== undefined && input.resource !== this.origin + CLI_RESOURCE)
 			throw new OAuthError("invalid_target", "The credential is only for the CLI API.");
 	}

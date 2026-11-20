@@ -6,7 +6,7 @@
 
 ### 面向智能体的 Apple 开发知识服务。
 
-*Apple 文档。WWDC26 视频字幕。RAG 检索 + [Jev](https://typesafe.ai/) 相关性排序。支持 MCP / CLI。*
+*通过 MCP 或 CLI，让智能体查阅 Apple 开发文档和 WWDC26 字幕。RAG 负责检索，[Jev](https://typesafe.ai/) 按相关性排列结果。*
 
 [官网](https://apple-rag.com) · 由 [<img src="./public/typesafe-logo.webp" alt="" width="18" height="18"> Jev](https://typesafe.ai/) 驱动
 
@@ -18,17 +18,21 @@
 
 ---
 
-## 不只是另一个文档工具
+## 智能体可以做什么
 
-混合检索结合关键词与语义搜索，找到 Apple 官方资料，再由 [Jev](https://typesafe.ai/) 对合并后的候选结果进行相关性重排，将更匹配的内容交给智能体。
+| 工具 | 适用场景 |
+| --- | --- |
+| `search` 搜索 | 用英文查询 API 或 WWDC 中讨论过的问题，通过关键词和语义搜索找到相关原文片段。 |
+| `browse` 浏览目录 | 想了解 SwiftUI 或 UIKit 的某个主题时，沿着 Apple 官方分组逐层找到 API，无需猜测文档地址。 |
+| `fetch` 读取原文 | 打开搜索结果、目录中的文档或已有链接，核对完整上下文并引用来源。 |
 
-**最小占用。最大信号。** 我们的 MCP 工具设计精简——没有臃肿的响应，没有浪费的 token，没有干扰你 AI agent 上下文的噪音。只有真正重要的信息。
+MCP 和 CLI 都提供这三项工具。在[控制台](https://apple-rag.com/overview)可以分别查看三项工具的用量趋势、打开对应的调用记录，并查看本周剩余额度。
 
 ### 由 [<img src="./public/typesafe-logo.webp" alt="" width="22" height="22"> Jev](https://typesafe.ai/) 驱动
 
 我们已将 [Jev](https://typesafe.ai/) 决策模型接入搜索流程，用于相关性评分。
 它会结合查询中的 API、平台和版本要求，为候选 Apple 文档与视频字幕评分；
-我们再根据评分对结果排序，通过 MCP 交给智能体。调用失败时，备用重排序模型会自动接手。
+我们再根据评分对结果排序，通过 MCP 或 CLI 交给智能体。调用失败时，备用重排序模型会自动接手。
 
 ---
 
@@ -42,42 +46,26 @@
 
 托管服务负责数据库、资料索引更新和检索模型凭据。CLI 客户端独立分发，应用源码公开。
 
-`browse` 按官方分组浏览已收录的 SwiftUI 和 UIKit 文档。从目录根或文档 URL 进入，使用相对链接展开子项，用 `fetch` 读取正文。
-
-`search` 检索已建立索引的 Apple 资料。`fetch` 优先读取已有正文，处理 Apple
-链接跳转；缺少内容时读取官方文档 JSON，或通过 Firecrawl 提取网页正文。
-响应标明内容来源和读取方式。公开网页缓存在 RAG 资料库之外，任意第三方网页不会
-自动进入搜索索引。限额、配置和日志含义见[网页读取运维说明](ops/web-retrieval.md)。
+读取页面时，`fetch` 优先使用已收录的正文，支持跟随 Apple 的链接跳转；缺少正文时可读取官方文档 JSON 或实时提取网页。结果标明来源与读取方式，站外网页不会自动进入 Apple 搜索库。限额和日志含义见[网页读取运维说明](ops/web-retrieval.md)。
 
 [免费开始](https://apple-rag.com/)。[Pro](https://apple-rag.com/#pricing) 周付 $1，包含每周 50,000 次、每分钟 50 次工具调用，由 `search`、`browse` 和 `fetch` 共用。
 
 ---
 
-## 秒速开始
+## 接入你的智能体
 
-**终端和编程智能体：** 使用 [Apple RAG CLI](packages/cli/README.md)：
+打开[接入指南](https://apple-rag.com/connect)，复制提示词，粘贴到智能体的对话框即可开始配置。
 
-```sh
-npm install -g apple-rag-cli
-apple-rag auth login
-apple-rag search "SwiftUI NavigationStack" --limit 3 --json
-```
+- **MCP** 适合支持原生 MCP 工具的智能体，建议优先使用。要使用账号额度，可从[控制台](https://apple-rag.com/overview)复制专属提示词。
+- **CLI** 让能执行终端命令的智能体使用同样的三项工具。[npm 安装包](https://www.npmjs.com/package/apple-rag-cli)附带 CLI 和智能体技能，需要使用账号时由你在浏览器中确认授权。
 
-CLI 与 MCP 共用匿名、免费和 Pro 权益及账号额度。CLI 2.x 通过网站独立授权设备，
-不使用 MCP Token；设备和 API key 在设置中单独管理。`auth status` 查询实时套餐和
-剩余额度，`upgrade` 提供网站订阅入口。首次 npm 发布由包所有者操作，见
-[CLI 发布运维说明](ops/cli.md)。
-
-**交给智能体配置：** 在[仪表盘](https://apple-rag.com/overview)选择令牌，
-点击 **复制安装提示词**，粘贴给你当前使用的智能体，由它配置连接并验证工具。
-
-**一键安装：**
+### 在 Cursor 中一键接入
 
 [![Install MCP Server](https://cursor.com/deeplink/mcp-install-light.svg)](https://cursor.com/en/install-mcp?name=apple-rag-mcp&config=eyJ1cmwiOiJodHRwczovL21jcC5hcHBsZS1yYWcuY29tIn0%3D)
 
 在唤起的 [Cursor](https://cursor.com) 中确认安装。
 
-### 方式二：其他 MCP 客户端手动配置
+### 其他 MCP 客户端的手动配置
 
 **JSON 配置（复制粘贴）：**
 这是配置示例，并非所有客户端通用的格式。仪表盘也保留了手动配置示例。

@@ -1,10 +1,10 @@
 ---
 name: apple-dev-docs
-description: Use when verifying Apple API behavior, availability, deprecation or WWDC claims from official documentation using Apple RAG MCP or the apple-rag CLI.
+description: Use when exploring SwiftUI or UIKit topics, verifying Apple API behavior and availability, or checking WWDC claims through Apple RAG via MCP or CLI.
 license: MIT
 compatibility: Requires Apple RAG remote MCP tools, or apple-rag-cli with Node.js 22.20+. Anonymous trial, signed-in free and Pro access share service quotas.
 metadata:
-  version: "2.0.2"
+  version: "2.1.1"
 ---
 
 # Apple Developer Documentation
@@ -16,13 +16,14 @@ generation with no API fact to verify needs no lookup.
 
 ## Choose an available connection
 
-Use an available Apple RAG connection: native MCP `search` and `fetch` tools, or
+Use an available Apple RAG connection: native MCP `search`, `browse`, and `fetch` tools, or
 an installed `apple-rag` CLI when shell execution is available. Both provide the
 same core retrieval service. Keep the connection already configured for this task:
 
 ```sh
 apple-rag auth status --json
 apple-rag search "SwiftUI NavigationStack path binding" --limit 3 --json
+apple-rag browse --json
 apple-rag fetch "https://developer.apple.com/documentation/swiftui" --json
 ```
 
@@ -51,7 +52,7 @@ must be revoked in settings. MCP credentials and sessions are unaffected.
 
 ## Explore an indexed topic
 
-Use `browse` for a catalog or category question. Start at a known SwiftUI/UIKit documentation URL, or omit the URL for the pilot root. CLI: `apple-rag browse URL --json`. Resolve each href against its parent, applying the local base first. A section fragment opens a group; fetch a document URL to read its source. Inline items are complete small branches. Use depth 1 for just the next level or 3 for a deeper preview. For more members of a paginated group, repeat the URL and limit with the next page and the returned revision. On LIST_CHANGED, reopen the first page. A zero count is an indexed leaf; a null count means unknown. Results cover the indexed default language view.
+Use `browse` for a catalog or category question. Start at a known SwiftUI/UIKit documentation URL, or omit the URL to see the current catalog. CLI: `apple-rag browse URL --json`. Resolve each href against its parent, applying the local base first. A section fragment opens a group; fetch a document URL to read its source. Inline items are complete small branches. Use depth 1 for just the next level or 3 for a deeper preview. For more members of a paginated group, repeat the URL and limit with the next page and the returned revision. On LIST_CHANGED, reopen the first page. A zero count is an indexed leaf; a null count means unknown. Results cover the indexed default language view.
 
 ## Retrieve, then answer
 

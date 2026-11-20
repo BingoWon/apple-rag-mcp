@@ -31,7 +31,7 @@ export function buildRateLimitMessage(
 			: `${rateLimitResult.planType} plan`;
 	const guidance = !authContext.isAuthenticated
 		? channel === "cli"
-			? "Run apple-rag auth login for a free account with 50 tool calls/week and 5 tool calls/minute, shared by search and fetch."
+			? "Run apple-rag auth login for a free account with 50 tool calls/week and 5 tool calls/minute, shared by search, browse, and fetch."
 			: FREE_ACCESS_GUIDANCE
 		: rateLimitResult.planType === "hobby"
 			? PRO_UPGRADE_GUIDANCE

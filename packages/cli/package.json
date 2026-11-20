@@ -1,7 +1,7 @@
 {
 	"name": "apple-rag-cli",
-	"version": "2.1.0",
-	"description": "Apple developer knowledge for AI agents. Search and read sources through the Apple RAG CLI.",
+	"version": "2.1.1",
+	"description": "Give shell-based agents tools to search Apple docs and WWDC transcripts, browse SwiftUI and UIKit topics, and read source pages.",
 	"type": "module",
 	"license": "MIT",
 	"bin": {

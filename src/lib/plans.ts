@@ -23,6 +23,8 @@ function buildPricingPlans(): PricingPlan[] {
 				i18n.t("plans.hybrid_search"),
 				i18n.t("plans.model_calls_included"),
 				i18n.t("plans.community_support"),
+				i18n.t("plans.multiple_tokens"),
+				i18n.t("plans.usage_analytics"),
 			],
 		},
 		{
