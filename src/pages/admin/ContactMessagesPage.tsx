@@ -184,26 +184,6 @@ export default function AdminContactMessagesPage() {
 				</Button>
 			</div>
 
-			{/* Stats */}
-			<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-				<div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-					<p className="text-sm text-gray-600 dark:text-gray-400">{t("admin.total")}</p>
-					<p className="text-2xl font-bold text-gray-900 dark:text-white">{total}</p>
-				</div>
-				<div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-					<p className="text-sm text-gray-600 dark:text-gray-400">{t("admin.pending")}</p>
-					<p className="text-2xl font-bold text-blue-600">{stats.pending}</p>
-				</div>
-				<div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-					<p className="text-sm text-gray-600 dark:text-gray-400">{t("admin.replied")}</p>
-					<p className="text-2xl font-bold text-green-600">{stats.replied}</p>
-				</div>
-				<div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-					<p className="text-sm text-gray-600 dark:text-gray-400">{t("admin.read")}</p>
-					<p className="text-2xl font-bold text-gray-600 dark:text-gray-400">{stats.readByUser}</p>
-				</div>
-			</div>
-
 			{/* Error State */}
 			{error && (
 				<div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
@@ -218,6 +198,23 @@ export default function AdminContactMessagesPage() {
 				total={total}
 				onPageChange={fetchMessages}
 				isLoading={isLoading}
+				header={
+					<dl className="flex flex-wrap items-center gap-x-5 gap-y-1 text-sm">
+						{(
+							[
+								["total", total],
+								["pending", stats.pending],
+								["replied", stats.replied],
+								["read", stats.readByUser],
+							] as const
+						).map(([key, value]) => (
+							<div key={key} className="flex items-baseline gap-1.5">
+								<dt className="text-muted-foreground">{t(`admin.${key}`)}</dt>
+								<dd className="font-semibold tabular-nums">{value}</dd>
+							</div>
+						))}
+					</dl>
+				}
 			>
 				<table className="w-full min-w-2xl table-fixed">
 					<thead className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">

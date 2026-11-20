@@ -5,7 +5,7 @@
 import { IconRefresh } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/Button";
-import { CardHeader, CardTitle } from "@/components/ui/Card";
+import { CardTitle } from "@/components/ui/Card";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import { formatAdminDateTime, formatAdminResponseTime, getCountryFlag } from "@/lib/admin-utils";
 import { AdminPagedList } from "./AdminPagedList";
@@ -120,28 +120,26 @@ export function AdminTable<T extends object>({
 			onPageChange={onPageChange}
 			isLoading={isLoading}
 			header={
-				<CardHeader className="shrink-0">
-					<CardTitle className="flex flex-wrap items-center justify-between gap-3">
-						<div>
-							<span>{title}</span>
-							{description && (
-								<p className="text-sm text-muted-foreground mt-1 font-normal">{description}</p>
-							)}
-						</div>
-						{onRefresh && (
-							<Button
-								variant="outline"
-								size="sm"
-								onClick={onRefresh}
-								disabled={isLoading}
-								className="flex items-center gap-2"
-							>
-								<IconRefresh className="h-4 w-4" />
-								{t("common.refresh")}
-							</Button>
+				<>
+					<div className="min-w-0 flex-[1_1_12rem] py-1">
+						<CardTitle>{title}</CardTitle>
+						{description && (
+							<p className="text-sm text-muted-foreground mt-1 font-normal">{description}</p>
 						)}
-					</CardTitle>
-				</CardHeader>
+					</div>
+					{onRefresh && (
+						<Button
+							variant="outline"
+							size="sm"
+							onClick={onRefresh}
+							disabled={isLoading}
+							className="flex items-center gap-2"
+						>
+							<IconRefresh className="h-4 w-4" />
+							{t("common.refresh")}
+						</Button>
+					)}
+				</>
 			}
 		>
 			<DataTable

@@ -116,82 +116,86 @@ function Breakdown({
 					</div>
 				))}
 			</dl>
-			<div className="mb-3 flex gap-2">
-				{(["environment", "version"] as const).map((d) => (
-					<Button
-						key={d}
-						size="sm"
-						variant={dimension === d ? "primary" : "secondary"}
-						aria-pressed={dimension === d}
-						onClick={() => {
-							setDimension(d);
-							setPage(1);
-						}}
-					>
-						{t(`client_stats.${d}`)}
-					</Button>
-				))}
-			</div>
-			{data === undefined ? (
-				<p className="py-4 text-sm" role="status">
-					{t("admin.stats_loading")}
-				</p>
-			) : data === null ? (
-				<p className="py-4" role="alert">
-					{t("admin.stats_unavailable")}{" "}
-					<Button size="sm" onClick={reload}>
-						{t("admin.stats_retry")}
-					</Button>
-				</p>
-			) : (
-				<AdminPagedList
-					currentPage={page}
-					total={data.total}
-					pageSize={CLIENT_PAGE_SIZE}
-					onPageChange={setPage}
-				>
-					<table className="w-full text-left text-sm [&_td]:px-3 [&_th]:px-3">
-						<thead>
-							<tr className="border-b border-default text-xs text-muted-foreground">
-								<th scope="col" className="py-2">
-									{t(`client_stats.${dimension}`)}
-								</th>
-								<th scope="col" className="text-right">
-									{t("activity.calls")}
-								</th>
-							</tr>
-						</thead>
-						<tbody>
-							{data.rows.map((r) => {
-								const source =
-									r.label === "browser"
-										? t("client_stats.browser")
-										: r.label
-											? (environmentNames[r.label] ?? r.label)
-											: null;
-								const value =
-									dimension === "version"
-										? [source, r.version ?? t("client_stats.not_reported")]
-												.filter(Boolean)
-												.join(" · ")
-										: (source ?? t("client_stats.not_reported"));
-								return (
-									<tr
-										key={JSON.stringify([r.label, r.version])}
-										className="border-b border-default/60"
-									>
-										<td className="py-2 break-words">{value}</td>
-										<td className="text-right tabular-nums">{number(r.calls)}</td>
-									</tr>
-								);
-							})}
-						</tbody>
-					</table>
-					{!data.total && (
-						<p className="py-3 text-sm text-muted-foreground">{t("client_stats.empty")}</p>
-					)}
-				</AdminPagedList>
-			)}
+			<AdminPagedList
+				currentPage={page}
+				total={data?.total}
+				pageSize={CLIENT_PAGE_SIZE}
+				onPageChange={setPage}
+				header={
+					<div className="flex flex-wrap gap-2">
+						{(["environment", "version"] as const).map((d) => (
+							<Button
+								key={d}
+								size="sm"
+								variant={dimension === d ? "primary" : "secondary"}
+								aria-pressed={dimension === d}
+								onClick={() => {
+									setDimension(d);
+									setPage(1);
+								}}
+							>
+								{t(`client_stats.${d}`)}
+							</Button>
+						))}
+					</div>
+				}
+			>
+				{data === undefined ? (
+					<p className="py-4 text-sm" role="status">
+						{t("admin.stats_loading")}
+					</p>
+				) : data === null ? (
+					<p className="py-4" role="alert">
+						{t("admin.stats_unavailable")}{" "}
+						<Button size="sm" onClick={reload}>
+							{t("admin.stats_retry")}
+						</Button>
+					</p>
+				) : (
+					<>
+						<table className="w-full text-left text-sm [&_td]:px-3 [&_th]:px-3">
+							<thead>
+								<tr className="border-b border-default text-xs text-muted-foreground">
+									<th scope="col" className="py-2">
+										{t(`client_stats.${dimension}`)}
+									</th>
+									<th scope="col" className="text-right">
+										{t("activity.calls")}
+									</th>
+								</tr>
+							</thead>
+							<tbody>
+								{data.rows.map((r) => {
+									const source =
+										r.label === "browser"
+											? t("client_stats.browser")
+											: r.label
+												? (environmentNames[r.label] ?? r.label)
+												: null;
+									const value =
+										dimension === "version"
+											? [source, r.version ?? t("client_stats.not_reported")]
+													.filter(Boolean)
+													.join(" · ")
+											: (source ?? t("client_stats.not_reported"));
+									return (
+										<tr
+											key={JSON.stringify([r.label, r.version])}
+											className="border-b border-default/60"
+										>
+											<td className="py-2 break-words">{value}</td>
+											<td className="text-right tabular-nums">{number(r.calls)}</td>
+										</tr>
+									);
+								})}
+							</tbody>
+						</table>
+						{!data.total && (
+							<p className="py-3 text-sm text-muted-foreground">{t("client_stats.empty")}</p>
+						)}
+					</>
+				)}
+			</AdminPagedList>
 		</>
 	);
 }

@@ -1,9 +1,11 @@
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 
 export interface PaginationControlsProps {
+	children?: ReactNode;
 	currentPage: number;
 	totalPages: number;
 	pageSize: number;
@@ -19,6 +21,7 @@ export interface PaginationControlsProps {
 }
 
 export function PaginationControls({
+	children,
 	currentPage,
 	totalPages,
 	pageSize,
@@ -36,6 +39,8 @@ export function PaginationControls({
 	const startIndex = total > 0 ? (currentPage - 1) * pageSize + 1 : 0;
 	const endIndex = Math.min(currentPage * pageSize, total);
 
+	const directionLabel = children ? "sr-only @5xl:not-sr-only" : "sr-only @sm:not-sr-only";
+	const otherPage = children ? "hidden @3xl:inline-flex" : "hidden @min-[16rem]:inline-flex";
 	const firstPage = Math.max(1, Math.min(currentPage - 2, totalPages - 4));
 	const pages = Array.from(
 		{ length: Math.max(1, Math.min(5, totalPages)) },
@@ -49,7 +54,7 @@ export function PaginationControls({
 				className,
 			)}
 		>
-			{/* Left side: Page size selector and info */}
+			{children}
 			{(showInfo || (showPageSizeSelector && onPageSizeChange)) && (
 				<div className="flex flex-wrap items-center gap-3">
 					{showPageSizeSelector && onPageSizeChange && (
@@ -99,7 +104,7 @@ export function PaginationControls({
 						className="px-2 @sm:px-3"
 					>
 						<IconChevronLeft className="h-4 w-4" />
-						<span className="sr-only @sm:not-sr-only">{t("common.previous")}</span>
+						<span className={directionLabel}>{t("common.previous")}</span>
 					</Button>
 
 					<div className="flex items-center space-x-1">
@@ -111,10 +116,7 @@ export function PaginationControls({
 								size="sm"
 								onClick={() => onPageChange(pageNum)}
 								disabled={isLoading}
-								className={cn(
-									"w-8 h-8 p-0",
-									currentPage !== pageNum && "hidden @min-[16rem]:inline-flex",
-								)}
+								className={cn("w-8 h-8 p-0", currentPage !== pageNum && otherPage)}
 							>
 								{pageNum}
 							</Button>
@@ -128,7 +130,7 @@ export function PaginationControls({
 						disabled={totalPages === 0 || currentPage >= totalPages || isLoading}
 						className="px-2 @sm:px-3"
 					>
-						<span className="sr-only @sm:not-sr-only">{t("common.next")}</span>
+						<span className={directionLabel}>{t("common.next")}</span>
 						<IconChevronRight className="h-4 w-4" />
 					</Button>
 				</nav>

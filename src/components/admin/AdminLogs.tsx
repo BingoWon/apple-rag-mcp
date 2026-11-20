@@ -120,12 +120,18 @@ export function AdminLogs({ kind }: { kind: AdminLogKind }) {
 	);
 	const filters = logs.query.filters;
 	const select = (name: string, label: string, options: { value: string; label: string }[]) => (
-		<label className="min-w-0 space-y-1 text-xs text-muted-foreground">
+		<label
+			className={
+				name === "outcome"
+					? "flex items-center gap-2 text-xs text-muted-foreground"
+					: "min-w-0 space-y-1 text-xs text-muted-foreground"
+			}
+		>
 			<span className="block">{label}</span>
 			<select
 				name={name}
 				defaultValue={filters[name as keyof AdminLogFilters] || ""}
-				className={`${fieldClass} w-full`}
+				className={name === "outcome" ? fieldClass : `${fieldClass} w-full`}
 			>
 				<option value="">{t("admin.all")}</option>
 				{options.map((o) => (
@@ -138,8 +144,8 @@ export function AdminLogs({ kind }: { kind: AdminLogKind }) {
 	);
 	return (
 		<div className="flex h-full min-w-0 flex-col gap-4">
-			<header className="flex flex-wrap items-start justify-between gap-3">
-				<div>
+			<header className="flex items-start justify-between gap-3">
+				<div className="min-w-0 flex-1">
 					<h1 className="text-xl font-semibold tracking-tight">{t(`admin.${kind}_logs`)}</h1>
 					<p className="mt-1 text-sm text-muted-foreground">{t("admin.log_list_desc")}</p>
 					{(filters.from || filters.to) && (
@@ -156,149 +162,7 @@ export function AdminLogs({ kind }: { kind: AdminLogKind }) {
 					{t("common.refresh")}
 				</Button>
 			</header>
-			<form
-				key={JSON.stringify(filters)}
-				className="space-y-3 rounded-xl border border-default bg-card p-4"
-				onSubmit={(event) => {
-					event.preventDefault();
-					const form = new FormData(event.currentTarget);
-					const values = Object.fromEntries(
-						[...form]
-							.filter(([, value]) => String(value).trim())
-							.map(([key, value]) => [key, String(value).trim()]),
-					);
-					if (values.start && values.end && values.start > values.end) {
-						setRangeError(true);
-						return;
-					}
-					setRangeError(false);
-					if (!values.start && !values.end) {
-						if (filters.from) values.from = filters.from;
-						if (filters.to) values.to = filters.to;
-					}
-					logs.apply(values);
-				}}
-			>
-				<div className="flex flex-wrap items-end gap-3">
-					<label className="min-w-48 flex-1 space-y-1 text-xs text-muted-foreground">
-						<span className="block">{t("admin.search_logs_label")}</span>
-						<div className="relative">
-							<IconSearch className="pointer-events-none absolute left-3 top-2.5 h-4 w-4" />
-							<input
-								name="q"
-								defaultValue={filters.q || ""}
-								maxLength={2048}
-								placeholder={t(
-									kind !== "search"
-										? "admin.filter_url_placeholder"
-										: "admin.filter_query_placeholder",
-								)}
-								className={`${fieldClass} w-full pl-9`}
-							/>
-						</div>
-					</label>
-					{select(
-						"outcome",
-						t("admin.col_outcome"),
-						TOOL_OUTCOMES.map((value) => ({ value, label: t(`admin.stats_${value}`) })),
-					)}
-					<Button type="submit" size="sm" disabled={logs.loading}>
-						{t("admin.apply_filters")}
-					</Button>
-					<Button
-						type="button"
-						size="sm"
-						variant="ghost"
-						onClick={() => {
-							setRangeError(false);
-							logs.apply({});
-						}}
-					>
-						{t("admin.reset_filters")}
-					</Button>
-				</div>
-				<details
-					open={
-						!!(
-							filters.start ||
-							filters.end ||
-							filters.channel ||
-							filters.reason ||
-							filters.source ||
-							filters.provider ||
-							filters.cache
-						)
-					}
-				>
-					<summary className="w-fit cursor-pointer rounded text-xs text-muted-foreground focus-visible:outline-2 focus-visible:outline-brand">
-						<IconAdjustmentsHorizontal className="mr-1 inline h-3.5 w-3.5" />
-						{t("admin.more_filters")}
-					</summary>
-					<div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-						{select(
-							"channel",
-							t("admin.col_channel"),
-							["mcp", "cli", "unknown"].map((value) => ({
-								value,
-								label: t(`admin.channel_${value}`),
-							})),
-						)}
-						<label className="space-y-1 text-xs text-muted-foreground">
-							<span className="block">{t("admin.col_reason")}</span>
-							<input
-								name="reason"
-								defaultValue={filters.reason || ""}
-								maxLength={100}
-								placeholder="PAGE_NOT_FOUND"
-								className={`${fieldClass} w-full`}
-							/>
-						</label>
-						{kind === "fetch" && (
-							<>
-								{select(
-									"source",
-									t("admin.col_source"),
-									["apple", "third_party"].map((value) => ({
-										value,
-										label: t(`admin.source_${value}`),
-									})),
-								)}
-								{select(
-									"provider",
-									t("admin.col_provider"),
-									["index", "apple_json", "apple_http", "firecrawl"].map((value) => ({
-										value,
-										label: value,
-									})),
-								)}
-								{select(
-									"cache",
-									t("admin.col_cache"),
-									["hit", "miss"].map((value) => ({ value, label: t(`admin.cache_${value}`) })),
-								)}
-							</>
-						)}
-						{(["start", "end"] as const).map((name) => (
-							<label key={name} className="space-y-1 text-xs text-muted-foreground">
-								<span className="block">
-									{t(name === "start" ? "admin.stats_start_date" : "admin.stats_end_date")} · UTC+8
-								</span>
-								<input
-									name={name}
-									type="date"
-									defaultValue={filters[name] || ""}
-									className={`${fieldClass} w-full [color-scheme:light_dark]`}
-								/>
-							</label>
-						))}
-					</div>
-				</details>
-				{rangeError && (
-					<p role="alert" className="text-sm text-error">
-						{t("admin.log_date_range_error")}
-					</p>
-				)}
-			</form>
+
 			{logs.error && (
 				<div
 					role="alert"
@@ -317,6 +181,152 @@ export function AdminLogs({ kind }: { kind: AdminLogKind }) {
 				onPageChange={logs.goToPage}
 				onPageSizeChange={logs.changeLimit}
 				isLoading={logs.loading}
+				header={
+					<form
+						key={JSON.stringify(filters)}
+						className="contents"
+						onSubmit={(event) => {
+							event.preventDefault();
+							const form = new FormData(event.currentTarget);
+							const values = Object.fromEntries(
+								[...form]
+									.filter(([, value]) => String(value).trim())
+									.map(([key, value]) => [key, String(value).trim()]),
+							);
+							if (values.start && values.end && values.start > values.end) {
+								setRangeError(true);
+								return;
+							}
+							setRangeError(false);
+							if (!values.start && !values.end) {
+								if (filters.from) values.from = filters.from;
+								if (filters.to) values.to = filters.to;
+							}
+							logs.apply(values);
+						}}
+					>
+						<label className="min-w-0 basis-full @sm:max-w-sm @sm:flex-[1_1_10rem]">
+							<span className="sr-only">{t("admin.search_logs_label")}</span>
+							<div className="relative">
+								<IconSearch className="pointer-events-none absolute left-3 top-2.5 h-4 w-4" />
+								<input
+									name="q"
+									defaultValue={filters.q || ""}
+									maxLength={2048}
+									placeholder={t(
+										kind !== "search"
+											? "admin.filter_url_placeholder"
+											: "admin.filter_query_placeholder",
+									)}
+									className={`${fieldClass} w-full pl-9`}
+								/>
+							</div>
+						</label>
+						{select(
+							"outcome",
+							t("admin.col_outcome"),
+							TOOL_OUTCOMES.map((value) => ({ value, label: t(`admin.stats_${value}`) })),
+						)}
+						<Button type="submit" size="sm" disabled={logs.loading}>
+							{t("admin.apply_filters")}
+						</Button>
+						<Button
+							type="button"
+							size="sm"
+							variant="ghost"
+							onClick={(event) => {
+								event.currentTarget.form?.reset();
+								setRangeError(false);
+								logs.apply({});
+							}}
+						>
+							{t("admin.reset_filters")}
+						</Button>
+						<details
+							className="min-w-0 open:order-last open:basis-full"
+							open={
+								!!(
+									filters.start ||
+									filters.end ||
+									filters.channel ||
+									filters.reason ||
+									filters.source ||
+									filters.provider ||
+									filters.cache
+								)
+							}
+						>
+							<summary className="w-fit cursor-pointer rounded py-2 text-xs text-muted-foreground focus-visible:outline-2 focus-visible:outline-brand">
+								<IconAdjustmentsHorizontal className="mr-1 inline h-3.5 w-3.5" />
+								{t("admin.more_filters")}
+							</summary>
+							<div className="grid grid-cols-1 gap-3 py-2 sm:grid-cols-2 lg:grid-cols-4">
+								{select(
+									"channel",
+									t("admin.col_channel"),
+									["mcp", "cli", "unknown"].map((value) => ({
+										value,
+										label: t(`admin.channel_${value}`),
+									})),
+								)}
+								<label className="space-y-1 text-xs text-muted-foreground">
+									<span className="block">{t("admin.col_reason")}</span>
+									<input
+										name="reason"
+										defaultValue={filters.reason || ""}
+										maxLength={100}
+										placeholder="PAGE_NOT_FOUND"
+										className={`${fieldClass} w-full`}
+									/>
+								</label>
+								{kind === "fetch" && (
+									<>
+										{select(
+											"source",
+											t("admin.col_source"),
+											["apple", "third_party"].map((value) => ({
+												value,
+												label: t(`admin.source_${value}`),
+											})),
+										)}
+										{select(
+											"provider",
+											t("admin.col_provider"),
+											["index", "apple_json", "apple_http", "firecrawl"].map((value) => ({
+												value,
+												label: value,
+											})),
+										)}
+										{select(
+											"cache",
+											t("admin.col_cache"),
+											["hit", "miss"].map((value) => ({ value, label: t(`admin.cache_${value}`) })),
+										)}
+									</>
+								)}
+								{(["start", "end"] as const).map((name) => (
+									<label key={name} className="space-y-1 text-xs text-muted-foreground">
+										<span className="block">
+											{t(name === "start" ? "admin.stats_start_date" : "admin.stats_end_date")} ·
+											UTC+8
+										</span>
+										<input
+											name={name}
+											type="date"
+											defaultValue={filters[name] || ""}
+											className={`${fieldClass} w-full [color-scheme:light_dark]`}
+										/>
+									</label>
+								))}
+							</div>
+						</details>
+						{rangeError && (
+							<p role="alert" className="order-last basis-full text-sm text-error">
+								{t("admin.log_date_range_error")}
+							</p>
+						)}
+					</form>
+				}
 			>
 				{!logs.loading && !!logs.data?.logs.length && (
 					<ul className="divide-y divide-border sm:hidden">
