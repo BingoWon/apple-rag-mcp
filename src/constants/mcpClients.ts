@@ -9,7 +9,7 @@ import Pi from "@thesvg/react/pi";
 import TRAE from "@thesvg/react/trae";
 import VSCode from "@thesvg/react/visual-studio-code";
 import WorkBuddy from "@thesvg/react/workbuddy";
-import type { ComponentType, SVGProps } from "react";
+import { type ComponentType, createElement, type SVGProps } from "react";
 import {
 	generateCursorLink,
 	generateTraeInstallUrl,
@@ -24,7 +24,10 @@ const guides = {
 	opencode: { Logo: OpenCode, href: "https://opencode.ai/docs/mcp-servers/" },
 	pi: { Logo: Pi, href: "https://github.com/earendil-works/pi" },
 	antigravity: { Logo: Antigravity, href: "https://antigravity.google/docs/mcp" },
-	cursor: { Logo: Cursor, href: "https://cursor.com/docs/context/mcp" },
+	cursor: {
+		Logo: (props) => createElement(Cursor, { ...props, variant: "light" }),
+		href: "https://cursor.com/docs/context/mcp",
+	},
 	vscode: {
 		Logo: VSCode,
 		href: "https://code.visualstudio.com/docs/copilot/customization/mcp-servers",
