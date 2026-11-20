@@ -52,7 +52,11 @@ export default function StatsCards() {
 					!success ||
 					!data ||
 					!Number.isFinite(Date.parse(data.generated_at)) ||
-					metrics.some(({ field }) => !Number.isFinite(data[field]))
+					metrics.some(
+						({ field }) =>
+							!(field === "embedded_percentage" && data[field] === null) &&
+							!Number.isFinite(data[field]),
+					)
 				)
 					throw Error();
 				setData(data);
@@ -101,6 +105,15 @@ export default function StatsCards() {
 									href={url}
 									target={url ? "_blank" : undefined}
 									rel={url ? "noopener noreferrer" : undefined}
+									title={
+										field === "embedded_percentage"
+											? t("dashboard.stats_coverage_detail", {
+													indexed: data.indexed_pages,
+													readable: data.readable_pages,
+													navigation: data.navigation_only_pages,
+												})
+											: undefined
+									}
 									className={cn(
 										"group flex h-24 min-w-0 flex-col items-center justify-center gap-1 rounded-[10px] text-center focus-visible:outline-2 focus-visible:outline-action @[450px]:h-32 @[450px]:gap-2",
 										url &&
@@ -110,8 +123,14 @@ export default function StatsCards() {
 								>
 									<Icon aria-hidden="true" className="size-6 lg:size-8" style={{ color }} />
 									<strong className="text-lg tabular-nums text-light @[450px]:text-xl">
-										{new Intl.NumberFormat(locale).format(data[field])}
-										{field === "embedded_percentage" && "%"}
+										{data[field] === null
+											? "—"
+											: new Intl.NumberFormat(
+													locale,
+													field === "embedded_percentage"
+														? { style: "percent", maximumFractionDigits: 1 }
+														: {},
+												).format(field === "embedded_percentage" ? data[field] / 100 : data[field])}
 									</strong>
 									<span
 										className={

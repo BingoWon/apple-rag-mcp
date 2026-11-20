@@ -1,13 +1,11 @@
+import { normalizeAppleUrl } from "../shared/url-utils.js";
 import type { AppleAPIResponse, BatchResult, DocumentContent } from "./types/index.js";
 import { BatchErrorHandler } from "./utils/batch-error-handler.js";
-import { UrlProcessor } from "./utils/url-processor.js";
 
 // biome-ignore lint/suspicious/noExplicitAny: ContentProcessor handles dynamic Apple documentation JSON structures with deeply nested, variable-shape nodes
 type DocJsonNode = any;
 
 class ContentProcessor {
-	private urlProcessor = new UrlProcessor();
-
 	async processDocuments(
 		apiResults: BatchResult<AppleAPIResponse>[],
 	): Promise<BatchResult<DocumentContent>[]> {
@@ -24,7 +22,13 @@ class ContentProcessor {
 
 		return BatchErrorHandler.safeExecute(item.url, () => {
 			const { titles, content } = this.cleanAndSeparateContent(item.data!);
-			const extractedUrls = this.urlProcessor.extractAllUrls(item.data!);
+			const extractedUrls = [
+				...new Set(
+					Object.values(item.data!.references ?? {})
+						.map((ref) => (ref?.url ? normalizeAppleUrl(ref.url) : null))
+						.filter((url): url is string => url !== null),
+				),
+			];
 
 			return {
 				title: titles.trim() || null,
@@ -57,7 +61,9 @@ class ContentProcessor {
 
 		// Add abstract as description
 		if (docData.abstract?.length && docData.abstract.length > 0) {
-			const abstractText = docData.abstract.map((item) => item.text).join("");
+			const abstractText = docData.abstract
+				.map((item) => this.renderInlineContent(item, docData.references ?? {}))
+				.join("");
 			if (abstractText.trim()) {
 				parts.push(`\n${abstractText}`);
 			}
@@ -156,7 +162,7 @@ class ContentProcessor {
 			restParameters: () => this.renderRestParameters(section, references),
 			restResponses: () => this.renderRestResponses(section, references),
 			details: () => this.renderDetails(section),
-			possibleValues: () => this.renderPossibleValues(section),
+			possibleValues: () => this.renderPossibleValues(section, references),
 			attributes: () => this.renderAttributes(section),
 		};
 
@@ -282,7 +288,12 @@ class ContentProcessor {
 			video: () => this.renderMedia(inline, "Video"),
 		};
 
-		return handlers[inline.type]?.() || "";
+		if (Array.isArray(inline.inlineContent)) {
+			return inline.inlineContent
+				.map((child: DocJsonNode) => this.renderInlineContent(child, references))
+				.join("");
+		}
+		return handlers[inline.type]?.() ?? this.toSafeString(inline.text);
 	}
 
 	private renderReference(inline: DocJsonNode, references: Record<string, DocJsonNode>): string {
@@ -776,7 +787,10 @@ class ContentProcessor {
 		return { title: section.title || "", content };
 	}
 
-	private renderPossibleValues(section: DocJsonNode): {
+	private renderPossibleValues(
+		section: DocJsonNode,
+		references: Record<string, DocJsonNode>,
+	): {
 		title: string;
 		content: string;
 	} {
@@ -798,7 +812,7 @@ class ContentProcessor {
 							.map((contentItem: DocJsonNode) => {
 								if (contentItem.inlineContent) {
 									return contentItem.inlineContent
-										.map((inline: DocJsonNode) => this.renderInlineContent(inline, {}))
+										.map((inline: DocJsonNode) => this.renderInlineContent(inline, references))
 										.join("");
 								}
 								return "";

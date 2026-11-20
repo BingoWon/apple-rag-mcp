@@ -1,6 +1,6 @@
 import type { ModelUsageRecorder } from "../services/model-usage.js";
 import { AppleAPIClient } from "./AppleAPIClient.js";
-import { Chunker } from "./Chunker.js";
+import { chunkText } from "./Chunker.js";
 import { ContentProcessor } from "./ContentProcessor.js";
 import { createEmbeddings } from "./EmbeddingProvider.js";
 import type { PostgreSQLManager } from "./PostgreSQLManager.js";
@@ -9,45 +9,15 @@ import { BatchErrorHandler } from "./utils/batch-error-handler.js";
 import { logger } from "./utils/logger.js";
 import { notifyStats } from "./utils/telegram-notifier.js";
 
-interface ProcessingPlanItem {
-	record: DatabaseRecord;
-	collectResult: BatchResult<unknown>;
-	hasChanged: boolean;
-	newRawJson?: string | null;
-	processResult?: BatchResult<DocumentContent> | undefined;
-	error?: string;
-	isPermanentError?: boolean;
-}
-
-interface ComparisonResult {
-	hasChanged: boolean;
-	difference?: string;
-	oldContent?: string | null;
-	newContent?: string;
-}
-
 class AppleDocCollector {
-	private readonly apiClient: AppleAPIClient;
-	private readonly contentProcessor: ContentProcessor;
-	private readonly chunker: Chunker;
-	private readonly dbManager: PostgreSQLManager;
-	private readonly apiKey: string;
-	private readonly config: BatchConfig;
-
+	private readonly apiClient = new AppleAPIClient();
+	private readonly contentProcessor = new ContentProcessor();
 	constructor(
-		dbManager: PostgreSQLManager,
-		apiKey: string,
-		config: BatchConfig,
+		private readonly dbManager: PostgreSQLManager,
+		private readonly apiKey: string,
+		private readonly config: BatchConfig,
 		private readonly recordUsage?: ModelUsageRecorder,
-	) {
-		this.dbManager = dbManager;
-		this.apiKey = apiKey;
-		this.config = config;
-		this.apiClient = new AppleAPIClient();
-		this.contentProcessor = new ContentProcessor();
-		this.chunker = new Chunker(config);
-	}
-
+	) {}
 	/**
 	 * Discover and sync all video URLs to database
 	 * Returns count of newly inserted video URLs
@@ -80,362 +50,156 @@ class AppleDocCollector {
 		return inserted;
 	}
 
-	async execute(): Promise<{
-		totalChunks: number;
-	}> {
-		const records = await this.dbManager.getBatchRecords(this.config.batchSize).catch((error) => {
-			throw new Error(
-				`PostgreSQL batch claim failed: ${error instanceof Error ? error.message : String(error)}`,
-				{ cause: error },
-			);
-		});
-
-		const startTime = Date.now();
-
-		logger.info(`Processing ${records.length} URLs`);
-
-		const result = await this.processBatch(records);
-
-		const duration = Date.now() - startTime;
-
-		logger.info(`Batch completed in ${duration}ms: ${result.totalChunks} chunks generated`);
-
-		return { totalChunks: result.totalChunks };
-	}
-
-	private async processBatch(records: DatabaseRecord[]): Promise<{ totalChunks: number }> {
-		// Split records by type
-		const videoRecords = records.filter((r) => AppleAPIClient.isVideoUrl(r.url));
-		const docRecords = records.filter((r) => !AppleAPIClient.isVideoUrl(r.url));
-
-		// Fetch content in parallel
-		const [videoResults, docApiResults] = await Promise.all([
-			videoRecords.length > 0 ? this.apiClient.fetchVideos(videoRecords.map((r) => r.url)) : [],
-			docRecords.length > 0 ? this.apiClient.fetchDocuments(docRecords.map((r) => r.url)) : [],
-		]);
-
-		// Process documents through contentProcessor
-		const validDocResults = docApiResults
-			.filter((r): r is NonNullable<typeof r> => r != null)
-			.filter((r) => r.data);
-		const docProcessResults =
-			validDocResults.length > 0
-				? await this.contentProcessor.processDocuments(validDocResults)
-				: [];
-
-		// Build result maps (preserving original order)
-		const collectResultsMap = new Map<string, BatchResult<unknown>>();
-		const processResultsMap = new Map<string, BatchResult<DocumentContent>>();
-
-		// Map document results (use filter to align indices)
-		const validDocUrls = docApiResults
-			.filter((r): r is NonNullable<typeof r> => r != null)
-			.filter((r) => r.data)
-			.map((r) => r.url);
-		docApiResults.forEach((result) => {
-			collectResultsMap.set(result.url, result);
-		});
-		validDocUrls.forEach((url, i) => {
-			processResultsMap.set(url, docProcessResults[i]!);
-		});
-
-		// Map video results (convert VideoContent to DocumentContent format)
-		videoResults.forEach((result) => {
-			collectResultsMap.set(result.url, result);
-			if (result.data) {
-				processResultsMap.set(result.url, {
-					url: result.url,
-					data: {
-						title: result.data.title,
-						content: result.data.content,
-						extractedUrls: [],
-					},
-				});
-			}
-		});
-
-		// Build collect results in original record order
-		const collectResults = records.map(
-			(r) =>
-				collectResultsMap.get(r.url) || {
-					url: r.url,
-					data: null,
-					error: "Missing result",
-				},
-		);
-
-		const processingPlan = this.createProcessingPlan(records, collectResults, processResultsMap);
-		return await this.executeProcessingPlan(processingPlan);
-	}
-
-	private createProcessingPlan(
-		records: DatabaseRecord[],
-		collectResults: BatchResult<unknown>[],
-		processResultsMap: Map<string, BatchResult<DocumentContent>>,
-	): ProcessingPlanItem[] {
-		if (this.config.forceUpdateAll) {
-			logger.info(`🔄 Force Update: Processing all ${records.length} URLs`);
-		}
-
-		const planItems = records.map((record, index) => {
-			const collectResult = collectResults[index];
-
-			if (!collectResult?.data) {
-				return this.createErrorPlanItem(
-					record,
-					collectResult || {
-						url: record.url,
-						data: null,
-						error: "Missing collect result",
-					},
-				);
-			}
-
-			const processResult = processResultsMap.get(record.url);
-			return this.createSuccessPlanItem(record, collectResult, processResult);
-		});
-
-		return planItems;
-	}
-
-	private createErrorPlanItem(
-		record: DatabaseRecord,
-		collectResult: BatchResult<unknown>,
-	): ProcessingPlanItem {
-		const isPermanent = BatchErrorHandler.isPermanentError(collectResult.error || "");
-		return {
-			record,
-			collectResult,
-			hasChanged: false,
-			error: collectResult.error || "Unknown error",
-			isPermanentError: isPermanent,
-		};
-	}
-
-	private createSuccessPlanItem(
-		record: DatabaseRecord,
-		collectResult: BatchResult<unknown>,
-		processResult?: BatchResult<DocumentContent>,
-	): ProcessingPlanItem {
-		// Videos don't have raw JSON API response, only documents do
-		const isVideo = AppleAPIClient.isVideoUrl(record.url);
-		const newRawJson = isVideo ? null : JSON.stringify(collectResult.data);
-		if (!processResult?.data || (record.content?.trim() && !processResult.data.content.trim())) {
-			return { record, collectResult, hasChanged: false, error: "No usable replacement content" };
-		}
-		const comparison = this.compareContent(record, processResult);
-
-		this.logContentChanges(record.url, comparison);
-
-		return {
-			record,
-			collectResult,
-			hasChanged: comparison.hasChanged,
-			newRawJson,
-			processResult,
-		};
-	}
-
-	private compareContent(
-		oldRecord: DatabaseRecord,
-		processResult?: BatchResult<DocumentContent>,
-	): ComparisonResult {
-		if (this.config.forceUpdateAll) {
-			return { hasChanged: true };
-		}
-
-		if (!processResult?.data) {
-			return { hasChanged: false };
-		}
-
-		const newTitle = processResult.data.title;
-		const newContent = processResult.data.content;
-
-		const titleChanged = oldRecord.title !== newTitle;
-		const contentChanged = oldRecord.content !== newContent;
-		const hasChanged = titleChanged || contentChanged;
-
-		if (hasChanged) {
-			const changes = [];
-			if (titleChanged) changes.push(`Title: "${oldRecord.title}" → "${newTitle}"`);
-			if (contentChanged)
-				changes.push(`Content: ${(oldRecord.content ?? "").length} → ${newContent.length} chars`);
-
-			return {
-				hasChanged,
-				difference: changes.join(", "),
-				oldContent: `Title: ${oldRecord.title}\nContent: ${(oldRecord.content ?? "").substring(0, 200)}...`,
-				newContent: `Title: ${newTitle}\nContent: ${newContent.substring(0, 200)}...`,
-			};
-		}
-
-		return { hasChanged: false };
-	}
-
-	private logContentChanges(url: string, comparison: ComparisonResult): void {
-		if (comparison.hasChanged && !this.config.forceUpdateAll && comparison.difference) {
-			const consolidatedMessage = [
-				`📝 Content change detected for ${url}:`,
-				`${comparison.difference}`,
-				``,
-				`🔍 DEBUG - Complete content comparison:`,
-				`📄 OLD CONTENT:`,
-				`${comparison.oldContent || "null"}`,
-				``,
-				`📄 NEW CONTENT:`,
-				`${comparison.newContent || "null"}`,
-				`🔚 END DEBUG for ${url}`,
-			].join("\n");
-
-			logger.info(consolidatedMessage);
-		}
-	}
-
-	private async executeProcessingPlan(
-		processingPlan: ProcessingPlanItem[],
-	): Promise<{ totalChunks: number }> {
-		const changedRecords = processingPlan.filter((r) => r.hasChanged && !r.error);
-		const unchangedRecords = processingPlan.filter((r) => !r.hasChanged && !r.error);
-		const errorRecords = processingPlan.filter((r) => r.error);
-
-		const navOnly = unchangedRecords.filter(
-			(r) =>
-				r.newRawJson &&
-				/^https:\/\/developer\.apple\.com\/documentation\/(swiftui|uikit)(\/|$)/.test(r.record.url),
-		);
-		const processResults = changedRecords.map((r) => r.processResult).filter(Boolean);
-
-		const { allChunks, embeddings } = await this.generateChunksAndEmbeddings(processResults);
-		const extractedUrls = new Set(
-			processingPlan.flatMap((item) => item.processResult?.data?.extractedUrls ?? []),
-		);
-		if (extractedUrls.size) {
-			await this.dbManager.batchInsertUrls([...extractedUrls]).catch((error) => {
+	async execute(ids?: string[]) {
+		const records = await this.dbManager
+			.getBatchRecords(this.config.batchSize, ids)
+			.catch((error) => {
 				throw new Error(
-					`PostgreSQL discovered URL sync failed: ${error instanceof Error ? error.message : String(error)}`,
+					`PostgreSQL batch claim failed: ${error instanceof Error ? error.message : error}`,
 					{ cause: error },
 				);
 			});
-		}
-
-		if (navOnly.length)
-			await this.dbManager.updateRawDocuments(
-				navOnly.map((r) => ({ id: r.record.id, json: r.newRawJson! })),
-			);
-
-		if (changedRecords.length > 0) {
-			logger.info(`📝 Content changed: ${changedRecords.length} URLs (full processing)`);
-
-			if (!this.config.forceUpdateAll) {
-				const realChangedRecords = changedRecords.filter((r) => r.record.content !== "");
-
-				if (realChangedRecords.length > 0) {
-					const MAX_URLS_DISPLAY = 10;
-					const urlsToShow = realChangedRecords.slice(0, MAX_URLS_DISPLAY);
-					const remaining = realChangedRecords.length - MAX_URLS_DISPLAY;
-
-					const urlList = urlsToShow.map((r) => r.record.url).join("\n");
-					const remainingText = remaining > 0 ? `\n...and ${remaining} more` : "";
-
-					const message =
-						`📝 Content Updated: ${realChangedRecords.length} URLs\n\n` +
-						`${urlList}${remainingText}`;
-
-					await notifyStats(message);
-				}
+		if (ids && records.length !== ids.length) throw Error("Some recovery pages no longer exist");
+		const [videos, docs] = await Promise.all([
+			this.apiClient.fetchVideos(
+				records.filter((r) => AppleAPIClient.isVideoUrl(r.url)).map((r) => r.url),
+			),
+			this.apiClient.fetchDocuments(
+				records.filter((r) => !AppleAPIClient.isVideoUrl(r.url)).map((r) => r.url),
+			),
+		]);
+		const parsed = await this.contentProcessor.processDocuments(docs.filter((r) => r.data));
+		const raw = new Map(docs.filter((r) => r.data).map((r) => [r.url, JSON.stringify(r.data)]));
+		const results = new Map<string, BatchResult<DocumentContent>>();
+		for (const r of docs)
+			if (!r.data)
+				results.set(r.url, { url: r.url, data: null, error: r.error || "Missing response" });
+		for (const r of parsed) results.set(r.url, r);
+		for (const r of videos)
+			results.set(r.url, { ...r, data: r.data ? { ...r.data, extractedUrls: [] } : null });
+		const links = new Set<string>();
+		const failures: { record: DatabaseRecord; error: string }[] = [];
+		const pages = [];
+		for (const record of records) {
+			const result = results.get(record.url);
+			if (!result?.data || (record.content?.trim() && !result.data.content.trim())) {
+				failures.push({ record, error: result?.error || "No usable replacement content" });
+				continue;
 			}
-
-			const chunksWithEmbeddings = allChunks.map((item, index) => ({
-				url: item.url,
-				title: item.chunk.title,
-				content: item.chunk.content,
-				embedding: embeddings[index]!,
-				chunk_index: item.chunk.chunk_index,
-				total_chunks: item.chunk.total_chunks,
-			}));
-
-			await this.dbManager.batchUpdateFullRecords(
-				changedRecords.map((r) => {
-					return {
-						...r.record,
+			const { title, content, extractedUrls } = result.data;
+			for (const link of extractedUrls) links.add(link);
+			pages.push({
+				record,
+				title,
+				content,
+				raw_json: raw.get(record.url) ?? null,
+				chunks: chunkText(content, title),
+			});
+		}
+		if (links.size)
+			await this.dbManager.batchInsertUrls([...links]).catch((error) => {
+				throw new Error(
+					`PostgreSQL discovered URL sync failed: ${error instanceof Error ? error.message : error}`,
+					{ cause: error },
+				);
+			});
+		const sameBody = pages.filter(
+			(p) =>
+				!this.config.forceUpdateAll && p.record.title === p.title && p.record.content === p.content,
+		);
+		const layouts = new Map<
+			string,
+			Awaited<ReturnType<PostgreSQLManager["getChunkLayout"]>>[number][]
+		>();
+		if (sameBody.length)
+			for (const row of await this.dbManager.getChunkLayout(sameBody.map((p) => p.record.url))) {
+				const rows = layouts.get(row.url) ?? [];
+				rows.push(row);
+				layouts.set(row.url, rows);
+			}
+		const unchanged = new Set(
+			sameBody.filter((p) => {
+				const stored = layouts.get(p.record.url) ?? [];
+				return (
+					stored.length === p.chunks.length &&
+					stored.every((v, i) => {
+						const c = p.chunks[i]!;
+						return (
+							v.indexed &&
+							v.chunk_index === i &&
+							v.total_chunks === c.total_chunks &&
+							v.title === c.title &&
+							v.content === c.content
+						);
+					})
+				);
+			}),
+		);
+		const changed = pages.filter((p) => !unchanged.has(p));
+		const chunks = changed.flatMap((p) =>
+			p.chunks.map((chunk) => ({ ...chunk, url: p.record.url })),
+		);
+		const embeddings = await createEmbeddings(
+			chunks.map((c) => (c.title ? `${c.title}\n\n${c.content}` : c.content)),
+			this.apiKey,
+			this.recordUsage,
+		);
+		const saved = changed.length
+			? await this.dbManager.batchUpdateFullRecords(
+					changed.map((p) => ({
+						...p.record,
+						raw_json: p.raw_json,
 						updated_at: new Date(),
-						raw_json: r.newRawJson || JSON.stringify(r.collectResult.data),
-						title: r.processResult?.data?.title || null,
-						content: r.processResult?.data?.content || "",
-					};
-				}),
-				chunksWithEmbeddings,
-			);
-		}
-
-		if (unchangedRecords.length > 0) {
-			logger.info(
-				`🔄 Content unchanged: ${unchangedRecords.length} URLs (no database update needed)`,
-			);
-		}
-
-		const permanentErrorRecords = errorRecords.filter((r) => r.isPermanentError);
-		const temporaryErrorRecords = errorRecords.filter((r) => !r.isPermanentError);
-
-		if (permanentErrorRecords.length > 0) {
-			const permanentUrls = permanentErrorRecords
-				.map((r) => `${r.record.url} (${r.error})`)
-				.join("\n");
-			logger.info(
-				`🗑️ Permanent errors: ${permanentErrorRecords.length} URLs (deleting records)\nDeleted URLs:\n${permanentUrls}`,
-			);
-
-			await this.dbManager.deleteRecords(permanentErrorRecords.map((r) => r.record.id));
-		}
-
-		if (temporaryErrorRecords.length > 0) {
-			const temporaryUrls = temporaryErrorRecords
-				.map((r) => `${r.record.url} (${r.error})`)
-				.join("\n");
-			await logger.warn(`Temporary errors: ${temporaryErrorRecords.length} URLs\n${temporaryUrls}`);
-		}
-
-		return { totalChunks: allChunks.length };
-	}
-
-	private async generateChunksAndEmbeddings(
-		processResults: (BatchResult<DocumentContent> | undefined)[],
-	): Promise<{
-		allChunks: Array<{
-			url: string;
-			chunk: {
-				title: string | null;
-				content: string;
-				chunk_index: number;
-				total_chunks: number;
-			};
-		}>;
-		embeddings: number[][];
-	}> {
-		const documents = processResults.flatMap((result) =>
-			result?.data?.content.trim()
-				? [{ url: result.url, title: result.data.title, content: result.data.content }]
-				: [],
+						title: p.title,
+						content: p.content,
+					})),
+					chunks.map((c, i) => ({ ...c, embedding: embeddings[i]! })),
+				)
+			: [];
+		const savedUrls = new Set(saved);
+		const nav = [...unchanged].filter(
+			(p) =>
+				p.raw_json &&
+				/^https:\/\/developer\.apple\.com\/documentation\/(swiftui|uikit)(\/|$)/.test(p.record.url),
 		);
-		const chunkResults = this.chunker.chunkTexts(documents);
-		if (
-			chunkResults.length !== documents.length ||
-			chunkResults.some((row) => !row.data?.length || row.error)
-		)
-			throw Error("Document chunking failed");
-		const allChunks = chunkResults.flatMap((r) =>
-			r.data ? r.data.map((chunk) => ({ url: r.url, chunk })) : [],
+		if (nav.length)
+			await this.dbManager.updateRawDocuments(
+				nav.map((p) => ({
+					id: p.record.id,
+					collect_count: p.record.collect_count,
+					json: p.raw_json!,
+				})),
+			);
+		const removable = ids
+			? []
+			: failures.filter((f) => BatchErrorHandler.isPermanentError(f.error));
+		const deleted = removable.length
+			? await this.dbManager.deleteRecords(removable.map((f) => f.record))
+			: 0;
+		const failed = failures.filter((f) => !removable.includes(f));
+		if (failed.length)
+			await logger.warn(failed.map((f) => `${f.record.url} ${f.error}`).join("\n"));
+		const updated = changed.filter(
+			(p) => savedUrls.has(p.record.url) && p.record.content && p.record.content !== p.content,
 		);
-
-		const embeddingTexts = allChunks.map((c) => {
-			return c.chunk.title ? `${c.chunk.title}\n\n${c.chunk.content}` : c.chunk.content;
-		});
-
-		const embeddings = await createEmbeddings(embeddingTexts, this.apiKey, this.recordUsage);
-
-		if (embeddings.length !== allChunks.length || embeddings.some((vector) => !vector?.length))
-			throw Error("Incomplete document embeddings");
-		return { allChunks, embeddings };
+		if (updated.length && !this.config.forceUpdateAll)
+			await notifyStats(
+				`Content updated: ${updated.length} URLs\n${updated
+					.slice(0, 10)
+					.map((p) => p.record.url)
+					.join("\n")}`,
+			);
+		const summary = {
+			claimed: records.length,
+			updated: saved.length,
+			unchanged: unchanged.size,
+			failed: failed.length,
+			deleted,
+			stale: changed.length - saved.length + removable.length - deleted,
+			totalChunks: chunks.filter((c) => savedUrls.has(c.url)).length,
+		};
+		logger.info(`Collector batch: ${JSON.stringify(summary)}`);
+		return summary;
 	}
 }
 

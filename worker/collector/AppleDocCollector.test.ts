@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { AppleAPIClient } from "./AppleAPIClient.js";
 import { AppleDocCollector } from "./AppleDocCollector.js";
-import { Chunker } from "./Chunker.js";
 import { ContentProcessor } from "./ContentProcessor.js";
 import type { PostgreSQLManager } from "./PostgreSQLManager.js";
 import type { DatabaseRecord } from "./types/index.js";
@@ -26,6 +25,7 @@ test("failed URL sync leaves the source unchanged and a later collection retries
 		code: "55P03",
 	});
 	const database = {
+		getChunkLayout: async () => [],
 		getBatchRecords: async () => {
 			events.push("claim");
 			return [stored];
@@ -42,13 +42,14 @@ test("failed URL sync leaves the source unchanged and a later collection retries
 			events.push("save");
 			assert.deepEqual(JSON.parse(records[0].raw_json!), apiData);
 			stored = records[0];
+			return [stored.url];
 		},
 	};
 	t.mock.method(AppleAPIClient.prototype, "fetchDocuments", async () => [{ url, data: apiData }]);
 	t.mock.method(ContentProcessor.prototype, "processDocuments", async () => [
 		{ url, data: { title: "New title", content: "", extractedUrls: [child] } },
 	]);
-	t.mock.method(Chunker.prototype, "chunkTexts", () => []);
+
 	const collector = new AppleDocCollector(database as unknown as PostgreSQLManager, "", {
 		batchSize: 30,
 		forceUpdateAll: false,
@@ -66,7 +67,7 @@ test("failed URL sync leaves the source unchanged and a later collection retries
 
 	failSync = false;
 	events.length = 0;
-	assert.deepEqual(await collector.execute(), { totalChunks: 0 });
+	assert.equal((await collector.execute()).updated, 1);
 	assert.equal(stored.title, "New title");
 	assert.deepEqual(events, ["claim", "sync", "save"]);
 

@@ -94,11 +94,9 @@ async function processAppleContent(
 			const stats = await dbManager.getStats();
 			const statsMessage =
 				`Collector Completed\n` +
-				`${durationSeconds}s | ${config.batchSize} URLs | ${result.totalChunks} chunks\n\n` +
-				`Docs: ${stats.docs.total} | ${stats.docs.collectedPercentage} collected\n` +
-				`Videos: ${stats.videos.total} | ${stats.videos.collectedPercentage} collected\n` +
-				`Chunks: ${stats.totalChunks} total | Avg collect: ${stats.avgCollectCount}\n` +
-				`Range: ${stats.minCollectCount}-${stats.maxCollectCount}`;
+				`${durationSeconds}s | ${result.claimed} claimed | ${result.updated} updated | ${result.unchanged} unchanged | ${result.failed} failed | ${result.deleted} removed | ${result.stale} superseded\n` +
+				`Corpus: ${stats.docs_total} document URLs, ${stats.videos_total} video URLs\n` +
+				`Readable pages: ${stats.readable_pages} | Indexed: ${stats.indexed_pages} | Chunks: ${stats.chunks_total}`;
 
 			logger.info(statsMessage);
 			await notifyStats(statsMessage);

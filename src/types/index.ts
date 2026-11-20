@@ -144,7 +144,10 @@ export interface CorpusStats {
 	docs_total: number;
 	videos_total: number;
 	chunks_total: number;
-	embedded_percentage: 100;
+	readable_pages: number;
+	indexed_pages: number;
+	navigation_only_pages: number;
+	embedded_percentage: number | null;
 	generated_at: string;
 }
 

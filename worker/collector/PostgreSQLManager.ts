@@ -1,9 +1,10 @@
 import type postgres from "postgres";
+import { readCorpusStats } from "../shared/corpus-stats.js";
 import {
 	isTransientPostgresConnectionError,
 	retryTransientPostgres,
 } from "../shared/postgres-retry.js";
-import type { DatabaseRecord, DatabaseStats } from "./types/index.js";
+import type { DatabaseRecord } from "./types/index.js";
 import { logger } from "./utils/logger.js";
 
 export const COLLECTOR_CONNECTION_PARAMETERS = {
@@ -137,7 +138,12 @@ class PostgreSQLManager {
 		return insertedCount;
 	}
 
-	async getBatchRecords(batchSize: number): Promise<DatabaseRecord[]> {
+	async getBatchRecords(batchSize: number, ids?: string[]): Promise<DatabaseRecord[]> {
+		if (ids)
+			return this.sql<DatabaseRecord[]>`
+            WITH targets AS (SELECT id FROM pages WHERE id=ANY(${ids}::uuid[]) AND url LIKE 'https://developer.apple.com/%' ORDER BY id FOR UPDATE)
+            UPDATE pages SET collect_count=collect_count+1 WHERE id IN (SELECT id FROM targets)
+            RETURNING id,url,title,content,collect_count,created_at,updated_at`;
 		// Atomic operation: SELECT records with minimum collect_count and UPDATE them
 		// This ensures different workers get different records by always taking the minimum collect_count
 		return this.sql<DatabaseRecord[]>`
@@ -163,88 +169,40 @@ class PostgreSQLManager {
     `;
 	}
 
-	async getStats(): Promise<DatabaseStats> {
-		const appleUrlPattern = "https://developer.apple.com/%";
-		const videoUrlPattern = "https://developer.apple.com/videos/play/%";
-
-		const [
-			// Docs stats (non-video pages)
-			docsTotal,
-			docsCollected,
-			// Videos stats
-			videosTotal,
-			videosCollected,
-			// Combined stats
-			avgResult,
-			minMaxResult,
-			distributionResult,
-			chunksResult,
-		] = await this.withRetry("statistics", (sql) =>
-			Promise.all([
-				sql`SELECT COUNT(*) as count FROM pages WHERE url LIKE ${appleUrlPattern} AND url NOT LIKE ${videoUrlPattern}`,
-				sql`SELECT COUNT(*) as count FROM pages WHERE url LIKE ${appleUrlPattern} AND url NOT LIKE ${videoUrlPattern} AND collect_count > 0`,
-				sql`SELECT COUNT(*) as count FROM pages WHERE url LIKE ${videoUrlPattern}`,
-				sql`SELECT COUNT(*) as count FROM pages WHERE url LIKE ${videoUrlPattern} AND collect_count > 0`,
-				sql`SELECT AVG(collect_count) as avg FROM pages WHERE url LIKE ${appleUrlPattern}`,
-				sql`SELECT MIN(collect_count) as min, MAX(collect_count) as max FROM pages WHERE url LIKE ${appleUrlPattern}`,
-				sql`SELECT collect_count, COUNT(*) as count FROM pages WHERE url LIKE ${appleUrlPattern} GROUP BY collect_count ORDER BY collect_count`,
-				sql`SELECT COUNT(*) as count FROM chunks WHERE url LIKE ${appleUrlPattern}`,
-			]),
-		);
-
-		const docsCount = parseInt(docsTotal[0]?.count || "0", 10);
-		const docsCollectedCount = parseInt(docsCollected[0]?.count || "0", 10);
-		const videosCount = parseInt(videosTotal[0]?.count || "0", 10);
-		const videosCollectedCount = parseInt(videosCollected[0]?.count || "0", 10);
-
-		const total = docsCount + videosCount;
-		const collected = docsCollectedCount + videosCollectedCount;
-		const avgCollectCount = parseFloat(avgResult[0]?.avg || "0");
-		const minCollectCount = parseInt(minMaxResult[0]?.min || "0", 10);
-		const maxCollectCount = parseInt(minMaxResult[0]?.max || "0", 10);
-		const totalChunks = parseInt(chunksResult[0]?.count || "0", 10);
-
-		// Helper: percentage with 1 decimal, floor
-		const pct = (n: number, d: number) => (d > 0 ? `${Math.floor((n / d) * 1000) / 10}%` : "0%");
-
-		const collectCountDistribution: Record<string, { count: number; percentage: string }> = {};
-		distributionResult.forEach((row: Record<string, unknown>) => {
-			const cc = String(row.collect_count);
-			const count = parseInt(String(row.count), 10);
-			collectCountDistribution[cc] = { count, percentage: pct(count, total) };
-		});
-
-		return {
-			docs: {
-				total: docsCount,
-				collected: docsCollectedCount,
-				collectedPercentage: pct(docsCollectedCount, docsCount),
-			},
-			videos: {
-				total: videosCount,
-				collected: videosCollectedCount,
-				collectedPercentage: pct(videosCollectedCount, videosCount),
-			},
-			total,
-			avgCollectCount: Math.round(avgCollectCount * 10000) / 10000,
-			collectedCount: collected,
-			collectedPercentage: pct(collected, total),
-			maxCollectCount,
-			minCollectCount,
-			collectCountDistribution,
-			totalChunks,
-		};
+	getStats() {
+		return this.withRetry("statistics", readCorpusStats);
 	}
 
-	async updateRawDocuments(records: { id: string; json: string }[]): Promise<void> {
+	async getChunkLayout(urls: string[]) {
+		return this.withRetry(
+			"read chunk layout",
+			(sql) => sql<
+				{
+					url: string;
+					content: string;
+					title: string | null;
+					chunk_index: number;
+					total_chunks: number;
+					indexed: boolean;
+				}[]
+			>`
+            SELECT url,content,title,chunk_index,total_chunks,embedding IS NOT NULL AS indexed
+            FROM chunks WHERE url=ANY(${urls}) ORDER BY url,chunk_index`,
+		);
+	}
+
+	async updateRawDocuments(
+		records: { id: string; collect_count: number; json: string }[],
+	): Promise<void> {
 		await this.withTransaction("refresh documentation metadata", async (sql) => {
 			for (const r of records)
 				await sql`UPDATE pages SET raw_json=${r.json}::text::jsonb,updated_at=now()
- WHERE id=${r.id} AND raw_json IS DISTINCT FROM ${r.json}::text::jsonb AND raw_json IS DISTINCT FROM to_jsonb(${r.json}::text)`;
+                 WHERE id=${r.id} AND collect_count=${r.collect_count} AND raw_json IS DISTINCT FROM ${r.json}::text::jsonb AND raw_json IS DISTINCT FROM to_jsonb(${r.json}::text)`;
 		});
 	}
+
 	async batchUpdateFullRecords(
-		records: Array<DatabaseRecord & { readonly raw_json: string | null }>,
+		records: Array<DatabaseRecord & { raw_json: string | null }>,
 		chunks: Array<{
 			url: string;
 			title: string | null;
@@ -253,53 +211,43 @@ class PostgreSQLManager {
 			chunk_index: number;
 			total_chunks: number;
 		}>,
-	): Promise<void> {
-		if (records.length === 0) return;
-
-		await this.withTransaction("page updates", async (sql) => {
-			const urls = records.map((row) => row.url);
-			// Serialize replacement for overlapping collector batches, even when there are no old chunks.
-			const locked =
-				await sql`SELECT id FROM pages WHERE id=ANY(${records.map((r) => r.id)}) ORDER BY id FOR UPDATE`;
-			if (locked.length !== records.length)
-				throw Error("Page disappeared before index replacement");
-			await sql`DELETE FROM chunks WHERE url=ANY(${urls})`;
+	): Promise<string[]> {
+		if (!records.length) return [];
+		return this.withTransaction("page updates", async (sql: postgres.Sql) => {
+			const locked = await this.lockCurrent(sql, records);
+			if (!locked.length) return [];
+			const urls = new Set(locked.map((row) => row.url));
+			await sql`DELETE FROM chunks WHERE url=ANY(${[...urls]})`;
 			for (const chunk of chunks) {
-				await sql`INSERT INTO chunks(url,title,content,embedding,chunk_index,total_chunks) VALUES(${chunk.url},${chunk.title},${chunk.content},${"[" + chunk.embedding.join(",") + "]"},${chunk.chunk_index},${chunk.total_chunks})`;
+				if (urls.has(chunk.url))
+					await sql`INSERT INTO chunks(url,title,content,embedding,chunk_index,total_chunks) VALUES(${chunk.url},${chunk.title},${chunk.content},${`[${chunk.embedding.join(",")}]`},${chunk.chunk_index},${chunk.total_chunks})`;
 			}
-
 			for (const record of records) {
-				await sql`
-          UPDATE pages
-          SET raw_json = ${record.raw_json}::text::jsonb,
-              title = ${record.title},
-              content = ${record.content},
-              updated_at = ${record.updated_at}
-          WHERE id = ${record.id}
-        `;
+				if (urls.has(record.url))
+					await sql`UPDATE pages SET raw_json=${record.raw_json}::text::jsonb,title=${record.title},content=${record.content},updated_at=${record.updated_at} WHERE id=${record.id}`;
 			}
+			return [...urls];
 		});
-		logger.info(`📝 Updated full records: ${records.length} records`);
 	}
 
-	async deleteRecords(recordIds: string[]): Promise<void> {
-		if (recordIds.length === 0) return;
+	private lockCurrent(
+		sql: postgres.Sql,
+		records: readonly Pick<DatabaseRecord, "id" | "collect_count">[],
+	) {
+		return sql<{ id: string; url: string }[]>`SELECT p.id,p.url FROM pages p
+            JOIN unnest(${records.map((r) => r.id)}::uuid[],${records.map((r) => r.collect_count)}::int[]) AS claims(id,generation)
+            ON p.id=claims.id AND p.collect_count=claims.generation ORDER BY p.id FOR UPDATE OF p`;
+	}
 
-		const deleted = await this.withTransaction("permanent URL deletion", async (sql) => {
-			const chunksDeleteResult = await sql`
-        DELETE FROM chunks
-        WHERE url IN (SELECT url FROM pages WHERE id = ANY(${recordIds}))
-      `;
-
-			const pagesDeleteResult = await sql`
-        DELETE FROM pages WHERE id = ANY(${recordIds})
-      `;
-
-			return { pages: pagesDeleteResult.count, chunks: chunksDeleteResult.count };
+	async deleteRecords(
+		records: readonly Pick<DatabaseRecord, "id" | "collect_count">[],
+	): Promise<number> {
+		if (!records.length) return 0;
+		return this.withTransaction("permanent URL deletion", async (sql: postgres.Sql) => {
+			const current = await this.lockCurrent(sql, records);
+			await sql`DELETE FROM chunks WHERE url=ANY(${current.map((row) => row.url)})`;
+			return (await sql`DELETE FROM pages WHERE id=ANY(${current.map((row) => row.id)})`).count;
 		});
-		logger.info(
-			`🗑️ Deleted permanent error records: ${deleted.pages} pages, ${deleted.chunks} chunks`,
-		);
 	}
 
 	async close(): Promise<void> {

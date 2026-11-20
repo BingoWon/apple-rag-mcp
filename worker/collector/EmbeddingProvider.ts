@@ -13,7 +13,7 @@ const DEEPINFRA_CONFIG = {
 	DIMENSION: 2560,
 	TIMEOUT_MS: 30_000,
 	BATCH_SIZE: 32,
-	CONCURRENCY: 1,
+	GROUP_BUDGET_MS: 120_000,
 	MAX_ATTEMPTS: 5,
 	RETRY_BASE_DELAY_MS: 1_000,
 	RETRY_MAX_DELAY_MS: 30_000,
@@ -40,9 +40,12 @@ export class BatchEmbeddingProvider {
 	async encodeBatch(texts: string[]): Promise<number[][]> {
 		if (!texts.length) return [];
 
-		let lastError!: Error;
+		const deadline = Date.now() + DEEPINFRA_CONFIG.GROUP_BUDGET_MS;
+		let lastError = new Error("Embedding retry budget exhausted");
 
 		for (let attempt = 1; attempt <= DEEPINFRA_CONFIG.MAX_ATTEMPTS; attempt++) {
+			const remaining = deadline - Date.now();
+			if (remaining <= 0) break;
 			let inputTokens: number | undefined;
 			let delayMs: number;
 			try {
@@ -57,7 +60,7 @@ export class BatchEmbeddingProvider {
 						input: texts,
 						encoding_format: "float",
 					}),
-					signal: AbortSignal.timeout(DEEPINFRA_CONFIG.TIMEOUT_MS),
+					signal: AbortSignal.timeout(Math.min(remaining, DEEPINFRA_CONFIG.TIMEOUT_MS)),
 				});
 
 				if (!res.ok) {
@@ -110,6 +113,7 @@ export class BatchEmbeddingProvider {
 			} finally {
 				this.recordUsage?.(embeddingUsage(inputTokens));
 			}
+			if (delayMs >= deadline - Date.now()) break;
 			await new Promise((resolve) => setTimeout(resolve, delayMs));
 		}
 
@@ -126,7 +130,9 @@ export class BatchEmbeddingProvider {
 function parseRetryAfter(value: string | null): number | undefined {
 	if (!value) return undefined;
 	const seconds = Number(value);
-	return Number.isFinite(seconds) && seconds >= 0 ? seconds * 1_000 : undefined;
+	if (Number.isFinite(seconds)) return seconds >= 0 ? seconds * 1_000 : undefined;
+	const date = Date.parse(value);
+	return Number.isFinite(date) ? Math.max(0, date - Date.now()) : undefined;
 }
 
 export async function createEmbeddings(
@@ -137,29 +143,11 @@ export async function createEmbeddings(
 	if (!texts.length) return [];
 
 	const provider = new BatchEmbeddingProvider(apiKey, recordUsage);
-	const batches = Array.from(
-		{ length: Math.ceil(texts.length / DEEPINFRA_CONFIG.BATCH_SIZE) },
-		(_, index) => {
-			const start = index * DEEPINFRA_CONFIG.BATCH_SIZE;
-			return { start, texts: texts.slice(start, start + DEEPINFRA_CONFIG.BATCH_SIZE) };
-		},
-	);
-	const embeddings = new Array<number[]>(texts.length);
-	let nextBatch = 0;
-
-	async function worker(): Promise<void> {
-		while (nextBatch < batches.length) {
-			const batch = batches[nextBatch++];
-			const encoded = await provider.encodeBatch(batch.texts);
-			encoded.forEach((embedding, index) => {
-				embeddings[batch.start + index] = embedding;
-			});
-		}
+	const embeddings: number[][] = [];
+	for (let start = 0; start < texts.length; start += DEEPINFRA_CONFIG.BATCH_SIZE) {
+		embeddings.push(
+			...(await provider.encodeBatch(texts.slice(start, start + DEEPINFRA_CONFIG.BATCH_SIZE))),
+		);
 	}
-
-	await Promise.all(
-		Array.from({ length: Math.min(DEEPINFRA_CONFIG.CONCURRENCY, batches.length) }, () => worker()),
-	);
-
 	return embeddings;
 }

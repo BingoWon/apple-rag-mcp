@@ -11,22 +11,6 @@ interface BatchConfig {
 	readonly forceUpdateAll: boolean;
 }
 
-// Application configuration interface
-interface AppConfig {
-	readonly database: {
-		readonly host: string;
-		readonly port: number;
-		readonly database: string;
-		readonly username: string;
-		readonly password: string;
-		readonly ssl: boolean;
-	};
-	readonly batchProcessing: BatchConfig;
-	readonly logging: {
-		readonly level: string;
-	};
-}
-
 // Database record interface
 interface DatabaseRecord {
 	readonly id: string;
@@ -49,18 +33,6 @@ interface DocumentContent {
 interface VideoContent {
 	readonly title: string | null;
 	readonly content: string;
-}
-
-// Chunk record interface for vector storage
-interface ChunkRecord {
-	readonly id: string;
-	readonly url: string;
-	readonly title: string | null;
-	readonly content: string;
-	readonly created_at: Date;
-	readonly embedding: number[] | null;
-	readonly chunk_index: number;
-	readonly total_chunks: number;
 }
 
 // Batch result interface - simplified to core types
@@ -105,39 +77,12 @@ interface AppleAPIResponse {
 	>;
 }
 
-// Statistics interface
-interface DatabaseStats {
-	// Pages breakdown
-	readonly docs: {
-		readonly total: number;
-		readonly collected: number;
-		readonly collectedPercentage: string;
-	};
-	readonly videos: {
-		readonly total: number;
-		readonly collected: number;
-		readonly collectedPercentage: string;
-	};
-	// Combined stats
-	readonly total: number;
-	readonly avgCollectCount: number;
-	readonly collectedCount: number;
-	readonly collectedPercentage: string;
-	readonly maxCollectCount: number;
-	readonly minCollectCount: number;
-	readonly collectCountDistribution: Record<string, { count: number; percentage: string }>;
-	readonly totalChunks: number;
-}
-
 export type {
-	AppConfig,
 	AppleAPIResponse,
 	BatchConfig,
 	BatchResult,
-	ChunkRecord,
 	ContentSection,
 	DatabaseRecord,
-	DatabaseStats,
 	DocumentContent,
 	VideoContent,
 };

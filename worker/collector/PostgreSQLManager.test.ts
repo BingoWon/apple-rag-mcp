@@ -187,6 +187,7 @@ test("collector database operations remain safe under concurrency and interrupte
 		(CASE WHEN title IS NULL OR title = '' THEN 0 ELSE 1 END),
 		url, id
 	) WHERE url LIKE 'https://developer.apple.com/%'`;
+	await sql`CREATE TABLE catalog_nodes (url text,readable boolean)`;
 	await sql`CREATE TABLE chunks (
 		id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
 		url text NOT NULL,
@@ -598,19 +599,19 @@ test("collector database operations remain safe under concurrency and interrupte
 	await t.test(
 		"navigation-only changes refresh historical JSON without rewriting text, embeddings or an identical observation",
 		async () => {
-			const url = prefix + "catalog-only";
+			const url = `${prefix}catalog-only`;
 			const [row] =
 				await sql`INSERT INTO pages(url,title,content,raw_json,collect_count) VALUES (${url},'Same','Unchanged',to_jsonb('{"topicSections":[]}'::text),72) RETURNING id`;
 			const m = new PostgreSQLManager(connect);
 			try {
 				const json = JSON.stringify({ topicSections: [{ title: "New group" }] });
-				await m.updateRawDocuments([{ id: row.id, json }]);
+				await m.updateRawDocuments([{ id: row.id, collect_count: 72, json }]);
 				const [changed] =
 					await observer`SELECT raw_json,title,content,collect_count,updated_at FROM pages WHERE id=${row.id}`;
 				assert.deepEqual(changed.raw_json, JSON.parse(json));
 				assert.equal(changed.content, "Unchanged");
 				assert.equal(changed.collect_count, 72);
-				await m.updateRawDocuments([{ id: row.id, json }]);
+				await m.updateRawDocuments([{ id: row.id, collect_count: 72, json }]);
 				const [next] = await observer`SELECT updated_at FROM pages WHERE id=${row.id}`;
 				assert.equal(next.updated_at.getTime(), changed.updated_at.getTime());
 			} finally {
@@ -634,7 +635,7 @@ test("collector database operations remain safe under concurrency and interrupte
 				title: "New",
 				content: "New content",
 				raw_json: '{"updated":true}',
-				collect_count: 999,
+				collect_count: Number(row.collect_count),
 				created_at: row.created_at as Date,
 				updated_at: updatedAt,
 			}));
@@ -697,7 +698,7 @@ test("collector database operations remain safe under concurrency and interrupte
 	);
 
 	await t.test("a rejected page update rolls back replacement of its existing chunks", async () => {
-		const url = prefix + "page-a";
+		const url = `${prefix}page-a`;
 		const [record] = await observer`SELECT * FROM pages WHERE url=${url}`;
 		const before = await observer`SELECT id FROM chunks WHERE url=${url} ORDER BY id`;
 		assert.equal(before.length, 2);
@@ -724,10 +725,11 @@ test("collector database operations remain safe under concurrency and interrupte
 	await t.test(
 		"permanent deletion reconnects and leaves unrelated pages and chunks intact",
 		async (subtest) => {
-			const [target] = await observer`SELECT id FROM pages WHERE url = ${`${prefix}page-a`}`;
+			const [target] =
+				await observer`SELECT id,collect_count FROM pages WHERE url = ${`${prefix}page-a`}`;
 			await sql`INSERT INTO chunks (url, content) VALUES (${`${prefix}page-b`}, 'Keep')`;
 			const fault = disconnectOnce(subtest, false);
-			await fault.manager.deleteRecords([target.id]);
+			await fault.manager.deleteRecords([{ id: target.id, collect_count: target.collect_count }]);
 			assert.equal(fault.connections(), 2);
 			const rows = await observer`SELECT url FROM pages ORDER BY url`;
 			assert.deepEqual(
@@ -756,12 +758,28 @@ test("collector database operations remain safe under concurrency and interrupte
 		});
 		const stats = await reader.getStats();
 		assert.equal(created, 2);
-		assert.equal(stats.docs.total, 1);
-		assert.equal(stats.totalChunks, 1);
+		assert.equal(stats.docs_total, 1);
+		assert.equal(stats.chunks_total, 1);
 		const [row] = await observer`SELECT collect_count FROM pages`;
 		assert.equal(row.collect_count, 157);
 	});
 
+	await t.test(
+		"stale replacement, metadata and removal cannot overwrite a newer generation",
+		async () => {
+			const data =
+				await sql`INSERT INTO pages(url,title,content,collect_count) VALUES (${`${prefix}stale`},'Newest','Newest',2) RETURNING *`;
+			const stale = { ...data[0], collect_count: 1, raw_json: "{}", content: "Old" } as Parameters<
+				typeof manager.batchUpdateFullRecords
+			>[0][number];
+			assert.deepEqual(await manager.batchUpdateFullRecords([stale], []), []);
+			await manager.updateRawDocuments([{ id: stale.id, collect_count: 1, json: '{"old":true}' }]);
+			assert.equal(await manager.deleteRecords([stale]), 0);
+			const [kept] = await sql`SELECT content,raw_json FROM pages WHERE id=${stale.id}`;
+			assert.deepEqual(kept, { content: "Newest", raw_json: null });
+			await sql`DELETE FROM pages WHERE id=${stale.id}`;
+		},
+	);
 	await t.test("a lost claim acknowledgement never replays the counter increment", async () => {
 		let created = 0;
 		const client = connect();

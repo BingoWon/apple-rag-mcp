@@ -250,7 +250,8 @@
 		"stats_doc_pages": "Apple 文档页",
 		"stats_wwdc_videos": "WWDC 视频",
 		"stats_chunks": "向量分块",
-		"stats_embedded": "已嵌入"
+		"stats_coverage_detail": "{{readable}} 个可读页面中，{{indexed}} 个已有索引。目录另含 {{navigation}} 个仅供导航的页面。",
+		"stats_embedded": "可读页面索引覆盖率"
 	},
 	"tokens": {
 		"title": "MCP 令牌",

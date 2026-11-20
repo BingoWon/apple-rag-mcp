@@ -81,3 +81,21 @@ test("retries an overloaded model and succeeds", async () => {
 		globalThis.fetch = originalFetch;
 	}
 });
+
+test("a Retry-After beyond the group budget defers immediately, including HTTP dates", async (t) => {
+	let calls = 0;
+	t.mock.method(
+		globalThis,
+		"fetch",
+		async () =>
+			new Response(null, {
+				status: 429,
+				headers: {
+					"Retry-After": ++calls === 1 ? "86400" : new Date(Date.now() + 86400000).toUTCString(),
+				},
+			}),
+	);
+	for (let i = 0; i < 2; i++)
+		await assert.rejects(new BatchEmbeddingProvider("test").encodeBatch(["text"]), /429/);
+	assert.equal(calls, 2);
+});

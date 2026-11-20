@@ -1,20 +1,21 @@
-export function isValidAppleUrl(url: string): boolean {
-	return ![
-		url.split("https://").length > 2 || url.split("http://").length > 2,
-		url.includes("%ef%bb%bf") || url.includes("\ufeff"),
-		url.split("/documentation/").length > 2,
-		url.includes("https:/") && !url.startsWith("https://"),
-		url.length > 200,
-		url.split("developer.apple.com").length > 2,
-	].some(Boolean);
-}
+const APPLE_DEVELOPER = "https://developer.apple.com";
 
-export function normalizeAppleUrl(url: string): string {
+export function normalizeAppleUrl(input: string): string | null {
+	if (!input || input.length > 2048 || /[\\\s\uFEFF]|%ef%bb%bf/i.test(input)) return null;
 	try {
-		const parsed = new URL(url);
-		const path = parsed.pathname === "/" ? "/" : parsed.pathname.replace(/\/+$/, "").toLowerCase();
-		return `${parsed.protocol.toLowerCase()}//${parsed.hostname.toLowerCase()}${path}`;
+		const url = new URL(input, APPLE_DEVELOPER);
+		const path = url.pathname.toLowerCase().replace(/\/+$/, "");
+		if (
+			url.origin !== APPLE_DEVELOPER ||
+			url.username ||
+			url.password ||
+			!/^\/(?:documentation|design)(?:\/|$)/.test(path) ||
+			/https?:\/|developer\.apple\.com|\/documentation\/.*\/documentation\//.test(path)
+		)
+			return null;
+		const canonical = APPLE_DEVELOPER + path;
+		return canonical.length <= 2048 ? canonical : null;
 	} catch {
-		return url;
+		return null;
 	}
 }

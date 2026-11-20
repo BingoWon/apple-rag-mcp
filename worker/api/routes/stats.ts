@@ -1,28 +1,18 @@
 import postgres from "postgres";
+import { readCorpusStats } from "../../shared/corpus-stats.js";
 import { ApiErrorCode } from "../constants/error-codes";
 import { createOpenAPIApp } from "../utils/openapi";
 
 const app = createOpenAPIApp();
 const CACHE_TTL_SECONDS = 3600;
-const APPLE_URL_PATTERN = "https://developer.apple.com/%";
-const VIDEO_URL_PATTERN = "https://developer.apple.com/videos/play/%";
-
-interface CorpusStats {
-	docs_total: number;
-	videos_total: number;
-	chunks_total: number;
-	embedded_percentage: 100;
-	generated_at: string;
-}
-
 function createCacheKey(requestUrl: string): Request {
 	const url = new URL(requestUrl);
 	url.pathname = "/api/stats/corpus";
-	url.search = "";
+	url.search = "?metrics=coverage";
 	return new Request(url.toString(), { method: "GET" });
 }
 
-function createStatsResponse(data: CorpusStats): Response {
+function createStatsResponse(data: Awaited<ReturnType<typeof readCorpusStats>>): Response {
 	return new Response(JSON.stringify({ success: true, data }), {
 		headers: {
 			"Content-Type": "application/json; charset=utf-8",
@@ -51,39 +41,7 @@ app.get("/corpus", async (c) => {
 	});
 
 	try {
-		const rows = await sql`
-			WITH page_counts AS (
-				SELECT
-					COUNT(*) FILTER (
-						WHERE url LIKE ${APPLE_URL_PATTERN}
-						  AND url NOT LIKE ${VIDEO_URL_PATTERN}
-					) AS docs_total,
-					COUNT(*) FILTER (
-						WHERE url LIKE ${VIDEO_URL_PATTERN}
-					) AS videos_total
-				FROM pages
-				WHERE url LIKE ${APPLE_URL_PATTERN}
-			),
-			chunk_counts AS (
-				SELECT COUNT(*) AS chunks_total
-				FROM chunks
-				WHERE url LIKE ${APPLE_URL_PATTERN}
-			)
-			SELECT
-				page_counts.docs_total,
-				page_counts.videos_total,
-				chunk_counts.chunks_total
-			FROM page_counts, chunk_counts
-		`;
-
-		const row = rows[0] || {};
-		const data: CorpusStats = {
-			docs_total: Number(row.docs_total) || 0,
-			videos_total: Number(row.videos_total) || 0,
-			chunks_total: Number(row.chunks_total) || 0,
-			embedded_percentage: 100,
-			generated_at: new Date().toISOString(),
-		};
+		const data = await readCorpusStats(sql);
 
 		const response = createStatsResponse(data);
 		c.executionCtx.waitUntil(caches.default.put(cacheKey, response.clone()));
