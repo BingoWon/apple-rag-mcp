@@ -45,8 +45,8 @@ export function CTASection() {
 				<div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(96,165,250,0.1),transparent_50%)] dark:bg-[radial-gradient(circle_at_70%_80%,rgba(96,165,250,0.05),transparent_50%)]"></div>
 			</div>
 
-			{/* Content */}
-			<div className="home-content relative py-32 sm:py-40">
+			{/* The closing CTA keeps its own spacing and width. */}
+			<div className="relative px-6 py-32 sm:py-40 lg:px-8">
 				<div className="text-center">
 					<TypewriterEffectSmooth words={words} />
 					<p className="mt-6 text-lg leading-8 text-light/90">
