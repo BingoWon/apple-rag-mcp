@@ -212,3 +212,22 @@ Remove the obsolete setup label and assertions that prohibited the GitHub link o
 required this button to navigate to /connect. Do not add new presentation locks.
 The existing quick-start actions and connection guide continue to provide setup.
 Repository visibility remains private; restoring its link does not grant access.
+
+## MacBook screen and scroll timing — 5.14.3
+
+The screen and poster fill the lid throughout its opening animation. Once the
+lid faces the viewer, its width and height match the film’s 1280 × 848 aspect ratio.
+The screen stays in view while the user scrolls through the film in either direction.
+
+The three settings in `src/components/ui/macbook-scroll.tsx` are measured in
+viewport heights (`1` equals one screenful of scrolling). Their distances add
+up from the point where the lid is upright.
+
+| Setting | Default | Adjustment |
+| --- | ---: | --- |
+| `FILM_LEAD` | 0.20 | Distance the first frame stays in place after the lid opens. |
+| `FILM_PLAYBACK` | 2.00 | Distance from the first frame to the last. Increasing it slows the film for the same scroll speed. |
+| `FILM_HOLD` | 0.25 | Distance the last frame stays in place before the screen scrolls away. |
+
+With a 900 px viewport, the three stages take 180, 1,800 and 225 px respectively.
+The still-image fallback skips the extended scroll distance.
