@@ -76,7 +76,7 @@ export function AdminLayout() {
 									to={item.href}
 									className={`shrink-0 whitespace-nowrap border-b-2 py-2.5 px-1 text-sm font-medium transition-colors ${
 										isActive
-											? "border-brand text-brand bg-brand/10"
+											? "border-brand text-action bg-brand/10"
 											: "border-transparent text-muted-foreground hover:text-foreground hover:border-primary"
 									}`}
 								>

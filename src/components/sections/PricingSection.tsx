@@ -1,16 +1,12 @@
-import { IconCheck, IconCreditCard } from "@tabler/icons-react";
+import { IconCheck, IconCreditCard, IconPlus } from "@tabler/icons-react";
 import Alipay from "@thesvg/react/alipay";
 import { useEffect } from "react";
-import { Trans, useTranslation } from "react-i18next";
+import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
-import { Modal, ModalTrigger } from "@/components/ui/animated-modal";
 import { Button } from "@/components/ui/Button";
-import { EvervaultCard, Icon } from "@/components/ui/evervault-card";
-import { JevBrand, JevText } from "@/components/ui/jev-brand";
 import { useAuth } from "@/hooks/useAuth";
 import { trackEvent } from "@/lib/analytics";
 import { getPricingTiers } from "@/lib/plans";
-import { cn } from "@/lib/utils";
 import { useDashboardStore } from "@/stores/dashboard";
 import { activateFabContact } from "@/utils/contact";
 import { PricingModal } from "./PricingModal";
@@ -65,114 +61,115 @@ export function PricingSection() {
 			id="pricing"
 		>
 			<div className="home-section-heading text-center">
-				<h2 className="text-base font-semibold leading-7 text-brand">{t("pricing.eyebrow")}</h2>
+				<h2 className="text-base font-semibold leading-7 text-action">{t("pricing.eyebrow")}</h2>
 				<p className="mt-2 text-3xl font-bold tracking-tight text-light sm:text-4xl">
 					{t("pricing.title")}
 				</p>
-				<p className="mt-4 sm:mt-6 text-lg leading-8 text-muted">
-					<JevText i18nKey="pricing.subtitle" />
-				</p>
+				<p className="mt-4 sm:mt-6 text-lg leading-8 text-muted">{t("pricing.subtitle")}</p>
 			</div>
 			<div className="mx-auto grid max-w-md grid-cols-1 gap-y-6 lg:mx-0 lg:max-w-none lg:grid-cols-3 lg:gap-x-8 lg:gap-y-0 lg:items-start">
 				{tiers.map((tier) => (
 					<div key={tier.id} className="border border-default flex flex-col w-full relative">
 						{/* Corner Icons */}
-						<Icon className="absolute h-6 w-6 -top-3 -left-3 text-light" />
-						<Icon className="absolute h-6 w-6 -bottom-3 -left-3 text-light" />
-						<Icon className="absolute h-6 w-6 -top-3 -right-3 text-light" />
-						<Icon className="absolute h-6 w-6 -bottom-3 -right-3 text-light" />
-
-						{/* EvervaultCard with all pricing content */}
-						<EvervaultCard
-							className="w-full h-full"
-							gradientFrom={tier.gradientFrom}
-							gradientTo={tier.gradientTo}
-						>
-							<div className="flex flex-col justify-between h-full">
-								<div>
-									<div className="flex items-center justify-between gap-x-4">
-										<h3
-											id={tier.id}
-											className={`text-lg font-semibold leading-8 ${
-												tier.popular ? "text-brand" : "text-light"
-											}`}
-										>
-											{tier.name}
-										</h3>
-										{tier.popular ? (
-											<div className="flex items-center gap-1.5">
-												<span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold text-white bg-[#635BFF]">
-													<IconCreditCard className="w-3 h-3" />
-													{t("pricing.badge_card")}
-												</span>
-												<span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold text-white bg-[#1677FF]">
-													<Alipay aria-hidden="true" variant="mono" className="w-3 h-3" />
-													{t("pricing.badge_alipay")}
-												</span>
-											</div>
-										) : null}
-									</div>
-									<p className="mt-3 sm:mt-4 text-sm leading-6 text-muted">{tier.description}</p>
-									<p className="mt-4 sm:mt-6 flex items-baseline gap-x-1">
-										<span className="text-4xl font-bold tracking-widest text-light">
-											{tier.displayPrice}
-										</span>
-									</p>
-									<ul className="mt-6 sm:mt-8 space-y-2 sm:space-y-3 text-sm leading-6 text-muted">
-										{tier.features.map((feature) => (
-											<li key={feature} className="flex gap-x-3">
-												<IconCheck className="h-6 w-5 flex-none text-brand" aria-hidden="true" />
-												<span className="min-w-0">
-													<Trans defaults={feature} components={{ jev: <JevBrand /> }} />
-												</span>
-											</li>
-										))}
-									</ul>
+						<IconPlus
+							aria-hidden="true"
+							stroke={1.5}
+							className="absolute h-6 w-6 -top-3 -left-3 text-light"
+						/>
+						<IconPlus
+							aria-hidden="true"
+							stroke={1.5}
+							className="absolute h-6 w-6 -bottom-3 -left-3 text-light"
+						/>
+						<IconPlus
+							aria-hidden="true"
+							stroke={1.5}
+							className="absolute h-6 w-6 -top-3 -right-3 text-light"
+						/>
+						<IconPlus
+							aria-hidden="true"
+							stroke={1.5}
+							className="absolute h-6 w-6 -bottom-3 -right-3 text-light"
+						/>
+						<div className="flex h-full flex-col justify-between bg-card p-6 lg:p-8">
+							<div>
+								<div className="flex items-center justify-between gap-x-4">
+									<h3
+										id={tier.id}
+										className={`text-lg font-semibold leading-8 ${
+											tier.popular ? "text-action" : "text-light"
+										}`}
+									>
+										{tier.name}
+									</h3>
+									{tier.popular ? (
+										<div className="flex items-center gap-1.5">
+											<span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold text-white bg-[#635BFF]">
+												<IconCreditCard className="w-3 h-3" />
+												{t("pricing.badge_card")}
+											</span>
+											<span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold text-white bg-[#1677FF]">
+												<Alipay aria-hidden="true" variant="mono" className="w-3 h-3" />
+												{t("pricing.badge_alipay")}
+											</span>
+										</div>
+									) : null}
 								</div>
-								{tier.action === "contact" ? (
-									<Button
-										variant={tier.popular ? "primary" : "outline"}
-										className="mt-6 sm:mt-8 w-full"
-										onClick={activateFabContact}
+								<p className="mt-3 sm:mt-4 text-sm leading-6 text-muted">{tier.description}</p>
+								<p className="mt-4 sm:mt-6 flex items-baseline gap-x-1">
+									<span
+										className={
+											tier.popular
+												? "text-4xl font-bold text-action"
+												: "text-4xl font-bold text-light"
+										}
 									>
-										{t("common.contact_us")}
-									</Button>
-								) : tier.action === "register" ? (
-									<Link to={tier.href}>
-										<Button
-											variant={tier.popular ? "primary" : "outline"}
-											className="mt-6 sm:mt-8 w-full"
-										>
-											{t("common.get_started")}
-										</Button>
-									</Link>
-								) : hasActivePaidPlan ? (
-									<Button
-										variant={tier.popular ? "primary" : "outline"}
-										className="mt-6 sm:mt-8 w-full"
-										onClick={() => navigate("/billing/")}
-									>
-										{subscription?.payment_type === "one_time"
-											? t("pricing.view_plan")
-											: t("pricing.manage_subscription")}
-									</Button>
-								) : (
-									<Modal>
-										<ModalTrigger
-											className={cn(
-												"mt-6 sm:mt-8 w-full px-4 py-2 rounded-lg text-center relative overflow-hidden transition-all duration-200",
-												tier.popular
-													? "bg-brand text-white hover:bg-brand/90 shadow-lg hover:shadow-xl"
-													: "border border-default bg-transparent text-light hover:bg-secondary hover:border-border-light",
-											)}
-										>
-											{t("common.get_started")}
-										</ModalTrigger>
-										<PricingModal planName={tier.name} />
-									</Modal>
-								)}
+										{tier.displayPrice}
+									</span>
+								</p>
+								<ul className="mt-6 sm:mt-8 space-y-2 sm:space-y-3 text-sm leading-6 text-muted">
+									{tier.features.map((feature) => (
+										<li key={feature} className="flex gap-x-3">
+											<IconCheck className="h-6 w-5 flex-none text-action" aria-hidden="true" />
+											<span className="min-w-0">{feature}</span>
+										</li>
+									))}
+								</ul>
 							</div>
-						</EvervaultCard>
+							{tier.action === "contact" ? (
+								<Button
+									variant={tier.popular ? "primary" : "outline"}
+									className="mt-6 sm:mt-8 w-full"
+									onClick={activateFabContact}
+								>
+									{t("common.contact_us")}
+								</Button>
+							) : tier.action === "register" ? (
+								<Button
+									asChild
+									variant={tier.popular ? "primary" : "outline"}
+									className="mt-6 sm:mt-8 w-full"
+								>
+									<Link to={tier.href}>{t("common.get_started")}</Link>
+								</Button>
+							) : hasActivePaidPlan ? (
+								<Button
+									variant={tier.popular ? "primary" : "outline"}
+									className="mt-6 sm:mt-8 w-full"
+									onClick={() => navigate("/billing/")}
+								>
+									{subscription?.payment_type === "one_time"
+										? t("pricing.view_plan")
+										: t("pricing.manage_subscription")}
+								</Button>
+							) : (
+								<PricingModal>
+									<Button variant="primary" className="mt-6 w-full sm:mt-8">
+										{t("common.get_started")}
+									</Button>
+								</PricingModal>
+							)}
+						</div>
 					</div>
 				))}
 			</div>

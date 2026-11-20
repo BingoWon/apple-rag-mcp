@@ -1,23 +1,14 @@
 import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/Badge";
-import { adminUserName } from "@/lib/admin-user";
+import { adminUserName, formatAdminInterval } from "@/lib/admin-user";
 import type { AdminSubscription, AdminUserIdentity } from "../../../worker/shared/admin-user";
-
-const intervals: Record<string, string> = {
-	week: "weekly",
-	month: "monthly",
-	"6 months": "semiannual",
-	year: "annual",
-};
 
 export function AdminPlanBadge({ subscription }: { subscription: AdminSubscription }) {
 	const { t } = useTranslation();
 	const paid = subscription.plan !== "hobby";
 	const period = subscription.billing_interval;
-	const key = period ? intervals[period] : undefined;
-	const interval = key
-		? t(`pricing.${subscription.payment_type === "one_time" ? "onetime_" : ""}${key}`)
-		: period;
+	const interval =
+		period && formatAdminInterval(period, subscription.payment_type === "one_time", t);
 	const plan = subscription.plan === "enterprise" ? "Enterprise" : paid ? "Pro" : "Free";
 	return (
 		<Badge

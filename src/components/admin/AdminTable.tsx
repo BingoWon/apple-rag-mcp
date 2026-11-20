@@ -90,23 +90,7 @@ export function AdminTable<T extends object>({
 				return <span className="font-mono text-xs">{stringValue}</span>;
 			}
 
-			if (typeof value === "boolean") {
-				// Special handling for cancel_at_period_end: false=good(green), true=bad(red)
-				const isInvertedLogic = col.key === "cancel_at_period_end";
-				const isGoodState = isInvertedLogic ? !value : value;
-
-				return (
-					<span
-						className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-							isGoodState
-								? "bg-green-900 text-green-200 dark:bg-green-900 dark:text-green-200"
-								: "bg-red-900 text-red-200 dark:bg-red-900 dark:text-red-200"
-						}`}
-					>
-						{value ? "true" : "false"}
-					</span>
-				);
-			}
+			if (typeof value === "boolean") return t(value ? "common.yes" : "common.no");
 
 			return String(value);
 		},

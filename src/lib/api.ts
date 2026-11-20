@@ -1,5 +1,11 @@
 import axios, { type AxiosError, type AxiosInstance, type AxiosResponse } from "axios";
-import type { AdminDashboardStats, AdminStatsQuery, ApiResponse, CurrentUsage } from "@/types";
+import type {
+	AdminDashboardStats,
+	AdminStatsQuery,
+	ApiResponse,
+	CorpusStats,
+	CurrentUsage,
+} from "@/types";
 import type { AdminLogFilters, AdminLogKind, AdminLogsResponse } from "@/types/admin-logs";
 import { normalizeEmail } from "@/utils/email";
 import type { ToolActivity, UsagePeriod } from "../../shared/tool-activity";
@@ -219,8 +225,8 @@ class ApiClient {
 		return this.get<ToolActivity>("/users/usage/stats", { params: { period }, signal });
 	}
 
-	async getCorpusStats() {
-		return this.get("/stats/corpus");
+	async getCorpusStats(signal?: AbortSignal) {
+		return this.get<CorpusStats>("/stats/corpus", { signal });
 	}
 
 	async getUsageLogs(

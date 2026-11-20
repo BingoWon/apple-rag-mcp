@@ -1,22 +1,35 @@
+import { lazy, Suspense, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { AgentSetupCard } from "@/components/agent/AgentSetupCard";
 import { Footer } from "@/components/layout/Footer";
 import { AgentFAQ } from "@/components/sections/AgentFAQ";
 import { Button } from "@/components/ui/Button";
-import { CodeBlock } from "@/components/ui/code-block";
+
 import { AppNavbar } from "@/components/ui/resizable-navbar";
 import { usePageScroll } from "@/hooks/usePageScroll";
 
+const commands =
+	'npm install -g apple-rag-cli\napple-rag auth login\napple-rag search "SwiftUI NavigationStack path binding" --limit 3 --json\napple-rag browse --json\napple-rag fetch "https://developer.apple.com/documentation/swiftui" --json';
+
+const plainCommands = (
+	<pre className="overflow-x-auto rounded-lg bg-secondary p-4 text-sm">{commands}</pre>
+);
+
+const CodeBlock = lazy(() =>
+	import("@/components/ui/code-block").then(({ CodeBlock }) => ({ default: CodeBlock })),
+);
+
 export default function ConnectPage() {
 	const { t } = useTranslation();
+	const [referenceOpen, setReferenceOpen] = useState(false);
 	usePageScroll();
 	return (
 		<div className="min-h-screen bg-background">
 			<AppNavbar />
 			<main className="mx-auto max-w-3xl px-6 pb-12 pt-28 sm:pt-32">
 				<header className="mb-8">
-					<p className="text-sm font-medium text-brand">MCP / CLI</p>
+					<p className="text-sm font-medium text-action">MCP / CLI</p>
 					<h1 className="mt-3 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
 						{t("connect.title")}
 					</h1>
@@ -45,21 +58,24 @@ export default function ConnectPage() {
 							</>
 						) : (
 							<>
-								<details className="mb-6 rounded-xl border border-default p-4">
+								<details
+									onToggle={(event) => setReferenceOpen(event.currentTarget.open)}
+									className="mb-6 rounded-xl border border-default p-4"
+								>
 									<summary className="cursor-pointer text-sm font-medium text-foreground">
 										{t("connect.reference")}
 									</summary>
 									<div className="mt-4 min-w-0">
-										<CodeBlock
-											language="bash"
-											filename="agent commands"
-											code={
-												'npm install -g apple-rag-cli\napple-rag auth login\napple-rag search "SwiftUI NavigationStack path binding" --limit 3 --json\napple-rag browse --json\napple-rag fetch "https://developer.apple.com/documentation/swiftui" --json'
-											}
-										/>
+										<Suspense fallback={plainCommands}>
+											{referenceOpen ? (
+												<CodeBlock language="bash" filename="agent commands" code={commands} />
+											) : (
+												plainCommands
+											)}
+										</Suspense>
 									</div>
 								</details>
-								<div className="flex flex-wrap gap-5 text-sm text-brand">
+								<div className="flex flex-wrap gap-5 text-sm text-action">
 									<a
 										href="https://www.npmjs.com/package/apple-rag-cli"
 										target="_blank"
@@ -79,7 +95,7 @@ export default function ConnectPage() {
 									</p>
 									<Link
 										to="/settings#cli-access"
-										className="mt-4 inline-block text-sm text-brand hover:underline"
+										className="mt-4 inline-block text-sm text-action hover:underline"
 									>
 										{t("connect.settings")} →
 									</Link>

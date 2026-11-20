@@ -45,7 +45,9 @@
 		"url_copied": "URL copied to clipboard",
 		"copy_failed": "Failed to copy",
 		"copy_url": "Copy URL",
-		"continue": "Continue"
+		"continue": "Continue",
+		"yes": "Yes",
+		"no": "No"
 	},
 	"nav": {
 		"overview": "Overview",
@@ -85,13 +87,13 @@
 	"features": {
 		"eyebrow": "Built for agent workflows",
 		"title": "The sources your agent needs to build with Apple APIs",
-		"subtitle": "Apple RAG retrieves relevant sources and <jev>Jev</jev> ranks them for your question. Your agent uses the results to inform its work.",
+		"subtitle": "Give your agent the sources it needs to check an API or follow up on a WWDC session.",
 		"document_lookup": "Find and read docs",
 		"document_lookup_desc": "Search indexed Apple docs and WWDC transcripts, browse SwiftUI or UIKit by topic, or open a source page for context.",
 		"agent_access": "MCP / CLI",
 		"agent_access_desc": "Connect your agent through MCP or the CLI. You can revoke individual MCP tokens and CLI device authorizations in your account.",
 		"ai_search": "Relevant sources first",
-		"ai_search_desc": "Keyword and semantic search find candidate sources. <jev>Jev</jev> ranks them against the API, platform, and version in your question.",
+		"ai_search_desc": "Keyword and semantic search find sources that match the API, platform, and version in your question.",
 		"source_references": "Traceable references",
 		"source_references_desc": "Your agent can follow a source link to check API details, read any code examples on the page, and cite the original.",
 		"index_updates": "A maintained knowledge base",
@@ -100,7 +102,7 @@
 	"quickstart": {
 		"eyebrow": "Get connected",
 		"title": "Connect your agent",
-		"subtitle": "Copy a setup prompt and send it to your agent. RAG retrieval and <jev>Jev</jev> ranking are included.",
+		"subtitle": "Copy a setup prompt and paste it into your agent’s chat.",
 		"shared": "One plan with shared limits for MCP and CLI.",
 		"free_access": "Try without an account: 30 calls per week, up to 3 per minute.",
 		"supported_clients": "MCP client setup guides",
@@ -111,18 +113,18 @@
 	"datasources": {
 		"eyebrow": "Source library",
 		"title": "Official Apple sources, ready for your agent",
-		"subtitle": "Search developer documentation and WWDC transcripts through MCP / CLI. RAG retrieval and <jev>Jev</jev> relevance ranking are included.",
+		"subtitle": "Search Apple Developer documentation and WWDC transcripts, then follow a result back to its source.",
 		"docs_title": "Apple Developer Documentation",
-		"docs_desc": "Official Apple docs, found through RAG and ranked by <jev>Jev</jev> for your agent.",
+		"docs_desc": "Look up API declarations, availability, and code examples in Apple’s documentation.",
 		"videos_title": "WWDC and developer videos",
-		"videos_desc": "WWDC26 and Apple Developer transcripts, found with keyword and semantic search, then ranked by <jev>Jev</jev>.",
+		"videos_desc": "Find WWDC sessions by topic and read the relevant passages in their transcripts.",
 		"source_title": "Keep sources in view",
 		"source_desc": "Results include source links and distinguish Apple content from third-party pages."
 	},
 	"pricing": {
 		"eyebrow": "Pricing",
 		"title": "One plan for MCP and CLI",
-		"subtitle": "Start with a free account and upgrade as your agents need more calls. Every plan includes RAG retrieval and <jev>Jev</jev> relevance ranking.",
+		"subtitle": "Start free. Upgrade when your agents need more calls each week.",
 		"shared_quota": "Search, browse, and fetch share one account allowance across MCP, CLI, devices, and automation.",
 		"most_popular": "Most popular",
 		"badge_card": "Card",
@@ -175,7 +177,7 @@
 		"request_capacity": "Discuss request capacity",
 		"semantic_search": "Semantic search (for RAG)",
 		"keyword_search": "Keyword search",
-		"hybrid_search": "Hybrid search (ranked by <jev>Jev</jev>)",
+		"hybrid_search": "Hybrid search with relevance ranking",
 		"community_support": "Community support",
 		"multiple_tokens": "Multiple MCP tokens and CLI devices",
 		"model_calls_included": "Retrieval model calls included",
@@ -204,7 +206,7 @@
 		"empower": "empower",
 		"your": "your",
 		"ai_agents": "AI agents?",
-		"subtitle": "with Apple RAG: official sources, RAG retrieval, and <jev>Jev</jev> ranking through MCP or CLI."
+		"subtitle": "with Apple developer sources one prompt away. Connect your agent through MCP or the CLI."
 	},
 	"auth": {
 		"existing_method": "This email is already registered. Use your original sign-in method.",
@@ -253,7 +255,6 @@
 		"jev_integration": "It scores Apple sources for relevance to your question, putting the best matches first.",
 		"welcome_oauth": "Welcome {{name}}! Successfully authenticated via OAuth.",
 		"auth_failed": "Authentication failed. Please try again.",
-		"stats_status": "Status",
 		"stats_freshness": "We collect and index updates to Apple’s developer documentation.",
 		"stats_heading": "Apple sources indexed for your agents",
 		"stats_date": "Data as of {{date}}",
@@ -451,7 +452,10 @@
 		"buy_again": "Extend Pass",
 		"upgrade_to_subscription": "Upgrade to Subscription",
 		"upgrade_after_expiry": "You can switch to a subscription after your pass expires",
-		"loading": "Loading billing information..."
+		"loading": "Loading billing information...",
+		"incomplete_expired": "Activation expired",
+		"unpaid": "Unpaid",
+		"paused": "Paused"
 	},
 	"messages": {
 		"title": "Messages",
@@ -670,7 +674,6 @@
 		"col_billing": "Billing",
 		"col_period_start": "Period Start",
 		"col_period_end": "Period End",
-		"col_cancel_at_end": "Cancel at End",
 		"col_message": "Message",
 		"log_details": "Request details",
 		"log_details_desc": "Full request, outcome and retrieval provenance.",
@@ -736,7 +739,9 @@
 		"identity_anonymous": "Anonymous user",
 		"identity_registered": "Unnamed user",
 		"identity_deleted": "Deleted user",
-		"current_user_plan": "Current access plan, including on historical logs"
+		"current_user_plan": "Current access plan, including on historical logs",
+		"period_end_action": "At period end",
+		"renews": "Renews"
 	},
 	"notfound": {
 		"title": "Page Not Found",
@@ -780,7 +785,7 @@
 		"unread_suffix": "({{count}} unread)"
 	},
 	"footer": {
-		"tagline": "Apple RAG connects your agent to Apple developer sources through MCP / CLI, with retrieval and <jev>Jev</jev> ranking included.",
+		"tagline": "Apple developer documentation and WWDC transcripts for your agents, through MCP or the CLI.",
 		"copyright": "© 2026 Apple RAG. All rights reserved.",
 		"privacy": "Privacy Policy",
 		"terms": "Terms of Service",

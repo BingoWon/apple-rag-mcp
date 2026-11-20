@@ -215,3 +215,15 @@ Remove the obsolete setup label and assertions that prohibited the GitHub link o
 required this button to navigate to /connect. Do not add new presentation locks.
 The existing quick-start actions and connection guide continue to provide setup.
 Repository visibility remains private; restoring its link does not grant access.
+
+## Purchase, setup and dashboard usability
+
+The hosted Pro chooser clipped its payment action at 375 × 667. Both billing and
+homepage entry points should use the same keyboard-accessible, scrollable dialog.
+Use a contrasting foreground for links and prices in each theme. Source cards
+should link directly to Apple. Keep the Hero and Jev section as the main places
+for model attribution, and use the other sections to explain sources and actions.
+
+Corpus statistics distinguish loading, failure and zero values. Subscription
+rows describe what happens at period end in the selected language. Load optional
+notification effects and command highlighting only when the relevant UI opens.

@@ -1,5 +1,4 @@
 import { useTranslation } from "react-i18next";
-import { JevText } from "@/components/ui/jev-brand";
 import { WobbleCard } from "../ui/wobble-card";
 
 export function DataSourcesShowcase() {
@@ -8,28 +7,27 @@ export function DataSourcesShowcase() {
 		<div className="home-section relative">
 			<div className="mx-auto max-w-7xl px-6 lg:px-8">
 				<div className="home-section-heading mx-auto max-w-4xl lg:text-center">
-					<h2 className="text-base font-semibold leading-7 text-brand">
+					<h2 className="text-base font-semibold leading-7 text-action">
 						{t("datasources.eyebrow")}
 					</h2>
 					<p className="mt-2 text-3xl font-bold tracking-tight text-light sm:text-4xl">
 						{t("datasources.title")}
 					</p>
-					<p className="mt-6 text-lg leading-8 text-muted">
-						<JevText i18nKey="datasources.subtitle" />
-					</p>
+					<p className="mt-6 text-lg leading-8 text-muted">{t("datasources.subtitle")}</p>
 				</div>
 				<div className="grid grid-cols-1 lg:grid-cols-3 gap-4 w-full">
 					<WobbleCard
 						containerClassName="col-span-1 lg:col-span-2 h-full bg-pink-800 min-h-[440px] lg:min-h-[250px] cursor-pointer"
 						className=""
-						onClick={() => window.open("https://developer.apple.com/documentation", "_blank")}
+						href="https://developer.apple.com/documentation"
+						label={t("datasources.docs_title")}
 					>
 						<div className="max-w-xs relative z-10">
 							<h2 className="text-left text-balance text-xl lg:text-3xl font-semibold tracking-[-0.015em] text-white">
 								{t("datasources.docs_title")}
 							</h2>
 							<p className="mt-4 text-left  text-base/6 text-neutral-200">
-								<JevText i18nKey="datasources.docs_desc" />
+								{t("datasources.docs_desc")}
 							</p>
 						</div>
 						<img
@@ -57,14 +55,15 @@ export function DataSourcesShowcase() {
 					</WobbleCard>
 					<WobbleCard
 						containerClassName="col-span-1 lg:col-span-3 bg-brand-tertiary/80 min-h-[440px] xl:min-h-[250px] cursor-pointer"
-						onClick={() => window.open("https://developer.apple.com/videos/", "_blank")}
+						href="https://developer.apple.com/videos/"
+						label={t("datasources.videos_title")}
 					>
 						<div className="max-w-sm relative z-10">
 							<h2 className="max-w-sm md:max-w-lg  text-left text-balance text-xl lg:text-3xl font-semibold tracking-[-0.015em] text-white">
 								{t("datasources.videos_title")}
 							</h2>
 							<p className="mt-4 max-w-[26rem] text-left  text-base/6 text-neutral-200">
-								<JevText i18nKey="datasources.videos_desc" />
+								{t("datasources.videos_desc")}
 							</p>
 						</div>
 						<img

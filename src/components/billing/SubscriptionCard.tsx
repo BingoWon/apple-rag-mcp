@@ -3,7 +3,6 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { PricingModal } from "@/components/sections/PricingModal";
-import { Modal, ModalTrigger } from "@/components/ui/animated-modal";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
@@ -176,19 +175,17 @@ export function SubscriptionCard({ subscription, usage }: SubscriptionCardProps)
 				{/* Actions */}
 				{isOneTime ? (
 					<div className="space-y-3 pt-1">
-						<Modal>
-							<ModalTrigger className="w-full px-4 py-2 rounded-lg text-center border border-default bg-transparent text-light hover:bg-secondary hover:border-border-light transition-all duration-200">
+						<PricingModal defaultTab="one_time">
+							<Button className="w-full" variant="outline">
 								{t("billing.buy_again")}
-							</ModalTrigger>
-							<PricingModal planName="Pro" defaultTab="one_time" />
-						</Modal>
+							</Button>
+						</PricingModal>
 						{isExpired ? (
-							<Modal>
-								<ModalTrigger className="w-full px-4 py-2 rounded-lg text-center bg-brand text-white hover:bg-brand/90 shadow-lg hover:shadow-xl transition-all duration-200">
+							<PricingModal>
+								<Button className="w-full" variant="primary">
 									{t("billing.upgrade_to_subscription")}
-								</ModalTrigger>
-								<PricingModal planName="Pro" />
-							</Modal>
+								</Button>
+							</PricingModal>
 						) : (
 							<p className="text-xs text-faint text-center">{t("billing.upgrade_after_expiry")}</p>
 						)}

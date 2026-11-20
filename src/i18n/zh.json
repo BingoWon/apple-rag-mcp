@@ -45,7 +45,9 @@
 		"url_copied": "URL 已复制",
 		"copy_failed": "复制失败",
 		"copy_url": "复制 URL",
-		"continue": "继续"
+		"continue": "继续",
+		"yes": "是",
+		"no": "否"
 	},
 	"nav": {
 		"overview": "概览",
@@ -85,13 +87,13 @@
 	"features": {
 		"eyebrow": "为智能体开发流程而建",
 		"title": "让智能体找到开发所需的 Apple 资料",
-		"subtitle": "Apple RAG 检索相关资料，<jev>Jev</jev> 根据问题排序，供智能体查阅与引用。",
+		"subtitle": "让智能体查阅 API 文档，或顺着一场 WWDC 讲座找到相关资料。",
 		"document_lookup": "查找并读取 Apple 文档",
 		"document_lookup_desc": "智能体可以搜索已建索引的文档和 WWDC 字幕，也可以按主题浏览 SwiftUI 和 UIKit。找到相关内容后，可按需读取原文。",
 		"agent_access": "MCP / CLI",
 		"agent_access_desc": "智能体可通过 MCP 或 CLI 使用同一组工具。你可以在账号中单独撤销某个 MCP 令牌或某台 CLI 设备的授权。",
 		"ai_search": "优先呈现相关资料",
-		"ai_search_desc": "关键词与语义搜索共同召回，<jev>Jev</jev> 结合问题中的 API、平台与版本进行相关性重排。",
+		"ai_search_desc": "结合关键词与语义搜索，查找与你关心的 API、平台和版本相关的资料。",
 		"source_references": "来源可追溯",
 		"source_references_desc": "智能体可以沿来源链接核对 API 细节，查阅原文中的代码示例，并在回答中引用出处。",
 		"index_updates": "持续维护的知识库",
@@ -100,7 +102,7 @@
 	"quickstart": {
 		"eyebrow": "开始接入",
 		"title": "接入你的智能体",
-		"subtitle": "复制提示词并交给智能体，即可接入 Apple 资料的 RAG 检索与 <jev>Jev</jev> 排序。",
+		"subtitle": "复制接入提示词，粘贴到智能体的对话中。",
 		"shared": "MCP / CLI 共用套餐与额度。",
 		"free_access": "免注册体验：每周 30 次、每分钟最多 3 次调用。",
 		"supported_clients": "MCP 客户端配置指南",
@@ -111,18 +113,18 @@
 	"datasources": {
 		"eyebrow": "资料来源",
 		"title": "为智能体准备的 Apple 官方资料",
-		"subtitle": "通过 MCP / CLI 搜索开发者文档与 WWDC 字幕，使用 RAG 检索与 <jev>Jev</jev> 相关性排序。",
+		"subtitle": "搜索 Apple 开发者文档与 WWDC 字幕，随时打开对应的官方原文。",
 		"docs_title": "Apple 开发者文档",
-		"docs_desc": "Apple 官方开发文档，通过 RAG 检索与 <jev>Jev</jev> 排序，为智能体找到相关资料。",
+		"docs_desc": "在 Apple 官方文档中查阅 API 声明、适用系统版本和代码示例。",
 		"videos_title": "WWDC 与开发者视频",
-		"videos_desc": "WWDC26 与 Apple 开发者视频字幕，通过关键词与语义混合检索，再由 <jev>Jev</jev> 重排。",
+		"videos_desc": "按主题查找 WWDC 讲座，阅读字幕中的相关段落。",
 		"source_title": "每份资料，都有来源",
 		"source_desc": "结果附带来源链接，并明确区分 Apple 官方资料与站外页面。"
 	},
 	"pricing": {
 		"eyebrow": "订阅价格",
 		"title": "一个套餐，支持 MCP / CLI",
-		"subtitle": "免费账号即可开始使用，按智能体的调用需求升级。所有方案均包含 RAG 检索与 <jev>Jev</jev> 相关性排序。",
+		"subtitle": "免费开始使用，按智能体每周的调用需求升级。",
 		"shared_quota": "搜索、浏览目录和读取原文共用账号额度，MCP、CLI、各台设备及自动化任务合并计数。",
 		"most_popular": "最受欢迎",
 		"badge_card": "银行卡",
@@ -175,7 +177,7 @@
 		"request_capacity": "请求容量需求咨询",
 		"semantic_search": "语义搜索（用于 RAG）",
 		"keyword_search": "关键词搜索",
-		"hybrid_search": "混合搜索（<jev>Jev</jev> 重排）",
+		"hybrid_search": "混合搜索与相关性排序",
 		"community_support": "社区支持",
 		"multiple_tokens": "支持多个 MCP 令牌和 CLI 设备",
 		"model_calls_included": "包含检索模型调用",
@@ -193,7 +195,7 @@
 		"empower": "智能体",
 		"your": "注入",
 		"ai_agents": "超能力了吗？",
-		"subtitle": "，让智能体通过 MCP / CLI 查阅 Apple 官方资料，由 RAG 检索与 <jev>Jev</jev> 排序提供支持。"
+		"subtitle": "时，让智能体通过 MCP 或 CLI 随时查阅 Apple 官方资料。"
 	},
 	"auth": {
 		"existing_method": "这个邮箱已注册，请使用原来的方式登录。",
@@ -242,7 +244,6 @@
 		"jev_integration": "根据你的问题，为候选 Apple 资料评分排序，让更相关的内容优先呈现。",
 		"welcome_oauth": "欢迎，{{name}}！已通过 OAuth 成功登录。",
 		"auth_failed": "登录失败，请重试。",
-		"stats_status": "状态",
 		"stats_freshness": "实施采集和索引官方文档更新",
 		"stats_heading": "为智能体索引的 Apple 资料",
 		"stats_date": "数据截至 {{date}}",
@@ -440,7 +441,10 @@
 		"buy_again": "延长有效期",
 		"upgrade_to_subscription": "升级为订阅",
 		"upgrade_after_expiry": "到期后才可以切换为订阅方案",
-		"loading": "正在加载账单信息..."
+		"loading": "正在加载账单信息...",
+		"incomplete_expired": "激活已过期",
+		"unpaid": "未支付",
+		"paused": "已暂停"
 	},
 	"messages": {
 		"title": "消息",
@@ -659,7 +663,6 @@
 		"col_billing": "计费",
 		"col_period_start": "周期开始",
 		"col_period_end": "周期结束",
-		"col_cancel_at_end": "到期取消",
 		"col_message": "消息",
 		"log_details": "请求详情",
 		"log_details_desc": "完整请求、响应结果与读取来源。",
@@ -723,7 +726,9 @@
 		"identity_anonymous": "匿名用户",
 		"identity_registered": "未命名用户",
 		"identity_deleted": "已删除用户",
-		"current_user_plan": "当前实际套餐（历史日志也显示当前套餐）"
+		"current_user_plan": "当前实际套餐（历史日志也显示当前套餐）",
+		"period_end_action": "到期安排",
+		"renews": "继续订阅"
 	},
 	"notfound": {
 		"title": "页面未找到",
@@ -767,7 +772,7 @@
 		"unread_suffix": "（{{count}} 条未读）"
 	},
 	"footer": {
-		"tagline": "Apple RAG 面向智能体提供 Apple 开发知识，支持 MCP / CLI，包含检索与 <jev>Jev</jev> 相关性排序。",
+		"tagline": "通过 MCP 或 CLI，让智能体查阅 Apple 开发者文档与 WWDC 字幕。",
 		"copyright": "© 2026 Apple RAG · 版权所有",
 		"privacy": "隐私政策",
 		"terms": "服务条款",

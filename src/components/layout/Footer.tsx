@@ -1,7 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { Brand } from "@/components/layout/Brand";
-import { JevText } from "@/components/ui/jev-brand";
 import { activateFabContact } from "@/utils/contact";
 
 export function Footer() {
@@ -32,9 +31,7 @@ export function Footer() {
 						<div className="flex items-center">
 							<Brand />
 						</div>
-						<p className="text-sm leading-6 text-muted">
-							<JevText i18nKey="footer.tagline" />
-						</p>
+						<p className="text-sm leading-6 text-muted">{t("footer.tagline")}</p>
 					</div>
 					<div className="mt-16 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">
 						<div>

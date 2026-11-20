@@ -4,7 +4,7 @@ import test from "node:test";
 import i18next from "i18next";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { I18nextProvider, Trans } from "react-i18next";
+import { I18nextProvider } from "react-i18next";
 import { MemoryRouter } from "react-router-dom";
 import serverJson from "../../server.json";
 import { SITE_PAGES } from "../../shared/site";
@@ -66,98 +66,15 @@ test("discovery descriptions and agent documentation reflect the primary ranker 
 	}
 });
 
-test("retrieval copy separates keyword/semantic recall from Jev ranking and retains stack branding", () => {
+test("search describes keyword and semantic retrieval before relevance ranking", () => {
 	for (const locale of [en, zh]) {
-		assert.match(locale.plans.semantic_search, /semantic search|语义搜索/i);
-		assert.match(locale.plans.semantic_search, /for RAG|用于 RAG/);
-		assert.match(locale.plans.hybrid_search, /hybrid search|混合搜索/i);
-		assert.match(locale.plans.hybrid_search, /ranked by|重排/);
-		assert.ok(locale.plans.hybrid_search.includes("<jev>Jev</jev>"));
-		assert.doesNotMatch(locale.plans.hybrid_search, /RAG/);
-		for (const copy of [
-			locale.features.ai_search_desc,
-			locale.datasources.videos_desc,
-			locale.success.feature_rag,
-		]) {
-			assert.match(copy, /keyword|关键词/i);
-			assert.match(copy, /semantic|语义/i);
-			assert.match(copy, /rank|重排/i);
-			assert.ok(copy.includes("<jev>Jev</jev>"));
-		}
-		for (const copy of [
-			locale.hero.subtitle_desc,
-			locale.features.subtitle,
-			locale.datasources.subtitle,
-			locale.datasources.docs_desc,
-			locale.pricing.subtitle,
-			locale.cta.subtitle,
-			locale.footer.tagline,
-		]) {
-			assert.ok(copy.includes("RAG"));
-			assert.ok(copy.includes("<jev>Jev</jev>"));
-		}
+		assert.match(locale.success.feature_rag, /keyword|关键词/i);
+		assert.match(locale.success.feature_rag, /semantic|语义/i);
+		assert.ok(locale.success.feature_rag.includes("<jev>Jev</jev>"));
+		assert.ok(locale.hero.subtitle_desc.includes("<jev>Jev</jev>"));
 	}
 	assert.match(TOOLS.SEARCH.DESCRIPTION, /hybrid retrieval \(keyword \+ semantic\)/);
 	assert.match(TOOLS.SEARCH.DESCRIPTION, /ranking of the merged candidates/);
-});
-
-test("retrieval sections and footer render model logos in both languages", async () => {
-	const storage = Object.getOwnPropertyDescriptor(globalThis, "localStorage");
-	Object.defineProperty(globalThis, "localStorage", {
-		configurable: true,
-		value: { getItem: () => "en" },
-	});
-	try {
-		const { FeaturesSection } = await import("../components/sections/FeaturesSection.js");
-		const { DataSourcesShowcase } = await import("../components/sections/DataSourcesSection.js");
-		const { CTASection } = await import("../components/sections/CTASection.js");
-		const { Footer } = await import("../components/layout/Footer.js");
-		const { default: SuccessPage } = await import("../pages/SuccessPage.js");
-		const { JevBrand } = await import("../components/ui/jev-brand.js");
-		for (const language of ["en", "zh"]) {
-			const i18n = i18next.createInstance();
-			await i18n.init({
-				lng: language,
-				resources: { en: { translation: en }, zh: { translation: zh } },
-				interpolation: { escapeValue: false },
-			});
-			const feature = language === "en" ? en.plans.hybrid_search : zh.plans.hybrid_search;
-			const featureHtml = renderToStaticMarkup(
-				createElement(
-					I18nextProvider,
-					{ i18n },
-					createElement(Trans, { defaults: feature, components: { jev: createElement(JevBrand) } }),
-				),
-			);
-			assert.ok(featureHtml.includes('src="/typesafe-logo.webp"'));
-			assert.ok(featureHtml.includes('href="https://typesafe.ai/"'));
-			assert.ok(featureHtml.includes(language === "en" ? "ranked by" : "重排"));
-			assert.ok(!featureHtml.includes("&lt;jev&gt;"));
-			for (const [Component, count] of [
-				[FeaturesSection, 2],
-				[DataSourcesShowcase, 3],
-				[CTASection, 1],
-				[Footer, 1],
-				[SuccessPage, 1],
-			] as const) {
-				const html = renderToStaticMarkup(
-					createElement(
-						I18nextProvider,
-						{ i18n },
-						createElement(MemoryRouter, {}, createElement(Component)),
-					),
-				);
-				assert.equal(html.split('class="jev-brand ').length - 1, count);
-				assert.ok(html.includes("RAG"));
-				assert.ok(!html.includes("&lt;jev&gt;"));
-				assert.ok(!html.includes("text-typesafe leading-none"));
-				assert.ok(html.includes("jev-brand-name font-bold"));
-			}
-		}
-	} finally {
-		if (storage) Object.defineProperty(globalThis, "localStorage", storage);
-		else Reflect.deleteProperty(globalThis, "localStorage");
-	}
 });
 
 test("both READMEs introduce Jev scoring with a local logo and official link", () => {

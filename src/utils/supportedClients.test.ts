@@ -65,7 +65,7 @@ test("quick start presents both agent connections and current trial limits with 
 		assert.ok(html.includes(i18n.t("connect.copy_cli")));
 		assert.equal(html.match(/<button /g)?.length, 2);
 		assert.doesNotMatch(html, /aria-pressed|<fieldset/);
-		assert.match(html, /<strong class="[^"]*text-brand">\$1 \/ (week|周)<\/strong>/);
+		assert.match(html, /<strong[^>]*>\$1 \/ (week|周)<\/strong>/);
 		assert.doesNotMatch(html, /<pre|<code|<textarea|agent-setup\.txt/);
 		assert.doesNotMatch(
 			html,

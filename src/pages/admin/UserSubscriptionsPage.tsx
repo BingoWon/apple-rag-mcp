@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { AdminUserLabel } from "@/components/admin/AdminUserLabel";
+import { formatAdminInterval } from "@/lib/admin-user";
 import { api } from "@/lib/api";
 import { formatCurrency } from "@/lib/utils";
 import type { AdminUserIdentity } from "../../../worker/shared/admin-user";
@@ -20,6 +21,7 @@ interface AdminUserSubscription {
 	price: number;
 	currency: string | null;
 	billing_interval: string;
+	payment_type: string;
 	updated_at: string;
 }
 
@@ -34,8 +36,23 @@ export default function AdminUserSubscriptionsPage() {
 				width: 224,
 				render: (_value: unknown, row: AdminUserSubscription) => <AdminUserLabel user={row.user} />,
 			},
-			{ key: "plan_type", label: t("admin.col_plan"), width: 96 },
-			{ key: "status", label: t("admin.col_status"), width: 112 },
+			{
+				key: "plan_type",
+				label: t("admin.col_plan"),
+				width: 96,
+				render: (_: unknown, row: AdminUserSubscription) =>
+					t(`plans.${row.plan_type}`, { defaultValue: row.plan_type }),
+			},
+			{
+				key: "status",
+				label: t("admin.col_status"),
+				width: 112,
+				render: (_: unknown, row: AdminUserSubscription) =>
+					t(
+						`billing.${row.status === "canceled" ? "cancelled" : row.status === "trialing" ? "trial" : row.status}`,
+						{ defaultValue: row.status },
+					),
+			},
 			{
 				key: "price",
 				label: t("admin.col_price"),
@@ -43,10 +60,32 @@ export default function AdminUserSubscriptionsPage() {
 				render: (_value: unknown, row: AdminUserSubscription) =>
 					formatCurrency(row.price, row.currency),
 			},
-			{ key: "billing_interval", label: t("admin.col_billing"), width: 96 },
+			{
+				key: "billing_interval",
+				label: t("admin.col_billing"),
+				width: 116,
+				render: (_: unknown, row: AdminUserSubscription) =>
+					row.plan_type === "hobby"
+						? "—"
+						: formatAdminInterval(row.billing_interval, row.payment_type === "one_time", t),
+			},
 			{ key: "current_period_start", label: t("admin.col_period_start"), width: 144 },
 			{ key: "current_period_end", label: t("admin.col_period_end"), width: 144 },
-			{ key: "cancel_at_period_end", label: t("admin.col_cancel_at_end"), width: 128 },
+			{
+				key: "cancel_at_period_end",
+				label: t("admin.period_end_action"),
+				width: 128,
+				render: (_: unknown, row: AdminUserSubscription) => {
+					if (
+						row.plan_type === "hobby" ||
+						row.payment_type !== "subscription" ||
+						!["active", "trialing", "past_due"].includes(row.status)
+					)
+						return "—";
+					if (row.cancel_at_period_end) return t("billing.cancelled_at_end");
+					return row.status === "past_due" ? t("billing.past_due") : t("admin.renews");
+				},
+			},
 			{ key: "updated_at", label: t("admin.col_updated"), width: 160 },
 		],
 		[t],

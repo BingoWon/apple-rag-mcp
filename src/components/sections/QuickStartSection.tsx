@@ -4,7 +4,6 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
-import { JevText } from "@/components/ui/jev-brand";
 import { supportedClients } from "@/constants/mcpClients";
 import { generateCLIInstallPrompt } from "@/utils/agentSetup";
 import { copyText } from "@/utils/clipboard";
@@ -29,7 +28,7 @@ export function QuickStartSection() {
 		<section className="home-section" id="quickstart" aria-labelledby="quickstart-title">
 			<div className="mx-auto max-w-7xl px-6 lg:px-8">
 				<header className="home-section-heading mx-auto max-w-2xl text-center">
-					<p className="text-sm font-semibold text-brand">{t("quickstart.eyebrow")}</p>
+					<p className="text-sm font-semibold text-action">{t("quickstart.eyebrow")}</p>
 					<h2
 						id="quickstart-title"
 						className="mt-3 text-balance text-3xl font-bold tracking-tight text-light sm:text-4xl"
@@ -37,7 +36,7 @@ export function QuickStartSection() {
 						{t("quickstart.title")}
 					</h2>
 					<p className="mx-auto mt-4 max-w-xl text-base leading-7 text-muted">
-						<JevText i18nKey="quickstart.subtitle" />
+						{t("quickstart.subtitle")}
 					</p>
 				</header>
 
@@ -60,7 +59,7 @@ export function QuickStartSection() {
 							{t("quickstart.free_access")} {t("quickstart.shared")}{" "}
 							<Link
 								to="/connect"
-								className="whitespace-nowrap font-medium text-brand hover:underline"
+								className="whitespace-nowrap font-medium text-action hover:underline"
 							>
 								{t("connect.details")} →
 							</Link>
@@ -74,14 +73,14 @@ export function QuickStartSection() {
 						<div>
 							<p className="flex flex-wrap items-baseline gap-2 text-sm font-semibold text-light">
 								Pro <span aria-hidden="true">·</span>
-								<strong className="text-xl font-bold text-brand">{t("plans.price_pro")}</strong>
+								<strong className="text-xl font-bold text-action">{t("plans.price_pro")}</strong>
 							</p>
 							<p className="mt-1 text-xs leading-5 text-muted">
 								{t("quickstart.pro_weekly_calls")} <span aria-hidden="true">·</span>{" "}
 								{t("quickstart.pro_minute_calls")}
 							</p>
 						</div>
-						<span className="whitespace-nowrap text-sm font-medium text-brand group-hover:underline">
+						<span className="whitespace-nowrap text-sm font-medium text-action group-hover:underline">
 							{t("quickstart.pro_cta")} →
 						</span>
 					</a>

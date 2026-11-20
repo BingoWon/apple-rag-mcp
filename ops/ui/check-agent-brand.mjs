@@ -52,6 +52,24 @@ const base = `http://127.0.0.1:${server.address().port}`;
 const browser = await chromium.launch({ channel: "chrome", headless: true });
 const checks = [];
 try {
+	const phone = await browser.newPage({ viewport: { width: 375, height: 667 }, locale: "en-US" });
+	await phone.route("https://**", (route) => route.abort());
+	await phone.addInitScript(() => localStorage.setItem("cookie-consent", "declined"));
+	await phone.goto(base);
+	const trigger = phone
+		.locator("#pricing")
+		.getByRole("button", { name: "Get Started", exact: true });
+	await trigger.focus();
+	await phone.keyboard.press("Enter");
+	const chooser = phone.getByRole("dialog", { name: "Choose Your Pro Plan" });
+	await chooser.waitFor();
+	assert(await chooser.evaluate((el) => el.contains(document.activeElement)));
+	await chooser.getByRole("button", { name: "Subscribe Now" }).click({ trial: true });
+	await phone.keyboard.press("Escape");
+	await chooser.waitFor({ state: "hidden" });
+	await phone.waitForFunction((el) => el === document.activeElement, await trigger.elementHandle());
+	await phone.close();
+	checks.push({ name: "small-screen-checkout", width: 375, height: 667 });
 	for (const width of [390, 1440, 320])
 		for (const language of ["en", "zh"])
 			for (const theme of ["light", "dark"]) {
@@ -292,14 +310,12 @@ try {
 		const errors = [];
 		page.on("pageerror", (e) => errors.push(e.message));
 		await page.route("https://**", (r) => r.abort());
-		await page.route("**/api/**", (r) =>
-			r.fulfill({
-				json: {
-					success: true,
-					data: new URL(r.request().url()).pathname === "/api/mcp-tokens" ? [] : {},
-				},
-			}),
-		);
+		await page.route("**/api/**", (r) => {
+			const path = new URL(r.request().url()).pathname;
+			if (path === "/api/users/usage/stats" || path === "/api/users/quota")
+				return r.fulfill({ status: 503, json: { success: false } });
+			return r.fulfill({ json: { success: true, data: path === "/api/mcp-tokens" ? [] : {} } });
+		});
 		await page.addInitScript(
 			({ language }) => {
 				const user = {
@@ -312,7 +328,7 @@ try {
 				const token = `local.${btoa(JSON.stringify({ sub: user.id, exp: 4000000000 }))}.local`;
 				localStorage.setItem(
 					"auth-storage",
-					JSON.stringify({ state: { user, token, isAuthenticated: true }, version: 0 }),
+					JSON.stringify({ state: { user, token, isAuthenticated: true }, version: 1 }),
 				);
 				localStorage.setItem("theme", "light");
 				localStorage.setItem("apple-rag-lang", language);

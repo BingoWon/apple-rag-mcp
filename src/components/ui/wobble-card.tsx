@@ -7,12 +7,14 @@ export const WobbleCard = ({
 	children,
 	containerClassName,
 	className,
-	onClick,
+	href,
+	label,
 }: {
 	children: React.ReactNode;
 	containerClassName?: string;
 	className?: string;
-	onClick?: () => void;
+	href?: string;
+	label?: string;
 }) => {
 	const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 	const [isHovering, setIsHovering] = useState(false);
@@ -30,15 +32,19 @@ export const WobbleCard = ({
 		const y = (clientY - (rect.top + rect.height / 2)) / 20;
 		setMousePosition({ x, y });
 	};
+	const Container = href ? motion.a : motion.section;
 	return (
-		<motion.section
+		<Container
 			onMouseMove={handleMouseMove}
 			onMouseEnter={() => setIsHovering(true)}
 			onMouseLeave={() => {
 				setIsHovering(false);
 				setMousePosition({ x: 0, y: 0 });
 			}}
-			onClick={onClick}
+			href={href}
+			target={href ? "_blank" : undefined}
+			rel={href ? "noopener noreferrer" : undefined}
+			aria-label={label}
 			style={
 				isSafari
 					? {
@@ -53,7 +59,7 @@ export const WobbleCard = ({
 						}
 			}
 			className={cn(
-				"mx-auto w-full bg-indigo-800 relative rounded-2xl overflow-hidden",
+				"block focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action mx-auto w-full bg-indigo-800 relative rounded-2xl overflow-hidden",
 				containerClassName,
 			)}
 		>
@@ -84,7 +90,7 @@ export const WobbleCard = ({
 					{children}
 				</motion.div>
 			</div>
-		</motion.section>
+		</Container>
 	);
 };
 

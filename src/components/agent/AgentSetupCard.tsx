@@ -19,7 +19,7 @@ export function AgentSetupCard({ mode }: { mode: "mcp" | "cli" }) {
 	return (
 		<Card className="flex h-full min-w-0 flex-col rounded-2xl shadow-none">
 			<CardHeader>
-				<Icon size={24} className="mb-3 text-brand" aria-hidden="true" />
+				<Icon size={24} className="mb-3 text-action" aria-hidden="true" />
 				<CardTitle className="text-2xl">{t(`connect.${mode}_title`)}</CardTitle>
 				<CardDescription className="leading-relaxed">
 					{t(`connect.${mode}_description`)}
@@ -48,7 +48,7 @@ export function AgentSetupCard({ mode }: { mode: "mcp" | "cli" }) {
 				</Button>
 				<Link
 					to={`/connect#${mode}`}
-					className="inline-flex items-center gap-2 text-sm text-brand hover:underline"
+					className="inline-flex items-center gap-2 text-sm text-action hover:underline"
 				>
 					{t("connect.details")}
 					<IconArrowRight size={15} aria-hidden="true" />

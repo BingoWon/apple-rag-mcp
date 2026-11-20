@@ -219,6 +219,8 @@ export const SidebarLink = ({
 	return (
 		<a
 			href={link.href}
+			aria-label={link.label}
+			aria-current={isActive ? "page" : undefined}
 			className={cn(
 				"flex items-center group/sidebar py-2 rounded-lg font-medium transition-colors duration-200 relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand",
 				isActive
