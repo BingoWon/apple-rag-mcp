@@ -19,6 +19,7 @@ const AdminFetchLogSchema = z.object({
 	session_id: z.string().nullable(),
 	auth_method: z.string().nullable(),
 	request_id: z.string().nullable(),
+	reported_client: z.string().nullable(),
 	client_name: z.string().nullable(),
 	client_version: z.string().nullable(),
 	requested_url: z.string(),
@@ -92,7 +93,7 @@ app.openapi(getFetchLogsRoute, async (c) => {
 		const total = Number(countResult?.total) || 0;
 
 		const logsResult = await c.env.DB.prepare(`
-      SELECT id, user_id, ip_address AS user_ip, channel, credential_id, session_id, auth_method, request_id, client_name, client_version, requested_url, actual_url, page_id,
+      SELECT id, user_id, ip_address AS user_ip, channel, credential_id, session_id, auth_method, request_id, reported_client, client_name, client_version, requested_url, actual_url, page_id,
              response_time_ms, status_code, error_code AS reason, outcome, country_code, created_at, content_source, provider, upstream_status, cache_hit
       FROM fetch_logs${where}
       ORDER BY julianday(created_at) DESC, id DESC
@@ -113,6 +114,7 @@ app.openapi(getFetchLogsRoute, async (c) => {
 				session_id: row.session_id as string | null,
 				auth_method: row.auth_method as string | null,
 				request_id: row.request_id as string | null,
+				reported_client: row.reported_client as string | null,
 				client_name: row.client_name as string | null,
 				client_version: row.client_version as string | null,
 				requested_url: requestedUrl,

@@ -3,6 +3,8 @@ import test from "node:test";
 import { fixture } from "../../../packages/cli/test/fixture.js";
 import { clientDetails, clientReport } from "../../../shared/client-usage.js";
 import type { ToolKind } from "../../../shared/tool-activity.js";
+import { operationContext } from "../../services/operation-context.js";
+import { ToolCallLogger } from "../../services/tool-call-logger.js";
 import admin from "./admin/index.js";
 
 test("client counts reconcile across channels, labels, attempts and accounts at exact window boundaries", async (t) => {
@@ -124,4 +126,52 @@ test("client counts reconcile across channels, labels, attempts and accounts at 
 	assert.equal(second.rows.length, 5);
 	assert.equal(new Set([...first.rows, ...second.rows].map((r) => r.version)).size, 25);
 	assert.deepEqual(await breakdown("codex", "mcp", "version", 3), { total: 25, rows: [] });
+	// The header identifies the host, independently of transport UA and authorization.
+	const writes: Promise<unknown>[] = [];
+	const logger = new ToolCallLogger(f.env.DB, {
+		waitUntil(p) {
+			writes.push(p);
+		},
+	});
+	for (const product of ["deepseek-harness", "workbuddy", "trae"]) {
+		const req = new Request("https://mcp.apple-rag.com", {
+			headers: { "X-Apple-RAG-Client": product, "User-Agent": "node/22.0.0" },
+		});
+		const ctx = operationContext({ isAuthenticated: false }, req, "mcp");
+		assert.equal(
+			operationContext({ isAuthenticated: false }, req, "cli").reportedClient,
+			undefined,
+		);
+		logger.logBrowse({
+			...ctx,
+			userId: "anon_test",
+			responseTimeMs: 1,
+			outcome: "success",
+			requestedUrl: "",
+			resultCount: 1,
+		});
+	}
+	await Promise.all(writes);
+	// Use the fixture window for the newly inserted events.
+	f.sql
+		.prepare("UPDATE browse_logs SET created_at=? WHERE reported_client IS NOT NULL")
+		.run("2026-11-20 04:20:44");
+	log("search", "mcp", "dsh-mcp-client/0.0.1");
+	log("fetch", "mcp", "trae-cn/3.0");
+	log("search", "mcp", "WorkBuddy/1.0");
+	const region = await report("7d");
+	for (const family of ["deepseek-harness", "workbuddy", "trae"])
+		assert.equal(region.rows.find((r) => r.family === family)?.calls, 2);
+	assert.deepEqual(
+		(await breakdown("workbuddy", "mcp", "version")).rows.map((r) => r.version).sort(),
+		["1.0", null].sort(),
+	);
+	assert.equal(
+		operationContext(
+			{ isAuthenticated: false },
+			new Request("https://example.com", { headers: { "X-Apple-RAG-Client": "untrusted name" } }),
+			"mcp",
+		).reportedClient,
+		undefined,
+	);
 });

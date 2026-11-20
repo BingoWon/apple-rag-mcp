@@ -61,9 +61,11 @@ MCP 和 CLI 都提供这三项工具。在[控制台](https://apple-rag.com/over
 - **MCP** 适合支持原生 MCP 工具的智能体，建议优先使用。要使用账号额度，可从[控制台](https://apple-rag.com/overview)复制专属提示词。
 - **CLI** 让能执行终端命令的智能体使用同样的三项工具。[npm 安装包](https://www.npmjs.com/package/apple-rag-cli)附带 CLI 和智能体技能，需要使用账号时由你在浏览器中确认授权。
 
+中文[客户端配置指南](https://apple-rag.com/#quickstart)涵盖 Codex、Claude Code、OpenCode、Antigravity、Cursor、DeepSeek Harness、WorkBuddy 和 TRAE。
+
 ### 在 Cursor 中一键接入
 
-[![Install MCP Server](https://cursor.com/deeplink/mcp-install-light.svg)](https://cursor.com/en/install-mcp?name=apple-rag-mcp&config=eyJ1cmwiOiJodHRwczovL21jcC5hcHBsZS1yYWcuY29tIn0%3D)
+[在 Cursor 中安装](https://cursor.com/en/install-mcp?name=apple-rag-mcp&config=eyJ1cmwiOiJodHRwczovL21jcC5hcHBsZS1yYWcuY29tIiwiaGVhZGVycyI6eyJYLUFwcGxlLVJBRy1DbGllbnQiOiJjdXJzb3IifX0%3D)
 
 在唤起的 [Cursor](https://cursor.com) 中确认安装。
 

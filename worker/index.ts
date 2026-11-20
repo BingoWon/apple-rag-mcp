@@ -1,6 +1,7 @@
 import { originValidationResponse } from "@modelcontextprotocol/server";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
+import { MCP_CLIENT_HEADER } from "../shared/mcp-clients.js";
 import { siteSitemap } from "../shared/site.js";
 import { apiApp } from "./api/app.js";
 import { CLIAuthorization } from "./cli/authorization.js";
@@ -23,6 +24,7 @@ const MCP_ALLOWED_ORIGINS = [
 	`https://${MCP_HOSTNAME}`,
 ];
 const MCP_ALLOWED_HEADERS = [
+	MCP_CLIENT_HEADER,
 	"Content-Type",
 	"Authorization",
 	"MCP-Protocol-Version",

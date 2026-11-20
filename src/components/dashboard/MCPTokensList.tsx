@@ -14,13 +14,13 @@ import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import { DropdownMenu, type DropdownMenuItem } from "@/components/ui/DropdownMenu";
 import { LoaderFive } from "@/components/ui/loader";
 import { MCP_SERVER_URL } from "@/constants/mcp";
-import { INSTALL_CLIENTS } from "@/constants/mcpClients";
+import { nativeInstallClients } from "@/constants/mcpClients";
 import { useDeleteConfirm } from "@/hooks/useDeleteConfirm";
 import { formatDate } from "@/lib/utils";
 import { useDashboardStore } from "@/stores/dashboard";
 import type { MCPToken } from "@/types";
 import { copyText } from "@/utils/clipboard";
-import { MCPConfigService } from "@/utils/mcpConfigService";
+import { generateInstallPrompt } from "@/utils/mcpConfigService";
 import { copyMcpTokenToClipboard, getMcpTokenDisplayText } from "@/utils/mcpTokenUtils";
 import { EditableName } from "./EditableName";
 
@@ -67,7 +67,7 @@ export function MCPTokensList({ tokens, onRefresh, isLoading = false }: MCPToken
 	const handleCopyInstallPrompt = async (token: MCPToken) => {
 		try {
 			await copyText(
-				MCPConfigService.generateInstallPrompt(
+				generateInstallPrompt(
 					{ token: token.mcp_token, serverUrl: MCP_SERVER_URL },
 					i18n.resolvedLanguage,
 				),
@@ -79,19 +79,27 @@ export function MCPTokensList({ tokens, onRefresh, isLoading = false }: MCPToken
 	};
 
 	const buildMenuItems = (row: MCPToken): DropdownMenuItem[] => {
-		const installItems: DropdownMenuItem[] = INSTALL_CLIENTS.map((client) => ({
-			key: client.key,
-			label: client.label,
-			icon: <img src={client.logo} alt={client.alt} width={16} height={16} className="w-4 h-4" />,
-			onClick: async () => {
-				try {
-					const messageKey = await client.action(row.mcp_token, MCP_SERVER_URL);
-					toast.success(t(messageKey, { client: client.label }));
-				} catch {
-					toast.error(t("common.copy_failed"));
-				}
-			},
-		}));
+		const installItems: DropdownMenuItem[] = nativeInstallClients(i18n.resolvedLanguage).map(
+			(client) => ({
+				key: client.key,
+				label: client.label,
+				icon: (
+					<client.Logo aria-hidden="true" className="size-4 rounded-sm bg-white text-neutral-900" />
+				),
+				onClick: () => {
+					try {
+						window.open(
+							client.installUrl(row.mcp_token, MCP_SERVER_URL),
+							"_blank",
+							"noopener,noreferrer",
+						);
+						toast.success(t("tokens.install_hint", { client: client.label }));
+					} catch {
+						toast.error(t("common.copy_failed"));
+					}
+				},
+			}),
+		);
 
 		return [
 			{

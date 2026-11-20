@@ -1,4 +1,6 @@
-import { IconBrandGithub, IconBrandGoogle, IconXboxX } from "@tabler/icons-react";
+import { IconXboxX } from "@tabler/icons-react";
+import GitHub from "@thesvg/react/github";
+import Google from "@thesvg/react/google";
 import type React from "react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -113,7 +115,7 @@ export function LoginForm() {
 						disabled={oauthLoading !== null || isLoading}
 						className="w-full h-11"
 					>
-						<IconBrandGoogle className="h-5 w-5 mr-3" />
+						<Google aria-hidden="true" className="h-5 w-5 mr-3" />
 						{oauthLoading === "google" ? t("common.connecting") : "Google"}
 					</Button>
 					<Button
@@ -122,7 +124,7 @@ export function LoginForm() {
 						disabled={oauthLoading !== null || isLoading}
 						className="w-full h-11"
 					>
-						<IconBrandGithub className="h-5 w-5 mr-3" />
+						<GitHub aria-hidden="true" variant="mono" className="h-5 w-5 mr-3" />
 						{oauthLoading === "github" ? t("common.connecting") : "GitHub"}
 					</Button>
 				</div>

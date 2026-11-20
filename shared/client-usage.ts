@@ -1,18 +1,13 @@
 import { z } from "zod";
 import { TOOL_CHANNELS } from "../worker/shared/tool-channels.js";
+import { MCP_CLIENT_NAMES, type MCPClientId } from "./mcp-clients.js";
 
 export const CLIENT_PRODUCTS = {
-	opencode: "OpenCode",
-	claude: "Claude Code",
-	codex: "Codex",
-	cursor: "Cursor",
+	...MCP_CLIENT_NAMES,
 	apple_cli: "Apple RAG CLI",
 } as const;
 export const clientFamily = z.enum([
-	"opencode",
-	"claude",
-	"codex",
-	"cursor",
+	...(Object.keys(MCP_CLIENT_NAMES) as MCPClientId[]),
 	"apple_cli",
 	"probe",
 	"http",

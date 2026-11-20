@@ -8,6 +8,7 @@ export interface AdminLog {
 	session_id: string | null;
 	auth_method: string | null;
 	request_id: string | null;
+	reported_client: string | null;
 	client_name: string | null;
 	client_version: string | null;
 	requested_url?: string;

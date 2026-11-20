@@ -12,9 +12,8 @@ configuration guides.
 | [VS Code](https://github.com/microsoft/vscode) | Install URI accepts a percent-encoded JSON payload containing `name`, `type: "http"`, `url`, and `headers`. | Include the HTTP type explicitly. The official URI handler can infer it from the URL, so the previous omission was not necessarily a failure. |
 | [VS Code Insiders](https://github.com/microsoft/vscode) | Same payload, with the `vscode-insiders:` scheme. | Same explicit HTTP type. |
 | [Codex](https://github.com/openai/codex) | `~/.codex/config.toml`, `[mcp_servers.<name>]`, `url`, and `http_headers`. | Existing TOML is correct. Retain literal bearer authentication and replace the outdated documentation link. |
-| [Claude Code](https://github.com/anthropics/claude-code) | `claude mcp add --transport http`, `--scope user`, and `--header`. | Existing options are correct. Quote URL/header arguments for POSIX shells. |
+| [Claude Code](https://code.claude.com/docs/en/mcp) | `claude mcp add-json --scope user` accepts an HTTP endpoint and multiple headers. | Shell-quote the JSON, including the bearer token and the client identifier. |
 | [Antigravity](https://antigravity.google) | `mcpServers`, `serverUrl`, and `headers`. | Existing JSON is correct; leave it unchanged. |
-| [Augment Code](https://www.augmentcode.com) | `mcpServers`, `type: "http"`, `url`, and `headers` in Auggie settings. | Existing JSON is correct. Remove the false blanket warning that Authorization headers are unsupported. |
 | [Cline](https://github.com/cline/cline) | `mcpServers`, `type: "streamableHttp"`, `url`, `headers`, `disabled`, and `autoApprove`. | Replace the invalid transport spelling and `alwaysAllow`; retain approval of only the two existing read tools. |
 
 ## Primary Sources
@@ -26,7 +25,6 @@ configuration guides.
 - [Codex MCP documentation](https://developers.openai.com/codex/mcp)
 - [Claude Code MCP documentation](https://code.claude.com/docs/en/mcp)
 - [Antigravity MCP documentation](https://antigravity.google/docs/mcp)
-- [Augment MCP settings and headers](https://docs.augmentcode.com/cli/integrations)
 - [Cline MCP configuration](https://docs.cline.bot/mcp/mcp-overview)
 
 ## Verification And Limits
@@ -39,7 +37,7 @@ configuration guides.
   temporary `CODEX_HOME`; URL and bearer header were preserved.
 - Parse generated Claude commands with a real shell without running Claude.
 - Exercise every registry button using mocked clipboard/window APIs.
-- Preserve existing raw-text clipboard behavior and local logo assets.
+- Preserve existing raw-text clipboard behavior and client marks.
 
 This is a configuration-contract audit, not a claim that every installed editor
 has connected successfully. External-protocol approval, an installed client,
@@ -60,16 +58,7 @@ or unrelated dependencies are changed by this audit.
   expandable manual configuration section. No configuration download is added.
 - Reuse the raw-text clipboard helper. Remove unused client-specific generators,
   copy callbacks, registry entries, and translation keys.
-- Use static overlapping local logos for all five original copy clients plus
-  the two added clients. New assets come from the official
-  [OpenCode](https://github.com/anomalyco/opencode) website favicon
-  (`https://opencode.ai/favicon-96x96-v3.png`) and
-  [Pi](https://github.com/earendil-works/pi) website favicon
-  (`https://pi.dev/favicon.svg`).
-- The homepage client list uses the parent section's available width. Do not
-  add a narrower maximum width around the client names and logos.
-- Keep the downloaded Pi mark dark on its white badge instead of following the
-  operating system color scheme; add its SVG accessibility title.
+- The homepage uses a wrapping horizontal client strip in the full section width.
 - The visible JSON example is a client connection configuration, not an MCP
   protocol schema. Its `mcpServers`, `type: "http"`, `url`, and `headers` follow
   [Claude Code](https://github.com/anthropics/claude-code)
@@ -78,10 +67,28 @@ or unrelated dependencies are changed by this audit.
   ([portable configuration](https://code.visualstudio.com/docs/copilot/customization/mcp-servers)).
   Other clients may need different native formats. Protocol compatibility must
   still be checked separately.
-- Check prompt localization, selected credentials, local assets, decoded deep
+- Check prompt localization, selected credentials, localized client rosters, decoded deep
   links, rendered button counts/disabled states, and visible JSON placement.
   Agent configuration remains a workflow, not a guarantee that every client
   supports the server protocol.
 - Remove the dashboard-only
   [XcodeBuildMCP](https://github.com/cameroncooke/XcodeBuildMCP) recommendation,
   its component, and its dedicated translations at the user's request.
+
+## Localized guides and reported clients
+
+The homepage, dashboard setup prompt and token menu use the page language to
+choose the client roster in `shared/mcp-clients.ts`. English includes Pi, VS Code and
+Cline. Chinese ends with DeepSeek Harness, WorkBuddy and TRAE. The prompt works
+for any compatible active client. Native links are offered for Cursor, VS Code
+and VS Code Insiders in English, and Cursor and TRAE CN in Chinese.
+The latter imports the selected endpoint and headers using TRAE's documented HTTP
+install scheme. Confirmation still happens inside the client.
+
+Client marks, GitHub, Google and Alipay use individual modules from
+`@thesvg/react`. DeepSeek Harness uses the DeepSeek brand mark. First-party Apple RAG
+artwork and the Jev partner mark use their original assets.
+
+- [DeepSeek Harness Streamable HTTP configuration](https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/mcp/mcp-client/README.md)
+- [WorkBuddy MCP settings](https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/MCP-Guide)
+- [TRAE CN configuration](https://docs.trae.cn/ide_add-mcp-servers) and [install links](https://docs.trae.cn/ide_mcp-server-install-links)

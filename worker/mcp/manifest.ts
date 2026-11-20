@@ -4,6 +4,7 @@
  */
 
 import serverJson from "../../server.json";
+import { MCP_CLIENT_HEADER } from "../../shared/mcp-clients.js";
 import { MCP_PROTOCOL_VERSION, SERVER_NAME, SERVER_VERSION } from "./constants.js";
 
 export const SERVER_MANIFEST = {
@@ -32,7 +33,7 @@ export const SERVER_MANIFEST = {
 			required: ["Content-Type", "Accept"],
 			modern: ["MCP-Protocol-Version", "Mcp-Method"],
 			conditional: ["Mcp-Name"],
-			optional: ["Authorization"],
+			optional: ["Authorization", MCP_CLIENT_HEADER],
 		},
 		legacy: {
 			handshake: "initialize",

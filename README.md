@@ -62,9 +62,11 @@ Open the [connection guide](https://apple-rag.com/connect), copy a setup prompt,
 - **MCP** is the recommended choice for agents with native MCP support. To use your account allowance, copy the personalized prompt from your [dashboard](https://apple-rag.com/overview).
 - **CLI** gives shell-based agents the same tools. The [npm package](https://www.npmjs.com/package/apple-rag-cli) includes the CLI and an agent skill. You approve account access in your browser.
 
+The English [client guides](https://apple-rag.com/#quickstart) cover Codex, Claude Code, OpenCode, Pi, Antigravity, Cursor, VS Code, and Cline.
+
 ### One-click setup for Cursor
 
-[![Install MCP Server](https://cursor.com/deeplink/mcp-install-light.svg)](https://cursor.com/en/install-mcp?name=apple-rag-mcp&config=eyJ1cmwiOiJodHRwczovL21jcC5hcHBsZS1yYWcuY29tIn0%3D)
+[Install in Cursor](https://cursor.com/en/install-mcp?name=apple-rag-mcp&config=eyJ1cmwiOiJodHRwczovL21jcC5hcHBsZS1yYWcuY29tIiwiaGVhZGVycyI6eyJYLUFwcGxlLVJBRy1DbGllbnQiOiJjdXJzb3IifX0%3D)
 
 Open [Cursor](https://cursor.com) and confirm installation.
 

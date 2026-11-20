@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { JevText } from "@/components/ui/jev-brand";
-import { SUPPORTED_CLIENTS } from "@/constants/clients";
+import { supportedClients } from "@/constants/mcpClients";
 import { generateCLIInstallPrompt } from "@/utils/agentSetup";
 import { copyText } from "@/utils/clipboard";
 import { generateInstallPrompt } from "@/utils/mcpConfigService";
@@ -92,7 +92,7 @@ export function QuickStartSection() {
 						{t("quickstart.supported_clients")}
 					</h3>
 					<ul className="flex flex-wrap justify-center gap-x-5 gap-y-3">
-						{SUPPORTED_CLIENTS.map((client) => (
+						{supportedClients(i18n.resolvedLanguage).map((client) => (
 							<li key={client.label}>
 								<a
 									href={client.href}
@@ -101,15 +101,7 @@ export function QuickStartSection() {
 									className="inline-flex items-center gap-2 rounded-sm text-sm text-muted transition-colors hover:text-light focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
 								>
 									<span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white">
-										<img
-											src={client.logo}
-											alt=""
-											width={16}
-											height={16}
-											loading="lazy"
-											decoding="async"
-											className="h-4 w-4 object-contain"
-										/>
+										<client.Logo aria-hidden="true" className="size-4 text-neutral-900" />
 									</span>
 									<span className="whitespace-nowrap">{client.label}</span>
 								</a>

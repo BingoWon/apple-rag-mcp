@@ -25,6 +25,10 @@ configuration. Preserve existing settings. Server name: apple-rag-mcp. Anonymous
 trial needs no Authorization header. Use a personalized setup prompt from the account
 setup page for the user's plan; never expose a token in an answer or source code.
 
+For a known MCP client that supports custom headers, the localized setup prompt
+includes its optional X-Apple-RAG-Client identifier. Set only the ID of the actual
+client. Page language and model name do not identify an MCP client.
+
 Supports MCP 2026-07-28 and legacy initialize with 2025-11-25, 2025-06-18, and
 2025-03-26. A missing MCP-Protocol-Version header does not establish incompatibility.
 After setup, verify the connection and tools/list: search, browse, and fetch must be available.

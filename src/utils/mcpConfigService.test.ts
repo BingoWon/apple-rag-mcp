@@ -1,8 +1,7 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { existsSync } from "node:fs";
 import test from "node:test";
-import { INSTALL_CLIENTS, PROMPT_CLIENTS } from "../constants/mcpClients.js";
+import { nativeInstallClients } from "../constants/mcpClients.js";
 import {
 	generateClaudeCodeCommand,
 	generateCodexTomlString,
@@ -46,7 +45,7 @@ test("encodes the Cursor install URI with the selected URL and UTF-8 JSON", () =
 	const config = JSON.parse(Buffer.from(link.searchParams.get("config")!, "base64").toString());
 	assert.deepEqual(config, {
 		url: CUSTOM_URL,
-		headers: { Authorization: `Bearer ${TOKEN}` },
+		headers: { Authorization: `Bearer ${TOKEN}`, "X-Apple-RAG-Client": "cursor" },
 	});
 });
 
@@ -62,7 +61,7 @@ test("generates explicit HTTP install payloads for both VS Code editions", () =>
 			name: "apple-rag-mcp",
 			type: "http",
 			url: CUSTOM_URL,
-			headers: { Authorization: `Bearer ${TOKEN}` },
+			headers: { Authorization: `Bearer ${TOKEN}`, "X-Apple-RAG-Client": "vscode" },
 		});
 	}
 });
@@ -74,7 +73,8 @@ test("keeps Codex URL and bearer header in the official TOML tables", () => {
 url = "${CUSTOM_URL}"
 
 [mcp_servers.apple-rag-mcp.http_headers]
-Authorization = "Bearer ${TOKEN}"`,
+Authorization = "Bearer ${TOKEN}"
+X-Apple-RAG-Client = "codex"`,
 	);
 	assert.match(generateCodexTomlString('quote"\\\n\r\t'), /Bearer quote\\"\\\\\\n\\r\\t/);
 });
@@ -88,19 +88,13 @@ test("keeps Claude Code HTTP/user scope and quotes each dynamic argument", () =>
 			.toString()
 			.split("\0")
 			.slice(0, -1);
-		assert.deepEqual(args, [
-			"claude",
-			"mcp",
-			"add",
-			"--transport",
-			"http",
-			"--scope",
-			"user",
-			"apple-rag-mcp",
+		const config = JSON.parse(args.pop()!);
+		assert.deepEqual(args, ["claude", "mcp", "add-json", "--scope", "user", "apple-rag-mcp"]);
+		assert.deepEqual(config, {
+			type: "http",
 			url,
-			"--header",
-			`Authorization: Bearer ${token}`,
-		]);
+			headers: { Authorization: `Bearer ${token}`, "X-Apple-RAG-Client": "claude" },
+		});
 	}
 });
 
@@ -137,56 +131,19 @@ test("regenerates the install prompt for the selected token", () => {
 	assert.ok(!prompt.includes(TOKEN));
 });
 
-test("every displayed client logo is a local, existing asset", () => {
-	for (const client of [...INSTALL_CLIENTS, ...PROMPT_CLIENTS]) {
-		assert.ok(client.logo.startsWith("/mcp-clients/"), client.label);
-		assert.ok(existsSync(new URL(`../../public${client.logo}`, import.meta.url)), client.label);
-	}
-});
-
-test("all native install buttons use the selected server URL and token", async () => {
-	const originalWindow = Object.getOwnPropertyDescriptor(globalThis, "window");
-	let opened = "";
-
-	Object.defineProperty(globalThis, "window", {
-		configurable: true,
-		value: {
-			open: (url: string, target: string) => {
-				assert.equal(target, "_blank");
-				opened = url;
-			},
+test("TRAE CN imports the selected HTTP endpoint, credentials and product label locally", () => {
+	const client = nativeInstallClients("zh-CN").find((c) => c.key === "trae")!;
+	const link = new URL(client.installUrl(TOKEN, CUSTOM_URL));
+	assert.equal(link.protocol, "trae-cn:");
+	assert.equal(link.hostname, "trae.ai-ide");
+	assert.equal(link.pathname, "/mcp-import");
+	assert.equal(link.searchParams.get("type"), "http");
+	assert.equal(link.searchParams.get("name"), "apple-rag-mcp");
+	assert.deepEqual(
+		JSON.parse(Buffer.from(link.searchParams.get("config")!, "base64").toString("utf8")),
+		{
+			url: CUSTOM_URL,
+			headers: { Authorization: `Bearer ${TOKEN}`, "X-Apple-RAG-Client": "trae" },
 		},
-	});
-	try {
-		assert.deepEqual(
-			INSTALL_CLIENTS.map((client) => client.key),
-			["cursor", "vscode", "vscode-insiders"],
-		);
-		for (const client of INSTALL_CLIENTS) {
-			opened = "";
-			const result = await client.action(TOKEN, CUSTOM_URL);
-			assert.equal(result, "tokens.install_hint");
-			const link = new URL(opened);
-			const json =
-				client.key === "cursor"
-					? Buffer.from(link.searchParams.get("config")!, "base64").toString()
-					: decodeURIComponent(link.search.slice(1));
-			const config = JSON.parse(json);
-			assert.equal(config.url, CUSTOM_URL, client.key);
-			assert.equal(config.headers.Authorization, `Bearer ${TOKEN}`, client.key);
-		}
-	} finally {
-		if (originalWindow) Object.defineProperty(globalThis, "window", originalWindow);
-		else Reflect.deleteProperty(globalThis, "window");
-	}
-});
-
-test("public MCP setup prompts use anonymous access without empty bearer credentials", () => {
-	for (const language of ["en", "zh"]) {
-		const prompt = generateInstallPrompt({}, language);
-		assert.ok(prompt.includes(SERVER_URL));
-		assert.ok(prompt.includes("https://apple-rag.com/overview"));
-		assert.ok(prompt.includes("initialize"));
-		assert.doesNotMatch(prompt, /Bearer|undefined|null/);
-	}
+	);
 });

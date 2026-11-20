@@ -67,6 +67,7 @@ export class ToolCallLogger {
 			session_id: entry.sessionId ?? null,
 			auth_method: entry.authMethod ?? null,
 			request_id: entry.requestId ?? null,
+			reported_client: entry.reportedClient ?? null,
 			client_name: entry.clientName ?? null,
 			client_version: entry.clientVersion ?? null,
 			response_time_ms: entry.responseTimeMs,

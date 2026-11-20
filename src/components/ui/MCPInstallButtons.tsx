@@ -2,10 +2,14 @@ import { IconClipboard, IconDownload } from "@tabler/icons-react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/Button";
-import { INSTALL_CLIENTS, type MCPInstallClient, PROMPT_CLIENTS } from "@/constants/mcpClients";
+import {
+	type NativeInstallClient,
+	nativeInstallClients,
+	supportedClients,
+} from "@/constants/mcpClients";
 import { cn } from "@/lib/utils";
 import { copyText } from "@/utils/clipboard";
-import { MCPConfigService } from "@/utils/mcpConfigService";
+import { generateInstallPrompt } from "@/utils/mcpConfigService";
 
 interface MCPInstallButtonsProps {
 	token: string;
@@ -20,17 +24,17 @@ function ClientButton({
 	serverUrl,
 	disabled,
 }: {
-	client: MCPInstallClient;
+	client: NativeInstallClient;
 	token: string;
 	serverUrl: string;
 	disabled: boolean;
 }) {
 	const { t } = useTranslation();
 
-	const handleClick = async () => {
+	const handleClick = () => {
 		try {
-			const messageKey = await client.action(token, serverUrl);
-			toast.success(t(messageKey, { client: client.label }));
+			window.open(client.installUrl(token, serverUrl), "_blank", "noopener,noreferrer");
+			toast.success(t("tokens.install_hint", { client: client.label }));
 		} catch {
 			toast.error(t("common.copy_failed"));
 		}
@@ -51,12 +55,9 @@ function ClientButton({
 				"active:scale-[0.98]",
 			)}
 		>
-			<img
-				src={client.logo}
-				alt={client.alt}
-				width={16}
-				height={16}
-				className="h-4 w-4 rounded-sm bg-white object-contain shrink-0"
+			<client.Logo
+				aria-hidden="true"
+				className="size-4 shrink-0 rounded-sm bg-white text-neutral-900"
 			/>
 			<span className="whitespace-nowrap">{client.label}</span>
 		</button>
@@ -70,12 +71,11 @@ export function MCPInstallButtons({
 	className,
 }: MCPInstallButtonsProps) {
 	const { t, i18n } = useTranslation();
+	const clients = supportedClients(i18n.resolvedLanguage);
 
 	const handleCopyPrompt = async () => {
 		try {
-			await copyText(
-				MCPConfigService.generateInstallPrompt({ token, serverUrl }, i18n.resolvedLanguage),
-			);
+			await copyText(generateInstallPrompt({ token, serverUrl }, i18n.resolvedLanguage));
 			toast.success(t("guide.install_prompt_copied"));
 		} catch {
 			toast.error(t("guide.copy_clipboard_failed"));
@@ -89,21 +89,20 @@ export function MCPInstallButtons({
 				variant="primary"
 				onClick={handleCopyPrompt}
 				disabled={disabled || !token}
-				title={PROMPT_CLIENTS.map((client) => client.label).join(", ")}
+				title={clients.map((client) => client.label).join(", ")}
 				className="w-full h-auto min-h-14 flex-wrap gap-x-3 gap-y-2 px-4 py-3"
 			>
 				<span aria-hidden="true" className="flex -space-x-2 shrink-0">
-					{PROMPT_CLIENTS.map((client) => (
+					{clients.map((client) => (
 						<span
 							key={client.label}
 							className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-brand bg-white"
 						>
-							<img
-								src={client.logo}
-								alt=""
-								width={client.logoSize ?? 20}
-								height={client.logoSize ?? 20}
-								className="object-contain"
+							<client.Logo
+								className={cn(
+									"text-neutral-900",
+									client.id === "opencode" || client.id === "pi" ? "size-4" : "size-5",
+								)}
 							/>
 						</span>
 					))}
@@ -122,7 +121,7 @@ export function MCPInstallButtons({
 					</span>
 				</div>
 				<div className="flex flex-wrap gap-2">
-					{INSTALL_CLIENTS.map((c) => (
+					{nativeInstallClients(i18n.resolvedLanguage).map((c) => (
 						<ClientButton
 							key={c.key}
 							client={c}

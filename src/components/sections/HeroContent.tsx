@@ -1,4 +1,4 @@
-import { IconBrandGithub } from "@tabler/icons-react";
+import GitHub from "@thesvg/react/github";
 import type React from "react";
 import { useTranslation } from "react-i18next";
 import { ArrowButton } from "@/components/ui/arrow-button";
@@ -68,7 +68,11 @@ export const HeroContent: React.FC = () => {
 						className={rainbowButtonStyles}
 					>
 						<div className="flex items-center">
-							<IconBrandGithub className="size-5 text-[#0f172a] dark:text-white" />
+							<GitHub
+								aria-hidden="true"
+								variant="mono"
+								className="size-5 text-[#0f172a] dark:text-white"
+							/>
 							<span className="ml-2 text-[#0f172a] dark:text-white lg:inline p-1 text-base font-semibold">
 								{t("nav.star_github")}
 							</span>

@@ -13,6 +13,7 @@ import {
 import { formatAdminDateTime, formatAdminResponseTime, getCountryFlag } from "@/lib/admin-utils";
 import type { AdminLog, AdminLogKind } from "@/types/admin-logs";
 import { copyText } from "@/utils/clipboard";
+import { MCP_CLIENT_NAMES, reportedMCPClient } from "../../../shared/mcp-clients";
 import { AdminUserLabel } from "./AdminUserLabel";
 import { LogOutcome } from "./LogOutcome";
 
@@ -42,6 +43,7 @@ export function LogDetails({
 			setCopying(false);
 		}
 	};
+	const reported = reportedMCPClient(log?.reported_client ?? null);
 	const fields: [string, ReactNode][] = log
 		? [
 				["admin.col_created", `${formatAdminDateTime(log.created_at)} UTC+8`],
@@ -62,6 +64,7 @@ export function LogDetails({
 				["admin.col_session", log.session_id],
 				["admin.col_auth_method", log.auth_method],
 				["admin.col_request_id", log.request_id],
+				["admin.reported_client", reported ? MCP_CLIENT_NAMES[reported] : null],
 				["admin.col_client", log.client_name],
 				["admin.col_client_version", log.client_version],
 				[

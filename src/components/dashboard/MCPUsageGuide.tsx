@@ -8,6 +8,8 @@ import {
 	IconTerminal,
 	IconWorld,
 } from "@tabler/icons-react";
+import ClaudeCode from "@thesvg/react/claude-code";
+import OpenAI from "@thesvg/react/openai-chatgpt";
 import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
@@ -20,7 +22,11 @@ import { MCPInstallButtons } from "@/components/ui/MCPInstallButtons";
 import { MCP_SERVER_NAME, MCP_SERVER_URL } from "@/constants/mcp";
 import { useDashboardStore } from "@/stores/dashboard";
 import { copyText } from "@/utils/clipboard";
-import { MCPConfigService } from "@/utils/mcpConfigService";
+import {
+	generateClaudeCodeCommand,
+	generateCodexTomlString,
+	generateJsonString,
+} from "@/utils/mcpConfigService";
 
 export function MCPUsageGuide() {
 	const { t } = useTranslation();
@@ -261,7 +267,7 @@ export function MCPUsageGuide() {
 							<CodeBlock
 								language="json"
 								filename={t("guide.json_example")}
-								code={MCPConfigService.generateJsonString({
+								code={generateJsonString({
 									token: selectedToken?.mcp_token || "your-mcp-token-here",
 									serverUrl: mcpServerUrl,
 								})}
@@ -284,7 +290,7 @@ export function MCPUsageGuide() {
 											>
 												<div className="flex items-center gap-3">
 													<div className="flex items-center gap-1.5">
-														<img src="/mcp-clients/codex.svg" alt="OpenAI" className="h-5 w-5" />
+														<OpenAI aria-hidden="true" className="size-5" />
 														<span className="text-sm font-semibold text-light">OpenAI</span>
 													</div>
 													<div className="flex items-center gap-1.5">
@@ -316,10 +322,7 @@ export function MCPUsageGuide() {
 														<CodeBlock
 															language="toml"
 															filename="~/.codex/config.toml"
-															code={MCPConfigService.generateCodexTomlString(
-																selectedToken.mcp_token,
-																mcpServerUrl,
-															)}
+															code={generateCodexTomlString(selectedToken.mcp_token, mcpServerUrl)}
 														/>
 													</div>
 												</div>
@@ -337,11 +340,7 @@ export function MCPUsageGuide() {
 											>
 												<div className="flex items-center gap-3">
 													<div className="flex items-center gap-1.5">
-														<img
-															src="/mcp-clients/claude.svg"
-															alt="Claude Code"
-															className="h-5 w-5"
-														/>
+														<ClaudeCode aria-hidden="true" variant="color" className="size-5" />
 														<span className="text-sm font-semibold text-light">Claude Code</span>
 													</div>
 													<span className="text-sm text-muted">{t("guide.claude_command")}</span>
@@ -368,7 +367,7 @@ export function MCPUsageGuide() {
 														<CodeBlock
 															language="bash"
 															filename="terminal"
-															code={MCPConfigService.generateClaudeCodeCommand(
+															code={generateClaudeCodeCommand(
 																selectedToken.mcp_token,
 																mcpServerUrl,
 															)}

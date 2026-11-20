@@ -88,3 +88,11 @@ can count a shared account twice. Calls without a matching account include anony
 traffic. HTTP 2xx, HTTP 429 and all other responses partition each row's attempts.
 The admin-only breakdown exposes aggregated environments and versions, with stable
 pagination. It returns no raw User-Agent, account ID, credential, IP or query text.
+
+MCP clients can optionally send `X-Apple-RAG-Client` with a recognized product ID.
+Migration 0015 stores it separately from the original User-Agent. Localized setup
+prompts and native install links use the shared client catalog. An explicit product
+takes precedence for product attribution. Version and environment from a different
+User-Agent are omitted. Historical rows still use explicit User-Agent signatures;
+a generic HTTP library or an account's language does not identify a product.
+The header has no effect on access, billing or CLI host attribution.

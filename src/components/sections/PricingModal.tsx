@@ -1,4 +1,5 @@
-import { IconBrandAlipay, IconCheck, IconCreditCard, IconLock } from "@tabler/icons-react";
+import { IconCheck, IconCreditCard, IconLock } from "@tabler/icons-react";
+import Alipay from "@thesvg/react/alipay";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
@@ -151,7 +152,7 @@ export function PricingModal({ planName, defaultTab = "subscription" }: PricingM
 						) : (
 							<>
 								<IconCreditCard className="w-4 h-4" />
-								<IconBrandAlipay className="w-4 h-4" />
+								<Alipay aria-hidden="true" variant="mono" className="w-4 h-4" />
 							</>
 						)}
 						{t("pricing.tab_onetime")}
@@ -253,7 +254,7 @@ export function PricingModal({ planName, defaultTab = "subscription" }: PricingM
 								disabled={!selectedPricingOption || isLoading}
 								className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-medium text-white bg-[#1677FF] hover:bg-[#1677FF]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
 							>
-								<IconBrandAlipay className="w-4 h-4" />
+								<Alipay aria-hidden="true" variant="mono" className="w-4 h-4" />
 								{t("pricing.pay_alipay")}
 							</button>
 							<button

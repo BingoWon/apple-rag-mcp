@@ -26,6 +26,13 @@ const familySQL = `CASE
  WHEN agent='opencode' THEN 'opencode'
  WHEN agent='claude-code' THEN 'claude'
  WHEN agent='codex-mcp-client' OR (agent='openai-mcp' AND instr(ua,'(codex)')>0) THEN 'codex'
+ WHEN agent IN ('dsh-mcp-client','deepseek-harness','deepseek harness') THEN 'deepseek-harness'
+ WHEN agent='workbuddy' THEN 'workbuddy'
+ WHEN agent IN ('trae','trae-cn') THEN 'trae'
+ WHEN agent='pi-coding-agent' THEN 'pi'
+ WHEN agent IN ('vscode','vscode-insiders') THEN 'vscode'
+ WHEN agent='cline' THEN 'cline'
+ WHEN agent='antigravity' THEN 'antigravity'
  WHEN agent='cursor' THEN 'cursor'
  WHEN agent='apple-rag-cli' THEN 'apple_cli'
  WHEN agent IN ('brickbluebot','kitscout-livecheck','mcpyp-incremental','faceabotprobe','teppi-probe','agentvalcon-collector',
@@ -43,12 +50,13 @@ function callSource(period: ClientPeriod, end: string, channel?: ToolChannel) {
 	if (channel) values.push(channel);
 	const union = TOOL_KINDS.map(
 		(tool) => `SELECT '${tool}' tool,channel,user_id,status_code,
- lower(trim(coalesce(client_name,''))) ua,client_version FROM ${tool}_logs
+ lower(trim(coalesce(client_name,''))) ua,client_version,reported_client FROM ${tool}_logs
  WHERE ${predicate}${channel ? " AND channel=?" : ""}`,
 	).join(" UNION ALL ");
 	const sql = `WITH raw AS (${union}), tokens AS (
  SELECT *,substr(ua,1,instr(ua||'/','/')-1) agent FROM raw
- ), classified AS (SELECT *,${familySQL} family FROM tokens)`;
+ ), detected AS (SELECT *,${familySQL} ua_family FROM tokens),
+ classified AS (SELECT *,coalesce(reported_client,ua_family) family FROM detected)`;
 	return { start, sql, params: TOOL_KINDS.flatMap(() => values) };
 }
 
@@ -120,6 +128,7 @@ app.openapi(
 		const environment = `CASE
  WHEN family='unrecognized' AND length(agent) BETWEEN 2 AND 28 AND agent GLOB '[a-z]*' AND agent NOT GLOB '*[^a-z-]*'
  AND tail GLOB '[0-9]*' THEN agent
+ WHEN family!=ua_family THEN NULL
  WHEN family IN ('probe','http') THEN CASE WHEN agent='mozilla' THEN 'browser' ELSE agent END
  WHEN family='claude' AND host IN ('claude-vscode','claude-desktop','cli','sdk-cli','t3-code') THEN host
  WHEN family='cursor' AND host IN ('darwin arm64','darwin x64','win32 x64','win32 arm64','linux x64','linux arm64') THEN host
@@ -130,7 +139,7 @@ app.openapi(
 		const version = byVersion
 			? `CASE WHEN length(candidate) BETWEEN 1 AND 32
  AND candidate GLOB '[0-9]*' AND candidate NOT GLOB '*[^0-9a-z.+-]*'
- AND family NOT IN ('unrecognized','missing') AND agent!='mozilla' THEN candidate END`
+ AND family=ua_family AND family NOT IN ('unrecognized','missing') AND agent!='mozilla' THEN candidate END`
 			: "NULL";
 		const result = await c.env.DB.prepare(`${sql}, parts AS (
  SELECT *,CASE WHEN family='opencode' AND ua LIKE 'opencode/latest/%' THEN substr(ua,17)

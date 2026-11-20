@@ -50,40 +50,24 @@ function renderButtons(language: string, token = "test-token", disabled = false)
 	);
 }
 
-test("renders one copy-prompt button and three native install buttons in both languages", async () => {
-	for (const [language, label] of [
-		["en", "Copy setup prompt"],
-		["zh", "复制安装提示词"],
-	]) {
-		const html = await renderButtons(language);
-		assert.ok(html.includes(label));
-		assert.equal(html.match(/<button /g)?.length, 4);
-		assert.equal(html.match(/<img /g)?.length, 10);
-		assert.match(
-			html,
-			/title="Codex, Claude Code, OpenCode, Pi, Antigravity, Cline, Augment Code"/,
-		);
-		const logos = [...html.matchAll(/<img\b[^>]*src="([^"]+)"/g)].map(([, src]) => src);
-		assert.deepEqual(logos.slice(5, 7), ["/mcp-clients/cline.png", "/mcp-clients/augmentcode.png"]);
-		assert.equal(html.match(/rounded-sm bg-white object-contain/g)?.length, 3);
+test("the setup prompt covers all recommended clients and native actions follow the language", async () => {
+	for (const [lang, labels, native] of [
+		[
+			"en",
+			"Codex, Claude Code, OpenCode, Pi, Antigravity, Cursor, VS Code, Cline",
+			["Cursor", "VS Code", "VS Code Insiders"],
+		],
+		[
+			"zh",
+			"Codex, Claude Code, OpenCode, Antigravity, Cursor, DeepSeek Harness, WorkBuddy, TRAE",
+			["Cursor", "TRAE"],
+		],
+	] as const) {
+		const html = await renderButtons(lang);
+		assert.ok(html.includes(`title="${labels}"`));
+		for (const label of native) assert.ok(html.includes(`>${label}</span>`));
+		assert.equal(html.match(/<button /g)?.length, 1 + native.length);
 		assert.doesNotMatch(html, /test-token/);
-		assert.doesNotMatch(html, /Copy JSON|复制 JSON|Copy Configuration|复制配置/);
-	}
-});
-
-test("shrinks only OpenCode and Pi logos and removes added padding from native install icons", async () => {
-	const html = await renderButtons("en");
-	const images = [...html.matchAll(/<img\b[^>]*>/g)].map(([image]) => image);
-	assert.equal(images.length, 10);
-	for (let index = 0; index < images.length; index++) {
-		const image = images[index];
-		const size = index === 2 || index === 3 || index >= 7 ? 16 : 20;
-		assert.ok(image.includes(`width="${size}"`));
-		assert.ok(image.includes(`height="${size}"`));
-		if (index >= 7) {
-			assert.match(image, /\brounded-sm\b/);
-			assert.doesNotMatch(image, /\bp-\d/);
-		}
 	}
 });
 
