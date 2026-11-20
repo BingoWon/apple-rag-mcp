@@ -413,10 +413,11 @@ export function MCPUsageGuide() {
 								<div className="bg-tertiary rounded-lg p-4 border border-default">
 									<h4 className="font-medium text-light mb-2">{t("guide.about_features")}</h4>
 									<ul className="space-y-1 text-xs">
-										<li>• {t("guide.about_feature_1")}</li>
-										<li>• {t("guide.about_feature_2")}</li>
-										<li>• {t("guide.about_feature_3")}</li>
-										<li>• {t("guide.about_feature_4")}</li>
+										<li>• {t("guide.about_search")}</li>
+										<li>• {t("guide.about_browse")}</li>
+										<li>• {t("guide.about_read")}</li>
+										<li>• {t("guide.about_token_limits")}</li>
+										<li>• {t("guide.about_trusted_ips")}</li>
 									</ul>
 								</div>
 							</div>

@@ -1,43 +1,38 @@
-import { IconBolt, IconClock, IconCode, IconSearch, IconShieldCheck } from "@tabler/icons-react";
+import { IconBook2, IconClock, IconCode, IconSearch, IconShieldCheck } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 import { GlowingEffect } from "@/components/ui/glowing-effect";
 import { JevText } from "@/components/ui/jev-brand";
 
+const features = [
+	{
+		id: "document_lookup",
+		icon: IconBook2,
+		area: "md:[grid-area:1/1/2/7] xl:[grid-area:1/1/2/5]",
+	},
+	{
+		id: "agent_access",
+		icon: IconShieldCheck,
+		area: "md:[grid-area:1/7/2/13] xl:[grid-area:2/1/3/5]",
+	},
+	{
+		id: "ai_search",
+		icon: IconSearch,
+		area: "md:[grid-area:2/1/3/7] xl:[grid-area:1/5/3/8]",
+	},
+	{
+		id: "source_references",
+		icon: IconCode,
+		area: "md:[grid-area:2/7/3/13] xl:[grid-area:1/8/2/13]",
+	},
+	{
+		id: "index_updates",
+		icon: IconClock,
+		area: "md:[grid-area:3/1/4/13] xl:[grid-area:2/8/3/13]",
+	},
+] as const;
+
 export function FeaturesSection() {
 	const { t } = useTranslation();
-
-	const features = [
-		{
-			name: t("features.lightning_fast"),
-			description: t("features.lightning_fast_desc"),
-			icon: IconBolt,
-			area: "md:[grid-area:1/1/2/7] xl:[grid-area:1/1/2/5]",
-		},
-		{
-			name: t("features.always_secure"),
-			description: t("features.always_secure_desc"),
-			icon: IconShieldCheck,
-			area: "md:[grid-area:1/7/2/13] xl:[grid-area:2/1/3/5]",
-		},
-		{
-			name: t("features.ai_search"),
-			description: <JevText i18nKey="features.ai_search_desc" />,
-			icon: IconSearch,
-			area: "md:[grid-area:2/1/3/7] xl:[grid-area:1/5/3/8]",
-		},
-		{
-			name: t("features.code_examples"),
-			description: t("features.code_examples_desc"),
-			icon: IconCode,
-			area: "md:[grid-area:2/7/3/13] xl:[grid-area:1/8/2/13]",
-		},
-		{
-			name: t("features.realtime_updates"),
-			description: t("features.realtime_updates_desc"),
-			icon: IconClock,
-			area: "md:[grid-area:3/1/4/13] xl:[grid-area:2/8/3/13]",
-		},
-	];
 
 	return (
 		<div
@@ -61,7 +56,7 @@ export function FeaturesSection() {
 					<ul className="grid grid-cols-1 grid-rows-none gap-3 md:grid-cols-12 md:grid-rows-3 md:gap-4 lg:gap-4 xl:max-h-[34rem] xl:grid-rows-2">
 						{features.map((feature) => (
 							<GridItem
-								key={feature.name}
+								key={feature.id}
 								area={feature.area}
 								icon={
 									<feature.icon
@@ -70,8 +65,8 @@ export function FeaturesSection() {
 										aria-hidden="true"
 									/>
 								}
-								title={feature.name}
-								description={feature.description}
+								title={t(`features.${feature.id}`)}
+								description={<JevText i18nKey={`features.${feature.id}_desc`} />}
 							/>
 						))}
 					</ul>

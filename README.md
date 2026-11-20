@@ -20,7 +20,7 @@
 
 ## What your agent can do
 
-Choose the tool that fits the question. A single call can be enough.
+Choose the tool that fits the question. A single call can be enough. Search returns relevant passages, and the topic catalog is paginated. Your agent can pull a full page into context when it needs the details.
 
 | Tool | When to use it |
 | --- | --- |
