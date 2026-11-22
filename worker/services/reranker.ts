@@ -9,7 +9,7 @@ import {
 	postModelJson,
 } from "./model-request.js";
 import { type ModelUsageRecorder, pricedModelUsage } from "./model-usage.js";
-import type { TypeSafeRegion } from "./typesafe-region.js";
+import type { SearchTrace } from "./types.js";
 
 export interface RerankDocument {
 	content: string;
@@ -57,6 +57,7 @@ const JEV_PROVIDERS = [
 	},
 ] as const;
 type JevProvider = (typeof JEV_PROVIDERS)[number];
+class JevRegionDenied extends ModelRequestError {}
 const MAX_STATE_BYTES = 64_000;
 const encoder = new TextEncoder();
 
@@ -93,7 +94,7 @@ export class RerankerService {
 		private readonly env: Pick<Env, "DEEPINFRA_API_KEY" | "TYPESAFE_API_KEY" | "ZENMUX_API_KEY">,
 		private readonly reportFailure: ModelAlertReporter,
 		private readonly recordUsage?: ModelUsageRecorder,
-		private readonly region?: TypeSafeRegion,
+		private readonly route?: Pick<SearchTrace, "country" | "ingress">,
 	) {}
 
 	async rerank(
@@ -120,7 +121,9 @@ export class RerankerService {
 			ids = modelResponseIds(response);
 		};
 		let payload: ReturnType<RerankerService["buildJevPayload"]> | undefined;
-		for (const provider of JEV_PROVIDERS) {
+		// Both Jev routes denied or failed on this path. See the 2026-11-22 incident.
+		const qwenByRegion = this.route?.country === "CN" && this.route.ingress === "AMS";
+		for (const provider of qwenByRegion ? [] : JEV_PROVIDERS) {
 			const key = this.env[provider.key];
 			if (provider.name === "zenmux" && !key) continue;
 			ids = "";
@@ -146,6 +149,7 @@ export class RerankerService {
 				const failure = this.safeError(error);
 				failures.push({ provider: provider.name, error: failure, ids });
 				logger.warn(`[RERANK] ${provider.name} Jev: ${failure.message} ${ids}`);
+				if (error instanceof JevRegionDenied) break;
 			}
 		}
 
@@ -160,19 +164,24 @@ export class RerankerService {
 			const response = await this.qwenScores(input, captureIds, signal);
 			signal?.throwIfAborted();
 			const ranked = this.processResponse(response, input);
-			this.reportFailure(
-				`rerank:jev:${failureKey}:recovered`,
-				`Jev failed: ${failureSummary}\nFallback Qwen3-Reranker-8B succeeded. ${ids}`,
-			);
+			if (failures.length) {
+				this.reportFailure(
+					`rerank:jev:${failureKey}:recovered`,
+					`Jev failed: ${failureSummary}\nFallback Qwen3-Reranker-8B succeeded. ${ids}`,
+				);
+			}
 			logger.info(
-				`[RERANK] provider=deepinfra model=${DEEPINFRA_CONFIG.RERANKER_MODEL} fallback=true elapsed_ms=${Date.now() - started}`,
+				`[RERANK] provider=deepinfra model=${DEEPINFRA_CONFIG.RERANKER_MODEL} reason=${qwenByRegion ? "regional_route" : "provider_failure"} elapsed_ms=${Date.now() - started}`,
 			);
 			input.onFallback?.("RERANKER_FALLBACK");
 			return ranked;
 		} catch (error) {
 			signal?.throwIfAborted();
 			const backupError = this.safeError(error);
-			const message = `Jev failed: ${failureSummary}\nFallback Qwen3-Reranker-8B failed: ${backupError.message} ${ids}\nBoth rerankers failed. Search will return the original candidate order.`;
+			const context = qwenByRegion
+				? "Jev skipped on the verified regional route."
+				: `Jev failed: ${failureSummary}`;
+			const message = `${context}\nQwen3-Reranker-8B failed: ${backupError.message} ${ids}\nSearch will use the original candidate order.`;
 			this.reportFailure(`rerank:jev:${failureKey}:qwen:${this.signature(backupError)}`, message);
 			throw new Error(`Reranking: ${message}`);
 		}
@@ -251,11 +260,6 @@ export class RerankerService {
 		signal?: AbortSignal,
 	): Promise<RerankerResponse & { model: string }> {
 		signal?.throwIfAborted();
-		const region = provider.name === "typesafe" ? this.region : undefined;
-		if (await region?.skip()) {
-			throw new ModelRequestError("skipped after repeated regional HTTP 451 responses", false, 451);
-		}
-		let denied = false;
 		let data: JevResponse | null = null;
 		try {
 			const response = await fetch(provider.endpoint, {
@@ -268,18 +272,20 @@ export class RerankerService {
 			if (!response.ok) {
 				const body = await response.text().catch(() => "");
 				const reason = body.replaceAll(key, "[REDACTED]").slice(0, 500);
-				if (region && response.status === 451) {
+				if (provider.name === "typesafe" && response.status === 451) {
+					let title: unknown;
 					try {
-						denied = JSON.parse(body)?.title === "Typesafe is not available in your region.";
+						title = JSON.parse(body)?.title;
 					} catch {
-						// Only a confirmed regional restriction counts toward the pause.
+						// Other HTTP errors follow the ordinary provider fallback.
 					}
+					if (title === "Typesafe is not available in your region.")
+						throw new JevRegionDenied(`HTTP 451: ${reason}`, false, 451);
 				}
 				throw new ModelRequestError(`HTTP ${response.status}: ${reason}`, false, response.status);
 			}
 			data = (await response.json()) as JevResponse | null;
 		} finally {
-			if (region) await region.finish(signal?.aborted ? undefined : denied);
 			this.recordUsage?.(pricedModelUsage("jev", data?.usage?.input_tokens, "USD", 42));
 		}
 		if (

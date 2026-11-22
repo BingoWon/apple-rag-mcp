@@ -12,7 +12,7 @@ async function sampleWorkerColo(): Promise<string> {
 	try {
 		const response = await fetch("https://mcp.apple-rag.com/cdn-cgi/trace", {
 			signal: AbortSignal.timeout(1000),
-			redirect: "error",
+			redirect: "manual",
 		});
 		if (response.ok) workerTraceColo = /^colo=([A-Z]{3})$/m.exec(await response.text())?.[1];
 	} catch {

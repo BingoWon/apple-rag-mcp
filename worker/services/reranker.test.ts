@@ -3,7 +3,6 @@ import test, { type TestContext } from "node:test";
 import { EmbeddingService } from "./embedding.js";
 import type { ModelUsageEvent } from "./model-usage.js";
 import { type RerankDocument, RerankerService } from "./reranker.js";
-import { TypeSafeRegion } from "./typesafe-region.js";
 
 const documents: RerankDocument[] = [
 	{ title: "Unrelated", url: "https://developer.apple.com/a", content: "A document" },
@@ -254,7 +253,10 @@ test("both failures report both reasons and throw for original-order recovery", 
 			{ status: url.includes("typesafe") ? 402 : 403 },
 		),
 	);
-	await assert.rejects(() => setup.reranker.rerank("query", documents, 1), /Both rerankers failed/);
+	await assert.rejects(
+		() => setup.reranker.rerank("query", documents, 1),
+		/original candidate order/,
+	);
 	assert.equal(setup.calls.length, 2);
 	assert.equal(setup.alerts.length, 1);
 	assert.match(setup.alerts[0], /insufficient credits/);
@@ -269,7 +271,7 @@ test("invalid backup scores are treated as failure rather than silently padded",
 			: Response.json({ scores: [0.9] }),
 	);
 	await assert.rejects(() => setup.reranker.rerank("query", documents, 1), /Incomplete or invalid/);
-	assert.match(setup.alerts[0], /Both rerankers failed/);
+	assert.match(setup.alerts[0], /original candidate order/);
 });
 
 test("bounds large UTF-8 contexts without dropping candidates or truncating returned text", async (t) => {
@@ -302,120 +304,72 @@ test("DeepInfra embedding failures use the same alert callback", async (t) => {
 	assert.match(alerts[0], /Embedding generation failed/);
 });
 
-test("regional 451s pause only TypeSafe on the affected path, and recovery uses a real search", async (t) => {
-	let now = Date.now();
-	t.mock.method(Date, "now", () => now);
-	const entries = new Map<string, { value: string; expires: number }>();
-	const cache = {
-		async match(key: string) {
-			const entry = entries.get(key);
-			if (entry && entry.expires > now) return new Response(entry.value);
-		},
-		async put(key: string, response: Response) {
-			const seconds = Number(response.headers.get("cache-control")?.split("max-age=")[1]);
-			entries.set(key, { value: await response.text(), expires: now + seconds * 1000 });
-		},
-		async delete(key: string) {
-			return entries.delete(key);
-		},
-	} as Cache;
-	let primary: "region" | "legal" | "good" = "region";
-	const setup = service(t, (url, body) => {
-		if (url.includes("typesafe.ai")) {
-			if (primary === "good") return jevResponse(body as { questions: Record<string, unknown> });
-			return Response.json(
-				{
-					title:
-						primary === "region"
-							? "Typesafe is not available in your region."
-							: "Other legal restriction",
-				},
-				{ status: 451 },
-			);
-		}
-		if (url.includes("zenmux"))
-			return Response.json(
-				{ error: { code: "invalid_params", message: "systemone failed (request_id: zm-example)" } },
-				{ status: 400 },
-			);
-		return Response.json({ scores: [0, 1] }, { headers: { "x-request-id": "qwen-example" } });
-	});
-	const env = { ...keys, ZENMUX_API_KEY: "test-zenmux" };
-	const run = async (path = "AMS/CN") => {
+test("the verified route uses only Qwen; all other routes still try Jev", async (t) => {
+	const setup = service(t, (url, body) =>
+		url.includes("deepinfra")
+			? Response.json({ scores: [0.2, 0.9] })
+			: jevResponse(body as { questions: Record<string, unknown> }),
+	);
+	for (const [country, ingress, model] of [
+		["CN", "AMS", "reranking"],
+		["CN", "AMS", "reranking"],
+		["US", "AMS", "jev"],
+		["CN", "DFW", "jev"],
+		[undefined, undefined, "jev"],
+	] as const) {
 		const usage: ModelUsageEvent[] = [];
-		const count = setup.calls.length;
-		const reranker = new RerankerService(
-			env,
+		const reasons: string[] = [];
+		const before = setup.calls.length;
+		const r = new RerankerService(
+			{ ...keys, ZENMUX_API_KEY: "test-zenmux" },
 			(_key, msg) => setup.alerts.push(msg),
 			(e) => usage.push(e),
-			new TypeSafeRegion(cache, path),
+			{ country, ingress },
 		);
-		const ranked = await reranker.rerank("SwiftUI", documents, 1);
+		const ranked = await r.rerank("SwiftUI", documents, 1, undefined, (reason) =>
+			reasons.push(reason),
+		);
 		assert.equal(ranked[0].originalIndex, 1);
-		assert.equal(usage.length, setup.calls.length - count);
-		return setup.calls.slice(count).map((url) => new URL(url).hostname);
-	};
-	const all = ["api.typesafe.ai", "zenmux.ai", "api.deepinfra.com"];
-	assert.deepEqual(await run(), all);
-	primary = "legal";
-	assert.deepEqual(await run(), all);
-	primary = "region";
-	assert.deepEqual(await run(), all);
-	now += 601_000; // An isolated old denial does not count.
-	assert.deepEqual(await run(), all);
-	assert.deepEqual(await run(), all);
-	assert.deepEqual(await run(), all.slice(1));
-	assert.match(
-		setup.alerts.at(-1)!,
-		/skipped.*451[\s\S]*zm-example[\s\S]*upstream_request_id=qwen-example/,
-	);
-	assert.deepEqual(await run("DFW/US"), all);
-	assert.deepEqual(await run("AMS/NL"), all);
-	now += 300_000;
-	assert.deepEqual(await run(), all); // Failed recovery probe renews the pause.
-	assert.deepEqual(await run(), all.slice(1));
-	now += 300_000;
-	primary = "good";
-	assert.deepEqual(await run(), [all[0]]);
-	primary = "region";
-	assert.deepEqual(await run(), all);
-	assert.deepEqual(await run(), all);
+		assert.equal(setup.calls.length - before, 1);
+		assert.deepEqual(
+			usage.map((e) => e.category),
+			[model],
+		);
+		assert.deepEqual(reasons, model === "jev" ? [] : ["RERANKER_FALLBACK"]);
+	}
+	assert.deepEqual(setup.alerts, []);
 });
 
-test("a recovery probe is released on cancellation and cache failures allow normal traffic", async (t) => {
-	const cache = { match: async () => new Response(String(Date.now() - 1)) } as Cache;
-	const probe = new TypeSafeRegion(cache, "probe-path");
-	const next = () => new TypeSafeRegion(cache, "probe-path");
-	const controller = new AbortController();
-	service(t, (_url, _body, init) => {
-		controller.abort();
-		init!.signal!.throwIfAborted();
-		return new Response();
+test("an explicit region denial selects Qwen immediately; a different 451 still offers ZenMux", async (t) => {
+	let title = "Typesafe is not available in your region.";
+	const setup = service(t, (url) => {
+		if (url.includes("typesafe.ai")) return Response.json({ title }, { status: 451 });
+		if (url.includes("zenmux")) return new Response("unavailable", { status: 503 });
+		return Response.json({ scores: [0, 1] });
 	});
-	assert.equal(await probe.skip(), false);
-	assert.equal(await next().skip(), true);
-	await probe.finish();
-	const key = "cancelled-path";
-	const cancelled = new RerankerService(
-		keys,
-		() => assert.fail("cancelled"),
-		undefined,
-		new TypeSafeRegion(cache, key),
+	const r = new RerankerService({ ...keys, ZENMUX_API_KEY: "test-zenmux" }, (_key, msg) =>
+		setup.alerts.push(msg),
 	);
-	await assert.rejects(cancelled.rerank("query", documents, 1, controller.signal), {
-		name: "AbortError",
+	await r.rerank("SwiftUI", documents, 1);
+	assert.deepEqual(
+		setup.calls.map((u) => new URL(u).hostname),
+		["api.typesafe.ai", "api.deepinfra.com"],
+	);
+	title = "Different restriction";
+	await r.rerank("SwiftUI", documents, 1);
+	assert.deepEqual(
+		setup.calls.slice(2).map((u) => new URL(u).hostname),
+		["api.typesafe.ai", "zenmux.ai", "api.deepinfra.com"],
+	);
+});
+
+test("a failed regional Qwen request reports only the provider actually called", async (t) => {
+	const setup = service(t, () => new Response("outage", { status: 503 }));
+	const r = new RerankerService(keys, (_key, msg) => setup.alerts.push(msg), undefined, {
+		country: "CN",
+		ingress: "AMS",
 	});
-	const retry = new TypeSafeRegion(cache, key);
-	assert.equal(await retry.skip(), false);
-	await retry.finish();
-	const broken = new TypeSafeRegion(
-		{
-			match: async () => {
-				throw Error("cache offline");
-			},
-		} as Cache,
-		key,
-	);
-	assert.equal(await broken.skip(), false);
-	await broken.finish(true);
+	await assert.rejects(r.rerank("SwiftUI", documents, 1), /original candidate order/);
+	assert.equal(setup.calls.length, 1);
+	assert.match(setup.alerts[0], /Jev skipped[\s\S]*Qwen3-Reranker-8B failed: HTTP 503/);
 });

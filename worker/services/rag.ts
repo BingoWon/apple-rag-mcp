@@ -14,7 +14,6 @@ import { EmbeddingService } from "./embedding.js";
 import { createModelUsageRecorder } from "./model-usage.js";
 import { RerankerService } from "./reranker.js";
 import { type RankedSearchResult, SearchEngine } from "./search-engine.js";
-import { TypeSafeRegion } from "./typesafe-region.js";
 
 export class RAGService {
 	readonly database: DatabaseService;
@@ -56,7 +55,7 @@ export class RAGService {
 				alert = { key, message };
 			},
 			this.usage.record,
-			await TypeSafeRegion.forSearch(request.trace),
+			request.trace,
 		);
 		const searchResult = await new SearchEngine(this.database, this.embedding, reranker)
 			.search(trimmedQuery, { resultCount, signal })

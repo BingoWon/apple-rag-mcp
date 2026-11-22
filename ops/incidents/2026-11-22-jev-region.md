@@ -2,12 +2,16 @@
 
 On 22 November, three production searches used the same query, result limit and MCP endpoint. The proxied connection reached DFW from a US exit and TypeSafe returned scores. Two direct connections reached AMS from a CN exit. Both received TypeSafe HTTP 451 with its regional unavailability message, then ZenMux HTTP 400 with a System One upstream request ID. Qwen reranked both searches. Each search returned four results. Removing the DeepSeek Harness client label had no effect. ZenMux's 400 does not identify its upstream status.
 
-## Handling a recurrence
+## What the receiving edge saw
 
-The first regional denial follows the usual TypeSafe → ZenMux → Qwen order. Two explicit TypeSafe regional denials within ten minutes pause TypeSafe for five minutes on that path. A successful TypeSafe attempt or another TypeSafe error clears the streak. The next search after the pause tests TypeSafe again. A further region denial renews the pause. A skipped attempt consumes no model usage. ZenMux continues to run independently, including after a 400. If Qwen also fails, search can still return the original candidates.
+A separate Worker preview sent a fixed empty JSON object to TypeSafe with no model credential, client label, or forwarded visitor headers. On the CN/AMS path, TypeSafe’s own Cloudflare trace returned `loc=CN`, `colo=AMS`; the API returned the regional 451. On the US/DFW path the trace returned `loc=US` and the API asked for an API key (403). In both previews the destination trace reported the same documented cross-zone Worker IP. The country still differed. Direct requests from the Mac also returned the regional 451 through LAX for the CN connection. No inference was needed to reproduce the rejection. These measurements establish that country information can reach the receiving edge independently of the application payload. They do not reveal TypeSafe’s private rule expression.
 
-The short-lived markers live in a named Workers cache local to the executing data center and are partitioned by Cloudflare's incoming colo and visitor country. They contain only a timestamp. Eviction, a cache error, or missing route metadata allows a normal TypeSafe attempt. Concurrent isolates may send an extra probe. There is no central write or cross-region switch.
+In a separate historical comparison, a US-origin production search at 02:10 UTC returned four results and one metered Jev attempt. All matching US MCP POSTs in its time window entered through AMS. This is a time-window correlation rather than a per-request Ray ID match.
 
-Ranking alerts identify the tool request, ingress Ray ID, route, model errors, available upstream IDs, selected ranking and final result count. The Worker-side Cloudflare trace colo is sampled in the background for Telegram. Smart Placement's exact decision for a particular request can be checked using its client-visible response header. The provider's own geographic classification is not exposed. Use the ZenMux request ID to ask the provider to look up the upstream failure.
+## Production routing
 
-[Cloudflare placement](https://developers.cloudflare.com/workers/configuration/placement/#check-the-cf-placement-header) · [Cache locality](https://developers.cloudflare.com/workers/runtime-apis/cache/)
+Searches with Cloudflare visitor country CN and ingress AMS go straight to Qwen. Both Jev routes failed repeatedly on this production path. Other paths keep TypeSafe first. If TypeSafe explicitly denies the region, the same search continues with Qwen. Other TypeSafe errors can still recover through ZenMux. Change the known path only when new production evidence or provider guidance justifies it.
+
+Qwen use is recorded as `RERANKER_FALLBACK` with its actual model usage. An expected route selection is logged without generating a provider error alert. If Qwen fails, the search engine can return candidates in retrieval order and records `RERANKING_UNAVAILABLE`. Actual upstream failures retain the request ID, provider diagnostics and final result count in the alert.
+
+[Cloudflare cross-zone request headers](https://developers.cloudflare.com/fundamentals/reference/http-headers/#cf-connecting-ip-in-worker-subrequests) · [Cloudflare placement](https://developers.cloudflare.com/workers/configuration/placement/#check-the-cf-placement-header)
