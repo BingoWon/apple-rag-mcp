@@ -72,13 +72,48 @@ exhausted, search can continue with the keyword results already fetched in
 parallel. The collector uses its separate 30-second batch timeout.
 
 Each dispatched request emits a Worker log with message `embedding_attempt`,
-provider, attempt number, timeout and elapsed milliseconds, outcome and any
-upstream HTTP error status. It records one model usage event, including when
-the response has no token count. `embedding_exhausted` identifies searches that
+linked to the tool response and `search_logs` by `request_id`. It records one
+`model_usage_events` row with the same provider, attempt number, timeout budget,
+elapsed milliseconds, outcome and any HTTP error status, even if the attempt was
+cancelled or the upstream returned no usage. A successful attempt means the
+response contained a usable vector. Attempt metadata starts with migration 0018.
+Earlier usage rows and collector batches have no online attempt details.
+`embedding_exhausted` identifies searches that
 ran out of embedding options. `EMBEDDING_FALLBACK` in search logs indicates
 that the alternate provider was tried, even when the primary subsequently
 recovered. `SEMANTIC_UNAVAILABLE` identifies searches that lost the semantic
 branch, which can also happen if vector lookup in PostgreSQL fails.
+
+For an embedding incident the Worker sends one Telegram summary at the end of
+each affected search. The first line states whether retrieval recovered, ran
+with keywords or vectors alone, or failed. It includes the result count and
+elapsed milliseconds from the start of tool execution. The following lines show
+the attempts in order, any ranking incident and the request ID. A completed
+search can return zero matches. Healthy searches and client cancellations send
+no model alert. Repeated ranking-only alerts keep their existing cooldown.
+
+To evaluate the longer retry round in D1, group the last seven days by the
+dispatched attempt that produced the vector. The zero bucket includes exhaustion
+and client cancellations. The mean includes the time spent on all dispatched
+5-second attempts, including failures. This measures embedding time; keyword
+lookup runs concurrently. Use the tool response time for end-to-end latency.
+
+```sql
+WITH retries AS (
+  SELECT request_id,
+         MAX(CASE WHEN attempt_outcome = 'success' THEN attempt_no END) AS winner,
+         SUM(elapsed_ms) AS retry_ms
+  FROM model_usage_events
+  WHERE category = 'embedding' AND timeout_ms = 5000
+    AND created_at >= strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-7 days')
+  GROUP BY request_id
+)
+SELECT COALESCE(winner, 0) AS successful_attempt, COUNT(*) AS searches,
+       ROUND(AVG(retry_ms)) AS mean_retry_ms
+FROM retries
+GROUP BY COALESCE(winner, 0)
+ORDER BY successful_attempt;
+```
 
 Compare equal UTC windows before and after a release. Use the 99th percentile
 of `search_logs.response_time_ms` for served searches (success, degraded or

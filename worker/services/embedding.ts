@@ -1,12 +1,11 @@
 import type { Env } from "../shared/types.js";
-import type { ModelAlertReporter } from "./model-alerts.js";
 import {
 	DEEPINFRA_CONFIG,
 	ModelRequestError,
 	modelTimeout,
 	postModelJson,
 } from "./model-request.js";
-import { type ModelUsageRecorder, pricedModelUsage } from "./model-usage.js";
+import { type EmbeddingAttempt, type ModelUsageEvent, pricedModelUsage } from "./model-usage.js";
 
 const EMBEDDING_PRICE_NANOS = { USD: 20, CNY: 140 } as const;
 const DIMENSIONS = 2560;
@@ -64,8 +63,8 @@ function failureOutcome(error: unknown, timeout: AbortSignal, caller?: AbortSign
 export class EmbeddingService {
 	constructor(
 		private readonly env: Pick<Env, Provider["key"]>,
-		private readonly reportFailure: ModelAlertReporter,
-		private readonly recordUsage?: ModelUsageRecorder,
+		private readonly recordAttempt: (usage: ModelUsageEvent, attempt: EmbeddingAttempt) => void,
+		private readonly requestId?: string,
 	) {}
 
 	async createEmbedding(
@@ -89,8 +88,9 @@ export class EmbeddingService {
 					onFallback?.("EMBEDDING_FALLBACK");
 				const attemptSignal = modelTimeout(timeoutMs, budget);
 				const started = Date.now();
-				const event = {
-					message: "embedding_attempt",
+				const event: EmbeddingAttempt = {
+					outcome: "success",
+					elapsed_ms: 0,
 					provider: provider.name,
 					attempt: ++attempts,
 					timeout_ms: timeoutMs,
@@ -110,33 +110,28 @@ export class EmbeddingService {
 					);
 					const vector = normalizedVector(response);
 					attemptSignal.throwIfAborted();
-					console.log({ ...event, elapsed_ms: Date.now() - started, outcome: "success" });
 					return vector;
 				} catch (error) {
-					const httpStatus = error instanceof ModelRequestError ? error.status : undefined;
-					const outcome = failureOutcome(error, attemptSignal, signal);
-					console.warn({
-						...event,
-						elapsed_ms: Date.now() - started,
-						outcome,
-						http_status: httpStatus,
-					});
+					event.http_status = error instanceof ModelRequestError ? error.status : undefined;
+					event.outcome = failureOutcome(error, attemptSignal, signal);
 					signal?.throwIfAborted();
 					lastError = error instanceof Error ? error : new Error(String(error));
 					if (error instanceof ModelRequestError)
 						retryAt.set(provider, error.retryable ? (error.retryAt ?? 0) : Infinity);
-					this.reportFailure(
-						`embedding:${provider.name}:${httpStatus ?? outcome}`,
-						`${provider.name} Embedding generation failed (${httpStatus ?? outcome}).`,
-					);
 				} finally {
-					this.recordUsage?.(embeddingUsage(response?.usage?.prompt_tokens, provider.currency));
+					event.elapsed_ms = Date.now() - started;
+					const log = { message: "embedding_attempt", request_id: this.requestId, ...event };
+					if (event.outcome === "success") console.log(log);
+					else console.warn(log);
+					this.recordAttempt(
+						embeddingUsage(response?.usage?.prompt_tokens, provider.currency),
+						event,
+					);
 				}
 			}
 		}
 		signal?.throwIfAborted();
-		if (attempts === 0) this.reportFailure("embedding:config", lastError.message);
-		console.warn({ message: "embedding_exhausted", attempts });
+		console.warn({ message: "embedding_exhausted", request_id: this.requestId, attempts });
 		budget.throwIfAborted();
 		throw lastError;
 	}

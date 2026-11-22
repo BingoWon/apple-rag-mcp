@@ -21,7 +21,6 @@ export async function createServices(
 			rag,
 			pages: new PageReader(rag.database, env),
 			database: rag.database,
-			embedding: rag.embedding,
 			rateLimit,
 			logger,
 		};

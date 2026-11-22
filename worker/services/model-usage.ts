@@ -1,3 +1,18 @@
+export interface EmbeddingAttempt {
+	provider: "SiliconFlow" | "DeepInfra";
+	attempt: number;
+	timeout_ms: number;
+	elapsed_ms: number;
+	outcome:
+		| "success"
+		| "timeout"
+		| "cancelled"
+		| "http_error"
+		| "invalid_response"
+		| "network_error";
+	http_status?: number;
+}
+
 export interface ModelUsageEvent {
 	category: "jev" | "embedding" | "reranking";
 	inputTokens?: number;
@@ -23,10 +38,14 @@ export function pricedModelUsage(
 		: { category, inputTokens };
 }
 
-export function createModelUsageRecorder(db: D1Database, channel?: "mcp" | "cli") {
-	const events: Array<ModelUsageEvent & { createdAt: string }> = [];
-	const record: ModelUsageRecorder = (event) => {
-		events.push({ ...event, createdAt: new Date().toISOString() });
+export function createModelUsageRecorder(
+	db: D1Database,
+	channel?: "mcp" | "cli",
+	requestId?: string,
+) {
+	const events: Array<ModelUsageEvent & { createdAt: string; attempt?: EmbeddingAttempt }> = [];
+	const record = (event: ModelUsageEvent, attempt?: EmbeddingAttempt) => {
+		events.push({ ...event, attempt, createdAt: new Date().toISOString() });
 	};
 
 	return {
@@ -40,8 +59,9 @@ export function createModelUsageRecorder(db: D1Database, channel?: "mcp" | "cli"
 						db
 							.prepare(
 								`INSERT INTO model_usage_events
-							(created_at, category, channel, input_tokens, currency, cost_nanos, cost_source)
-							VALUES (?, ?, ?, ?, ?, ?, ?)`,
+							(created_at, category, channel, input_tokens, currency, cost_nanos, cost_source,
+							 request_id, provider, attempt_no, timeout_ms, elapsed_ms, attempt_outcome, http_status)
+							VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 							)
 							.bind(
 								event.createdAt,
@@ -51,6 +71,13 @@ export function createModelUsageRecorder(db: D1Database, channel?: "mcp" | "cli"
 								event.currency ?? null,
 								event.costNanos ?? null,
 								event.costSource ?? null,
+								requestId ?? null,
+								event.attempt?.provider ?? null,
+								event.attempt?.attempt ?? null,
+								event.attempt?.timeout_ms ?? null,
+								event.attempt?.elapsed_ms ?? null,
+								event.attempt?.outcome ?? null,
+								event.attempt?.http_status ?? null,
 							),
 					),
 				);

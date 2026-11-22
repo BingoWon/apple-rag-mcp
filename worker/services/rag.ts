@@ -2,35 +2,31 @@ import type { WaitUntilContext } from "../services/d1-utils.js";
 import { createModelAlertReporter } from "../services/model-alerts.js";
 import type {
 	AppConfig,
-	EmbeddingService as IEmbeddingService,
 	RAGQuery,
 	RAGResult,
 	SearchResult,
+	SearchTrace,
 } from "../services/types.js";
 import { logger } from "../shared/logger.js";
 import type { Env } from "../shared/types.js";
 import { DatabaseService } from "./database.js";
 import { EmbeddingService } from "./embedding.js";
-import { createModelUsageRecorder } from "./model-usage.js";
+import { createModelUsageRecorder, type EmbeddingAttempt } from "./model-usage.js";
 import { RerankerService } from "./reranker.js";
 import { type RankedSearchResult, SearchEngine } from "./search-engine.js";
 
 export class RAGService {
 	readonly database: DatabaseService;
-	readonly embedding: IEmbeddingService;
 	private readonly reportFailure: ReturnType<typeof createModelAlertReporter>;
-	private readonly usage: ReturnType<typeof createModelUsageRecorder>;
 
 	constructor(
 		config: AppConfig,
 		private readonly env: Env,
 		private readonly ctx: WaitUntilContext,
-		channel: "mcp" | "cli",
+		private readonly channel: "mcp" | "cli",
 	) {
 		this.reportFailure = createModelAlertReporter(env, ctx, channel);
-		this.usage = createModelUsageRecorder(env.DB, channel);
 		this.database = new DatabaseService(config);
-		this.embedding = new EmbeddingService(env, this.reportFailure, this.usage.record);
 	}
 
 	async query(request: RAGQuery): Promise<RAGResult> {
@@ -48,42 +44,87 @@ export class RAGService {
 		}
 
 		const resultCount = Math.min(Math.max(result_count, 1), 10);
-		let alert: { key: string; message: string } | undefined;
+		const trace = request.trace ?? { requestId: crypto.randomUUID() };
+		const usage = createModelUsageRecorder(this.env.DB, this.channel, trace.requestId);
+		const attempts: EmbeddingAttempt[] = [];
+		const embedding = new EmbeddingService(
+			this.env,
+			(event, attempt) => {
+				attempts.push(attempt);
+				usage.record(event, attempt);
+			},
+			trace.requestId,
+		);
+		let ranking: { key: string; message: string } | undefined;
 		const reranker = new RerankerService(
 			this.env,
 			(key, message) => {
-				alert = { key, message };
+				ranking = { key, message };
 			},
-			this.usage.record,
-			request.trace?.country,
+			usage.record,
+			trace.country,
 		);
-		const searchResult = await new SearchEngine(this.database, this.embedding, reranker)
-			.search(trimmedQuery, { resultCount, signal })
-			.finally(() => this.ctx.waitUntil(this.usage.flush()));
-		const formattedResults = this.formatResults(searchResult.results);
-		const totalTime = Date.now() - startTime;
-		if (alert) {
-			const outcome = searchResult.degradations.length ? "degraded" : "success";
-			this.reportFailure(
-				alert.key,
-				`${alert.message}\nSearch: ${outcome}, results=${formattedResults.length}`,
-				request.trace,
+		let result: RAGResult | undefined;
+		try {
+			const search = await new SearchEngine(this.database, embedding, reranker).search(
+				trimmedQuery,
+				{ resultCount, signal },
 			);
+			signal?.throwIfAborted();
+			const results = this.formatResults(search.results);
+			const elapsed = Date.now() - startTime;
+			logger.info(
+				`RAG query completed (${(elapsed / 1000).toFixed(1)}s) - results: ${results.length}, query: ${query.substring(0, 50)}`,
+			);
+			result = {
+				success: true,
+				degradations: search.degradations,
+				query: trimmedQuery,
+				results,
+				additionalUrls: search.additionalUrls,
+				count: results.length,
+				processing_time_ms: elapsed,
+			};
+			return result;
+		} finally {
+			this.ctx.waitUntil(usage.flush());
+			if (!signal?.aborted)
+				this.reportOutcome(
+					trace,
+					attempts,
+					ranking,
+					result,
+					Date.now() - (request.startedAt ?? startTime),
+				);
 		}
+	}
 
-		logger.info(
-			`RAG query completed (${(totalTime / 1000).toFixed(1)}s) - results: ${formattedResults.length}, query: ${query.substring(0, 50)}`,
-		);
-
-		return {
-			success: true,
-			degradations: searchResult.degradations,
-			query: trimmedQuery,
-			results: formattedResults,
-			additionalUrls: searchResult.additionalUrls,
-			count: formattedResults.length,
-			processing_time_ms: totalTime,
-		};
+	private reportOutcome(
+		trace: SearchTrace,
+		attempts: EmbeddingAttempt[],
+		ranking: { key: string; message: string } | undefined,
+		result: RAGResult | undefined,
+		elapsedMs: number,
+	) {
+		const embeddingIssue =
+			!attempts.length || attempts.some((attempt) => attempt.outcome !== "success");
+		if (!embeddingIssue && !ranking) return;
+		let status = "Search completed";
+		if (!result) status = "Search failed";
+		else if (result.degradations.includes("SEMANTIC_UNAVAILABLE")) status = "Keyword-only search";
+		else if (result.degradations.includes("KEYWORD_UNAVAILABLE")) status = "Semantic-only search";
+		else if (embeddingIssue) status = "Search completed after embedding recovery";
+		const lines = [`${status}: results=${result?.count ?? 0}, elapsed_ms=${elapsedMs}`];
+		if (embeddingIssue) {
+			const steps = attempts.map(
+				(a) =>
+					`#${a.attempt} ${a.provider} ${a.http_status ? `HTTP ${a.http_status}` : a.outcome} (${a.elapsed_ms}ms)`,
+			);
+			lines.push(`Embedding: ${steps.join(" → ") || "no provider configured"}`);
+		}
+		if (ranking) lines.push(ranking.message);
+		const key = embeddingIssue ? null : `${ranking?.key ?? "search"}:${status}`;
+		this.reportFailure(key, lines.join("\n"), trace);
 	}
 
 	private formatResults(results: readonly RankedSearchResult[]): SearchResult[] {

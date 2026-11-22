@@ -11,6 +11,7 @@ export interface SearchTrace {
 
 export interface RAGQuery {
 	trace?: SearchTrace;
+	startedAt?: number;
 	query: string;
 	result_count?: number;
 	signal?: AbortSignal;
@@ -47,7 +48,6 @@ export interface Services {
 	rag: RAGService;
 	pages: PageReader;
 	database: DatabaseService;
-	embedding: EmbeddingService;
 	logger: ToolCallLogger;
 	rateLimit: RateLimitService;
 }

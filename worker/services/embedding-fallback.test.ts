@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test, { type TestContext } from "node:test";
 import { EmbeddingService } from "./embedding.js";
-import type { ModelUsageEvent } from "./model-usage.js";
+import type { EmbeddingAttempt, ModelUsageEvent } from "./model-usage.js";
 
 const keys = { SILICONFLOW_API_KEY: "sf-key", DEEPINFRA_API_KEY: "di-key" };
 const vector = [3, 4, ...Array(2558).fill(0)];
@@ -15,7 +15,7 @@ function harness(
 ) {
 	const calls: string[] = [];
 	const timers: { ms: number; controller: AbortController }[] = [];
-	const alerts: string[] = [];
+	const attempts: EmbeddingAttempt[] = [];
 	const reasons: string[] = [];
 	const usage: ModelUsageEvent[] = [];
 	t.mock.method(AbortSignal, "timeout", (ms: number) => {
@@ -44,16 +44,15 @@ function harness(
 		calls.push(sf ? "A" : "B");
 		return reply(calls.length, init);
 	});
-	const service = new EmbeddingService(
-		env,
-		(_key, message) => alerts.push(message),
-		(event) => usage.push(event),
-	);
+	const service = new EmbeddingService(env, (event, attempt) => {
+		attempts.push(attempt);
+		usage.push(event);
+	});
 	return {
 		calls,
 		timers,
 		usage,
-		alerts,
+		attempts,
 		reasons,
 		run: (signal?: AbortSignal) =>
 			service.createEmbedding(" query ", signal, (reason) => reasons.push(reason)),
@@ -72,6 +71,11 @@ for (const successfulAttempt of [1, 2, 3, 4, 0]) {
 		}
 		const count = successfulAttempt || 4;
 		assert.equal(h.calls.join(""), "ABAB".slice(0, count));
+		assert.deepEqual(
+			h.attempts.map((a) => a.attempt),
+			[1, 2, 3, 4].slice(0, count),
+		);
+		assert.equal(h.attempts.at(-1)?.outcome, successfulAttempt ? "success" : "http_error");
 		assert.deepEqual(
 			h.timers.map((t) => t.ms),
 			[16000, ...[3000, 3000, 5000, 5000].slice(0, count)],
@@ -101,6 +105,10 @@ test("an individual timeout switches provider; expiring the overall deadline sto
 	});
 	await assert.rejects(h.run(), { name: "TimeoutError" });
 	assert.deepEqual(h.calls, ["A", "B"]);
+	assert.deepEqual(
+		h.attempts.map(({ outcome }) => outcome),
+		["timeout", "timeout"],
+	);
 	assert.equal(h.usage.length, 2);
 });
 
@@ -120,13 +128,15 @@ for (const at of [0, 1, 2, 3, 4]) {
 		await assert.rejects(h.run(controller.signal), reason);
 		assert.equal(h.calls.length, at);
 		assert.equal(h.usage.length, at);
-		assert.equal(h.alerts.length, Math.max(0, at - 1));
+		if (at) assert.equal(h.attempts.at(-1)?.outcome, "cancelled");
 	});
 }
 
 test("an invalid key and an explicit retry-after skip only the affected provider", async (t) => {
 	for (const [status, headers] of [
 		[401, {}],
+		[402, {}],
+		[451, {}],
 		[429, { "Retry-After": "60" }],
 		[503, { "Retry-After": new Date(Date.now() + 60_000).toUTCString() }],
 	] as const) {
@@ -137,7 +147,7 @@ test("an invalid key and an explicit retry-after skip only the affected provider
 			await h.run();
 			assert.equal(h.calls.join(""), "ABB");
 			assert.deepEqual(h.reasons, ["EMBEDDING_FALLBACK"]);
-			assert.match(h.alerts[0], /SiliconFlow Embedding generation failed/);
+			assert.equal(h.attempts[0].http_status, status);
 		});
 	}
 });

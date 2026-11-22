@@ -29,8 +29,8 @@ export function createModelAlertReporter(
 	env: Env,
 	ctx: WaitUntilContext,
 	channel: "mcp" | "cli" = "mcp",
-): ModelAlertReporter {
-	return (key, message, trace) => {
+) {
+	return (key: string | null, message: string, trace?: SearchTrace) => {
 		const route = trace
 			? `ingress=${trace.ingress ?? "unknown"} country=${trace.country ?? "unknown"}`
 			: "";
@@ -45,19 +45,21 @@ export function createModelAlertReporter(
 		if (!url) return;
 
 		const now = Date.now();
-		const alertKey = `${url}:${channel}:${route}:${key}`;
-		if (now - (sentAlerts.get(alertKey) ?? -Infinity) < COOLDOWN_MS) return;
-		for (const [oldKey, timestamp] of sentAlerts) {
-			if (now - timestamp >= COOLDOWN_MS) sentAlerts.delete(oldKey);
+		const alertKey = key && `${url}:${channel}:${route}:${key}`;
+		if (alertKey) {
+			if (now - (sentAlerts.get(alertKey) ?? -Infinity) < COOLDOWN_MS) return;
+			for (const [oldKey, timestamp] of sentAlerts) {
+				if (now - timestamp >= COOLDOWN_MS) sentAlerts.delete(oldKey);
+			}
+			if (sentAlerts.size >= 128) sentAlerts.delete(sentAlerts.keys().next().value!);
+			sentAlerts.set(alertKey, now);
 		}
-		if (sentAlerts.size >= 128) sentAlerts.delete(sentAlerts.keys().next().value!);
-		sentAlerts.set(alertKey, now);
 
 		ctx.waitUntil(
 			(async () => {
 				if (trace) safeMessage += ` worker_trace_colo=${await sampleWorkerColo()}`;
 				const delivered = await sendTelegram(url, safeMessage);
-				if (!delivered && sentAlerts.get(alertKey) === now) sentAlerts.delete(alertKey);
+				if (!delivered && alertKey && sentAlerts.get(alertKey) === now) sentAlerts.delete(alertKey);
 			})(),
 		);
 	};

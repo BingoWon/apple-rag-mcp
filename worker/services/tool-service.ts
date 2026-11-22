@@ -119,6 +119,7 @@ export class ToolService {
 					query: actualQuery!,
 					result_count: data.result_count,
 					trace: searchTrace(request, context.requestId),
+					startedAt: start,
 					signal,
 				});
 				signal.throwIfAborted();

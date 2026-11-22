@@ -57,9 +57,6 @@ function createServices(): Services & {
 			}),
 			close: async () => {},
 		},
-		embedding: {
-			createEmbedding: async () => [],
-		},
 		rateLimit: {
 			checkLimits: async () => ({
 				allowed: true,

@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
 import test, { type TestContext } from "node:test";
-import { EmbeddingService } from "./embedding.js";
 import type { ModelUsageEvent } from "./model-usage.js";
 import { searchTrace } from "./request-info.js";
 import { type RerankDocument, RerankerService } from "./reranker.js";
@@ -140,25 +139,6 @@ for (const cancelBackup of [false, true]) {
 	});
 }
 
-test("cancelled embeddings do not retry or send provider failure alerts", async (t) => {
-	const controller = new AbortController();
-	const reason = new Error("User cancelled");
-	let calls = 0;
-	const alerts: string[] = [];
-	t.mock.method(globalThis, "fetch", async (_input, init) => {
-		calls++;
-		const signal = init?.signal;
-		assert.ok(signal);
-		controller.abort(reason);
-		assert.equal(signal.aborted, true);
-		throw signal.reason;
-	});
-	const embedding = new EmbeddingService(keys, (_key, message) => alerts.push(message));
-	await assert.rejects(embedding.createEmbedding("query", controller.signal), reason);
-	assert.equal(calls, 1);
-	assert.deepEqual(alerts, []);
-});
-
 test("uses Jev score-only requests with metadata and preserves original document mapping", async (t) => {
 	const setup = service(t, (url, body, init) => {
 		assert.equal(url, "https://api.typesafe.ai/v1/systemone");
@@ -290,19 +270,6 @@ test("bounds large UTF-8 contexts without dropping candidates or truncating retu
 	const result = await setup.reranker.rerank("SwiftUI navigation path", large, 4);
 	assert.ok(result.every((row) => row.content === large[row.originalIndex].content));
 	assert.equal(setup.alerts.length, 0);
-});
-
-test("DeepInfra embedding failures use the same alert callback", async (t) => {
-	const alerts: string[] = [];
-	let calls = 0;
-	t.mock.method(globalThis, "fetch", async () => {
-		calls++;
-		return Response.json({ error: "insufficient balance" }, { status: 402 });
-	});
-	const embedding = new EmbeddingService(keys, (_key, message) => alerts.push(message));
-	await assert.rejects(() => embedding.createEmbedding("query"), /HTTP 402/);
-	assert.equal(calls, 1);
-	assert.match(alerts[0], /Embedding generation failed/);
 });
 
 test("CN searches use Qwen at any ingress and all other countries try Jev first", async (t) => {
