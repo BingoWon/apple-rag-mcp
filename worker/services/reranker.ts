@@ -9,7 +9,6 @@ import {
 	postModelJson,
 } from "./model-request.js";
 import { type ModelUsageRecorder, pricedModelUsage } from "./model-usage.js";
-import type { SearchTrace } from "./types.js";
 
 export interface RerankDocument {
 	content: string;
@@ -94,7 +93,7 @@ export class RerankerService {
 		private readonly env: Pick<Env, "DEEPINFRA_API_KEY" | "TYPESAFE_API_KEY" | "ZENMUX_API_KEY">,
 		private readonly reportFailure: ModelAlertReporter,
 		private readonly recordUsage?: ModelUsageRecorder,
-		private readonly route?: Pick<SearchTrace, "country" | "ingress">,
+		private readonly visitorCountry?: string,
 	) {}
 
 	async rerank(
@@ -121,8 +120,7 @@ export class RerankerService {
 			ids = modelResponseIds(response);
 		};
 		let payload: ReturnType<RerankerService["buildJevPayload"]> | undefined;
-		// Both Jev routes denied or failed on this path. See the 2026-11-22 incident.
-		const qwenByRegion = this.route?.country === "CN" && this.route.ingress === "AMS";
+		const qwenByRegion = this.visitorCountry === "CN";
 		for (const provider of qwenByRegion ? [] : JEV_PROVIDERS) {
 			const key = this.env[provider.key];
 			if (provider.name === "zenmux" && !key) continue;
@@ -179,7 +177,7 @@ export class RerankerService {
 			signal?.throwIfAborted();
 			const backupError = this.safeError(error);
 			const context = qwenByRegion
-				? "Jev skipped on the verified regional route."
+				? "Jev skipped for visitor country CN."
 				: `Jev failed: ${failureSummary}`;
 			const message = `${context}\nQwen3-Reranker-8B failed: ${backupError.message} ${ids}\nSearch will use the original candidate order.`;
 			this.reportFailure(`rerank:jev:${failureKey}:qwen:${this.signature(backupError)}`, message);

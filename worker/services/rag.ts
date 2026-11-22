@@ -55,7 +55,7 @@ export class RAGService {
 				alert = { key, message };
 			},
 			this.usage.record,
-			request.trace,
+			request.trace?.country,
 		);
 		const searchResult = await new SearchEngine(this.database, this.embedding, reranker)
 			.search(trimmedQuery, { resultCount, signal })

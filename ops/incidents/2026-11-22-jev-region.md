@@ -2,16 +2,16 @@
 
 ## Production routing
 
-Apple RAG chooses a reranker before sending search candidates to a model. The Worker reads the visitor’s network country from `request.cf.country` and the ingress data center from `request.cf.colo`. Cloudflare supplies these values on the incoming request. A decision to skip Jev also requires evidence that Jev is unavailable on that route. [Cloudflare request metadata](https://developers.cloudflare.com/workers/runtime-apis/request/#incomingrequestcfproperties)
+Apple RAG uses Cloudflare’s visitor network country (`request.cf.country`) to choose a reranker before sending search candidates to a model. The ingress data center (`request.cf.colo`) is recorded for diagnostics. [Cloudflare request metadata](https://developers.cloudflare.com/workers/runtime-apis/request/#incomingrequestcfproperties)
 
 | Condition | Action |
 | --- | --- |
-| Country is `CN` **and** ingress is `AMS` | Send the candidates directly to Qwen3-Reranker-8B. Skip both TypeSafe and ZenMux from the first search. |
-| Any other combination, including missing metadata | Try TypeSafe Jev first. |
+| Country is `CN`, at any ingress or with no ingress information | Send the candidates directly to Qwen3-Reranker-8B. Skip both TypeSafe and ZenMux from the first search. |
+| Any other country, or country unknown | Try TypeSafe Jev first. |
 | TypeSafe returns HTTP 451 with the JSON title `Typesafe is not available in your region.` | Use Qwen for this search immediately. This response does not add a new route to the rule. |
 | TypeSafe fails for another reason | Try ZenMux Jev if configured, then Qwen if needed. |
 
-As of v5.15.9, `CN` via `AMS` is the only route selected in advance. Revisit that rule when production evidence or the provider’s published coverage changes. User searches do not run timed recovery probes. [Routing implementation](../../worker/services/reranker.ts) · [Routing tests](../../worker/services/reranker.test.ts)
+Starting in v5.15.10, the country rule covers every `CN` search across MCP and CLI. This product policy avoids an upstream wait even on ingress routes that have not been individually tested. User searches do not run timed recovery probes. [Routing implementation](../../worker/services/reranker.ts) · [Routing tests](../../worker/services/reranker.test.ts)
 
 When Qwen supplies scores, the search records `RERANKER_FALLBACK` and the actual model usage. Expected regional routing is logged without a provider failure alert. Actual upstream failures include the request ID, provider diagnostics and final result count in the alert. If Qwen also fails, search can return the candidates in retrieval order with `RERANKING_UNAVAILABLE`.
 

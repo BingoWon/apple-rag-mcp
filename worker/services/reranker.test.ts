@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test, { type TestContext } from "node:test";
 import { EmbeddingService } from "./embedding.js";
 import type { ModelUsageEvent } from "./model-usage.js";
+import { searchTrace } from "./request-info.js";
 import { type RerankDocument, RerankerService } from "./reranker.js";
 
 const documents: RerankDocument[] = [
@@ -304,7 +305,7 @@ test("DeepInfra embedding failures use the same alert callback", async (t) => {
 	assert.match(alerts[0], /Embedding generation failed/);
 });
 
-test("the verified route uses only Qwen; all other routes still try Jev", async (t) => {
+test("CN searches use Qwen at any ingress and all other countries try Jev first", async (t) => {
 	const setup = service(t, (url, body) =>
 		url.includes("deepinfra")
 			? Response.json({ scores: [0.2, 0.9] })
@@ -312,11 +313,16 @@ test("the verified route uses only Qwen; all other routes still try Jev", async 
 	);
 	for (const [country, ingress, model] of [
 		["CN", "AMS", "reranking"],
-		["CN", "AMS", "reranking"],
+		["CN", "DFW", "reranking"],
+		["CN", undefined, "reranking"],
 		["US", "AMS", "jev"],
-		["CN", "DFW", "jev"],
+		["HK", "AMS", "jev"],
+		["XX", "AMS", "jev"],
 		[undefined, undefined, "jev"],
 	] as const) {
+		const request = Object.assign(new Request("https://mcp.apple-rag.com/"), {
+			cf: { country, colo: ingress },
+		});
 		const usage: ModelUsageEvent[] = [];
 		const reasons: string[] = [];
 		const before = setup.calls.length;
@@ -324,7 +330,7 @@ test("the verified route uses only Qwen; all other routes still try Jev", async 
 			{ ...keys, ZENMUX_API_KEY: "test-zenmux" },
 			(_key, msg) => setup.alerts.push(msg),
 			(e) => usage.push(e),
-			{ country, ingress },
+			searchTrace(request, "test").country,
 		);
 		const ranked = await r.rerank("SwiftUI", documents, 1, undefined, (reason) =>
 			reasons.push(reason),
@@ -365,10 +371,7 @@ test("an explicit region denial selects Qwen immediately; a different 451 still 
 
 test("a failed regional Qwen request reports only the provider actually called", async (t) => {
 	const setup = service(t, () => new Response("outage", { status: 503 }));
-	const r = new RerankerService(keys, (_key, msg) => setup.alerts.push(msg), undefined, {
-		country: "CN",
-		ingress: "AMS",
-	});
+	const r = new RerankerService(keys, (_key, msg) => setup.alerts.push(msg), undefined, "CN");
 	await assert.rejects(r.rerank("SwiftUI", documents, 1), /original candidate order/);
 	assert.equal(setup.calls.length, 1);
 	assert.match(setup.alerts[0], /Jev skipped[\s\S]*Qwen3-Reranker-8B failed: HTTP 503/);
