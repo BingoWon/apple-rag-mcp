@@ -24,11 +24,25 @@ export function modelTimeout(timeoutMs: number, parent?: AbortSignal) {
 	return parent ? AbortSignal.any([parent, timeout]) : timeout;
 }
 
+export function modelResponseIds(response: Response): string {
+	const requestId = response.headers.get("x-request-id") ?? response.headers.get("request-id");
+	const ray = response.headers.get("cf-ray");
+	return [
+		requestId && /^[a-zA-Z0-9._:-]{1,128}$/.test(requestId)
+			? `upstream_request_id=${requestId}`
+			: "",
+		ray && /^[a-f0-9]{16}(?:-[A-Z]{3})?$/i.test(ray) ? `upstream_ray=${ray}` : "",
+	]
+		.filter(Boolean)
+		.join(" ");
+}
+
 export async function postModelJson<T>(
 	url: string,
 	apiKey: string,
 	payload: unknown,
 	signal: AbortSignal,
+	onResponse?: (response: Response) => void,
 ): Promise<T> {
 	signal.throwIfAborted();
 	const res = await fetch(url, {
@@ -41,6 +55,7 @@ export async function postModelJson<T>(
 		body: JSON.stringify(payload),
 		signal,
 	});
+	onResponse?.(res);
 	if (!res.ok) {
 		const after = res.headers.get("Retry-After");
 		const retryAt = !after

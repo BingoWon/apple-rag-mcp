@@ -1,5 +1,5 @@
 import { canonicalIP } from "../../shared/ip";
-import type { AuthContext, RateLimitResult } from "../services/types.js";
+import type { AuthContext, RateLimitResult, SearchTrace } from "../services/types.js";
 import { FREE_ACCESS_GUIDANCE, PRO_UPGRADE_GUIDANCE } from "./access-guidance.js";
 
 export interface ClientInfo {
@@ -14,6 +14,18 @@ export function extractClientInfo(request: Request): ClientInfo {
 	const ip = canonicalIP(request.headers.get("cf-connecting-ip")) ?? "unknown";
 	const country = (request as Request & { cf?: { country?: string } }).cf?.country || null;
 	return { ip, country };
+}
+
+export function searchTrace(request: Request, requestId: string): SearchTrace {
+	const cf = request.cf;
+	const ray = request.headers.get("cf-ray") ?? "";
+	return {
+		requestId,
+		ray: /^[a-f0-9]{16}(?:-[A-Z]{3})?$/i.test(ray) ? ray : undefined,
+		ingress: typeof cf?.colo === "string" && /^[A-Z]{3}$/.test(cf.colo) ? cf.colo : undefined,
+		country:
+			typeof cf?.country === "string" && /^[A-Z0-9]{2}$/.test(cf.country) ? cf.country : undefined,
+	};
 }
 
 export function buildRateLimitMessage(

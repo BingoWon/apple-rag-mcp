@@ -101,3 +101,30 @@ test("Telegram body rejection and a missing URL are not reported as delivery", a
 	assert.equal(await sendTelegram("https://example.invalid/rejected", "message"), false);
 	assert.equal(await sendTelegram(undefined, "message"), false);
 });
+
+test("CLI ranking alerts correlate the finished search and distinguish ingress from Worker-side trace", async (t) => {
+	const pending: Promise<unknown>[] = [];
+	const messages: string[] = [];
+	t.mock.method(globalThis, "fetch", async (url, init) => {
+		if (String(url).endsWith("/cdn-cgi/trace")) return new Response("colo=FRA\n");
+		messages.push(JSON.parse(String(init?.body)).text);
+		return Response.json({ ok: true });
+	});
+	const report = createModelAlertReporter(
+		{ TELEGRAM_ALERT_BOT_URL: "https://example.invalid/trace" } as Env,
+		{ waitUntil: (p) => pending.push(p) },
+		"cli",
+	);
+	const trace = { requestId: "search-1", ingress: "AMS", country: "CN", ray: "a5e70aa35c5f6624" };
+	report("451:400:qwen", "Ranking: Qwen. Search: degraded, results=4", trace);
+	report("451:400:qwen", "Same incident, different upstream request ID", {
+		...trace,
+		requestId: "search-2",
+	});
+	await Promise.all(pending);
+	assert.equal(messages.length, 1);
+	assert.match(
+		messages[0],
+		/\[CLI\]\[MODEL\].*results=4\nrequest_id=search-1 ray=a5e70aa35c5f6624 ingress=AMS country=CN worker_trace_colo=FRA/,
+	);
+});

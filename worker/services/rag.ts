@@ -14,25 +14,24 @@ import { EmbeddingService } from "./embedding.js";
 import { createModelUsageRecorder } from "./model-usage.js";
 import { RerankerService } from "./reranker.js";
 import { type RankedSearchResult, SearchEngine } from "./search-engine.js";
+import { TypeSafeRegion } from "./typesafe-region.js";
 
 export class RAGService {
 	readonly database: DatabaseService;
 	readonly embedding: IEmbeddingService;
-	private readonly searchEngine: SearchEngine;
+	private readonly reportFailure: ReturnType<typeof createModelAlertReporter>;
 	private readonly usage: ReturnType<typeof createModelUsageRecorder>;
 
 	constructor(
 		config: AppConfig,
-		env: Env,
+		private readonly env: Env,
 		private readonly ctx: WaitUntilContext,
 		channel: "mcp" | "cli",
 	) {
-		const reportFailure = createModelAlertReporter(env, ctx);
+		this.reportFailure = createModelAlertReporter(env, ctx, channel);
 		this.usage = createModelUsageRecorder(env.DB, channel);
 		this.database = new DatabaseService(config);
-		this.embedding = new EmbeddingService(env, reportFailure, this.usage.record);
-		const reranker = new RerankerService(env, reportFailure, this.usage.record);
-		this.searchEngine = new SearchEngine(this.database, this.embedding, reranker);
+		this.embedding = new EmbeddingService(env, this.reportFailure, this.usage.record);
 	}
 
 	async query(request: RAGQuery): Promise<RAGResult> {
@@ -50,11 +49,28 @@ export class RAGService {
 		}
 
 		const resultCount = Math.min(Math.max(result_count, 1), 10);
-		const searchResult = await this.searchEngine
+		let alert: { key: string; message: string } | undefined;
+		const reranker = new RerankerService(
+			this.env,
+			(key, message) => {
+				alert = { key, message };
+			},
+			this.usage.record,
+			await TypeSafeRegion.forSearch(request.trace),
+		);
+		const searchResult = await new SearchEngine(this.database, this.embedding, reranker)
 			.search(trimmedQuery, { resultCount, signal })
 			.finally(() => this.ctx.waitUntil(this.usage.flush()));
 		const formattedResults = this.formatResults(searchResult.results);
 		const totalTime = Date.now() - startTime;
+		if (alert) {
+			const outcome = searchResult.degradations.length ? "degraded" : "success";
+			this.reportFailure(
+				alert.key,
+				`${alert.message}\nSearch: ${outcome}, results=${formattedResults.length}`,
+				request.trace,
+			);
+		}
 
 		logger.info(
 			`RAG query completed (${(totalTime / 1000).toFixed(1)}s) - results: ${formattedResults.length}, query: ${query.substring(0, 50)}`,

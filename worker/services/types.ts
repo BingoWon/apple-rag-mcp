@@ -2,7 +2,15 @@ import type { BrowseData, BrowseInput } from "../../shared/browse.js";
 import type { PageReader, StoredWebPage } from "../services/page-reader.js";
 import type { ToolCallLogger } from "../services/tool-call-logger.js";
 
+export interface SearchTrace {
+	requestId: string;
+	ray?: string;
+	ingress?: string;
+	country?: string;
+}
+
 export interface RAGQuery {
+	trace?: SearchTrace;
 	query: string;
 	result_count?: number;
 	signal?: AbortSignal;

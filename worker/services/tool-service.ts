@@ -8,7 +8,7 @@ import {
 	type ToolError,
 } from "../../shared/contracts.js";
 import { cleanQuerySafely } from "../services/query-cleaner.js";
-import { buildRateLimitMessage, extractClientInfo } from "../services/request-info.js";
+import { buildRateLimitMessage, extractClientInfo, searchTrace } from "../services/request-info.js";
 import { isAppleUrl } from "../shared/web-url.js";
 import { accountStatus } from "./account.js";
 import { CatalogError } from "./catalog.js";
@@ -118,6 +118,7 @@ export class ToolService {
 				const rag = await this.services.rag.query({
 					query: actualQuery!,
 					result_count: data.result_count,
+					trace: searchTrace(request, context.requestId),
 					signal,
 				});
 				signal.throwIfAborted();

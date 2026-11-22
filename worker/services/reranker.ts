@@ -4,10 +4,12 @@ import type { Env } from "../shared/types.js";
 import {
 	DEEPINFRA_CONFIG,
 	ModelRequestError,
+	modelResponseIds,
 	modelTimeout,
 	postModelJson,
 } from "./model-request.js";
 import { type ModelUsageRecorder, pricedModelUsage } from "./model-usage.js";
+import type { TypeSafeRegion } from "./typesafe-region.js";
 
 export interface RerankDocument {
 	content: string;
@@ -91,6 +93,7 @@ export class RerankerService {
 		private readonly env: Pick<Env, "DEEPINFRA_API_KEY" | "TYPESAFE_API_KEY" | "ZENMUX_API_KEY">,
 		private readonly reportFailure: ModelAlertReporter,
 		private readonly recordUsage?: ModelUsageRecorder,
+		private readonly region?: TypeSafeRegion,
 	) {}
 
 	async rerank(
@@ -111,22 +114,27 @@ export class RerankerService {
 		};
 		signal?.throwIfAborted();
 		const started = Date.now();
-		const failures: Array<{ provider: JevProvider["name"]; error: Error }> = [];
+		const failures: Array<{ provider: JevProvider["name"]; error: Error; ids: string }> = [];
+		let ids = "";
+		const captureIds = (response: Response) => {
+			ids = modelResponseIds(response);
+		};
 		let payload: ReturnType<RerankerService["buildJevPayload"]> | undefined;
 		for (const provider of JEV_PROVIDERS) {
 			const key = this.env[provider.key];
 			if (provider.name === "zenmux" && !key) continue;
+			ids = "";
 			try {
 				if (!key) throw new ModelRequestError(`${provider.key} is not configured`, false);
 				payload ??= this.buildJevPayload(input);
-				const response = await this.jevScores(provider, key, payload, signal);
+				const response = await this.jevScores(provider, key, payload, captureIds, signal);
 				signal?.throwIfAborted();
 				const ranked = this.processResponse(response, input);
-				const primary = failures[0]?.error;
+				const primary = failures[0];
 				if (primary) {
 					this.reportFailure(
-						`rerank:jev:${this.signature(primary)}:zenmux`,
-						`TypeSafe Jev failed: ${primary.message}\nZenMux Jev recovered the search.`,
+						`rerank:jev:${this.signature(primary.error)}:zenmux`,
+						`TypeSafe: ${primary.error.message} ${primary.ids}\nRanking: ZenMux ${response.model} ${ids}`,
 					);
 				}
 				logger.info(
@@ -136,24 +144,25 @@ export class RerankerService {
 			} catch (error) {
 				signal?.throwIfAborted();
 				const failure = this.safeError(error);
-				failures.push({ provider: provider.name, error: failure });
-				logger.warn(`[RERANK] ${provider.name} Jev failed: ${failure.message}`);
+				failures.push({ provider: provider.name, error: failure, ids });
+				logger.warn(`[RERANK] ${provider.name} Jev: ${failure.message} ${ids}`);
 			}
 		}
 
 		const failureSummary = failures
-			.map(({ provider, error }) => `${provider}: ${error.message}`)
+			.map(({ provider, error, ids }) => `${provider}: ${error.message} ${ids}`.trimEnd())
 			.join("\n");
 		const failureKey = failures
 			.map(({ provider, error }) => `${provider}:${this.signature(error)}`)
 			.join(":");
+		ids = "";
 		try {
-			const response = await this.qwenScores(input, signal);
+			const response = await this.qwenScores(input, captureIds, signal);
 			signal?.throwIfAborted();
 			const ranked = this.processResponse(response, input);
 			this.reportFailure(
 				`rerank:jev:${failureKey}:recovered`,
-				`Jev failed: ${failureSummary}\nFallback Qwen3-Reranker-8B succeeded. Search remains available.`,
+				`Jev failed: ${failureSummary}\nFallback Qwen3-Reranker-8B succeeded. ${ids}`,
 			);
 			logger.info(
 				`[RERANK] provider=deepinfra model=${DEEPINFRA_CONFIG.RERANKER_MODEL} fallback=true elapsed_ms=${Date.now() - started}`,
@@ -163,7 +172,7 @@ export class RerankerService {
 		} catch (error) {
 			signal?.throwIfAborted();
 			const backupError = this.safeError(error);
-			const message = `Jev failed: ${failureSummary}\nFallback Qwen3-Reranker-8B failed: ${backupError.message}\nBoth rerankers failed. Search will return the original candidate order.`;
+			const message = `Jev failed: ${failureSummary}\nFallback Qwen3-Reranker-8B failed: ${backupError.message} ${ids}\nBoth rerankers failed. Search will return the original candidate order.`;
 			this.reportFailure(`rerank:jev:${failureKey}:qwen:${this.signature(backupError)}`, message);
 			throw new Error(`Reranking: ${message}`);
 		}
@@ -188,7 +197,9 @@ export class RerankerService {
 	}
 
 	private signature(error: Error): string {
-		return `${error instanceof ModelRequestError ? (error.status ?? "config") : error.name}:${error.message.slice(0, 120)}`;
+		return error instanceof ModelRequestError && error.status
+			? String(error.status)
+			: `${error.name}:${error.message.slice(0, 120)}`;
 	}
 
 	private buildJevPayload(input: RerankerInput) {
@@ -236,9 +247,15 @@ export class RerankerService {
 		provider: JevProvider,
 		key: string,
 		payload: ReturnType<RerankerService["buildJevPayload"]>,
+		onResponse: (response: Response) => void,
 		signal?: AbortSignal,
 	): Promise<RerankerResponse & { model: string }> {
 		signal?.throwIfAborted();
+		const region = provider.name === "typesafe" ? this.region : undefined;
+		if (await region?.skip()) {
+			throw new ModelRequestError("skipped after repeated regional HTTP 451 responses", false, 451);
+		}
+		let denied = false;
 		let data: JevResponse | null = null;
 		try {
 			const response = await fetch(provider.endpoint, {
@@ -247,14 +264,22 @@ export class RerankerService {
 				body: JSON.stringify({ model: provider.model, ...payload }),
 				signal: modelTimeout(DEEPINFRA_CONFIG.TIMEOUT_MS, signal),
 			});
+			onResponse(response);
 			if (!response.ok) {
-				const reason = (await response.text().catch(() => ""))
-					.replaceAll(key, "[REDACTED]")
-					.slice(0, 500);
+				const body = await response.text().catch(() => "");
+				const reason = body.replaceAll(key, "[REDACTED]").slice(0, 500);
+				if (region && response.status === 451) {
+					try {
+						denied = JSON.parse(body)?.title === "Typesafe is not available in your region.";
+					} catch {
+						// Only a confirmed regional restriction counts toward the pause.
+					}
+				}
 				throw new ModelRequestError(`HTTP ${response.status}: ${reason}`, false, response.status);
 			}
 			data = (await response.json()) as JevResponse | null;
 		} finally {
+			if (region) await region.finish(signal?.aborted ? undefined : denied);
 			this.recordUsage?.(pricedModelUsage("jev", data?.usage?.input_tokens, "USD", 42));
 		}
 		if (
@@ -280,7 +305,11 @@ export class RerankerService {
 		return { scores, model: data.model };
 	}
 
-	private async qwenScores(input: RerankerInput, signal?: AbortSignal): Promise<RerankerResponse> {
+	private async qwenScores(
+		input: RerankerInput,
+		onResponse: (response: Response) => void,
+		signal?: AbortSignal,
+	): Promise<RerankerResponse> {
 		signal?.throwIfAborted();
 		let response: RerankerResponse | undefined;
 		try {
@@ -291,6 +320,7 @@ export class RerankerService {
 				this.env.DEEPINFRA_API_KEY,
 				this.buildPayload(input),
 				modelTimeout(DEEPINFRA_CONFIG.TIMEOUT_MS, signal),
+				onResponse,
 			);
 			return response;
 		} finally {
