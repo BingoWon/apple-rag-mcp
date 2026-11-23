@@ -7,6 +7,7 @@ import type {
 	ModelCostCategory,
 	ModelCostCurrency,
 } from "../../../../src/types";
+import { MICROSOFT_DECISION_MODEL } from "../../../services/model-usage.js";
 import { TOOL_CHANNELS, type ToolChannel } from "../../../shared/tool-channels.js";
 import { emptyOutcomes, TOOL_OUTCOMES } from "../../../shared/tool-outcomes.js";
 import { logger } from "../../utils/logger";
@@ -85,7 +86,7 @@ const metricSchema = z.object({
 		})
 		.optional(),
 });
-const modelCostCategory = z.enum(["jev", "embedding", "reranking"]);
+const modelCostCategory = z.enum(["jev", "microsoft_decision", "embedding", "reranking"]);
 const modelCostCurrency = z.enum(["USD", "CNY"]);
 const modelCostsSchema = z.object({
 	first_recorded_at: z.string().nullable(),
@@ -416,12 +417,12 @@ app.openapi(statsRoute, async (c) => {
 		}
 		const modelCostQuery = c.env.DB.prepare(
 			`SELECT strftime('${format}', created_at, '+8 hours') AS bucket,
-			        category, currency, COUNT(*) AS attempts, COUNT(cost_nanos) AS priced_attempts,
+			        CASE WHEN model = ? THEN 'microsoft_decision' ELSE category END AS cost_category, currency, COUNT(*) AS attempts, COUNT(cost_nanos) AS priced_attempts,
 			        SUM(cost_nanos) AS cost_nanos
 			 FROM model_usage_events WHERE created_at >= ? AND created_at < ?
 			 ${query.channel ? "AND channel = ?" : ""}
-			 GROUP BY bucket, category, currency`,
-		).bind(start, end, ...(query.channel ? [query.channel] : []));
+			 GROUP BY bucket, cost_category, currency`,
+		).bind(MICROSOFT_DECISION_MODEL, start, end, ...(query.channel ? [query.channel] : []));
 		const [receipts, billingPeople, billingTotals, billingSync, modelRows, modelCoverage] =
 			await c.env.DB.batch<Record<string, unknown>>([
 				c.env.DB.prepare(
@@ -517,6 +518,7 @@ function summarizeModelCosts(
 ): AdminModelCosts {
 	const categories: AdminModelCosts["categories"] = {
 		jev: { attempts: 0, unpriced_attempts: 0 },
+		microsoft_decision: { attempts: 0, unpriced_attempts: 0 },
 		embedding: { attempts: 0, unpriced_attempts: 0 },
 		reranking: { attempts: 0, unpriced_attempts: 0 },
 	};
@@ -533,7 +535,7 @@ function summarizeModelCosts(
 		})),
 	});
 	for (const row of rows) {
-		const category = row.category as ModelCostCategory;
+		const category = row.cost_category as ModelCostCategory;
 		const attempts = Number(row.attempts);
 		const pricedAttempts = Number(row.priced_attempts);
 		categories[category].attempts += attempts;
@@ -542,7 +544,12 @@ function summarizeModelCosts(
 		const currency = row.currency as ModelCostCurrency;
 		currencies[currency] ??= {
 			total_nanos: 0,
-			categories: { jev: series(), embedding: series(), reranking: series() },
+			categories: {
+				jev: series(),
+				microsoft_decision: series(),
+				embedding: series(),
+				reranking: series(),
+			},
 		};
 		const totals = currencies[currency];
 		const cost = Number(row.cost_nanos);

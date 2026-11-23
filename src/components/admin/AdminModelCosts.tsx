@@ -7,6 +7,7 @@ import { TrendChart } from "../charts/TrendChart";
 
 const CATEGORIES = [
 	{ key: "jev", color: "#7c3aed" },
+	{ key: "microsoft_decision", color: "#c68121" },
 	{ key: "embedding", color: "#2563eb" },
 	{ key: "reranking", color: "#0d9488" },
 ] as const;
@@ -91,7 +92,7 @@ export function AdminModelCosts({
 						</label>
 					)}
 				</div>
-				<dl className="mt-4 grid gap-3 border-t border-default pt-4 sm:grid-cols-3">
+				<dl className="mt-4 grid gap-3 border-t border-default pt-4 grid-cols-2 lg:grid-cols-4">
 					{CATEGORIES.map(({ key, color }) => {
 						const attempts = costs?.categories[key].attempts;
 						const amounts = currencies.flatMap(({ code, values }) => {

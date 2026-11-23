@@ -46,7 +46,7 @@ DEEPINFRA_API_KEY=
 # ─── SiliconFlow (optional primary embedding provider) ───
 SILICONFLOW_API_KEY=
 
-# Jev primary, optional ZenMux Jev failover, then DeepInfra Qwen3-Reranker-8B
+# ZenMux serves Microsoft Decision for CN and Jev failover elsewhere. DeepInfra provides the final reranker.
 TYPESAFE_API_KEY=
 ZENMUX_API_KEY=
 

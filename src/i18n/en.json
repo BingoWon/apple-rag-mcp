@@ -721,6 +721,7 @@
 		"model_cost_title": "Model costs",
 		"model_cost_total": "Total recorded cost",
 		"model_cost_jev": "Jev",
+		"model_cost_microsoft_decision": "Microsoft Decision",
 		"model_cost_embedding": "Embeddings",
 		"model_cost_reranking": "Fallback reranking",
 		"model_cost_chart_currency": "Chart currency",

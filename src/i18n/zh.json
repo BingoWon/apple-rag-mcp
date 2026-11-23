@@ -710,6 +710,7 @@
 		"model_cost_title": "模型费用",
 		"model_cost_total": "已记录费用合计",
 		"model_cost_jev": "Jev",
+		"model_cost_microsoft_decision": "Microsoft Decision",
 		"model_cost_embedding": "向量嵌入",
 		"model_cost_reranking": "兜底重排",
 		"model_cost_chart_currency": "图表币种",

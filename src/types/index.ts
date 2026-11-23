@@ -90,7 +90,7 @@ export interface AdminBillingStats {
 	receipts: Record<string, AdminMetricStats>;
 }
 
-export type ModelCostCategory = "jev" | "embedding" | "reranking";
+export type ModelCostCategory = "jev" | "microsoft_decision" | "embedding" | "reranking";
 export type ModelCostCurrency = "USD" | "CNY";
 
 export interface AdminModelCosts {

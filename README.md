@@ -8,7 +8,7 @@
 
 ### Apple developer knowledge for your AI agent.
 
-*Give your agent Apple documentation and WWDC26 transcripts through MCP or CLI. RAG retrieval finds the sources, and [Jev](https://typesafe.ai/) ranks the results.*
+*Give your agent Apple documentation and WWDC26 transcripts through MCP or CLI. Hybrid search finds the sources. [Jev](https://typesafe.ai/) or Microsoft Decision ranks them for your question.*
 
 [Website](https://apple-rag.com) · Powered by [<img src="./public/typesafe-logo.webp" alt="" width="18" height="18"> Jev](https://typesafe.ai/)
 
@@ -34,8 +34,7 @@ All three tools are available through MCP and the CLI. The [dashboard](https://a
 
 [Jev](https://typesafe.ai/), a decision model, scores candidate Apple documentation
 and video transcripts against each query's API, platform, and version requirements.
-We use its relevance scores to rank the sources returned through MCP or CLI. A backup
-reranker takes over if the API call fails.
+For requests from mainland China, Microsoft Decision 1.1 scores the same candidates through ZenMux. MCP and CLI return sources in order of their relevance scores. Qwen takes over if the decision model cannot score the batch.
 
 ---
 
@@ -44,7 +43,7 @@ reranker takes over if the API call fails.
 The [hosted service](https://apple-rag.com/) connects your agent to an Apple knowledge base that is already collected, cleaned, and indexed.
 
 - **Ready-to-query sources:** Official developer documentation and video transcripts, available through one connection.
-- **Retrieval model calls included:** Embeddings, [Jev](https://typesafe.ai/) ranking, and the backup reranker run on our service.
+- **Retrieval model calls included:** Embeddings, decision model scoring, and the backup reranker run on our service.
 - **Ongoing upkeep:** We handle content collection, index updates, database backups, and protocol compatibility.
 
 The hosted service operates the database, refreshes the corpus, and manages retrieval model credentials. The CLI is distributed separately; the application source is public.
@@ -108,7 +107,7 @@ Saving a configuration alone does not verify a working connection.
 Get quick responses with our optimized search infrastructure. No more hunting through docs.
 
 ### 🎯 **AI-Powered Hybrid Search**
-Hybrid search combines keyword and semantic retrieval for Apple documentation and video transcripts. [Jev](https://typesafe.ai/) then ranks the combined candidates against your question, giving your agent more relevant context.
+Hybrid search combines keyword and semantic retrieval for Apple documentation and video transcripts. A decision model then ranks the combined candidates against your question, giving your agent more relevant context.
 
 ### 🔒 **Account Access**
 Use separate MCP and CLI credentials with shared account quotas and individually revocable access.

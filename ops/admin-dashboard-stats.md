@@ -46,10 +46,9 @@ indexing batches. Selecting a channel limits the model chart to that channel.
 The chart begins with the first recorded attempt. Earlier expenses, standalone
 maintenance scripts, and evaluation calls can be checked in provider billing.
 
-Official Jev runs first. If it fails, `ZENMUX_API_KEY` enables `typesafe/jev-1.14`
+Mainland China searches use Microsoft Decision 1.1 through ZenMux first. Its scores use the same rubric as Jev; calls are estimated at $0.042 per million input tokens. The dashboard separates Microsoft Decision from Qwen using the requested model ID in `model_usage_events.model`. Historical rows keep their original categories. For other visitor countries and unknown origins, official Jev runs first. If it fails, `ZENMUX_API_KEY` enables `typesafe/jev-1.14`
 via the [ZenMux System One API](https://zenmux.ai/docs/api/typesafe/systemone.html).
-Both count toward Jev at $0.042 per million input tokens. If neither Jev request
-produces usable scores, DeepInfra's Qwen3-Reranker-8B runs. Its reported cost takes
+Both count toward Jev at $0.042 per million input tokens. If the selected decision route fails to produce usable scores, DeepInfra's Qwen3-Reranker-8B runs. Its reported cost takes
 precedence over the $0.050 per million input tokens estimate. Embedding estimates
 use ¥0.14 per million input tokens for SiliconFlow China and $0.020 for DeepInfra.
 Attempts without usage or cost are reported separately. Local chart estimates can

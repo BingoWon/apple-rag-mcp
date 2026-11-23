@@ -70,9 +70,10 @@ test("ZenMux Jev recovers before Qwen and records both Jev attempts under one ca
 	assert.equal(ranked[0].originalIndex, 1);
 	assert.equal(setup.calls.length, 2);
 	assert.deepEqual(usage, [
-		{ category: "jev" },
+		{ category: "jev", model: "jev-latest" },
 		{
 			category: "jev",
+			model: "typesafe/jev-1.14",
 			inputTokens: 459,
 			currency: "USD",
 			costNanos: 19278,
@@ -272,10 +273,14 @@ test("bounds large UTF-8 contexts without dropping candidates or truncating retu
 	assert.equal(setup.alerts.length, 0);
 });
 
-test("CN searches use Qwen at any ingress and all other countries try Jev first", async (t) => {
+test("CN searches use Microsoft Decision at any ingress and all other countries try Jev first", async (t) => {
 	const setup = service(t, (url, body) =>
-		url.includes("deepinfra")
-			? Response.json({ scores: [0.2, 0.9] })
+		url.includes("zenmux")
+			? Response.json({
+					model: "microsoft/microsoft-decision-1.1",
+					answers: { d0: { type: "score", score: 0 }, d1: { type: "score", score: 3 } },
+					usage: { input_tokens: 100 },
+				})
 			: jevResponse(body as { questions: Record<string, unknown> }),
 	);
 	for (const [country, ingress, model] of [
@@ -308,7 +313,12 @@ test("CN searches use Qwen at any ingress and all other countries try Jev first"
 			usage.map((e) => e.category),
 			[model],
 		);
-		assert.deepEqual(reasons, model === "jev" ? [] : ["RERANKER_FALLBACK"]);
+		assert.deepEqual(reasons, []);
+		if (country === "CN") {
+			assert.equal(usage[0].model, "microsoft/microsoft-decision-1.1");
+			assert.equal(usage[0].costNanos, 4200);
+			assert.equal(setup.calls.at(-1), "https://zenmux.ai/api/v1/systemone");
+		}
 	}
 	assert.deepEqual(setup.alerts, []);
 });
@@ -336,10 +346,55 @@ test("an explicit region denial selects Qwen immediately; a different 451 still 
 	);
 });
 
-test("a failed regional Qwen request reports only the provider actually called", async (t) => {
-	const setup = service(t, () => new Response("outage", { status: 503 }));
-	const r = new RerankerService(keys, (_key, msg) => setup.alerts.push(msg), undefined, "CN");
-	await assert.rejects(r.rerank("SwiftUI", documents, 1), /original candidate order/);
-	assert.equal(setup.calls.length, 1);
-	assert.match(setup.alerts[0], /Jev skipped[\s\S]*Qwen3-Reranker-8B failed: HTTP 503/);
+test("CN switches directly to Qwen on misconfiguration, transport failure, or unusable Microsoft scores", async (t) => {
+	for (const failure of [
+		"missing key",
+		"timeout",
+		"wrong model",
+		"missing score",
+		"double failure",
+	] as const) {
+		await t.test(failure, async (st) => {
+			const setup = service(st, (url, body) => {
+				if (url.includes("deepinfra"))
+					return failure === "double failure"
+						? new Response(null, { status: 503 })
+						: Response.json({ scores: [0, 1] });
+				assert.equal(url, "https://zenmux.ai/api/v1/systemone");
+				assert.equal(body.model, "microsoft/microsoft-decision-1.1");
+				if (failure === "timeout") throw new DOMException("deadline", "TimeoutError");
+				return Response.json({
+					model: failure === "wrong model" ? "typesafe/jev-1.14" : body.model,
+					answers: { d0: { type: "score", score: 1 } },
+					usage: { input_tokens: 100 },
+				});
+			});
+			const usage: ModelUsageEvent[] = [];
+			const reasons: string[] = [];
+			const r = new RerankerService(
+				{ ...keys, ZENMUX_API_KEY: failure === "missing key" ? undefined : "test-zenmux" },
+				(_key, msg) => setup.alerts.push(msg),
+				(event) => usage.push(event),
+				"CN",
+			);
+			const result = r.rerank("SwiftUI", documents, 1, undefined, (reason) => reasons.push(reason));
+			if (failure === "double failure") {
+				await assert.rejects(result, /original candidate order/);
+				assert.match(setup.alerts[0], /Qwen3-Reranker-8B failed/);
+			} else {
+				assert.equal((await result)[0].originalIndex, 1);
+				assert.deepEqual(reasons, ["RERANKER_FALLBACK"]);
+				assert.match(setup.alerts[0], /Fallback Qwen3-Reranker-8B succeeded/);
+			}
+			assert.equal(setup.alerts.length, 1);
+			assert.match(setup.alerts[0], /Microsoft Decision failed/);
+			assert.deepEqual(
+				usage.map((e) => e.model),
+				[
+					...(failure === "missing key" ? [] : ["microsoft/microsoft-decision-1.1"]),
+					"Qwen/Qwen3-Reranker-8B",
+				],
+			);
+		});
+	}
 });

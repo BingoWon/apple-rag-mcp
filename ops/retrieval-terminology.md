@@ -7,7 +7,7 @@ descriptions:
 - Semantic search uses query/document embeddings to retrieve similar content.
 - Hybrid search combines keyword and semantic retrieval.
 - [Jev](https://typesafe.ai/) scores and reranks the merged candidates from both
-  retrieval paths. Its role is relevance ranking after retrieval.
+  retrieval paths. Mainland China searches use Microsoft Decision 1.1 for the same scoring task.
 - RAG is the workflow of supplying retrieved sources to an agent or model to
   support answer generation; it is broader than semantic search. See the
   [original RAG paper](https://arxiv.org/abs/2005.11401).

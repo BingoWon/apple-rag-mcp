@@ -479,6 +479,11 @@ test("model costs preserve native currencies, coverage and the request channel",
 	);
 	const first = "2026-10-07T16:00:00.000Z";
 	insert.run(first, "jev", "mcp", "USD", 42, "estimated");
+	sqlite
+		.prepare(
+			"INSERT INTO model_usage_events (created_at,category,model,channel,currency,cost_nanos,cost_source) VALUES (?, 'reranking','microsoft/microsoft-decision-1.1','cli','USD',126,'estimated')",
+		)
+		.run("2026-10-09T01:00:00.000Z");
 	insert.run("2026-10-07T17:00:00.000Z", "jev", "mcp", "USD", 42, "estimated");
 	insert.run("2026-10-08T01:00:00.000Z", "embedding", "cli", "CNY", 140, "estimated");
 	insert.run("2026-10-08T03:00:00.000Z", "embedding", null, "USD", 20, "estimated");
@@ -490,7 +495,9 @@ test("model costs preserve native currencies, coverage and the request channel",
 	assert.equal(data.model_costs.exchange_rate, 6.81);
 	assert.equal(first_recorded_at, first);
 	assert.deepEqual(categories.jev, { attempts: 3, unpriced_attempts: 1 });
-	assert.equal(currencies.USD?.total_nanos, 104);
+	assert.deepEqual(categories.microsoft_decision, { attempts: 1, unpriced_attempts: 0 });
+	assert.equal(currencies.USD?.categories.microsoft_decision.total_nanos, 126);
+	assert.equal(currencies.USD?.total_nanos, 230);
 	assert.equal(currencies.CNY?.total_nanos, 140);
 	assert.equal(currencies.USD?.categories.reranking.priced_attempts, 1);
 	assert.equal(currencies.USD?.categories.reranking.total_nanos, 0);

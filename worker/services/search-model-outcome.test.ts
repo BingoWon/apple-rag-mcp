@@ -15,6 +15,7 @@ test("concurrent searches persist their own attempts and notify only after the f
 		"INSERT INTO model_usage_events(created_at,category) VALUES ('2026-01-01','embedding')",
 	);
 	migrate("0018_model_attempts");
+	migrate("0019_ranking_model");
 	const pending: Promise<unknown>[] = [];
 	const messages: string[] = [];
 	const cancel = new AbortController();

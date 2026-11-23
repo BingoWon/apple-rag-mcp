@@ -1,3 +1,5 @@
+export const MICROSOFT_DECISION_MODEL = "microsoft/microsoft-decision-1.1";
+
 export interface EmbeddingAttempt {
 	provider: "SiliconFlow" | "DeepInfra";
 	attempt: number;
@@ -15,6 +17,7 @@ export interface EmbeddingAttempt {
 
 export interface ModelUsageEvent {
 	category: "jev" | "embedding" | "reranking";
+	model?: string;
 	inputTokens?: number;
 	currency?: "USD" | "CNY";
 	costNanos?: number;
@@ -60,8 +63,8 @@ export function createModelUsageRecorder(
 							.prepare(
 								`INSERT INTO model_usage_events
 							(created_at, category, channel, input_tokens, currency, cost_nanos, cost_source,
-							 request_id, provider, attempt_no, timeout_ms, elapsed_ms, attempt_outcome, http_status)
-							VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+							 request_id, provider, attempt_no, timeout_ms, elapsed_ms, attempt_outcome, http_status, model)
+							VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 							)
 							.bind(
 								event.createdAt,
@@ -78,6 +81,7 @@ export function createModelUsageRecorder(
 								event.attempt?.elapsed_ms ?? null,
 								event.attempt?.outcome ?? null,
 								event.attempt?.http_status ?? null,
+								event.model ?? null,
 							),
 					),
 				);

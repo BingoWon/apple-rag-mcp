@@ -8,7 +8,11 @@ import {
 	modelTimeout,
 	postModelJson,
 } from "./model-request.js";
-import { type ModelUsageRecorder, pricedModelUsage } from "./model-usage.js";
+import {
+	MICROSOFT_DECISION_MODEL,
+	type ModelUsageRecorder,
+	pricedModelUsage,
+} from "./model-usage.js";
 
 export interface RerankDocument {
 	content: string;
@@ -29,7 +33,7 @@ interface RerankerResponse {
 	inference_status?: { cost?: number; tokens_input?: number };
 }
 
-interface JevResponse {
+interface DecisionResponse {
 	model?: string;
 	answers?: Record<string, { type?: string; score?: number }>;
 	usage?: { input_tokens?: number };
@@ -41,6 +45,12 @@ export interface RankedDocument {
 	relevanceScore: number;
 }
 
+const ZENMUX = {
+	name: "zenmux",
+	key: "ZENMUX_API_KEY",
+	endpoint: "https://zenmux.ai/api/v1/systemone",
+} as const;
+const MICROSOFT_ROUTE = [{ ...ZENMUX, model: MICROSOFT_DECISION_MODEL }] as const;
 const JEV_PROVIDERS = [
 	{
 		name: "typesafe",
@@ -48,14 +58,9 @@ const JEV_PROVIDERS = [
 		model: "jev-latest",
 		endpoint: "https://api.typesafe.ai/v1/systemone",
 	},
-	{
-		name: "zenmux",
-		key: "ZENMUX_API_KEY",
-		model: "typesafe/jev-1.14",
-		endpoint: "https://zenmux.ai/api/v1/systemone",
-	},
+	{ ...ZENMUX, model: "typesafe/jev-1.14" },
 ] as const;
-type JevProvider = (typeof JEV_PROVIDERS)[number];
+type DecisionProvider = (typeof JEV_PROVIDERS | typeof MICROSOFT_ROUTE)[number];
 class JevRegionDenied extends ModelRequestError {}
 const MAX_STATE_BYTES = 64_000;
 const encoder = new TextEncoder();
@@ -114,21 +119,22 @@ export class RerankerService {
 		};
 		signal?.throwIfAborted();
 		const started = Date.now();
-		const failures: Array<{ provider: JevProvider["name"]; error: Error; ids: string }> = [];
+		const failures: Array<{ provider: DecisionProvider["name"]; error: Error; ids: string }> = [];
 		let ids = "";
 		const captureIds = (response: Response) => {
 			ids = modelResponseIds(response);
 		};
-		let payload: ReturnType<RerankerService["buildJevPayload"]> | undefined;
-		const qwenByRegion = this.visitorCountry === "CN";
-		for (const provider of qwenByRegion ? [] : JEV_PROVIDERS) {
+		let payload: ReturnType<RerankerService["buildDecisionPayload"]> | undefined;
+		const mainland = this.visitorCountry === "CN";
+		const family = mainland ? "Microsoft Decision" : "Jev";
+		for (const provider of mainland ? MICROSOFT_ROUTE : JEV_PROVIDERS) {
 			const key = this.env[provider.key];
-			if (provider.name === "zenmux" && !key) continue;
+			if (!mainland && provider.name === "zenmux" && !key) continue;
 			ids = "";
 			try {
 				if (!key) throw new ModelRequestError(`${provider.key} is not configured`, false);
-				payload ??= this.buildJevPayload(input);
-				const response = await this.jevScores(provider, key, payload, captureIds, signal);
+				payload ??= this.buildDecisionPayload(input);
+				const response = await this.decisionScores(provider, key, payload, captureIds, signal);
 				signal?.throwIfAborted();
 				const ranked = this.processResponse(response, input);
 				const primary = failures[0];
@@ -146,7 +152,7 @@ export class RerankerService {
 				signal?.throwIfAborted();
 				const failure = this.safeError(error);
 				failures.push({ provider: provider.name, error: failure, ids });
-				logger.warn(`[RERANK] ${provider.name} Jev: ${failure.message} ${ids}`);
+				logger.warn(`[RERANK] ${provider.name} ${family}: ${failure.message} ${ids}`);
 				if (error instanceof JevRegionDenied) break;
 			}
 		}
@@ -162,25 +168,24 @@ export class RerankerService {
 			const response = await this.qwenScores(input, captureIds, signal);
 			signal?.throwIfAborted();
 			const ranked = this.processResponse(response, input);
-			if (failures.length) {
-				this.reportFailure(
-					`rerank:jev:${failureKey}:recovered`,
-					`Jev failed: ${failureSummary}\nFallback Qwen3-Reranker-8B succeeded. ${ids}`,
-				);
-			}
+			this.reportFailure(
+				`rerank:${family}:${failureKey}:recovered`,
+				`${family} failed: ${failureSummary}\nFallback Qwen3-Reranker-8B succeeded. ${ids}`,
+			);
 			logger.info(
-				`[RERANK] provider=deepinfra model=${DEEPINFRA_CONFIG.RERANKER_MODEL} reason=${qwenByRegion ? "regional_route" : "provider_failure"} elapsed_ms=${Date.now() - started}`,
+				`[RERANK] provider=deepinfra model=${DEEPINFRA_CONFIG.RERANKER_MODEL} reason=provider_failure elapsed_ms=${Date.now() - started}`,
 			);
 			input.onFallback?.("RERANKER_FALLBACK");
 			return ranked;
 		} catch (error) {
 			signal?.throwIfAborted();
 			const backupError = this.safeError(error);
-			const context = qwenByRegion
-				? "Jev skipped for visitor country CN."
-				: `Jev failed: ${failureSummary}`;
+			const context = `${family} failed: ${failureSummary}`;
 			const message = `${context}\nQwen3-Reranker-8B failed: ${backupError.message} ${ids}\nSearch will use the original candidate order.`;
-			this.reportFailure(`rerank:jev:${failureKey}:qwen:${this.signature(backupError)}`, message);
+			this.reportFailure(
+				`rerank:${family}:${failureKey}:qwen:${this.signature(backupError)}`,
+				message,
+			);
 			throw new Error(`Reranking: ${message}`);
 		}
 	}
@@ -209,8 +214,8 @@ export class RerankerService {
 			: `${error.name}:${error.message.slice(0, 120)}`;
 	}
 
-	private buildJevPayload(input: RerankerInput) {
-		if (input.documents.length > 128) throw new Error("Too many candidates for Jev");
+	private buildDecisionPayload(input: RerankerInput) {
+		if (input.documents.length > 128) throw new Error("Too many candidates for decision scoring");
 
 		const state = {
 			query: input.query,
@@ -224,13 +229,13 @@ export class RerankerService {
 		// shortcut: The state is byte-bounded. Use a tokenizer if providers regularly reject this budget.
 		const available = MAX_STATE_BYTES - encoder.encode(JSON.stringify(state)).length;
 		if (available < input.documents.length * 128)
-			throw new Error("Jev context metadata exceeds budget");
+			throw new Error("Decision model context metadata exceeds budget");
 		const budget = Math.floor((available * 0.7) / input.documents.length);
 		for (const [index, document] of input.documents.entries()) {
 			state.documents[index].content = excerpt(document.content, input.query, budget);
 		}
 		if (encoder.encode(JSON.stringify(state)).length > MAX_STATE_BYTES) {
-			throw new Error("Jev context exceeds bounded input budget");
+			throw new Error("Decision model context exceeds bounded input budget");
 		}
 		const questions = Object.fromEntries(
 			input.documents.map((_, index) => [
@@ -250,15 +255,15 @@ export class RerankerService {
 		return { state, questions };
 	}
 
-	private async jevScores(
-		provider: JevProvider,
+	private async decisionScores(
+		provider: DecisionProvider,
 		key: string,
-		payload: ReturnType<RerankerService["buildJevPayload"]>,
+		payload: ReturnType<RerankerService["buildDecisionPayload"]>,
 		onResponse: (response: Response) => void,
 		signal?: AbortSignal,
 	): Promise<RerankerResponse & { model: string }> {
 		signal?.throwIfAborted();
-		let data: JevResponse | null = null;
+		let data: DecisionResponse | null = null;
 		try {
 			const response = await fetch(provider.endpoint, {
 				method: "POST",
@@ -282,9 +287,17 @@ export class RerankerService {
 				}
 				throw new ModelRequestError(`HTTP ${response.status}: ${reason}`, false, response.status);
 			}
-			data = (await response.json()) as JevResponse | null;
+			data = (await response.json()) as DecisionResponse | null;
 		} finally {
-			this.recordUsage?.(pricedModelUsage("jev", data?.usage?.input_tokens, "USD", 42));
+			this.recordUsage?.({
+				...pricedModelUsage(
+					provider.model === MICROSOFT_DECISION_MODEL ? "reranking" : "jev",
+					data?.usage?.input_tokens,
+					"USD",
+					42,
+				),
+				model: provider.model,
+			});
 		}
 		if (
 			typeof data?.model !== "string" ||
@@ -292,7 +305,7 @@ export class RerankerService {
 				? !data.model.startsWith("jev-")
 				: data.model !== provider.model)
 		) {
-			throw new Error("Invalid Jev model response");
+			throw new Error("Unexpected decision model in response");
 		}
 		const scores = Object.keys(payload.questions).map((id) => {
 			const answer = data.answers?.[id];
@@ -302,7 +315,7 @@ export class RerankerService {
 				answer.score! < 0 ||
 				answer.score! > 3
 			) {
-				throw new Error(`Missing or invalid Jev score for ${id}`);
+				throw new Error(`Missing or invalid decision score for ${id}`);
 			}
 			return answer.score!;
 		});
@@ -329,12 +342,15 @@ export class RerankerService {
 			return response;
 		} finally {
 			if (this.env.DEEPINFRA_API_KEY && this.recordUsage) {
-				const usage = pricedModelUsage(
-					"reranking",
-					response?.input_tokens ?? response?.inference_status?.tokens_input,
-					"USD",
-					50,
-				);
+				const usage = {
+					model: DEEPINFRA_CONFIG.RERANKER_MODEL,
+					...pricedModelUsage(
+						"reranking",
+						response?.input_tokens ?? response?.inference_status?.tokens_input,
+						"USD",
+						50,
+					),
+				};
 				const cost = response?.inference_status?.cost;
 				const nanos = typeof cost === "number" ? Math.round(cost * 1e9) : NaN;
 				this.recordUsage(

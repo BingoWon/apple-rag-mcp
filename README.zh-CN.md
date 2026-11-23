@@ -8,7 +8,7 @@
 
 ### 面向智能体的 Apple 开发知识服务。
 
-*通过 MCP 或 CLI，让智能体查阅 Apple 开发文档和 WWDC26 字幕。RAG 负责检索，[Jev](https://typesafe.ai/) 按相关性排列结果。*
+*通过 MCP 或 CLI，让智能体查阅 Apple 开发文档和 WWDC26 字幕。混合检索找到资料，再由 [Jev](https://typesafe.ai/) 或 Microsoft Decision 按相关性排序。*
 
 [官网](https://apple-rag.com) · 由 [<img src="./public/typesafe-logo.webp" alt="" width="18" height="18"> Jev](https://typesafe.ai/) 驱动
 
@@ -33,8 +33,8 @@ MCP 和 CLI 都提供这三项工具。在[控制台](https://apple-rag.com/over
 ### 由 [<img src="./public/typesafe-logo.webp" alt="" width="22" height="22"> Jev](https://typesafe.ai/) 驱动
 
 我们已将 [Jev](https://typesafe.ai/) 决策模型接入搜索流程，用于相关性评分。
-它会结合查询中的 API、平台和版本要求，为候选 Apple 文档与视频字幕评分；
-我们再根据评分对结果排序，通过 MCP 或 CLI 交给智能体。调用失败时，备用重排序模型会自动接手。
+它会结合查询中的 API、平台和版本要求，为候选 Apple 文档与视频字幕评分。
+中国大陆来源的请求由 ZenMux 上的 Microsoft Decision 1.1 按同一标准评分。MCP 和 CLI 均按评分返回结果。决策模型无法完成评分时，由 Qwen 接手。
 
 ---
 
@@ -43,7 +43,7 @@ MCP 和 CLI 都提供这三项工具。在[控制台](https://apple-rag.com/over
 使用[托管服务](https://apple-rag.com/)，让智能体直接连接已经采集、清洗并建立索引的 Apple 开发资料库。
 
 - **现成的资料索引：** 官方开发文档与视频字幕，通过一个连接即可检索。
-- **包含检索模型调用：** 向量生成、[Jev](https://typesafe.ai/) 排序与备用模型均由服务端处理。
+- **包含检索模型调用：** 向量生成、决策模型评分与备用重排均由服务端处理。
 - **持续维护：** 内容采集、索引更新、数据库备份和协议适配由我们负责。
 
 托管服务负责数据库、资料索引更新和检索模型凭据。CLI 客户端独立分发，应用源码公开。
@@ -106,7 +106,7 @@ MCP 和 CLI 都提供这三项工具。在[控制台](https://apple-rag.com/over
 通过我们优化的搜索基础设施获得快速响应。不再需要翻遍文档。
 
 ### 🎯 **AI 驱动的混合搜索**
-混合搜索结合关键词与语义检索，找到候选 Apple 文档与视频字幕，再由 [Jev](https://typesafe.ai/) 对合并后的资料进行相关性重排，让智能体优先获取更相关的上下文。
+混合搜索结合关键词与语义检索，找到候选 Apple 文档与视频字幕，再由决策模型对合并后的资料进行相关性重排，让智能体优先获取更相关的上下文。
 
 ### 🔒 **账号访问管理**
 MCP 与 CLI 使用独立凭据，共用账号额度，可单独撤销访问。

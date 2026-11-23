@@ -30,6 +30,7 @@ const emptyModelCosts: AdminDashboardStats["model_costs"] = {
 	exchange_rate: null,
 	categories: {
 		jev: { attempts: 0, unpriced_attempts: 0 },
+		microsoft_decision: { attempts: 0, unpriced_attempts: 0 },
 		embedding: { attempts: 0, unpriced_attempts: 0 },
 		reranking: { attempts: 0, unpriced_attempts: 0 },
 	},

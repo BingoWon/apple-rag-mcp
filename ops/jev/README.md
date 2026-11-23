@@ -1,6 +1,6 @@
 # [Jev](https://typesafe.ai/) Live Evaluation
 
-For the ZenMux model ID, endpoint, and a standalone smoke test, see [ZenMux Jev integration](zenmux.md). For the country-based choice between Jev and Qwen, see [production reranker routing](../incidents/2026-11-22-jev-region.md#production-routing).
+For the ZenMux model ID, endpoint, and a standalone smoke test, see [ZenMux Jev integration](zenmux.md). For the country-based choice between Jev and Microsoft Decision and the Qwen fallback, see [production reranker routing](../incidents/2026-11-22-jev-region.md#production-routing).
 
 These scripts replay actual searches using only the supplied model.
 They do not call the production MCP endpoint, an embedding model, or the existing
