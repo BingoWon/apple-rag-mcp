@@ -10,8 +10,7 @@ const buttonVariants = cva(
 		variants: {
 			variant: {
 				default: "bg-tertiary text-light border border-default hover:bg-secondary",
-				primary:
-					"bg-action-surface text-action-surface-foreground border border-transparent hover:opacity-90",
+				primary: "bg-action text-action-foreground border border-transparent hover:opacity-90",
 				secondary: "bg-tertiary text-light hover:bg-secondary border border-default",
 				ghost: "bg-transparent text-light hover:bg-secondary border border-transparent",
 				gradient:
