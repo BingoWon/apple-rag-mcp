@@ -13,6 +13,7 @@ const metrics = [
 		label: "stats_doc_pages",
 		icon: IconFileText,
 		color: "#9595ff",
+		textColor: "var(--color-metric-docs)",
 		url: "https://developer.apple.com/documentation",
 	},
 	{
@@ -20,6 +21,7 @@ const metrics = [
 		label: "stats_wwdc_videos",
 		icon: IconVideo,
 		color: "#fca147",
+		textColor: "var(--color-metric-videos)",
 		url: "https://developer.apple.com/videos/",
 	},
 	{
@@ -27,6 +29,7 @@ const metrics = [
 		label: "stats_chunks",
 		icon: IconDatabase,
 		color: "#42c16e",
+		textColor: "var(--color-metric-chunks)",
 		url: undefined,
 	},
 	{
@@ -34,6 +37,7 @@ const metrics = [
 		label: "stats_embedded",
 		icon: IconCircleCheck,
 		color: "#dc5bb7",
+		textColor: "var(--color-metric-coverage)",
 		url: undefined,
 	},
 ] as const;
@@ -72,12 +76,12 @@ export default function StatsCards() {
 			<CardContent className="p-6">
 				{data && (
 					<div className="flex justify-center mb-5">
-						<div className="flex max-w-full items-center gap-2 rounded-full bg-action px-1.5 py-1">
+						<div className="flex max-w-full items-center gap-2 rounded-full bg-action-surface px-1.5 py-1">
 							<div className="w-fit rounded-full bg-white px-2 py-0.5 text-xs font-semibold text-blue-700 sm:text-sm text-center flex items-center gap-1">
 								<IconCircleCheck aria-hidden="true" className="w-4 h-4" />
 								<span className="hidden sm:inline">{t("common.status")}</span>
 							</div>
-							<p className="min-w-0 pr-2 text-xs font-semibold text-action-foreground @[450px]:text-base">
+							<p className="min-w-0 pr-2 text-xs font-semibold text-action-surface-foreground @[450px]:text-base">
 								{t("dashboard.stats_freshness")}
 							</p>
 						</div>
@@ -97,7 +101,7 @@ export default function StatsCards() {
 				</div>
 				{data ? (
 					<div className="grid grid-cols-2 gap-3 @[450px]:grid-cols-4 @[450px]:gap-4">
-						{metrics.map(({ field, label, icon: Icon, color, url }) => {
+						{metrics.map(({ field, label, icon: Icon, color, textColor, url }) => {
 							const Tile = url ? "a" : "div";
 							return (
 								<Tile
@@ -119,10 +123,10 @@ export default function StatsCards() {
 										url &&
 											"motion-safe:transition-transform motion-safe:duration-[350ms] motion-safe:hover:scale-110",
 									)}
-									style={{ backgroundColor: `${color}20` }}
+									style={{ backgroundColor: `${color}20`, color: textColor }}
 								>
-									<Icon aria-hidden="true" className="size-6 lg:size-8" style={{ color }} />
-									<strong className="text-lg tabular-nums text-light @[450px]:text-xl">
+									<Icon aria-hidden="true" className="size-6 lg:size-8" />
+									<strong className="text-lg font-semibold tabular-nums @[450px]:text-xl">
 										{data[field] === null
 											? "—"
 											: new Intl.NumberFormat(
@@ -133,11 +137,10 @@ export default function StatsCards() {
 												).format(field === "embedded_percentage" ? data[field] / 100 : data[field])}
 									</strong>
 									<span
-										className={
-											url
-												? "text-xs font-medium text-action underline-offset-2 group-hover:underline @[450px]:text-sm"
-												: "text-xs font-medium text-light @[450px]:text-sm"
-										}
+										className={cn(
+											"text-xs font-semibold @[450px]:text-sm",
+											url && "underline-offset-2 group-hover:underline",
+										)}
 									>
 										{t(`dashboard.${label}`)}
 									</span>
