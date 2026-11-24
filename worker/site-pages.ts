@@ -7,7 +7,8 @@ export function sitePage(response: Response, pathname: string): Response {
 		headers: response.headers,
 	});
 	output.headers.set("X-Robots-Tag", page.robots);
-	output.headers.set("Cache-Control", "no-cache");
+	output.headers.set("Cache-Control", "no-cache, no-store, must-revalidate");
+	output.headers.set("CDN-Cache-Control", "no-store");
 	output.headers.delete("ETag");
 	output.headers.delete("Last-Modified");
 	return new HTMLRewriter()

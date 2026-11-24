@@ -1,41 +1,46 @@
-import { lazy, Suspense } from "react";
+import { Suspense } from "react";
 import { useTranslation } from "react-i18next";
 import { Route, Routes } from "react-router-dom";
+import { lazyWithRecovery } from "@/lib/deployment-recovery";
 
-const ConnectPage = lazy(() => import("@/pages/ConnectPage"));
-const CLIAuthorizePage = lazy(() => import("@/pages/cli/AuthorizePage"));
-const DashboardLayout = lazy(() => import("@/components/layout/DashboardLayout"));
-const HomePage = lazy(() => import("@/pages/HomePage"));
-const LoginPage = lazy(() => import("@/pages/auth/LoginPage"));
-const RegisterPage = lazy(() => import("@/pages/auth/RegisterPage"));
-const ForgotPasswordPage = lazy(() => import("@/pages/auth/ForgotPasswordPage"));
-const ResetPasswordPage = lazy(() => import("@/pages/auth/ResetPasswordPage"));
-const OverviewPage = lazy(() => import("@/pages/dashboard/OverviewPage"));
-const SettingsPage = lazy(() => import("@/pages/dashboard/SettingsPage"));
-const MessagesPage = lazy(() => import("@/pages/dashboard/MessagesPage"));
-const UsagePage = lazy(() => import("@/pages/dashboard/UsagePage"));
-const AuthorizedIPsPage = lazy(() => import("@/pages/dashboard/AuthorizedIPsPage"));
-const MCPTokensPage = lazy(() => import("@/pages/dashboard/MCPTokensPage"));
-const BillingPage = lazy(() => import("@/pages/dashboard/BillingPage"));
-const SuccessPage = lazy(() => import("@/pages/SuccessPage"));
-const NotFoundPage = lazy(() => import("@/pages/NotFoundPage"));
-const AdminDashboard = lazy(() => import("@/pages/admin/AdminDashboard"));
-const AdminClientsPage = lazy(() => import("@/pages/admin/ClientsPage"));
-const AdminUsersPage = lazy(() => import("@/pages/admin/UsersPage"));
-const AdminMCPTokensPage = lazy(() => import("@/pages/admin/MCPTokensPage"));
-const AdminAuthorizedIPsPage = lazy(() => import("@/pages/admin/AuthorizedIPsPage"));
-const AdminSearchLogsPage = lazy(() => import("@/pages/admin/SearchLogsPage"));
-const AdminBrowseLogsPage = lazy(() => import("@/pages/admin/BrowseLogsPage"));
-const AdminFetchLogsPage = lazy(() => import("@/pages/admin/FetchLogsPage"));
-const AdminUserSubscriptionsPage = lazy(() => import("@/pages/admin/UserSubscriptionsPage"));
-const AdminContactMessagesPage = lazy(() => import("@/pages/admin/ContactMessagesPage"));
-const AuthLayout = lazy(() =>
+const ConnectPage = lazyWithRecovery(() => import("@/pages/ConnectPage"));
+const CLIAuthorizePage = lazyWithRecovery(() => import("@/pages/cli/AuthorizePage"));
+const DashboardLayout = lazyWithRecovery(() => import("@/components/layout/DashboardLayout"));
+const HomePage = lazyWithRecovery(() => import("@/pages/HomePage"));
+const LoginPage = lazyWithRecovery(() => import("@/pages/auth/LoginPage"));
+const RegisterPage = lazyWithRecovery(() => import("@/pages/auth/RegisterPage"));
+const ForgotPasswordPage = lazyWithRecovery(() => import("@/pages/auth/ForgotPasswordPage"));
+const ResetPasswordPage = lazyWithRecovery(() => import("@/pages/auth/ResetPasswordPage"));
+const OverviewPage = lazyWithRecovery(() => import("@/pages/dashboard/OverviewPage"));
+const SettingsPage = lazyWithRecovery(() => import("@/pages/dashboard/SettingsPage"));
+const MessagesPage = lazyWithRecovery(() => import("@/pages/dashboard/MessagesPage"));
+const UsagePage = lazyWithRecovery(() => import("@/pages/dashboard/UsagePage"));
+const AuthorizedIPsPage = lazyWithRecovery(() => import("@/pages/dashboard/AuthorizedIPsPage"));
+const MCPTokensPage = lazyWithRecovery(() => import("@/pages/dashboard/MCPTokensPage"));
+const BillingPage = lazyWithRecovery(() => import("@/pages/dashboard/BillingPage"));
+const SuccessPage = lazyWithRecovery(() => import("@/pages/SuccessPage"));
+const NotFoundPage = lazyWithRecovery(() => import("@/pages/NotFoundPage"));
+const AdminDashboard = lazyWithRecovery(() => import("@/pages/admin/AdminDashboard"));
+const AdminClientsPage = lazyWithRecovery(() => import("@/pages/admin/ClientsPage"));
+const AdminUsersPage = lazyWithRecovery(() => import("@/pages/admin/UsersPage"));
+const AdminMCPTokensPage = lazyWithRecovery(() => import("@/pages/admin/MCPTokensPage"));
+const AdminAuthorizedIPsPage = lazyWithRecovery(() => import("@/pages/admin/AuthorizedIPsPage"));
+const AdminSearchLogsPage = lazyWithRecovery(() => import("@/pages/admin/SearchLogsPage"));
+const AdminBrowseLogsPage = lazyWithRecovery(() => import("@/pages/admin/BrowseLogsPage"));
+const AdminFetchLogsPage = lazyWithRecovery(() => import("@/pages/admin/FetchLogsPage"));
+const AdminUserSubscriptionsPage = lazyWithRecovery(
+	() => import("@/pages/admin/UserSubscriptionsPage"),
+);
+const AdminContactMessagesPage = lazyWithRecovery(
+	() => import("@/pages/admin/ContactMessagesPage"),
+);
+const AuthLayout = lazyWithRecovery(() =>
 	import("@/pages/auth/AuthLayout").then(({ AuthLayout }) => ({ default: AuthLayout })),
 );
-const LegalLayout = lazy(() =>
+const LegalLayout = lazyWithRecovery(() =>
 	import("@/pages/legal/LegalLayout").then(({ LegalLayout }) => ({ default: LegalLayout })),
 );
-const AdminLayout = lazy(() =>
+const AdminLayout = lazyWithRecovery(() =>
 	import("@/pages/admin/AdminLayout").then(({ AdminLayout }) => ({ default: AdminLayout })),
 );
 

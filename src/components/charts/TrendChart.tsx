@@ -1,11 +1,12 @@
 import type { ApexOptions } from "apexcharts";
-import { lazy, memo, Suspense, useMemo } from "react";
+import { memo, Suspense, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@/components/providers/ThemeProvider";
+import { lazyWithRecovery } from "@/lib/deployment-recovery";
 import type { AdminMetricStats } from "@/types";
 import { TOOL_OUTCOMES } from "../../../shared/tool-outcomes";
 
-const ApexChart = lazy(() => import("react-apexcharts"));
+const ApexChart = lazyWithRecovery(() => import("react-apexcharts"));
 export const OUTCOME_COLORS = {
 	success: "#22c55e",
 	degraded: "#06b6d4",

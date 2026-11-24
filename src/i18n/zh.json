@@ -759,11 +759,17 @@
 		"is_error": "觉得这里出了问题？"
 	},
 	"errorboundary": {
-		"title": "页面出错了",
-		"subtitle": "刚才遇到了一点意外，重试或刷新页面试试。",
-		"details": "错误详情（仅开发环境）",
+		"title": "页面遇到意外错误",
+		"subtitle": "当前页面发生了异常，刷新页面或重试即可恢复。",
+		"update_title": "页面资源已更新",
+		"update_subtitle": "网站刚刚发布了新版本，当前页面加载的旧资源已失效，刷新即可切换至最新版。",
+		"details": "查看错误详情",
+		"copy_details": "复制错误信息",
+		"copied": "已复制",
 		"try_again": "重试",
-		"reload": "刷新页面"
+		"reload": "刷新页面",
+		"reload_update": "刷新加载新版",
+		"back_home": "回到首页"
 	},
 	"fab": {
 		"label": "联系我们",

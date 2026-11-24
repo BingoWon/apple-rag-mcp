@@ -11,6 +11,7 @@ function browser(
 	entry = "/assets/build-a.js",
 	storage = new Map<string, string>(),
 	blocked = false,
+	options?: { onLine?: boolean; alreadyReloading?: boolean },
 ) {
 	const handlers = new Map<string, (event: object) => void>();
 	let reloads = 0;
@@ -23,8 +24,15 @@ function browser(
 		rel = "stylesheet";
 		href = "https://apple-rag.com/assets/missing.css";
 	}
+	const win = {
+		__APPLE_RAG_RELOADING__: options?.alreadyReloading,
+		addEventListener: (name: string, handler: (event: object) => void) =>
+			handlers.set(name, handler),
+		location: { origin: "https://apple-rag.com", reload: () => reloads++ },
+	};
 	runInNewContext(script as string, {
 		document: { querySelector: () => ({ getAttribute: () => entry }) },
+		navigator: options?.onLine === undefined ? undefined : { onLine: options.onLine },
 		sessionStorage: {
 			getItem: (key: string) => {
 				if (blocked) throw new Error("Storage unavailable");
@@ -34,16 +42,13 @@ function browser(
 		},
 		HTMLScriptElement: Script,
 		HTMLLinkElement: Link,
-		window: {
-			addEventListener: (name: string, handler: (event: object) => void) =>
-				handlers.set(name, handler),
-			location: { origin: "https://apple-rag.com", reload: () => reloads++ },
-		},
+		window: win,
 	});
 	return {
 		Script,
 		Link,
 		storage,
+		window: win,
 		reloads: () => reloads,
 		prevented: () => prevented,
 		dispatch: (name: string, target?: object) =>
@@ -90,4 +95,18 @@ test("unavailable session storage does not cause a refresh loop", () => {
 	const page = browser(undefined, undefined, true);
 	page.dispatch("vite:preloadError");
 	assert.equal(page.reloads(), 0);
+});
+
+test("offline browsers and already-reloading pages skip duplicate reloads", () => {
+	const offline = browser("/assets/build-a.js", new Map(), false, { onLine: false });
+	offline.dispatch("vite:preloadError");
+	assert.equal(offline.reloads(), 0);
+
+	const active = browser("/assets/build-a.js", new Map(), false, { alreadyReloading: true });
+	active.dispatch("vite:preloadError");
+	assert.equal(active.reloads(), 0);
+
+	const normal = browser();
+	normal.dispatch("vite:preloadError");
+	assert.equal(normal.window.__APPLE_RAG_RELOADING__, true);
 });

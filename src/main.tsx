@@ -1,16 +1,36 @@
-import { lazy, StrictMode, Suspense, useEffect } from "react";
+import { StrictMode, Suspense, useEffect, useRef } from "react";
 import { createRoot } from "react-dom/client";
 import { useTranslation } from "react-i18next";
 import { BrowserRouter, useLocation } from "react-router-dom";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { RouteErrorBoundary } from "@/components/ErrorBoundary";
 import { Providers } from "@/components/providers/Providers";
+import {
+	hasDeploymentUpdate,
+	lazyWithRecovery,
+	recoverFromStaleDeployment,
+} from "@/lib/deployment-recovery";
 import { getSiteMetadata, siteStructuredJSON } from "../shared/site";
 import { oauthReturnState } from "./lib/auth-return";
 import { AppRouter } from "./router";
 import "./i18n";
 import "./styles/globals.css";
 
-const AccountOverlays = lazy(() => import("@/components/AccountOverlays"));
+const AccountOverlays = lazyWithRecovery(() => import("@/components/AccountOverlays"));
+
+function DeploymentSync() {
+	const { pathname } = useLocation();
+	const currentPathname = useRef(pathname);
+
+	useEffect(() => {
+		if (pathname === currentPathname.current) return;
+		currentPathname.current = pathname;
+		if (hasDeploymentUpdate()) {
+			recoverFromStaleDeployment();
+		}
+	}, [pathname]);
+
+	return null;
+}
 
 function SiteMetadata() {
 	const { pathname } = useLocation();
@@ -88,13 +108,14 @@ if (root) {
 	createRoot(root).render(
 		<StrictMode>
 			<BrowserRouter>
-				<ErrorBoundary>
+				<RouteErrorBoundary scope="root">
 					<Providers>
+						<DeploymentSync />
 						<SiteMetadata />
 						<AppRouter />
 					</Providers>
 					<CustomerOverlays />
-				</ErrorBoundary>
+				</RouteErrorBoundary>
 			</BrowserRouter>
 		</StrictMode>,
 	);

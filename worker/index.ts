@@ -75,7 +75,12 @@ app.onError((err, c) => {
 	return c.json({ error: { message: "Internal server error" } }, 500);
 });
 
-app.get("/health", (c) => c.json({ status: "ok" }));
+app.get("/health", (c) =>
+	c.json({ status: "ok", version: SERVER_MANIFEST.version }, 200, {
+		"Cache-Control": "no-store",
+		"CDN-Cache-Control": "no-store",
+	}),
+);
 
 // ─── SEO ──────────────────────────────────────────────────────
 app.get("/robots.txt", (c) => {
@@ -166,10 +171,25 @@ app.notFound(async (c) => {
 				const shell = await c.env.ASSETS.fetch(request);
 				return shell.ok ? sitePage(shell, c.req.path) : shell;
 			}
+			if (res.status === 404 && c.req.path.startsWith("/assets/")) {
+				return new Response("Not Found", {
+					status: 404,
+					headers: {
+						"Cache-Control": "no-store",
+						"CDN-Cache-Control": "no-store",
+					},
+				});
+			}
 			if (res.ok && res.headers.get("Content-Type")?.includes("text/html"))
 				return sitePage(res, c.req.path);
 			return res;
 		} catch {}
+	}
+	if (c.req.path.startsWith("/assets/")) {
+		return c.text("Not Found", 404, {
+			"Cache-Control": "no-store",
+			"CDN-Cache-Control": "no-store",
+		});
 	}
 	return c.text("Not Found", 404);
 });

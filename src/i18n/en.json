@@ -773,10 +773,16 @@
 	},
 	"errorboundary": {
 		"title": "Something went wrong",
-		"subtitle": "We're sorry, but something unexpected happened. Please try again.",
-		"details": "Error details (development only)",
-		"try_again": "Try Again",
-		"reload": "Reload Page"
+		"subtitle": "This view ran into an unexpected error. Reload the page or try again.",
+		"update_title": "New version available",
+		"update_subtitle": "A newer build of Apple RAG was just deployed. Reload to load the latest files.",
+		"details": "Error details",
+		"copy_details": "Copy details",
+		"copied": "Copied",
+		"try_again": "Try again",
+		"reload": "Reload page",
+		"reload_update": "Reload to update",
+		"back_home": "Back to home"
 	},
 	"fab": {
 		"label": "Contact us",

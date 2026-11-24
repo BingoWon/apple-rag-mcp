@@ -8,10 +8,11 @@
     <script id="asset-recovery">
       (() => {
         const key = "apple-rag-asset-recovery";
-        let reloading = false;
         const recover = (event) => {
+          if (window.__APPLE_RAG_RELOADING__) return;
+          if (typeof navigator !== "undefined" && navigator.onLine === false) return;
           const entry = document.querySelector('script[type="module"][src]')?.getAttribute("src");
-          if (!entry || reloading) return;
+          if (!entry) return;
           const buildKey = key + ":" + entry;
           try {
             if (sessionStorage.getItem(buildKey)) return;
@@ -19,7 +20,7 @@
           } catch {
             return;
           }
-          reloading = true;
+          window.__APPLE_RAG_RELOADING__ = true;
           event.preventDefault();
           window.location.reload();
         };

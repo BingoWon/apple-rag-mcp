@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/Dialog";
 import { PRO_ONETIME_OPTIONS, PRO_PRICING_OPTIONS } from "@/constants/pricing";
 import { useAuth } from "@/hooks/useAuth";
+import { importWithRecovery } from "@/lib/deployment-recovery";
 import { cn } from "@/lib/utils";
 import { useDashboardStore } from "@/stores/dashboard";
 import type { PaymentType, PricingOption } from "@/types/pricing";
@@ -90,7 +91,7 @@ export function PricingModal({ children, defaultTab = "subscription" }: PricingM
 		setIsLoading(true);
 
 		try {
-			const { api } = await import("@/lib/api");
+			const { api } = await importWithRecovery(() => import("@/lib/api"));
 			const response = await api.createCheckoutSession(selectedOption, paymentMethod);
 			if (response.success && response.data?.url) {
 				window.location.href = response.data.url;

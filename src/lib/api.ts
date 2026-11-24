@@ -11,6 +11,7 @@ import type { AdminLogFilters, AdminLogKind, AdminLogsResponse } from "@/types/a
 import { normalizeEmail } from "@/utils/email";
 import type { ToolActivity, UsagePeriod } from "../../shared/tool-activity";
 import { ADMIN_PASSWORD_HEADER, ADMIN_SESSION_KEY } from "./constants";
+import { importWithRecovery, observeServerVersion } from "./deployment-recovery";
 
 function extractErrorMessage(data: unknown): string | null {
 	if (Array.isArray(data) && data.length > 0 && typeof data[0]?.message === "string") {
@@ -51,8 +52,12 @@ class ApiClient {
 		});
 
 		this.client.interceptors.response.use(
-			(r: AxiosResponse<ApiResponse>) => r,
+			(r: AxiosResponse<ApiResponse>) => {
+				observeServerVersion(r.headers?.["x-app-version"]);
+				return r;
+			},
 			(error: AxiosError) => {
+				observeServerVersion(error.response?.headers?.["x-app-version"]);
 				const url = error.config?.url ?? "";
 				const status = error.response?.status;
 				const isAuthEndpoint = url.includes("/auth/login") || url.includes("/auth/register");
@@ -62,7 +67,7 @@ class ApiClient {
 						localStorage.removeItem(ADMIN_SESSION_KEY);
 					} else if (status === 401 && error.config?.headers.Authorization) {
 						const rejected = error.config.headers.Authorization;
-						void import("@/stores/auth").then(({ useAuthStore }) => {
+						void importWithRecovery(() => import("@/stores/auth")).then(({ useAuthStore }) => {
 							const state = useAuthStore.getState();
 							if (rejected === "Bearer " + state.token) state.clearSession();
 						});

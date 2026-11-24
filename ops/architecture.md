@@ -129,6 +129,7 @@ flowchart LR
 | D1 数据层与 VPS PostgreSQL 严禁合并 | 语料、向量、目录与网页缓存固定在自管 VPS PostgreSQL；Cloudflare D1 仅存轻量应用状态与日志，不把检索语料迁移至 Cloudflare 托管存储。 | [`ops/README.md`](./README.md)、[`ops/web-retrieval.md`](./web-retrieval.md) |
 | 运营后台用 `INSTR` 过滤日志、`julianday()` 比较时间、禁止 `SELECT *` 迁移 | 2026-11-03 事故教训：D1 `LIKE` 有 50 字节模式上限且有通配符注入风险；历史日志混存 SQLite 与 ISO 时间格式；`INSERT INTO ... SELECT *` 曾导致列错位并耗尽 D1 写入配额。 | [`ops/incidents/2026-11-03-admin-log-recovery.md`](./incidents/2026-11-03-admin-log-recovery.md) |
 | 发布流程：推送 `main` 即部署，服务端与 CLI 版本独立 | Cloudflare Workers Builds 监听 `main` 自动构建部署，不走手工 `wrangler deploy`。服务端代码改动同步提升根 `package.json` 和 `server.json`；CLI 改版提升 `packages/cli/package.json` 及 `SKILL.md` 版本并在 CI 通过 npm OIDC + `--provenance` 发布。 | [`ops/README.md`](./README.md)、[`ops/cli.md`](./cli.md) |
+| SPA 三层部署防漂移（HTML 禁缓存 + 静态资源 `immutable` + `lazyWithRecovery` / `X-App-Version` + 主题化分层 `ErrorBoundary`） | Cloudflare Workers Static Assets 每次部署原子替换带 hash 的 `/assets/*`；若 HTML 被 CDN 缓存或长驻标签页持有旧清单，切换路由会触发 404 导致白屏报错。通过移除 Zone `Cache Everything`、HTML 返回 `no-store` + `CDN-Cache-Control: no-store`、`public/_headers` 标记 `/assets/*` 一年 `immutable`、`/assets/*` 404 禁缓存、API 附带 `X-App-Version`、前端统一 `lazyWithRecovery` 与分层自动复位 `ErrorBoundary` 根治发版报错。 | [`public/_headers`](../public/_headers)、[`worker/site-pages.ts`](../worker/site-pages.ts)、[`src/lib/deployment-recovery.ts`](../src/lib/deployment-recovery.ts)、[`src/components/ErrorBoundary.tsx`](../src/components/ErrorBoundary.tsx) |
 
 ---
 

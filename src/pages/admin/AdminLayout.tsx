@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { AdminAuth } from "@/components/admin/AdminAuth";
+import { RouteErrorBoundary } from "@/components/ErrorBoundary";
 import { Button } from "@/components/ui/Button";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { LoaderFive } from "@/components/ui/loader";
@@ -40,7 +41,7 @@ export function AdminLayout() {
 
 	if (isLoading) {
 		return (
-			<div className="min-h-screen bg-gray-900 flex items-center justify-center">
+			<div className="min-h-screen bg-background flex items-center justify-center">
 				<LoaderFive text={t("admin.loading")} />
 			</div>
 		);
@@ -101,7 +102,9 @@ export function AdminLayout() {
 			</header>
 
 			<main className="w-full min-w-0 mx-auto py-4 px-4 sm:px-6 sm:py-6 lg:px-8">
-				<Outlet />
+				<RouteErrorBoundary scope="page">
+					<Outlet />
+				</RouteErrorBoundary>
 			</main>
 		</div>
 	);

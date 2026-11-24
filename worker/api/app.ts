@@ -55,6 +55,7 @@ apiApp.use(async (c, next) => {
 apiApp.use(securityHeaders);
 apiApp.use("*", async (c, next) => {
 	c.header("X-Robots-Tag", "noindex, nofollow");
+	c.header("X-App-Version", packageJson.version);
 	await next();
 });
 

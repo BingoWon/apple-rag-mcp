@@ -1,10 +1,10 @@
 import { motion, useMotionTemplate, useMotionValue } from "motion/react";
 import type React from "react";
-import { lazy, type MouseEvent as ReactMouseEvent, Suspense, useState } from "react";
-
+import { type MouseEvent as ReactMouseEvent, Suspense, useState } from "react";
+import { lazyWithRecovery } from "@/lib/deployment-recovery";
 import { cn } from "@/lib/utils";
 
-const CanvasRevealEffect = lazy(() =>
+const CanvasRevealEffect = lazyWithRecovery(() =>
 	import("./canvas-reveal-effect").then(({ CanvasRevealEffect }) => ({
 		default: CanvasRevealEffect,
 	})),

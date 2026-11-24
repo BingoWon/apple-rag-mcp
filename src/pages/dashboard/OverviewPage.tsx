@@ -1,9 +1,10 @@
-import { lazy, Suspense } from "react";
+import { Suspense } from "react";
 import { useTranslation } from "react-i18next";
 import { AccountActivity } from "@/components/dashboard/AccountActivity";
 import StatsCards from "@/components/dashboard/StatsCards";
+import { lazyWithRecovery } from "@/lib/deployment-recovery";
 
-const AgentUsageGuide = lazy(() =>
+const AgentUsageGuide = lazyWithRecovery(() =>
 	import("@/components/dashboard/AgentUsageGuide").then(({ AgentUsageGuide }) => ({
 		default: AgentUsageGuide,
 	})),

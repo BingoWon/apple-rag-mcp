@@ -13,7 +13,7 @@ export function createCorsMiddleware(requestOrigin: string) {
 		},
 		allowHeaders: ["Content-Type", "Authorization", "X-Admin-Password"],
 		allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-		exposeHeaders: ["X-Request-ID", "X-Response-Time"],
+		exposeHeaders: ["X-Request-ID", "X-Response-Time", "X-App-Version"],
 		maxAge: 86400,
 		credentials: true,
 	});
