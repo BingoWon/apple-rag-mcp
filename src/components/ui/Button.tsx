@@ -10,11 +10,12 @@ const buttonVariants = cva(
 		variants: {
 			variant: {
 				default: "bg-tertiary text-light border border-default hover:bg-secondary",
-				primary: "bg-action text-action-foreground border border-transparent hover:opacity-90",
+				primary:
+					"bg-action text-action-foreground font-semibold border border-transparent hover:opacity-90",
 				secondary: "bg-tertiary text-light hover:bg-secondary border border-default",
 				ghost: "bg-transparent text-light hover:bg-secondary border border-transparent",
 				gradient:
-					"bg-gradient-to-b from-brand to-brand-tertiary text-inverse shadow-input hover:shadow-button hover:scale-[1.02] active:scale-[0.98]",
+					"bg-gradient-to-b from-brand to-brand-tertiary text-inverse font-semibold shadow-input hover:shadow-button hover:scale-[1.02] active:scale-[0.98]",
 				link: "underline-offset-4 hover:underline text-brand hover:text-brand-secondary bg-transparent hover:bg-brand/10",
 				outline: "border border-default bg-card text-light hover:bg-secondary",
 				destructive: "bg-red-600 text-white border border-transparent hover:bg-red-700",

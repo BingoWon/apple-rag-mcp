@@ -26,7 +26,7 @@ export default function TimeRangeSelector({
 					onClick={() => onTimeRangeChange(r)}
 					className={
 						presentation === "overview"
-							? `inline-flex h-9 items-center justify-center rounded-md px-3 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-brand ${r === timeRange ? "bg-brand text-white shadow-complex" : "border border-default bg-transparent text-muted hover:bg-secondary hover:text-light"}`
+							? `inline-flex h-9 items-center justify-center rounded-md px-3 text-xs transition-colors focus-visible:outline-2 focus-visible:outline-brand ${r === timeRange ? "bg-brand text-white font-semibold shadow-complex" : "border border-default bg-transparent font-medium text-muted hover:bg-secondary hover:text-light"}`
 							: `min-h-9 rounded-md px-2.5 text-xs font-medium focus-visible:outline-2 focus-visible:outline-brand ${r === timeRange ? "bg-card text-brand shadow-sm ring-1 ring-inset ring-default" : "text-muted hover:text-light"}`
 					}
 				>

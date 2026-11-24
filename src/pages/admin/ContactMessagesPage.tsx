@@ -106,7 +106,7 @@ export default function AdminContactMessagesPage() {
 						setSelectedMessage(message);
 					}}
 					size="sm"
-					className="bg-brand text-white hover:bg-brand/90 whitespace-nowrap"
+					className="bg-brand text-white font-semibold hover:bg-brand/90 whitespace-nowrap"
 				>
 					<IconMessageCircle className="w-4 h-4 mr-1.5" />
 					{t("admin.reply")}

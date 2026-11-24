@@ -125,7 +125,7 @@ export function LanguageSwitcher({
 									"w-full px-3 py-2 text-left text-sm transition-all duration-200",
 									"flex items-center gap-2 rounded-md",
 									isSelected
-										? "bg-brand text-brand-foreground font-medium shadow-sm"
+										? "bg-brand text-brand-foreground font-semibold shadow-sm"
 										: "text-foreground hover:bg-accent hover:text-accent-foreground",
 								)}
 							>

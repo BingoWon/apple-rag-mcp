@@ -64,8 +64,8 @@ test("navigation shares one color between labels and icons and uses the brand ac
 				),
 			);
 			assert.equal(html.split("text-inherit").length - 1, 2);
-			assert.ok(html.includes("font-medium"));
-			assert.ok(html.includes(active ? "bg-brand text-white" : "text-light/90"));
+			assert.ok(html.includes(active ? "font-semibold" : "font-medium"));
+			assert.ok(html.includes(active ? "bg-brand text-white font-semibold" : "text-light/90"));
 			assert.ok(!html.includes("text-muted"));
 		}
 	} finally {

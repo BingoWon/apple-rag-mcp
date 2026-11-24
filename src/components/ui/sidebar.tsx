@@ -222,8 +222,10 @@ export const SidebarLink = ({
 			aria-label={link.label}
 			aria-current={isActive ? "page" : undefined}
 			className={cn(
-				"flex items-center group/sidebar py-2 rounded-lg font-medium transition-colors duration-200 relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand",
-				isActive ? "bg-brand text-white" : "text-light/90 hover:text-light hover:bg-tertiary",
+				"flex items-center group/sidebar py-2 rounded-lg transition-colors duration-200 relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand",
+				isActive
+					? "bg-brand text-white font-semibold"
+					: "font-medium text-light/90 hover:text-light hover:bg-tertiary",
 				className,
 			)}
 			style={{

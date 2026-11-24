@@ -199,7 +199,7 @@ export function ThemeToggle({
 									"flex items-center gap-2 rounded-md",
 									"disabled:opacity-50 disabled:cursor-not-allowed",
 									isSelected
-										? "bg-brand text-brand-foreground font-medium shadow-sm"
+										? "bg-brand text-brand-foreground font-semibold shadow-sm"
 										: "text-foreground hover:bg-accent hover:text-accent-foreground",
 								)}
 							>

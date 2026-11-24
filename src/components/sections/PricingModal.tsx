@@ -131,8 +131,8 @@ export function PricingModal({ children, defaultTab = "subscription" }: PricingM
 									"h-auto min-w-0 flex-1 gap-1.5 whitespace-normal rounded-lg px-2 py-2.5",
 									paymentType === type &&
 										(recurring
-											? "bg-[#635BFF] text-white hover:bg-[#554cde]"
-											: "bg-[#146bdc] text-white hover:bg-[#105ebf]"),
+											? "bg-[#635BFF] text-white font-semibold hover:bg-[#554cde]"
+											: "bg-[#146bdc] text-white font-semibold hover:bg-[#105ebf]"),
 								)}
 								aria-pressed={paymentType === type}
 								disabled={isLoading || locked}

@@ -147,7 +147,7 @@ export function UnreadReplyNotification() {
 						type="button"
 						onClick={handleMarkAsRead}
 						disabled={isMarking}
-						className="px-6 py-2 bg-brand text-white rounded-lg font-medium hover:bg-brand-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+						className="px-6 py-2 bg-brand text-white rounded-lg font-semibold hover:bg-brand-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
 					>
 						{isMarking ? (
 							<>

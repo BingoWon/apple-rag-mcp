@@ -6,11 +6,11 @@ const badgeVariants = cva(
 	{
 		variants: {
 			variant: {
-				default: "bg-brand text-inverse",
+				default: "bg-brand text-inverse font-semibold",
 				secondary: "bg-tertiary text-muted",
-				destructive: "bg-error text-inverse",
-				success: "bg-success text-inverse",
-				warning: "bg-warning text-inverse",
+				destructive: "bg-error text-inverse font-semibold",
+				success: "bg-success text-inverse font-semibold",
+				warning: "bg-warning text-inverse font-semibold",
 				outline: "border border-default text-muted",
 			},
 		},
