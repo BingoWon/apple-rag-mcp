@@ -10,9 +10,15 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
+permissions:
+  contents: read
+
 jobs:
   check:
     runs-on: ubuntu-latest
+    outputs:
+      cli_changed: ${{ steps.cli.outputs.changed }}
+      publish_cli: ${{ steps.cli.outputs.publish }}
     services:
       postgres:
         image: postgres:16
@@ -30,11 +36,13 @@ jobs:
     env:
       TEST_DATABASE_URL: postgres://postgres:collector_test@127.0.0.1:5432/apple_rag_test
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .node-version
           cache: pnpm
@@ -47,18 +55,81 @@ jobs:
       - name: Verify atomic catalog publication on PostgreSQL
         run: python3 ops/server/test_publish_catalog.py
 
+      - name: Detect CLI changes and release need
+        id: cli
+        run: |
+          set -euo pipefail
+          CHANGED="false"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            CHANGED="true"
+          else
+            BASE="${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}"
+            if [ -n "$BASE" ] && [ "$BASE" != "0000000000000000000000000000000000000000" ] && git cat-file -e "$BASE^{commit}" 2>/dev/null; then
+              if git diff --name-only "$BASE" HEAD -- packages/cli shared skills ops/cli | grep -q .; then
+                CHANGED="true"
+              fi
+            else
+              CHANGED="true"
+            fi
+          fi
+          PUBLISH="false"
+          if [ "${{ github.event_name }}" = "push" ] && [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            OUT=$(mktemp)
+            GITHUB_OUTPUT="$OUT" node ops/cli/npm-release.mjs
+            if grep -qx "publish=true" "$OUT"; then
+              PUBLISH="true"
+              CHANGED="true"
+            fi
+            rm -f "$OUT"
+          fi
+          echo "changed=$CHANGED" >> "$GITHUB_OUTPUT"
+          echo "publish=$PUBLISH" >> "$GITHUB_OUTPUT"
+
       - name: Verify distributable CLI in an isolated consumer
+        if: steps.cli.outputs.changed == 'true'
         run: node --import tsx ops/cli/verify-package.mjs
         env:
           APPLE_RAG_RELEASE_DIR: ${{ runner.temp }}/apple-rag-cli-release
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload verified CLI artifact
+        if: steps.cli.outputs.publish == 'true'
+        uses: actions/upload-artifact@v7
         with:
           name: apple-rag-cli
           path: ${{ runner.temp }}/apple-rag-cli-release/*
           if-no-files-found: error
 
+  release:
+    needs: [check]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Create GitHub release for new version
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          VERSION="v$(node -p "require('./package.json').version")"
+
+          if git rev-parse "$VERSION" >/dev/null 2>&1; then
+            echo "$VERSION already exists."
+            exit 0
+          fi
+
+          gh release create "$VERSION" \
+            --target "$GITHUB_SHA" \
+            --title "$VERSION" \
+            --generate-notes
+
   cli-portability:
+    needs: [check]
+    if: needs.check.outputs.cli_changed == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -69,9 +140,9 @@ jobs:
             node: 26
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node }}
           cache: pnpm
@@ -81,28 +152,23 @@ jobs:
 
   publish-cli:
     needs: [check, cli-portability]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: ${{ !failure() && !cancelled() && needs.check.outputs.publish_cli == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .node-version
           registry-url: https://registry.npmjs.org
       - run: npm install -g npm@11.21.1
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: apple-rag-cli
           path: cli-release
-      - name: Check whether npm publication is needed
-        id: npm
-        run: node ops/cli/npm-release.mjs
       - name: Verify deployed service before publishing a new CLI
-        if: steps.npm.outputs.publish == 'true'
         run: node ops/cli/wait-for-service.mjs
       - name: Publish verified artifact with OIDC
-        if: steps.npm.outputs.publish == 'true'
         run: npm publish ./cli-release/*.tgz --access public --provenance

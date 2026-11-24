@@ -74,7 +74,7 @@
 
 - **纯共享层收口**：将 `tool-channels`、`tool-outcomes`、`admin-user`、`datetime` 迁入根目录 `shared/`，抽取 `shared/admin-stats.ts`，彻底消除 `src/ ↔ worker/` 与 `shared/ → worker/` 的 20 处跨层引用。
 - **领域归位与死代码清理**：将 `billing-reconciliation.{ts,test.ts}` 与 `checkout-reconciliation.test.ts` 迁回 `worker/api/services/` 并纳入 `pnpm test`；清理 `worker/api/utils/{validation,subscription}.ts` 中的过时死函数；删除合并重复的 `worker/api/types/response.ts`；删除指向退役素材的 `ops/ui/render-og-image.mjs`。
-- **细节与 CI 规范**：`request-info.ts` 改读 `OAUTH_SUBSCRIPTION_QUOTAS.hobby`；`account.ts` 去除 `/login/` 尾斜杠；`.github/workflows/ci.yml` 仅对非 `main` 分支开启 `cancel-in-progress`、统一 `.node-version` 并为公开仓库启用 npm `--provenance`（同步更新 `packages/cli/package.json`）；根 `package.json` 对齐 `engines.node >= 22.20.0` 并移除废弃 `deploy` 脚本；`.dev.vars.example` 补齐 `TELEGRAM_DEFAULT_BOT_URL`。
+- **细节与 CI 规范**：`request-info.ts` 改读 `OAUTH_SUBSCRIPTION_QUOTAS.hobby`；`account.ts` 去除 `/login/` 尾斜杠；`.github/workflows/ci.yml` 仅对非 `main` 分支开启 `cancel-in-progress`、统一 `.node-version`、为公开仓库启用 npm `--provenance`（同步更新 `packages/cli/package.json`）、将全部 Actions 升级至 Node 24 原生主版本（`checkout@v7` / `setup-node@v7` / `upload-artifact@v7` / `download-artifact@v8` / `pnpm/action-setup@v6`）、按变更路径与版本门控 `cli-portability` / `publish-cli`（保留 `ci.yml` 以兼容既有 npm OIDC Trusted Publisher 绑定）并将 `release` 合并为仅依赖 `check` 的独立 Job（移除冗余 `release.yml`）；根 `package.json` 对齐 `engines.node >= 22.20.0` 并移除废弃 `deploy` 脚本；`.dev.vars.example` 补齐 `TELEGRAM_DEFAULT_BOT_URL`。
 - **VPS PostgreSQL 配置修正**：`ops/server/pg_hba.conf` 远程访问改为强制 `hostssl`；`ops/server/postgresql.conf` 内存参数下调至匹配 3 GB 容器限额（`shared_buffers = 1GB`、`effective_cache_size = 2GB`、`maintenance_work_mem = 256MB`、`autovacuum_work_mem = 128MB`），详见第 5 节生效步骤。
 
 ### 3.5 前端缺陷修复、包体瘦身与非首页文案本土化

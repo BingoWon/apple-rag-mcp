@@ -68,10 +68,11 @@ though only `--allow-publish` was passed. CI uses direct publish only. The agent
 not read or change the owner's authenticated trust settings. The equivalent npm
 Settings → Trusted publishing → GitHub Actions form remains an optional fallback.
 
-The CI publish job runs only on main pushes after checks/portability succeed.
+The CI publish job remains in `ci.yml` (matching the npm Trusted Publisher binding) and runs on `main` pushes only when `packages/cli/package.json` contains a new unpublished version; cross-platform `cli-portability` runs only when CLI/shared/skill files change or a new CLI version is being published.
 GitHub-hosted runners use OIDC (`id-token: write`), without a long-lived npm token.
 Before publishing a new CLI, CI waits for the matching production service version
-and independent CLI API health. A failed deployment cannot release an unusable client.
+and independent CLI API health. A failed deployment cannot release an unusable client,
+while the service `release` job runs independently right after `check`.
 Missing package: record the owner bootstrap step and skip. Existing exact version:
 skip. New version of an existing package: publish through the trusted workflow.
 Registry/network/publish errors fail CI rather than masquerade as a missing package.

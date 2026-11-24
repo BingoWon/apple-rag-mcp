@@ -35,12 +35,11 @@ write allowance even on small databases. Verify real MCP tool results after rele
 ## Releases
 
 Update `package.json` and `server.json` to the same new version, then push to `main`.
-After CI succeeds, `.github/workflows/release.yml` creates its `vX.Y.Z` tag and release.
+After the `check` job in `.github/workflows/ci.yml` succeeds, the `release` job creates its `vX.Y.Z` tag and GitHub release directly (independent of CLI publication).
 An existing tag is skipped. `chore(release): vX.Y.Z` is the release commit naming convention,
 not the trigger; changing the commit message without changing the version does not publish a release.
 
-The independent npm CLI package, account/quota contract, artifact checks and
-owner-operated first publication are documented in [CLI operations](cli.md).
+Cross-platform `cli-portability` (macOS/Windows) and `publish-cli` (npm OIDC with `--provenance`) only run when CLI/shared/skill files change or when `packages/cli/package.json` introduces a new unpublished version. See [CLI operations](cli.md).
 
 ## Interface Checks
 
