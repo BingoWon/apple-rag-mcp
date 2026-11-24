@@ -546,6 +546,8 @@
 	"admin": {
 		"title": "Admin Console",
 		"dashboard": "Admin Dashboard",
+		"back_home": "Back to Home",
+		"back_dashboard": "Back to Dashboard",
 		"stats_new_records": "New records in selected period",
 		"stats_new_users": "New users",
 		"stats_active_users": "Active users",

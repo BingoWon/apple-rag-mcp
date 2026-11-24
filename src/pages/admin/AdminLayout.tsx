@@ -1,4 +1,5 @@
 import "./admin-layout.css";
+import { IconHome, IconLayoutDashboard } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, Outlet, useLocation } from "react-router-dom";
@@ -36,11 +37,6 @@ export function AdminLayout() {
 		setIsAuthenticated(!!adminPassword);
 		setIsLoading(false);
 	}, []);
-
-	const handleLogout = () => {
-		localStorage.removeItem(ADMIN_SESSION_KEY);
-		setIsAuthenticated(false);
-	};
 
 	if (isLoading) {
 		return (
@@ -88,13 +84,17 @@ export function AdminLayout() {
 					<div className="flex shrink-0 items-center gap-2">
 						<LanguageSwitcher />
 						<ThemeToggle />
-						<Button
-							onClick={handleLogout}
-							variant="link"
-							size="sm"
-							className="h-auto p-0 text-sm text-muted-foreground hover:text-foreground"
-						>
-							{t("common.logout")}
+						<Button asChild variant="outline" size="sm" className="h-8 gap-1.5 px-2.5 text-xs">
+							<Link to="/">
+								<IconHome aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
+								<span>{t("admin.back_home")}</span>
+							</Link>
+						</Button>
+						<Button asChild variant="outline" size="sm" className="h-8 gap-1.5 px-2.5 text-xs">
+							<Link to="/overview">
+								<IconLayoutDashboard aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
+								<span>{t("admin.back_dashboard")}</span>
+							</Link>
 						</Button>
 					</div>
 				</div>

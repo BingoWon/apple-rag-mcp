@@ -535,6 +535,8 @@
 	"admin": {
 		"title": "管理后台",
 		"dashboard": "管理面板",
+		"back_home": "回到首页",
+		"back_dashboard": "回到控制台",
 		"stats_new_records": "所选期间新增记录",
 		"stats_new_users": "新用户",
 		"stats_active_users": "实际使用用户",
