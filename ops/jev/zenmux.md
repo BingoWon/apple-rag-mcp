@@ -1,5 +1,7 @@
 # 在其他项目接入 ZenMux Jev 1.14
 
+> **2026-11-24 补充索引**：自 2026-11-22 起，Apple RAG 对中国大陆访客（`request.cf.country === "CN"`）优先经由 ZenMux 路由至 `microsoft/microsoft-decision-1.1`，非大陆请求继续优先使用 TypeSafe 官方 Jev，并将本文档描述的 ZenMux `typesafe/jev-1.14` 作为备用链。完整实证见 [`ops/incidents/2026-11-22-jev-region.md`](../incidents/2026-11-22-jev-region.md)。
+
 在服务端读取项目所有者单独提供的 ZenMux API Key，环境变量用 `ZENMUX_API_KEY`。需要创建 Key 时，可在 ZenMux 的 Pay As You Go 控制台操作。生产部署使用项目的 Secret 管理，日志只记录请求状态和用量。 [ZenMux 快速开始](https://zenmux.ai/docs/guide/quickstart.html) · [Pay As You Go 控制台](https://zenmux.ai/platform/pay-as-you-go)
 
 | 项目 | 值 |

@@ -1,4 +1,5 @@
 import { canonicalIP } from "../../shared/ip";
+import { OAUTH_SUBSCRIPTION_QUOTAS } from "../api/types/permissions.js";
 import type { AuthContext, RateLimitResult, SearchTrace } from "../services/types.js";
 import { FREE_ACCESS_GUIDANCE, PRO_UPGRADE_GUIDANCE } from "./access-guidance.js";
 
@@ -40,7 +41,7 @@ export function buildRateLimitMessage(
 			: `${rateLimitResult.planType} plan`;
 	const guidance = !authContext.isAuthenticated
 		? channel === "cli"
-			? "Run apple-rag auth login for a free account with 50 tool calls/week and 5 tool calls/minute, shared by search, browse, and fetch."
+			? `Run apple-rag auth login for a free account with ${OAUTH_SUBSCRIPTION_QUOTAS.hobby.week} tool calls/week and ${OAUTH_SUBSCRIPTION_QUOTAS.hobby.minute} tool calls/minute, shared by search, browse, and fetch.`
 			: FREE_ACCESS_GUIDANCE
 		: rateLimitResult.planType === "hobby"
 			? PRO_UPGRADE_GUIDANCE

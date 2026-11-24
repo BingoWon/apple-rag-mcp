@@ -1,27 +1,26 @@
 {
 	"name": "apple-rag-mcp",
-	"version": "5.15.12",
+	"version": "5.15.13",
 	"mcpName": "com.apple-rag/mcp-server",
 	"private": true,
 	"license": "MIT",
 	"type": "module",
 	"packageManager": "pnpm@11.18.0",
 	"engines": {
-		"node": ">=22.16.0",
+		"node": ">=22.20.0",
 		"pnpm": ">=11.0.0"
 	},
 	"scripts": {
 		"dev": "vite",
 		"prebuild": "pnpm verify",
 		"build": "pnpm --filter apple-rag-cli build && vite build",
-		"test": "tsx --test src/utils/*.test.ts src/lib/*.test.ts worker/api/routes/*.test.ts worker/collector/*.test.ts worker/mcp/*.test.ts worker/services/*.test.ts worker/shared/*.test.ts ops/collector/*.test.mjs ops/jev/*.test.mjs ops/cli/*.test.mjs",
+		"test": "tsx --test src/utils/*.test.ts src/lib/*.test.ts worker/api/routes/*.test.ts worker/api/services/*.test.ts worker/collector/*.test.ts worker/mcp/*.test.ts worker/services/*.test.ts worker/shared/*.test.ts ops/collector/*.test.mjs ops/jev/*.test.mjs ops/cli/*.test.mjs",
 		"lint": "biome check .",
 		"lint:fix": "biome check --write .",
 		"typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p worker/tsconfig.json && pnpm --filter apple-rag-cli typecheck",
 		"verify": "pnpm lint && pnpm typecheck && pnpm test && pnpm --filter apple-rag-cli test",
 		"check": "pnpm verify",
-		"db:migrate": "wrangler d1 migrations apply apple-rag-db --remote",
-		"deploy": "pnpm build && pnpm db:migrate && wrangler deploy"
+		"db:migrate": "wrangler d1 migrations apply apple-rag-db --remote"
 	},
 	"dependencies": {
 		"@hono/swagger-ui": "^0.6.1",
@@ -32,7 +31,6 @@
 		"@radix-ui/react-dropdown-menu": "^2.2.1",
 		"@radix-ui/react-label": "^2.1.7",
 		"@radix-ui/react-slot": "^1.2.4",
-		"@react-three/fiber": "^9.4.0",
 		"@tabler/icons-react": "^3.34.1",
 		"@thesvg/react": "4.0.12",
 		"apexcharts": "^5.3.2",
@@ -40,7 +38,6 @@
 		"bcryptjs": "^3.0.2",
 		"class-variance-authority": "^0.7.1",
 		"clsx": "^2.1.1",
-		"gsap": "^3.13.0",
 		"hono": "^4.13.5",
 		"i18next": "^25.9.08",
 		"jose": "6.2.15",
@@ -57,7 +54,6 @@
 		"resend": "^4.8.0",
 		"stripe": "^18.4.0",
 		"tailwind-merge": "^3.5.0",
-		"three": "^0.181.0",
 		"zod": "^4.3.6",
 		"zustand": "^5.0.12"
 	},
@@ -70,7 +66,6 @@
 		"@types/react": "^19.2.18",
 		"@types/react-dom": "^19.2.5",
 		"@types/react-syntax-highlighter": "^15.5.13",
-		"@types/three": "^0.181.0",
 		"@vitejs/plugin-react": "^6.1.1",
 		"tailwindcss": "^4.3.3",
 		"tsx": "^4.23.13",

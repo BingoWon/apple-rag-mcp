@@ -37,7 +37,12 @@ export function createModelAlertReporter(
 		let safeMessage = `[${channel.toUpperCase()}][MODEL] ${message}`;
 		if (trace)
 			safeMessage += `\nrequest_id=${trace.requestId} ray=${trace.ray ?? "unknown"} ${route}`;
-		for (const secret of [env.TYPESAFE_API_KEY, env.ZENMUX_API_KEY, env.DEEPINFRA_API_KEY]) {
+		for (const secret of [
+			env.SILICONFLOW_API_KEY,
+			env.TYPESAFE_API_KEY,
+			env.ZENMUX_API_KEY,
+			env.DEEPINFRA_API_KEY,
+		]) {
 			if (secret) safeMessage = safeMessage.replaceAll(secret, "[REDACTED]");
 		}
 		console.warn(safeMessage);

@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { formatRAGResponse } from "../mcp/formatters/response-formatter.js";
 import type { SearchResult } from "../services/types.js";
 import { SearchEngine } from "./search-engine.js";
+import { searchOutput } from "./tool-results.js";
 
 const result = (
 	id: string,
@@ -67,7 +69,7 @@ test("keeps identical titles from different URLs separate", async () => {
 	);
 });
 
-test("merges chunks only when they belong to the same URL", async () => {
+test("merges chunks only when they belong to the same URL and preserves completeness end-to-end", async () => {
 	const url = "https://developer.apple.com/documentation/swift";
 	const engine = createEngine({
 		semantic: [result("a", url, "Swift", 0, 2), result("b", url, "Swift", 1, 2)],
@@ -75,7 +77,37 @@ test("merges chunks only when they belong to the same URL", async () => {
 
 	const output = await engine.search("Swift", { resultCount: 1 });
 	assert.deepEqual(output.results[0].mergedChunkIndices, [0, 1]);
-	assert.equal(output.results[0].total_chunks, 1);
+	assert.equal(output.results[0].total_chunks, 2);
+
+	const structured = searchOutput(
+		{
+			success: true,
+			query: "Swift",
+			results: output.results.map((item) => ({ ...item, contentLength: item.content.length })),
+			additionalUrls: [],
+			degradations: [],
+			count: output.results.length,
+			processing_time_ms: 1,
+		},
+		{
+			authenticated: true,
+			auth_method: "token",
+			email: "dev@example.com",
+			plan: "pro",
+			quota: {
+				week: { limit: 50000, remaining: 49999, reset_at: "2026-12-01T00:00:00.000Z" },
+				minute: { limit: 50, remaining: 49, reset_at: "2026-11-24T00:01:00.000Z" },
+			},
+			login_url: "https://apple-rag.com/mcp-tokens",
+			upgrade_url: "https://apple-rag.com/#pricing",
+		},
+	);
+	assert.equal(structured.ok, true);
+	assert.equal(structured.results[0].complete, true);
+	const formatted = formatRAGResponse(structured, true);
+	assert.match(formatted, /✅ Complete Document/);
+	assert.doesNotMatch(formatted, /Parts 1, 2 merged \(1 total\)/);
+	assert.doesNotMatch(formatted, /use Apple RAG MCP fetch tool/);
 });
 
 test("falls back when one retrieval mode fails", async () => {

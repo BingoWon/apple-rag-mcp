@@ -29,7 +29,7 @@ export function accountStatus(
 				reset_at: quota.minuteResetAt,
 			},
 		},
-		login_url: channel === "cli" ? "https://apple-rag.com/login/" : LOGIN_URL,
+		login_url: channel === "cli" ? "https://apple-rag.com/login" : LOGIN_URL,
 		upgrade_url: UPGRADE_URL,
 	});
 }

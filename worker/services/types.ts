@@ -65,6 +65,15 @@ export interface AuthContext {
 	authMethod?: "anonymous" | "token" | "ip" | "oauth" | "api_key";
 }
 
+export interface UserTokenData {
+	userId: string;
+	email: string;
+	name: string;
+	credentialId?: string;
+}
+
+export const MCP_TOKEN_FORMAT = /^at_[a-f0-9]{32}$/;
+
 export interface DatabaseService {
 	browse(input: BrowseInput, signal: AbortSignal): Promise<BrowseData>;
 	semanticSearch(embedding: number[], options: SearchOptions): Promise<SearchResult[]>;
@@ -128,5 +137,3 @@ export interface RateLimitService {
 	): Promise<RateLimitResult>;
 	refund(result: RateLimitResult): Promise<void>;
 }
-
-export type { D1Database, D1Result, ExecutionContext } from "@cloudflare/workers-types";

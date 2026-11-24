@@ -4,8 +4,11 @@
 
 import type { Env } from "../../shared/types.js";
 import type { User } from "../types";
-import type { ApiResponse } from "../types/api-response";
+import { type ApiResponse, ResponseBuilder } from "../types/api-response";
+import { hashPassword, hashString, verifyPassword } from "../utils/security";
+import { getPlanPermissions, getUserPlanType, type PlanType } from "../utils/subscription";
 import { issueWebSession } from "../utils/web-session";
+import { EmailService } from "./email-service";
 
 interface LoginRequest {
 	email: string;
@@ -18,11 +21,6 @@ interface RegisterRequest {
 	name?: string;
 	terms_accepted: boolean;
 }
-
-import { ResponseBuilder } from "../types/response";
-import { hashPassword, verifyPassword } from "../utils/security";
-import { getPlanPermissions, getUserPlanType, type PlanType } from "../utils/subscription";
-import { EmailService } from "./email-service";
 
 export class AuthService {
 	constructor(
@@ -49,14 +47,15 @@ export class AuthService {
 				name: request.name,
 				provider: "email",
 				password_hash: await hashPassword(request.password),
+				last_login: now,
 				created_at: now,
 				updated_at: now,
 			};
 			const insert = this.db
 				.prepare(
-					`INSERT INTO users (id,email,password_hash,name,provider,created_at,updated_at) VALUES(?,?,?,?,'email',?,?)`,
+					`INSERT INTO users (id,email,password_hash,name,provider,last_login,created_at,updated_at) VALUES(?,?,?,?,'email',?,?,?)`,
 				)
-				.bind(user.id, user.email, user.password_hash!, user.name ?? null, now, now);
+				.bind(user.id, user.email, user.password_hash!, user.name ?? null, now, now, now);
 			return await this.signedIn(user, "hobby", insert);
 		} catch (error) {
 			if (
@@ -81,7 +80,11 @@ export class AuthService {
 				.first<User>();
 			if (!user?.password_hash || !(await verifyPassword(request.password, user.password_hash)))
 				return ResponseBuilder.error("INVALID_CREDENTIALS", "Invalid email or password");
-			return await this.signedIn(user, await getUserPlanType(user.id, this.db));
+			const now = new Date().toISOString();
+			const updateLogin = this.db
+				.prepare("UPDATE users SET last_login=?,updated_at=? WHERE id=?")
+				.bind(now, now, user.id);
+			return await this.signedIn(user, await getUserPlanType(user.id, this.db), updateLogin);
 		} catch (error) {
 			console.error("Login failed", error);
 			return ResponseBuilder.error("INTERNAL_ERROR", "Login failed");
@@ -132,18 +135,19 @@ export class AuthService {
 				};
 			}
 
-			// Generate reset token
+			// Generate reset token and persist only its SHA-256 hash
 			const resetToken = crypto.randomUUID();
+			const resetTokenHash = await hashString(resetToken);
 			const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
-			// Save reset token to database
+			// Save hashed reset token to database
 			await this.db
 				.prepare(
 					`UPDATE users
            SET reset_token = ?, reset_token_expires_at = ?, updated_at = ?
            WHERE id = ?`,
 				)
-				.bind(resetToken, expiresAt.toISOString(), new Date().toISOString(), user.id)
+				.bind(resetTokenHash, expiresAt.toISOString(), new Date().toISOString(), user.id)
 				.run();
 
 			// Send reset email
@@ -183,14 +187,16 @@ export class AuthService {
 		newPassword: string,
 	): Promise<ApiResponse<{ message: string }>> {
 		try {
-			// Find user with valid reset token
+			const tokenHash = await hashString(token);
+
+			// Find user with valid reset token hash
 			const user = (await this.db
 				.prepare(
 					`SELECT id, email, reset_token_expires_at
            FROM users
            WHERE reset_token = ?`,
 				)
-				.bind(token)
+				.bind(tokenHash)
 				.first()) as User & { reset_token_expires_at: string };
 
 			if (!user) {
@@ -223,7 +229,7 @@ export class AuthService {
 				.prepare(
 					"UPDATE users SET password_hash=?,reset_token=NULL,reset_token_expires_at=NULL,updated_at=? WHERE id=? AND reset_token=? AND julianday(reset_token_expires_at)>julianday('now') RETURNING id",
 				)
-				.bind(passwordHash, new Date().toISOString(), user.id, token)
+				.bind(passwordHash, new Date().toISOString(), user.id, tokenHash)
 				.first();
 			if (!updated) return ResponseBuilder.error("INVALID_TOKEN", "Invalid or expired reset token");
 

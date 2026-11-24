@@ -101,11 +101,9 @@ export function ResetPasswordForm() {
 
 					<p className="text-muted-foreground">{t("auth.reset_redirect")}</p>
 
-					<Link to="/login">
-						<Button variant="primary" className="w-full">
-							{t("auth.continue_signin")}
-						</Button>
-					</Link>
+					<Button variant="primary" className="w-full" asChild>
+						<Link to="/login">{t("auth.continue_signin")}</Link>
+					</Button>
 				</div>
 			</FormContainer>
 		);
@@ -132,6 +130,7 @@ export function ResetPasswordForm() {
 							type="button"
 							variant="ghost"
 							size="icon"
+							aria-label={showPassword ? t("auth.hide_password") : t("auth.show_password")}
 							onClick={() => setShowPassword(!showPassword)}
 							className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 text-muted-foreground hover:text-foreground"
 						>
@@ -159,6 +158,7 @@ export function ResetPasswordForm() {
 							type="button"
 							variant="ghost"
 							size="icon"
+							aria-label={showConfirmPassword ? t("auth.hide_password") : t("auth.show_password")}
 							onClick={() => setShowConfirmPassword(!showConfirmPassword)}
 							className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 text-muted-foreground hover:text-foreground"
 						>

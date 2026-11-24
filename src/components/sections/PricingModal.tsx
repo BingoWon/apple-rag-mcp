@@ -83,7 +83,7 @@ export function PricingModal({ children, defaultTab = "subscription" }: PricingM
 		if (!isAuthenticated) {
 			toast.error(t("pricing.login_required"));
 
-			navigate("/login/");
+			navigate("/login");
 			return;
 		}
 
@@ -96,7 +96,7 @@ export function PricingModal({ children, defaultTab = "subscription" }: PricingM
 				window.location.href = response.data.url;
 			} else {
 				const conflictKey = CONFLICT_MESSAGES[response.error?.message || ""];
-				toast.error(conflictKey ? t(conflictKey) : response.error?.message || "Unknown error");
+				toast.error(conflictKey ? t(conflictKey) : response.error?.message || t("common.error"));
 			}
 		} catch (error) {
 			console.error("Error creating checkout session:", error);

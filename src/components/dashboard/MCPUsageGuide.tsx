@@ -76,7 +76,7 @@ export function MCPUsageGuide() {
 
 	const handleCreateToken = async () => {
 		try {
-			const tokenName = `MCP Token ${new Date().toLocaleDateString()}`;
+			const tokenName = t("tokens.default_name", { date: new Date().toLocaleDateString() });
 			const newToken = await createMCPToken({
 				name: tokenName,
 				permissions: ["rag.read"],
@@ -119,7 +119,7 @@ export function MCPUsageGuide() {
 		},
 		{
 			label: t("guide.field_auth_type"),
-			value: "API key / Token",
+			value: t("guide.auth_type_value"),
 			copyable: false,
 		},
 		{
@@ -150,9 +150,9 @@ export function MCPUsageGuide() {
 						size="sm"
 						variant="ghost"
 						onClick={() =>
-							copyToClipboard(param.value || "", param.copyMessage || "Copied to clipboard!")
+							copyToClipboard(param.value || "", param.copyMessage || t("common.copied"))
 						}
-						title={t("guide.copy_param", { param: param.label.replace(":", "") })}
+						title={t("guide.copy_param", { param: param.label.replace(/[:：]/g, "") })}
 						className={copyButtonClass}
 					>
 						<IconClipboard className="h-3 w-3" />

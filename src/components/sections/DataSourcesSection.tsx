@@ -34,6 +34,8 @@ export function DataSourcesShowcase() {
 							src="/Apple Developer Documentation.jpeg"
 							width={400}
 							height={500}
+							loading="lazy"
+							decoding="async"
 							alt="Apple Developer Documentation"
 							className="absolute -right-4 lg:-right-[10%] -bottom-10 object-contain rounded-2xl z-0"
 						/>
@@ -49,6 +51,8 @@ export function DataSourcesShowcase() {
 							src="/muscle-sticker.png"
 							width={60}
 							height={60}
+							loading="lazy"
+							decoding="async"
 							alt="Muscle sticker"
 							className="absolute top-0 right-1 w-15 h-15 md:w-20 md:h-20 object-contain transform rotate-12 hover:rotate-[20deg] transition-transform duration-300"
 						/>
@@ -70,6 +74,8 @@ export function DataSourcesShowcase() {
 							src="/Apple Developer Videos.jpeg"
 							width={600}
 							height={500}
+							loading="lazy"
+							decoding="async"
 							alt="Apple Developer Videos"
 							className="absolute -right-4 -bottom-0  lg:right-[2%] lg:-bottom-20 object-contain rounded-2xl z-0"
 						/>

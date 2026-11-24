@@ -2,8 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import type { Services } from "../services/types.js";
 import { MCPProtocolHandler } from "./protocol-handler.js";
-import { FetchTool } from "./tools/fetch-tool.js";
-import { SearchTool } from "./tools/search-tool.js";
+import { executeMcpTool } from "./tools.js";
 
 for (const tool of ["search", "fetch"] as const) {
 	for (const stage of ["before-quota", "after-quota", "in-flight"] as const) {
@@ -51,14 +50,18 @@ for (const tool of ["search", "fetch"] as const) {
 			if (stage === "before-quota") controller.abort(reason);
 			const result =
 				tool === "search"
-					? new SearchTool(services).handle(
+					? executeMcpTool(
+							"search",
 							{ query: "Swift", result_count: 1 },
+							services,
 							{ isAuthenticated: false },
 							request,
 							controller.signal,
 						)
-					: new FetchTool(services).handle(
+					: executeMcpTool(
+							"fetch",
 							{ url: "https://developer.apple.com/documentation/swift" },
+							services,
 							{ isAuthenticated: false },
 							request,
 							controller.signal,

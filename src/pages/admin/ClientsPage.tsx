@@ -28,7 +28,7 @@ import {
 	clientPeriod,
 } from "../../../shared/client-usage";
 import { TOOL_KINDS } from "../../../shared/tool-activity";
-import { TOOL_CHANNELS } from "../../../worker/shared/tool-channels";
+import { TOOL_CHANNELS } from "../../../shared/tool-channels";
 
 function useClientStats<T>(url: string) {
 	const [attempt, retry] = useState(0);

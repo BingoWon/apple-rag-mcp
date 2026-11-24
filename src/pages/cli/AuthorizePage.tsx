@@ -222,6 +222,10 @@ function AuthorizationForm() {
 						</li>
 						<li>
 							<IconCheck className="auth-check" aria-hidden="true" />
+							{t("cli.browse_permission")}
+						</li>
+						<li>
+							<IconCheck className="auth-check" aria-hidden="true" />
 							{t("cli.read_permission")}
 						</li>
 					</ul>

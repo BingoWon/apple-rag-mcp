@@ -1,6 +1,6 @@
 import { z } from "@hono/zod-openapi";
-import { TOOL_CHANNELS } from "../../../shared/tool-channels.js";
-import { TOOL_OUTCOMES } from "../../../shared/tool-outcomes.js";
+import { TOOL_CHANNELS } from "../../../../shared/tool-channels.js";
+import { TOOL_OUTCOMES } from "../../../../shared/tool-outcomes.js";
 
 export const logQuerySchema = z
 	.object({

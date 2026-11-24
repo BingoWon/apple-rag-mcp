@@ -1,21 +1,19 @@
 import { IconCheck, IconPencil, IconX } from "@tabler/icons-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/Button";
 
-// 预设配置，消除重复参数
 const EDITABLE_CONFIGS = {
 	token: {
-		entityType: "Token",
-		successMessage: "Token name updated successfully",
-		errorMessage: "Failed to update token name",
-		emptyMessage: "Token name cannot be empty",
+		successKey: "tokens.rename_success",
+		errorKey: "tokens.rename_error",
+		emptyKey: "tokens.name_empty",
 	},
 	ip: {
-		entityType: "Authorized IP",
-		successMessage: "Authorized IP name updated successfully",
-		errorMessage: "Failed to update IP name",
-		emptyMessage: "IP name cannot be empty",
+		successKey: "ips.rename_success",
+		errorKey: "ips.rename_error",
+		emptyKey: "ips.name_empty",
 	},
 } as const;
 
@@ -30,6 +28,7 @@ interface EditableNameProps {
 }
 
 export function EditableName({ id, initialName, onUpdate, onRefresh, type }: EditableNameProps) {
+	const { t } = useTranslation();
 	const [isEditing, setIsEditing] = useState(false);
 	const [name, setName] = useState(initialName);
 	const [isLoading, setIsLoading] = useState(false);
@@ -38,7 +37,7 @@ export function EditableName({ id, initialName, onUpdate, onRefresh, type }: Edi
 
 	const handleSave = async () => {
 		if (name.trim() === "") {
-			toast.error(config.emptyMessage);
+			toast.error(t(config.emptyKey));
 			return;
 		}
 
@@ -51,10 +50,10 @@ export function EditableName({ id, initialName, onUpdate, onRefresh, type }: Edi
 		try {
 			await onUpdate(id, name.trim());
 			setIsEditing(false);
-			toast.success(config.successMessage);
+			toast.success(t(config.successKey));
 			onRefresh?.();
 		} catch (_error) {
-			toast.error(config.errorMessage);
+			toast.error(t(config.errorKey));
 			setName(initialName); // Reset to original name
 		} finally {
 			setIsLoading(false);
@@ -91,7 +90,8 @@ export function EditableName({ id, initialName, onUpdate, onRefresh, type }: Edi
 					onClick={handleSave}
 					disabled={isLoading}
 					className="h-8 w-8 text-success hover:text-success/80"
-					title="Save"
+					title={t("common.save")}
+					aria-label={t("common.save")}
 				>
 					<IconCheck className="h-4 w-4" />
 				</Button>
@@ -101,7 +101,8 @@ export function EditableName({ id, initialName, onUpdate, onRefresh, type }: Edi
 					onClick={handleCancel}
 					disabled={isLoading}
 					className="h-8 w-8 text-error hover:text-error/80"
-					title="Cancel"
+					title={t("common.cancel")}
+					aria-label={t("common.cancel")}
 				>
 					<IconX className="h-4 w-4" />
 				</Button>
@@ -116,8 +117,9 @@ export function EditableName({ id, initialName, onUpdate, onRefresh, type }: Edi
 				variant="ghost"
 				size="icon"
 				onClick={() => setIsEditing(true)}
-				className="h-8 w-8 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity"
-				title="Edit name"
+				className="h-8 w-8 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity"
+				title={t("common.edit_name")}
+				aria-label={t("common.edit_name")}
 			>
 				<IconPencil className="h-4 w-4" />
 			</Button>

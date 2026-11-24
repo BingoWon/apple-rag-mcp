@@ -1,7 +1,7 @@
 import type Stripe from "stripe";
-import { createStripeClient, STRIPE_API_VERSION } from "../api/utils/stripe-client";
-import { RECEIPT_SQL, subscriptionReceipt } from "../api/utils/subscription-receipts";
-import type { Env } from "../shared/types";
+import type { Env } from "../../shared/types";
+import { createStripeClient, STRIPE_API_VERSION } from "../utils/stripe-client";
+import { RECEIPT_SQL, subscriptionReceipt } from "../utils/subscription-receipts";
 
 type Scan = { since: number | null; until_at: number; cursor: string | null };
 

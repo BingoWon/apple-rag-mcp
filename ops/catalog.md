@@ -8,7 +8,7 @@ The first level uses a one-based page with a default size of 20 (maximum 50). De
 
 ## Publishing on the corpus VPS
 
-Apply `server/postgresql_catalog.sql` to the corpus database using its local administrative role. Install `server/publish_catalog.py` in `/opt/apple-rag-catalog/`, and the two `server/systemd/apple-rag-catalog.*` units in `/etc/systemd/system/`. Run `systemctl daemon-reload`, then `systemctl start apple-rag-catalog.service`. After checking its journal and a successful root listing, enable the hourly `apple-rag-catalog.timer`. The script uses Python's standard library and psql in the existing postgres_db container.
+Apply `ops/server/postgresql_catalog.sql` to the corpus database using its local administrative role. Install `ops/server/publish_catalog.py` in `/opt/apple-rag-catalog/`, and the two `ops/server/systemd/apple-rag-catalog.*` units in `/etc/systemd/system/`. Run `systemctl daemon-reload`, then `systemctl start apple-rag-catalog.service`. After checking its journal and a successful root listing, enable the hourly `apple-rag-catalog.timer`. The script uses Python's standard library and psql in the existing postgres_db container.
 
 The publisher reads an ordered source snapshot, reuses parsed groups for unchanged page versions, filters unavailable links and retains structure-only intermediates reachable from readable pages. The published tables change in a single transaction. A failed refresh retains the previous publication; an unavailable Apple technology index can reuse the last valid root. Readers use a repeatable-read transaction and only retrieve the selected slices. Browsing never calls a ranking model or live webpage provider.
 

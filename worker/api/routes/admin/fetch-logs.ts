@@ -3,7 +3,7 @@
  * Administrative access to fetch_logs table
  */
 import { createRoute, z } from "@hono/zod-openapi";
-import { TOOL_OUTCOMES, type ToolOutcome } from "../../../shared/tool-outcomes.js";
+import { TOOL_OUTCOMES, type ToolOutcome } from "../../../../shared/tool-outcomes.js";
 import { logger } from "../../utils/logger";
 import { createOpenAPIApp } from "../../utils/openapi";
 import { logConditions, logQuerySchema } from "./log-query.js";

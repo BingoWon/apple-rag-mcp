@@ -15,7 +15,9 @@ export const SERVER_MANIFEST = {
 	protocolVersion: MCP_PROTOCOL_VERSION,
 	supportedProtocolVersions: ["2026-07-28", "2025-11-25", "2025-06-18", "2025-03-26"],
 	capabilities: {
-		tools: {},
+		tools: {
+			listChanged: false,
+		},
 	},
 	serverInfo: {
 		name: SERVER_NAME,
@@ -25,6 +27,7 @@ export const SERVER_MANIFEST = {
 		mcp: "https://mcp.apple-rag.com",
 		manifest: "https://mcp.apple-rag.com/manifest",
 		health: "https://mcp.apple-rag.com/health",
+		account: "https://mcp.apple-rag.com/account",
 	},
 	transport: {
 		type: "streamable-http",

@@ -17,7 +17,6 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
-import { trackEvent } from "@/lib/analytics";
 import { api } from "@/lib/api";
 import { canonicalIP } from "../../../shared/ip";
 
@@ -83,13 +82,6 @@ export default function AuthorizedIPsPage() {
 		try {
 			const response = await api.createAuthorizedIP(data);
 			if (response.success) {
-				// Track IP authorization
-				trackEvent("IP_AUTHORIZE", {
-					ip_address: data.ip_address,
-					ip_name: data.name,
-					total_ips: ips.length + 1,
-				});
-
 				toast.success(t("ips.added_success", { name: data.name }));
 				form.reset();
 				closeModal?.(); // Close modal on success
@@ -123,7 +115,7 @@ export default function AuthorizedIPsPage() {
 				console.warn("IP already deleted or not found:", id);
 				return; // Silently succeed
 			}
-			throw new Error(response.error?.message || "Failed to delete authorized IP");
+			throw new Error(response.error?.message || t("ips.delete_error"));
 		}
 	};
 
@@ -281,11 +273,6 @@ function AddIPModal({ currentIP, form, isCreating, onSubmit, fillCurrentIP }: Ad
 										: t("ips.use_current_fallback")}
 								</Button>
 							</div>
-							{form.formState.errors.ip_address && (
-								<p className="mt-1 text-xs text-destructive">
-									{form.formState.errors.ip_address.message}
-								</p>
-							)}
 						</div>
 
 						<Input
@@ -310,7 +297,7 @@ function AddIPModal({ currentIP, form, isCreating, onSubmit, fillCurrentIP }: Ad
 							type="submit"
 							variant="primary"
 							loading={isCreating}
-							disabled={!form.formState.isValid}
+							disabled={isCreating}
 							className="flex-1"
 						>
 							{t("ips.add_btn")}

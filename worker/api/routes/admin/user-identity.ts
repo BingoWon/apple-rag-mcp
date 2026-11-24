@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { AdminSubscription, AdminUserIdentity } from "../../../shared/admin-user";
+import type { AdminSubscription, AdminUserIdentity } from "../../../../shared/admin-user";
 import { effectivePlanType } from "../../utils/subscription";
 export const adminSubscriptionSchema = z.object({
 	plan: z.enum(["hobby", "pro", "enterprise"]),

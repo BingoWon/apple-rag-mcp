@@ -56,12 +56,14 @@ credential. Logout revokes the device server-side before removing local state.
 A failed revocation leaves state available for retry.
 
 Headless automation uses a separate CLI API key generated in website Settings →
-CLI access. Keys expire in at most 90 days, are displayed once, and only their
+Automation access (formerly "CLI access"). Keys expire in at most 90 days, are displayed once, and only their
 SHA-256 hash is stored. Set `APPLE_RAG_TOKEN` through a secret manager. It takes
 precedence even when invalid and never falls back to another identity. It cannot
 manage the website, billing, MCP tokens or other CLI sessions. There are at most
 20 active devices/keys per account; inserts enforce this bound atomically.
 Website settings list and revoke individual devices/keys without affecting MCP.
+
+> **2026-11-24 update**: `browse` shares the `/api/cli/v1` channel, credentials, and quota alongside `search` and `fetch` (`CLI_SCOPE` keeps `"documents:search documents:fetch"` for wire compatibility with released CLI clients). `/oauth/cli/revoke` handles arbitrary malformed/header-unsafe token inputs per RFC 7009 (`200 OK`), and CLI v1 endpoints enforce auth before JSON parsing with a 64 KiB body limit.
 
 Account/health/authorization do not spend retrieval quota. Entitlements are read
 from current subscriptions server-side. No billing data is trusted from a JWT or

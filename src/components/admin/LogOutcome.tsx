@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/Badge";
-import type { ToolOutcome } from "../../../worker/shared/tool-outcomes";
+import type { ToolOutcome } from "../../../shared/tool-outcomes";
 
 const variants = {
 	success: "success",

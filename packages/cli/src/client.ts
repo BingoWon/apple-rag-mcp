@@ -97,7 +97,14 @@ export class AppleRagClient {
 					: `Service returned HTTP ${response.status}.`,
 				statusExitCode(response.status),
 			);
-		return response.json();
+		try {
+			return await response.json();
+		} catch {
+			throw new CLIError(
+				"INVALID_RESPONSE",
+				`The service returned HTTP ${response.status} without a valid JSON response.`,
+			);
+		}
 	}
 	async account() {
 		const parsed = accountSchema.safeParse(await this.json(`${CLI_RESOURCE}/account`));
@@ -155,7 +162,16 @@ export class AppleRagClient {
 			},
 			false,
 		);
-		const body = await response.json();
+		let body: unknown;
+		try {
+			body = await response.json();
+		} catch {
+			throw new CLIError(
+				response.ok ? "INVALID_RESPONSE" : "AUTH_FAILED",
+				`The authorization server returned HTTP ${response.status} without a valid JSON response.`,
+				response.ok ? 1 : 3,
+			);
+		}
 		if (!response.ok) {
 			const error = z.object({ error: z.string(), error_description: z.string() }).safeParse(body);
 			throw new CLIError(
@@ -164,7 +180,13 @@ export class AppleRagClient {
 				3,
 			);
 		}
-		return cliCredentialsSchema.parse(body);
+		const parsed = cliCredentialsSchema.safeParse(body);
+		if (!parsed.success)
+			throw new CLIError(
+				"INVALID_RESPONSE",
+				"The authorization server returned invalid credentials.",
+			);
+		return parsed.data;
 	}
 	async device(name: string) {
 		const response = await this.request(
@@ -181,6 +203,16 @@ export class AppleRagClient {
 			},
 			false,
 		);
+		let body: unknown;
+		try {
+			body = await response.json();
+		} catch {
+			throw new CLIError(
+				"AUTH_FAILED",
+				`Cannot start CLI device authorization (HTTP ${response.status}).`,
+				3,
+			);
+		}
 		const data = z
 			.object({
 				device_code: z.string(),
@@ -190,7 +222,7 @@ export class AppleRagClient {
 				expires_in: z.number().positive(),
 				interval: z.number().positive(),
 			})
-			.safeParse(await response.json());
+			.safeParse(body);
 		if (!response.ok || !data.success)
 			throw new CLIError("AUTH_FAILED", "Cannot start CLI device authorization.", 3);
 		if (new URL(data.data.verification_uri_complete).origin !== this.endpoint)
@@ -213,12 +245,16 @@ export class AppleRagClient {
 				"Could not revoke the CLI session. Try again or revoke it in website settings.",
 			);
 	}
-	async logout() {
-		await this.store.locked(this.signal, async () => {
+	async logout(): Promise<boolean> {
+		return this.store.locked(this.signal, async () => {
 			const saved = await this.store.read();
-			if (!saved) return;
+			if (!saved) {
+				await this.store.clearMarker();
+				return false;
+			}
 			await this.revoke(saved.refresh_token ?? saved.access_token);
 			await this.store.clear();
+			return true;
 		});
 	}
 	async doctor() {

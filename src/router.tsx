@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react";
+import { useTranslation } from "react-i18next";
 import { Route, Routes } from "react-router-dom";
 
 const ConnectPage = lazy(() => import("@/pages/ConnectPage"));
@@ -39,12 +40,13 @@ const AdminLayout = lazy(() =>
 );
 
 function RouteFallback() {
+	const { t } = useTranslation();
 	return (
 		<div
 			className="flex min-h-screen items-center justify-center bg-background text-muted"
 			role="status"
 		>
-			Loading...
+			{t("common.loading")}
 		</div>
 	);
 }

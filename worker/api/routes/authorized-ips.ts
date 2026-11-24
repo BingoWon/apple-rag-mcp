@@ -51,23 +51,48 @@ app.get("/", async (c) => {
 	}
 });
 
+const MAX_AUTHORIZED_IPS_PER_USER = 10;
+
+function parseIpName(value: unknown): string | null {
+	if (typeof value !== "string") return null;
+	const trimmed = value.trim();
+	if (trimmed.length < 1 || trimmed.length > 100) return null;
+	return trimmed;
+}
+
 // Create a new authorized IP
 app.post("/", async (c) => {
 	const user = c.get("user") as User;
 
+	let body: Record<string, unknown>;
 	try {
-		const body = await c.req.json();
-		const { name } = body;
-		const ip_address = canonicalIP(body.ip_address);
+		body = (await c.req.json()) as Record<string, unknown>;
+	} catch {
+		return c.json(
+			{
+				success: false,
+				error: {
+					code: ApiErrorCode.VALIDATION_ERROR,
+					message: "Invalid JSON body",
+				},
+			},
+			400,
+		);
+	}
+
+	try {
+		const name = parseIpName(body?.name);
+		const rawIp = typeof body?.ip_address === "string" ? body.ip_address : "";
+		const ip_address = canonicalIP(rawIp);
 
 		// Validate input
-		if (!body.ip_address || !name) {
+		if (!rawIp || !name) {
 			return c.json(
 				{
 					success: false,
 					error: {
 						code: ApiErrorCode.VALIDATION_ERROR,
-						message: "IP address and name are required",
+						message: "IP address and a name (1-100 characters) are required",
 					},
 				},
 				400,
@@ -82,6 +107,26 @@ app.post("/", async (c) => {
 					error: {
 						code: ApiErrorCode.VALIDATION_ERROR,
 						message: "Invalid IP address format",
+					},
+				},
+				400,
+			);
+		}
+
+		// Enforce per-user cap matching dashboard limit
+		const countRow = await c.env.DB.prepare(
+			"SELECT COUNT(*) as count FROM user_authorized_ips WHERE user_id = ?",
+		)
+			.bind(user.id)
+			.first<{ count: number }>();
+
+		if ((Number(countRow?.count) || 0) >= MAX_AUTHORIZED_IPS_PER_USER) {
+			return c.json(
+				{
+					success: false,
+					error: {
+						code: ApiErrorCode.VALIDATION_ERROR,
+						message: `Maximum of ${MAX_AUTHORIZED_IPS_PER_USER} authorized IP addresses reached`,
 					},
 				},
 				400,
@@ -133,6 +178,19 @@ app.post("/", async (c) => {
 			201,
 		);
 	} catch (error) {
+		if (error instanceof Error && error.message.includes("UNIQUE constraint failed")) {
+			return c.json(
+				{
+					success: false,
+					error: {
+						code: ApiErrorCode.RESOURCE_CONFLICT,
+						message: "IP address already authorized",
+					},
+				},
+				409,
+			);
+		}
+
 		await logger.error(
 			`Failed to create authorized IP for user ${user.id}: ${error instanceof Error ? error.message : String(error)}`,
 		);
@@ -155,9 +213,24 @@ app.put("/:id", async (c) => {
 	const user = c.get("user") as User;
 	const { id } = c.req.param();
 
+	let body: Record<string, unknown>;
 	try {
-		const body = await c.req.json();
-		const { name } = body;
+		body = (await c.req.json()) as Record<string, unknown>;
+	} catch {
+		return c.json(
+			{
+				success: false,
+				error: {
+					code: ApiErrorCode.VALIDATION_ERROR,
+					message: "Invalid JSON body",
+				},
+			},
+			400,
+		);
+	}
+
+	try {
+		const name = parseIpName(body?.name);
 
 		if (!name) {
 			return c.json(
@@ -165,7 +238,7 @@ app.put("/:id", async (c) => {
 					success: false,
 					error: {
 						code: ApiErrorCode.VALIDATION_ERROR,
-						message: "Name is required",
+						message: "Name (1-100 characters) is required",
 					},
 				},
 				400,

@@ -4,7 +4,7 @@ import Google from "@thesvg/react/google";
 import type React from "react";
 import { useState } from "react";
 import toast from "react-hot-toast";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
 import { FormContainer } from "@/components/ui/FormContainer";
@@ -12,7 +12,6 @@ import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
 import { LabelInputContainer } from "@/components/ui/LabelInputContainer";
 import { useAuth } from "@/hooks/useAuth";
-import { trackEvent } from "@/lib/analytics";
 import { api } from "@/lib/api";
 import { normalizeEmail } from "@/utils/email";
 import { getFriendlyErrorMessage } from "@/utils/errorMessages";
@@ -50,12 +49,6 @@ export function RegisterForm() {
 				email,
 				password,
 				terms_accepted: true,
-			});
-
-			// Track successful registration
-			trackEvent("USER_REGISTER", {
-				method: "email",
-				user_email: email,
 			});
 		} catch (error) {
 			// 提取错误码和消息
@@ -119,7 +112,7 @@ export function RegisterForm() {
 						{oauthLoading === "google" ? t("common.connecting") : "Google"}
 					</Button>
 					<Button
-						variant="ghost"
+						variant="outline"
 						onClick={() => handleOAuthLogin("github")}
 						disabled={oauthLoading !== null || isLoading}
 						className="w-full h-11"
@@ -196,7 +189,25 @@ export function RegisterForm() {
 						/>
 					</LabelInputContainer>
 
-					{passwordError && <div className="mb-4 text-sm text-status-error">{passwordError}</div>}
+					{passwordError && <div className="mb-4 text-sm text-destructive">{passwordError}</div>}
+
+					<p className="mb-4 text-xs text-muted-foreground leading-relaxed">
+						<Trans
+							i18nKey="auth.terms_notice"
+							components={{
+								terms: (
+									<Link to="/terms" className="text-brand hover:underline">
+										{t("footer.terms")}
+									</Link>
+								),
+								privacy: (
+									<Link to="/privacy" className="text-brand hover:underline">
+										{t("footer.privacy")}
+									</Link>
+								),
+							}}
+						/>
+					</p>
 
 					<Button variant="primary" type="submit" disabled={isLoading} className="w-full">
 						{isLoading ? t("auth.creating_account") : t("auth.sign_up_btn")}

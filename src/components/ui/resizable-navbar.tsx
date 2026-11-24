@@ -3,6 +3,7 @@ import { AnimatePresence, motion, useMotionValueEvent, useScroll } from "motion/
 import React, { createContext, useCallback, useContext, useState } from "react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 import { Brand } from "@/components/layout/Brand";
 import { Button } from "@/components/ui/Button";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
@@ -229,10 +230,17 @@ export const MobileNavMenu = ({ children, className, isOpen }: MobileNavMenuProp
 };
 
 export const MobileNavToggle = ({ isOpen, onClick }: { isOpen: boolean; onClick: () => void }) => {
-	return isOpen ? (
-		<IconX className="text-light" onClick={onClick} />
-	) : (
-		<IconMenu2 className="text-light" onClick={onClick} />
+	const { t } = useTranslation();
+	return (
+		<button
+			type="button"
+			onClick={onClick}
+			aria-label={isOpen ? t("common.close") : t("nav.menu")}
+			aria-expanded={isOpen}
+			className="inline-flex items-center justify-center rounded-md p-1.5 text-light hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+		>
+			{isOpen ? <IconX className="h-5 w-5" /> : <IconMenu2 className="h-5 w-5" />}
+		</button>
 	);
 };
 
@@ -241,38 +249,38 @@ export const UserMenu = ({ user, onLogout }: Omit<UserMenuProps, "visible">) => 
 	const { t } = useTranslation();
 	return (
 		<>
-			{/* 用户名 - 始终显示 */}
+			{/* 用户名与悬浮菜单 - 始终可用，确保无需滚动即可登出 */}
 			<div className="relative group">
-				<span className="text-sm font-semibold text-muted cursor-pointer">
+				<button
+					type="button"
+					className="text-sm font-semibold text-muted hover:text-light transition-colors cursor-pointer"
+				>
 					{user?.name || user?.email}
-				</span>
+				</button>
 
-				{/* 悬浮菜单 - 只在收缩状态下显示 */}
-				{visible && (
-					<div className="absolute right-0 top-full mt-2 w-48 bg-primary border border-default rounded-lg shadow-complex opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-						<div className="p-2 space-y-1">
-							<a
-								href="/overview/"
-								className="block px-3 py-2 text-sm text-muted hover:text-light hover:bg-secondary rounded-md"
-							>
-								{t("common.dashboard")}
-							</a>
-							<button
-								type="button"
-								onClick={onLogout}
-								className="block w-full text-left px-3 py-2 text-sm text-muted hover:text-light hover:bg-secondary rounded-md"
-							>
-								{t("common.logout")}
-							</button>
-						</div>
+				<div className="absolute right-0 top-full mt-2 w-48 bg-primary border border-default rounded-lg shadow-complex opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus-within:opacity-100 group-focus-within:visible transition-all duration-200 z-50">
+					<div className="p-2 space-y-1">
+						<Link
+							to="/overview"
+							className="block px-3 py-2 text-sm text-muted hover:text-light hover:bg-secondary rounded-md"
+						>
+							{t("common.dashboard")}
+						</Link>
+						<button
+							type="button"
+							onClick={onLogout}
+							className="block w-full text-left px-3 py-2 text-sm text-muted hover:text-light hover:bg-secondary rounded-md"
+						>
+							{t("common.logout")}
+						</button>
 					</div>
-				)}
+				</div>
 			</div>
 
 			{/* 按钮 - 只在初始状态下显示 */}
 			{!visible && (
 				<Button variant="gradient" asChild>
-					<a href="/overview/">{t("common.dashboard")}</a>
+					<Link to="/overview">{t("common.dashboard")}</Link>
 				</Button>
 			)}
 		</>
@@ -309,12 +317,12 @@ export function AppNavbar() {
 		<Navbar>
 			{/* Desktop Navigation */}
 			<NavBody>
-				<a
-					href="/"
+				<Link
+					to="/"
 					className="relative z-20 mr-4 flex items-center text-sm font-medium text-light transition-fast hover:text-brand"
 				>
 					<Brand />
-				</a>
+				</Link>
 				<NavItems items={navItems} onItemClick={handleMenuClose} />
 				<div className="flex items-center gap-3">
 					<LanguageSwitcher />
@@ -323,9 +331,9 @@ export function AppNavbar() {
 						<UserMenu user={user} onLogout={handleLogout} />
 					) : (
 						<Button variant="primary" asChild>
-							<a href="/login">
+							<Link to="/login">
 								{t("common.login")} / {t("common.sign_up")}
-							</a>
+							</Link>
 						</Button>
 					)}
 				</div>
@@ -334,12 +342,12 @@ export function AppNavbar() {
 			{/* Mobile Navigation */}
 			<MobileNav>
 				<MobileNavHeader>
-					<a
-						href="/"
+					<Link
+						to="/"
 						className="relative z-20 mr-4 flex items-center text-sm font-medium text-light transition-fast hover:text-brand"
 					>
 						<Brand />
-					</a>
+					</Link>
 					<div className="flex items-center gap-3">
 						<LanguageSwitcher />
 						<ThemeToggle variant="icon" />
@@ -351,23 +359,34 @@ export function AppNavbar() {
 				</MobileNavHeader>
 
 				<MobileNavMenu isOpen={isMobileMenuOpen}>
-					{navItems.map((item, idx) => (
-						<a
-							key={`mobile-nav-${idx}`}
-							href={item.link === "#contact" ? "#" : item.link}
-							onClick={(e) => {
-								if (item.link === "#contact") {
-									e.preventDefault();
-									activateFabContact();
-								}
-								handleMenuClose();
-							}}
-							className="text-muted hover:text-light transition-fast"
-							data-nav-action={item.link === "#contact" ? "fab-contact" : undefined}
-						>
-							{item.name}
-						</a>
-					))}
+					{navItems.map((item, idx) =>
+						item.link.startsWith("/") && !item.link.includes("#") ? (
+							<Link
+								key={`mobile-nav-${idx}`}
+								to={item.link}
+								onClick={handleMenuClose}
+								className="text-muted hover:text-light transition-fast"
+							>
+								{item.name}
+							</Link>
+						) : (
+							<a
+								key={`mobile-nav-${idx}`}
+								href={item.link === "#contact" ? "#" : item.link}
+								onClick={(e) => {
+									if (item.link === "#contact") {
+										e.preventDefault();
+										activateFabContact();
+									}
+									handleMenuClose();
+								}}
+								className="text-muted hover:text-light transition-fast"
+								data-nav-action={item.link === "#contact" ? "fab-contact" : undefined}
+							>
+								{item.name}
+							</a>
+						),
+					)}
 
 					<div className="flex w-full flex-col items-center gap-4 pt-4 border-t border-default">
 						<div className="w-full flex justify-center">
@@ -379,16 +398,19 @@ export function AppNavbar() {
 									<p className="text-sm font-semibold text-light">{user?.name || user?.email}</p>
 								</div>
 								<Button variant="gradient" className="w-full" asChild>
-									<a href="/overview/" onClick={handleMenuClose}>
+									<Link to="/overview" onClick={handleMenuClose}>
 										{t("common.dashboard")}
-									</a>
+									</Link>
+								</Button>
+								<Button variant="outline" className="w-full" onClick={handleLogout}>
+									{t("common.logout")}
 								</Button>
 							</>
 						) : (
 							<Button variant="gradient" className="w-full" asChild>
-								<a href="/login" onClick={handleMenuClose}>
+								<Link to="/login" onClick={handleMenuClose}>
 									{t("common.login")} / {t("common.sign_up")}
-								</a>
+								</Link>
 							</Button>
 						)}
 					</div>

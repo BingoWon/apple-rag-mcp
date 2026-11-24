@@ -1,70 +1,51 @@
 import { IconCheck, IconMessageCircle, IconX } from "@tabler/icons-react";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { CardSpotlight } from "@/components/ui/card-spotlight";
-import { api } from "@/lib/api";
 import { formatDateCompact } from "@/lib/datetime";
 import { useAuthStore } from "@/stores/auth";
-
-interface UnreadMessage {
-	id: string;
-	message: string;
-	admin_reply: string;
-	replied_at: string;
-	created_at: string;
-}
+import { useDashboardStore } from "@/stores/dashboard";
 
 export function UnreadReplyNotification() {
 	const { user } = useAuthStore();
-	const [unreadMessages, setUnreadMessages] = useState<UnreadMessage[]>([]);
+	const unreadMessages = useDashboardStore((state) => state.unreadReplies);
+	const fetchUnreadReplies = useDashboardStore((state) => state.fetchUnreadReplies);
+	const markReplyRead = useDashboardStore((state) => state.markReplyRead);
 	const [currentIndex, setCurrentIndex] = useState(0);
 	const [isVisible, setIsVisible] = useState(false);
 	const [isMarking, setIsMarking] = useState(false);
 	const { t } = useTranslation();
 
-	const checkUnreadMessages = useCallback(async () => {
-		try {
-			const response = await api.getUnreadReplies();
-			if (response.success && response.data) {
-				const messages =
-					(response.data as { unreadMessages?: UnreadMessage[] }).unreadMessages || [];
-				if (messages.length > 0) {
-					setUnreadMessages(messages);
-					setCurrentIndex(0);
-					setIsVisible(true);
-				}
-			}
-		} catch (error) {
-			console.error("Failed to check unread messages:", error);
-		}
-	}, []);
-
 	useEffect(() => {
-		if (user) {
-			checkUnreadMessages();
-		} else {
-			setUnreadMessages([]);
+		if (!user) {
 			setIsVisible(false);
+			return;
 		}
-	}, [user, checkUnreadMessages]);
+		let active = true;
+		fetchUnreadReplies().then((messages) => {
+			if (active && messages.length > 0) {
+				setCurrentIndex(0);
+				setIsVisible(true);
+			}
+		});
+		return () => {
+			active = false;
+		};
+	}, [user, fetchUnreadReplies]);
 
 	const handleMarkAsRead = async () => {
 		if (unreadMessages.length === 0) return;
 
 		const currentMessage = unreadMessages[currentIndex];
+		if (!currentMessage) return;
 		setIsMarking(true);
 
 		try {
-			const response = await api.markMessageAsRead(currentMessage.id);
+			const marked = await markReplyRead(currentMessage.id);
 
-			if (response.success) {
-				// Remove current message from list
-				const newMessages = unreadMessages.filter((_, index) => index !== currentIndex);
-				setUnreadMessages(newMessages);
-
-				// Show next message or close
-				if (newMessages.length > 0) {
+			if (marked) {
+				if (unreadMessages.length > 1) {
 					setCurrentIndex(0);
 				} else {
 					setIsVisible(false);

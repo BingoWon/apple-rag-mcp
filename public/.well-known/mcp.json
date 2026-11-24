@@ -1,5 +1,6 @@
 {
-	"name": "Apple RAG MCP",
+	"name": "Apple RAG",
 	"url": "https://mcp.apple-rag.com",
-	"description": "Apple developer docs and WWDC transcripts with RAG retrieval and Jev relevance ranking."
+	"manifest": "https://mcp.apple-rag.com/manifest",
+	"description": "Find Apple docs and WWDC with RAG retrieval and Jev relevance ranking. Browse topics or read pages."
 }

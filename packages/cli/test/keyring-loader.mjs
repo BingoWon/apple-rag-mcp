@@ -21,6 +21,8 @@ export class AsyncEntry {
 		await writeFile(this.path, value, { mode: 0o600 });
 	}
 	async deleteCredential() {
+		if (process.env.APPLE_RAG_TEST_VAULT_MISSING_DELETE)
+			throw Error("No matching entry found in secure storage");
 		await rm(this.path, { force: true });
 		return true;
 	}

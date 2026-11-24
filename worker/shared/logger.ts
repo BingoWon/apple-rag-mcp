@@ -1,5 +1,11 @@
 import { sendTelegram } from "./telegram.js";
 
+let globalAlertUrl: string | undefined;
+
+export function setGlobalAlertUrl(url: string | undefined): void {
+	globalAlertUrl = url;
+}
+
 export class Logger {
 	private alertUrl?: string;
 	private prefix: string;
@@ -22,8 +28,9 @@ export class Logger {
 
 	async error(msg: string): Promise<void> {
 		console.error(msg);
-		if (this.alertUrl) {
-			await sendTelegram(this.alertUrl, `${this.prefix} ${msg}`);
+		const target = this.alertUrl ?? globalAlertUrl;
+		if (target) {
+			await sendTelegram(target, `${this.prefix} ${msg}`);
 		}
 	}
 }

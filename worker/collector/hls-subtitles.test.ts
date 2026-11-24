@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+	decodeHtmlEntities,
 	extractHlsSourceUrl,
 	extractHtmlTranscriptText,
 	extractMediaSegmentUrls,
@@ -118,5 +119,12 @@ test("downloads and combines segmented HLS subtitles", async () => {
 			concurrency: 2,
 		}),
 		"First cue. Second cue.",
+	);
+});
+
+test("decodeHtmlEntities safely preserves out-of-range numeric entities without throwing", () => {
+	assert.equal(
+		decodeHtmlEntities("A &amp; B &#x27; &#99999999; &#x110000;"),
+		"A & B ' &#99999999; &#x110000;",
 	);
 });

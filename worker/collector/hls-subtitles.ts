@@ -1,7 +1,8 @@
 const HLS_FETCH_TIMEOUT_MS = 20_000;
 const HLS_TOTAL_TIMEOUT_MS = 120_000;
 const HLS_SEGMENT_CONCURRENCY = 3;
-const HLS_MAX_SEGMENTS = 2_000;
+// Keep subtitle fetches comfortably under Cloudflare Workers' 1,000 subrequest invocation limit.
+const HLS_MAX_SEGMENTS = 400;
 
 interface HlsSubtitleTrack {
 	readonly uri: string;
@@ -230,7 +231,7 @@ async function mapWithConcurrency<T, R>(
 	return results;
 }
 
-function decodeHtmlEntities(value: string): string {
+export function decodeHtmlEntities(value: string): string {
 	return value.replace(
 		/&(#x[\da-f]+|#\d+|amp|lt|gt|quot|apos|nbsp);/gi,
 		(match, entity: string) => {
@@ -242,10 +243,16 @@ function decodeHtmlEntities(value: string): string {
 			if (normalized === "apos") return "'";
 			if (normalized === "nbsp") return " ";
 			if (normalized.startsWith("#x")) {
-				return String.fromCodePoint(Number.parseInt(normalized.slice(2), 16));
+				const codePoint = Number.parseInt(normalized.slice(2), 16);
+				return Number.isInteger(codePoint) && codePoint >= 0 && codePoint <= 0x10ffff
+					? String.fromCodePoint(codePoint)
+					: match;
 			}
 			if (normalized.startsWith("#")) {
-				return String.fromCodePoint(Number.parseInt(normalized.slice(1), 10));
+				const codePoint = Number.parseInt(normalized.slice(1), 10);
+				return Number.isInteger(codePoint) && codePoint >= 0 && codePoint <= 0x10ffff
+					? String.fromCodePoint(codePoint)
+					: match;
 			}
 			return match;
 		},

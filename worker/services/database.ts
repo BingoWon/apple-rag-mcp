@@ -12,6 +12,7 @@ import type { StoredWebPage } from "./page-reader.js";
 
 export class DatabaseService {
 	private sql: ReturnType<typeof postgres>;
+	private reconnecting: Promise<ReturnType<typeof postgres>> | null = null;
 	constructor(private config: AppConfig) {
 		this.sql = this.createClient();
 	}
@@ -23,14 +24,15 @@ export class DatabaseService {
 			database: this.config.RAG_DB_DATABASE,
 			username: this.config.RAG_DB_USER,
 			password: this.config.RAG_DB_PASSWORD,
-			ssl: this.config.RAG_DB_SSLMODE === "require",
-			max: 1,
+			ssl: this.config.RAG_DB_SSLMODE !== "disable",
+			max: 2,
 			idle_timeout: 30,
 			connect_timeout: 10,
 			max_lifetime: 60 * 30,
-			prepare: true,
+			prepare: false,
 			connection: {
 				application_name: "apple-rag-mcp",
+				statement_timeout: 15_000,
 			},
 			transform: {
 				undefined: null,
@@ -38,18 +40,35 @@ export class DatabaseService {
 		});
 	}
 
+	private async rebuildClient(
+		failed: ReturnType<typeof postgres>,
+	): Promise<ReturnType<typeof postgres>> {
+		if (this.sql !== failed) return this.sql;
+		if (!this.reconnecting) {
+			this.reconnecting = (async () => {
+				await failed.end({ timeout: 0 }).catch(() => {});
+				const next = this.createClient();
+				this.sql = next;
+				return next;
+			})().finally(() => {
+				this.reconnecting = null;
+			});
+		}
+		return this.reconnecting;
+	}
+
 	private async withReconnect<T>(
 		operation: (sql: ReturnType<typeof postgres>) => Promise<T>,
 	): Promise<T> {
+		const current = this.sql;
 		try {
-			return await operation(this.sql);
+			return await operation(current);
 		} catch (error) {
 			if (!isTransientPostgresConnectionError(error)) throw error;
 
 			logger.warn(`PostgreSQL connection reset, rebuilding pool: ${String(error)}`);
-			await this.sql.end({ timeout: 0 }).catch(() => {});
-			this.sql = this.createClient();
-			return operation(this.sql);
+			const next = await this.rebuildClient(current);
+			return operation(next);
 		}
 	}
 
@@ -168,34 +187,20 @@ export class DatabaseService {
 		content: string;
 	} | null> {
 		const normalizedUrl = this.normalizeUrl(url);
+		const alternativeUrl = normalizedUrl.endsWith("/")
+			? normalizedUrl.slice(0, -1)
+			: `${normalizedUrl}/`;
 
 		try {
-			// Try exact match first
-			let results = await this.withReconnect(
+			const results = await this.withReconnect(
 				(sql) => sql`
 	        SELECT id, url, title, content
 	        FROM pages
-	        WHERE url = ${normalizedUrl}
+	        WHERE url IN (${normalizedUrl}, ${alternativeUrl})
+	        ORDER BY CASE WHEN url = ${normalizedUrl} THEN 0 ELSE 1 END
 	        LIMIT 1
 	      `,
 			);
-
-			// If no exact match, try flexible matching
-			if (results.length === 0) {
-				// Try with/without trailing slash
-				const alternativeUrl = normalizedUrl.endsWith("/")
-					? normalizedUrl.slice(0, -1)
-					: `${normalizedUrl}/`;
-
-				results = await this.withReconnect(
-					(sql) => sql`
-	          SELECT id, url, title, content
-	          FROM pages
-	          WHERE url = ${alternativeUrl}
-	          LIMIT 1
-	        `,
-				);
-			}
 
 			if (results.length === 0) {
 				return null;

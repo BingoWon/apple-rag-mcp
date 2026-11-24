@@ -1,6 +1,6 @@
 # CLI operations and npm publication
 
-Current implementation: service 5.5.2, independent npm `apple-rag-cli` 2.0.0;
+Current implementation (2026-11-24): service `5.15.13`, independent npm `apple-rag-cli` `2.1.4`;
 executable `apple-rag`, Node.js 22.20+. See [authorization architecture](cli-auth-architecture.md)
 and [acceptance](cli-auth-acceptance-2026-11-03.md). The CLI uses a versioned JSON
 API and independent OAuth/device/API-key credentials, with shared account billing
@@ -76,10 +76,11 @@ Missing package: record the owner bootstrap step and skip. Existing exact versio
 skip. New version of an existing package: publish through the trusted workflow.
 Registry/network/publish errors fail CI rather than masquerade as a missing package.
 
-Increment the independent CLI version for CLI/shared-contract/bundled-skill changes.
+Increment the independent CLI version for CLI/shared-contract/bundled-skill changes
+(and keep `skills/apple-dev-docs/SKILL.md` `metadata.version` synchronized).
 Keep root/server versions synchronized under existing release rules. Server-only
-changes need no npm update or user reinstall. npm provenance is disabled because
-private GitHub repositories currently cannot generate it; OIDC still works.
+changes need no npm update or user reinstall. As of 2026-11-24, this public
+repository publishes with npm OIDC `--provenance` enabled (`publishConfig.provenance: true`).
 
 References: [npm metadata](https://docs.npmjs.com/cli/v11/configuring-npm/package-json/),
 [Trusted Publishers](https://docs.npmjs.com/trusted-publishers/),

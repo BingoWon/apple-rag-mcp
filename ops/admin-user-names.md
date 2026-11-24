@@ -1,7 +1,7 @@
 # Admin user-name presentation
 
 All admin tables except the Users page identify people by their current account name.
-Subscriptions, MCP tokens, authorized IPs, search/fetch logs, contact messages and their
+Subscriptions, MCP tokens, authorized IPs, search/browse/fetch logs, contact messages and their
 detail/reply views share one identity resolver and one localized name formatter.
 
 The resolver fetches account names for a page in one query. It strips user IDs from

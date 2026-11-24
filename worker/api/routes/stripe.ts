@@ -95,6 +95,17 @@ stripe.openapi(
 					},
 				},
 			},
+			409: {
+				description: "Conflict - pending checkout session",
+				content: {
+					"application/json": {
+						schema: z.object({
+							success: z.boolean(),
+							error: z.object({ code: z.string(), message: z.string() }),
+						}),
+					},
+				},
+			},
 			500: {
 				description: "Internal server error",
 				content: {
@@ -104,7 +115,6 @@ stripe.openapi(
 							error: z.object({
 								code: z.string(),
 								message: z.string(),
-								details: z.string().optional(),
 							}),
 						}),
 					},
@@ -114,7 +124,7 @@ stripe.openapi(
 	},
 	async (c) => {
 		try {
-			const { priceId, cancelUrl, paymentMethod } = await c.req.json();
+			const { priceId, cancelUrl, paymentMethod } = c.req.valid("json");
 			const user = c.get("user");
 
 			if (!c.env.STRIPE_SECRET_KEY) {
@@ -198,8 +208,15 @@ stripe.openapi(
 			}
 
 			const origin = new URL(c.req.url).origin;
-			const back = new URL(cancelUrl || "/#pricing", origin);
-			const finalCancelUrl = back.origin === origin ? back.href : origin + "/#pricing";
+			let finalCancelUrl = `${origin}/#pricing`;
+			if (cancelUrl) {
+				try {
+					const back = new URL(cancelUrl, origin);
+					if (back.origin === origin) finalCancelUrl = back.href;
+				} catch {
+					// Malformed cancelUrl falls back to default pricing anchor
+				}
+			}
 
 			const stripeClient = createStripeClient(c.env.STRIPE_SECRET_KEY);
 
@@ -245,18 +262,20 @@ stripe.openapi(
 						success: false,
 						error: { code: ApiErrorCode.RESOURCE_CONFLICT, message: "CHECKOUT_PENDING" },
 					},
-					400,
+					409,
 				);
 
 			return c.json({ success: true as const, data: { url: session.url! } }, 200);
 		} catch (error) {
+			await logger.error(
+				`Failed to create checkout session: ${error instanceof Error ? error.message : String(error)}`,
+			);
 			return c.json(
 				{
 					success: false,
 					error: {
 						code: ApiErrorCode.INTERNAL_ERROR,
 						message: "Failed to create checkout session",
-						details: error instanceof Error ? error.message : "Unknown error",
 					},
 				},
 				500,
@@ -434,7 +453,6 @@ stripe.openapi(
 			enterprise: "Enterprise",
 		};
 
-		let planType = (result?.plan_type as string) || "hobby";
 		const paymentType = (result?.payment_type as string) || "subscription";
 		let status = (result?.status as string) || "active";
 
@@ -443,12 +461,11 @@ stripe.openapi(
 			result?.current_period_end &&
 			new Date(result.current_period_end as string) < new Date()
 		) {
-			planType = "hobby";
 			status = "inactive";
 		}
 
-		const quota =
-			OAUTH_SUBSCRIPTION_QUOTAS[effectivePlanType(result)] || OAUTH_SUBSCRIPTION_QUOTAS.hobby;
+		const planType = effectivePlanType(result);
+		const quota = OAUTH_SUBSCRIPTION_QUOTAS[planType] || OAUTH_SUBSCRIPTION_QUOTAS.hobby;
 		const price = result?.price ?? 0;
 		const billingInterval = result?.billing_interval ?? "month";
 
@@ -458,7 +475,7 @@ stripe.openapi(
 				id: result?.stripe_subscription_id
 					? String(result.stripe_subscription_id)
 					: `mock_${user.id}`,
-				plan_id: planType as "hobby" | "pro" | "enterprise",
+				plan_id: planType,
 				plan_name: PLAN_NAMES[planType] || "Hobby",
 				status: status as
 					| "active"
@@ -488,11 +505,14 @@ stripe.openapi(
 	},
 );
 
+class WebhookSignatureError extends Error {}
+
 stripe.post("/webhook", async (c) => {
-	const eventId = c.req.header("stripe-signature")?.split(",")[0]?.split("=")[1] || "unknown";
+	let eventId = "unknown";
 
 	try {
 		const { event, stripeClient } = await validateWebhook(c);
+		eventId = event.id;
 		const objectId = getEventObjectId(event);
 
 		if (
@@ -519,6 +539,16 @@ stripe.post("/webhook", async (c) => {
 			message,
 		});
 	} catch (error) {
+		if (error instanceof WebhookSignatureError) {
+			return c.json(
+				{
+					received: false,
+					error: error.message,
+				},
+				400,
+			);
+		}
+
 		await logger.error(
 			`🔔 [STRIPE WEBHOOK] Critical error for event ${eventId}: ${error instanceof Error ? error.message : String(error)}`,
 		);
@@ -562,7 +592,7 @@ async function validateWebhook(c: Context<AppEnv>) {
 	const signature = c.req.header("stripe-signature");
 
 	if (!signature) {
-		throw new Error("Missing Stripe signature");
+		throw new WebhookSignatureError("Missing Stripe signature");
 	}
 
 	if (!c.env.STRIPE_WEBHOOK_SECRET) {
@@ -571,13 +601,18 @@ async function validateWebhook(c: Context<AppEnv>) {
 
 	const stripeClient = createStripeClient(c.env.STRIPE_SECRET_KEY);
 
-	const event = await stripeClient.webhooks.constructEventAsync(
-		body,
-		signature,
-		c.env.STRIPE_WEBHOOK_SECRET,
-	);
-
-	return { event, stripeClient };
+	try {
+		const event = await stripeClient.webhooks.constructEventAsync(
+			body,
+			signature,
+			c.env.STRIPE_WEBHOOK_SECRET,
+		);
+		return { event, stripeClient };
+	} catch (error) {
+		throw new WebhookSignatureError(
+			error instanceof Error ? error.message : "Invalid Stripe signature",
+		);
+	}
 }
 
 /**

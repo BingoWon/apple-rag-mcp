@@ -26,6 +26,15 @@ const INTERVAL_MAP: Record<string, { perKey: string; passKey: string }> = {
 	annual: { perKey: "per_year", passKey: "onetime_annual" },
 };
 
+const STATUS_I18N_KEY: Record<string, string> = {
+	active: "billing.active",
+	trialing: "billing.trial",
+	canceled: "billing.cancelled",
+	past_due: "billing.past_due",
+	incomplete: "billing.incomplete",
+	inactive: "billing.inactive",
+};
+
 export function SubscriptionCard({ subscription, usage }: SubscriptionCardProps) {
 	const { t } = useTranslation();
 	const [isManagingSubscription, setIsManagingSubscription] = useState(false);
@@ -49,6 +58,12 @@ export function SubscriptionCard({ subscription, usage }: SubscriptionCardProps)
 		}
 	};
 
+	const statusLabel = isExpired
+		? t("billing.expired")
+		: t(STATUS_I18N_KEY[subscription.status] ?? "billing.inactive", {
+				defaultValue: subscription.status,
+			});
+
 	const getStatusBadge = () => {
 		if (isExpired) {
 			return <Badge variant="secondary">{t("billing.expired")}</Badge>;
@@ -64,8 +79,10 @@ export function SubscriptionCard({ subscription, usage }: SubscriptionCardProps)
 				return <Badge variant="warning">{t("billing.past_due")}</Badge>;
 			case "incomplete":
 				return <Badge variant="warning">{t("billing.incomplete")}</Badge>;
+			case "inactive":
+				return <Badge variant="secondary">{t("billing.inactive")}</Badge>;
 			default:
-				return <Badge variant="secondary">{subscription.status}</Badge>;
+				return <Badge variant="secondary">{statusLabel}</Badge>;
 		}
 	};
 
@@ -75,6 +92,8 @@ export function SubscriptionCard({ subscription, usage }: SubscriptionCardProps)
 			const response = await api.createBillingPortalSession();
 			if (response.success && response.data?.url) {
 				window.location.href = response.data.url;
+			} else {
+				toast.error(response.error?.message || t("billing.manage_error"));
 			}
 		} catch (error) {
 			console.error("Failed to create billing portal session:", error);
@@ -126,13 +145,7 @@ export function SubscriptionCard({ subscription, usage }: SubscriptionCardProps)
 				<div className="grid grid-cols-2 gap-4 text-sm">
 					<div>
 						<span className="text-faint">{t("billing.status")}</span>
-						<div className="mt-1 font-medium">
-							{isExpired
-								? t("billing.expired")
-								: t(`billing.${subscription.status}`, {
-										defaultValue: subscription.status,
-									})}
-						</div>
+						<div className="mt-1 font-medium">{statusLabel}</div>
 					</div>
 					<div>
 						<span className="text-faint">{t("billing.weekly_quota")}</span>
@@ -230,7 +243,11 @@ function UsageProgress({ usage, t }: { usage: CurrentUsage; t: TFunction }) {
 				/>
 			</div>
 			<div className="flex items-center justify-between text-xs text-faint">
-				<span>{t("billing.remaining", { count: usage.remaining })}</span>
+				<span>
+					{usage.limit === -1
+						? t("common.unlimited")
+						: t("billing.remaining", { count: usage.remaining.toLocaleString() })}
+				</span>
 				<span>{t("billing.resets_on", { date: formatDate(usage.reset_at) })}</span>
 			</div>
 		</div>

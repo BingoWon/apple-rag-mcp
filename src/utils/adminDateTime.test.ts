@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { parseUTCDate } from "../../worker/shared/datetime.js";
+import { parseUTCDate } from "../../shared/datetime.js";
 import { formatAdminDateTime, formatAdminResponseTime } from "../lib/admin-utils.js";
 
 test("admin timestamps normalize historical D1 and ISO dates into the same UTC+8 display", () => {

@@ -6,7 +6,7 @@
 		"url": "https://github.com/BingoWon/apple-rag-mcp",
 		"source": "github"
 	},
-	"version": "5.15.12",
+	"version": "5.15.13",
 	"remotes": [
 		{
 			"type": "streamable-http",
@@ -17,6 +17,12 @@
 					"description": "For account access, send Bearer followed by a space and your MCP token. Omit this header for anonymous access.",
 					"isRequired": false,
 					"isSecret": true
+				},
+				{
+					"name": "X-Apple-RAG-Client",
+					"description": "Optional MCP client identifier for product attribution.",
+					"isRequired": false,
+					"isSecret": false
 				}
 			]
 		}

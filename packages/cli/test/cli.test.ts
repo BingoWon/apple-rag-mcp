@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { spawn, spawnSync } from "node:child_process";
 import { chmod, mkdtemp, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { createServer } from "node:http";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -416,4 +417,60 @@ test("fetch preserves signed input for the reader but stores only a public URL i
 		.get(JSON.parse(r.stdout).request_id);
 	assert.equal(row?.requested_url, "https://example.com/manual");
 	assert.equal(row?.actual_url, "https://example.com/final");
+});
+
+test("CLI text search renders chunk range and additional URLs; validation maps --limit; --version rejects subcommands", async (t) => {
+	const { run, server } = await setup(t);
+	const env = { APPLE_RAG_TOKEN: server.cliKey };
+	const text = await run(["search", "additional"], env);
+	assert.equal(text.code, 0, text.stderr);
+	assert.match(text.stdout, /Partial document — chunks 1 of 2; use fetch for full text/);
+	assert.match(
+		text.stdout,
+		/Additional matching URLs \(use fetch to read\):\n- NavigationStack: https:\/\/developer\.apple\.com\/documentation\/swiftui\/navigationstack/,
+	);
+	const badLimit = await run(["search", "SwiftUI", "--limit", "0"], env);
+	assert.equal(badLimit.code, 2);
+	assert.match(badLimit.stderr, /--limit/);
+	assert.doesNotMatch(badLimit.stderr, /result_count/);
+	const badVersion = await run(["search", "SwiftUI", "--version"], env);
+	assert.equal(badVersion.code, 2);
+	assert.match(badVersion.stderr, /--version is not valid/);
+	const badToken = await run(["auth", "status"], { APPLE_RAG_TOKEN: "bad" });
+	assert.equal(badToken.code, 3);
+	assert.match(badToken.stderr, /Automation access/);
+});
+
+test("logout distinguishes absent sessions and tolerates missing OS keyring entries", async (t) => {
+	const { run, login, directory } = await setup(t);
+	const empty = await run(["auth", "logout"]);
+	assert.equal(empty.code, 0);
+	assert.match(empty.stderr, /No saved CLI session found/);
+	assert.equal((await login()).code, 0);
+	const missingKeyring = await run(["auth", "logout"], {
+		APPLE_RAG_TEST_VAULT_MISSING_DELETE: "1",
+	});
+	assert.equal(missingKeyring.code, 0, missingKeyring.stderr);
+	assert.match(missingKeyring.stderr, /Saved CLI session revoked and removed/);
+	const remainingFiles = (await readdir(directory)).filter((f) => f.endsWith(".json"));
+	assert.deepEqual(remainingFiles, []);
+});
+
+test("non-JSON upstream OAuth errors produce clean AUTH_FAILED instead of uncaught SyntaxError", async (t) => {
+	const { run } = await setup(t);
+	const badGateway = createServer((_req, res) => {
+		res.writeHead(502, { "Content-Type": "text/html" });
+		res.end("<html>Bad Gateway</html>");
+	});
+	await new Promise<void>((resolve) => badGateway.listen(0, "127.0.0.1", resolve));
+	t.after(async () => {
+		badGateway.closeAllConnections();
+		await new Promise<void>((resolve) => badGateway.close(() => resolve()));
+	});
+	const port = (badGateway.address() as { port: number }).port;
+	const result = await run(["auth", "login", "--device", "--no-browser"], {
+		APPLE_RAG_URL: `http://127.0.0.1:${port}`,
+	});
+	assert.equal(result.code, 3, result.stderr);
+	assert.match(result.stderr, /AUTH_FAILED: Cannot start CLI device authorization \(HTTP 502\)/);
 });

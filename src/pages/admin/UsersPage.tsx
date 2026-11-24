@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { AdminPlanBadge } from "@/components/admin/AdminUserLabel";
 import { api } from "@/lib/api";
-import type { AdminSubscription } from "../../../worker/shared/admin-user";
+import type { AdminSubscription } from "../../../shared/admin-user";
 
 interface AdminUser {
 	id: string;

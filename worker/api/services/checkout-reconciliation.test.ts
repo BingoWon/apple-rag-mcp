@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import Stripe from "stripe";
-import { fixture } from "../../packages/cli/test/fixture";
-import { reconcileCheckouts } from "../api/services/stripe-checkout";
+import { fixture } from "../../../packages/cli/test/fixture";
+import { reconcileCheckouts } from "./stripe-checkout";
 
 test("hourly recovery verifies owners, retries pending payments and fulfills offline checkouts once", async (t) => {
 	const f = await fixture();

@@ -1,9 +1,16 @@
 import { IconCheck, IconCopy } from "@tabler/icons-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { atomDark } from "react-syntax-highlighter/dist/cjs/styles/prism";
+import { PrismLight as SyntaxHighlighter } from "react-syntax-highlighter";
+import bash from "react-syntax-highlighter/dist/esm/languages/prism/bash";
+import json from "react-syntax-highlighter/dist/esm/languages/prism/json";
+import toml from "react-syntax-highlighter/dist/esm/languages/prism/toml";
+import atomDark from "react-syntax-highlighter/dist/esm/styles/prism/atom-dark";
 import { copyText } from "@/utils/clipboard";
+
+SyntaxHighlighter.registerLanguage("bash", bash);
+SyntaxHighlighter.registerLanguage("json", json);
+SyntaxHighlighter.registerLanguage("toml", toml);
 
 type CodeBlockProps = {
 	language: string;

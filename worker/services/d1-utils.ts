@@ -8,13 +8,19 @@ export interface WaitUntilContext {
 	waitUntil(promise: Promise<unknown>): void;
 }
 
-const raceWithTimeout = <T>(operation: () => Promise<T>, name: string): Promise<T> =>
-	Promise.race([
-		operation(),
-		new Promise<never>((_, reject) =>
-			setTimeout(() => reject(new Error(`D1 timeout: ${name}`)), D1_TIMEOUT_MS),
-		),
-	]);
+const raceWithTimeout = async <T>(operation: () => Promise<T>, name: string): Promise<T> => {
+	let timer: ReturnType<typeof setTimeout> | undefined;
+	try {
+		return await Promise.race([
+			operation(),
+			new Promise<never>((_, reject) => {
+				timer = setTimeout(() => reject(new Error(`D1 timeout: ${name}`)), D1_TIMEOUT_MS);
+			}),
+		]);
+	} finally {
+		if (timer !== undefined) clearTimeout(timer);
+	}
+};
 
 export async function withD1Timeout<T>(operation: () => Promise<T>, name: string): Promise<T> {
 	try {

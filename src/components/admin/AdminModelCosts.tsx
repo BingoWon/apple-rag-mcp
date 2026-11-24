@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/Card";
 import type { AdminDashboardStats, ModelCostCurrency } from "@/types";
-import type { ToolChannel } from "../../../worker/shared/tool-channels";
+import type { ToolChannel } from "../../../shared/tool-channels";
 import { TrendChart } from "../charts/TrendChart";
 
 const CATEGORIES = [

@@ -1,10 +1,9 @@
-import { TOKEN_FORMAT } from "../mcp/constants.js";
 import type { WaitUntilContext } from "../services/d1-utils.js";
 import { IPAuthenticationService } from "../services/ip-authentication.js";
 import { extractClientInfo } from "../services/request-info.js";
-import type { AuthContext } from "../services/types.js";
+import { type AuthContext, MCP_TOKEN_FORMAT } from "../services/types.js";
 import { logger } from "../shared/logger.js";
-import { TokenValidator, type UserTokenData } from "./token-validator.js";
+import { TokenValidator } from "./token-validator.js";
 
 export class MCPAuthenticationError extends Error {
 	constructor() {
@@ -24,7 +23,7 @@ export class AuthMiddleware {
 	private extractBearerToken(authHeader?: string): string | null {
 		if (!authHeader) return null;
 		const token = /^Bearer ([^\s]+)$/i.exec(authHeader)?.[1];
-		return token && TOKEN_FORMAT.test(token) ? token : null;
+		return token && MCP_TOKEN_FORMAT.test(token) ? token : null;
 	}
 
 	async optionalAuth(request: Request): Promise<AuthContext> {
@@ -70,13 +69,9 @@ export class AuthMiddleware {
 
 		// No authentication method succeeded
 		logger.info(
-			`No authentication provided - allowing unauthenticated access from IP: ${clientIP} (hasToken: ${!!token})`,
+			`No authentication provided - allowing unauthenticated access from IP: ${clientIP}`,
 		);
 
 		return { isAuthenticated: false, authMethod: "anonymous" };
-	}
-
-	async getUserData(userId: string): Promise<UserTokenData> {
-		return this.tokenValidator.getUserDataById(userId);
 	}
 }

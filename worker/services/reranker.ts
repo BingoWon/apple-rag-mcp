@@ -86,8 +86,12 @@ function excerpt(content: string, query: string, bytes: number): string {
 			start = offset;
 		}
 	}
-	const heading = prefix(content, Math.min(400, Math.floor(bytes / 4)));
 	const marker = "\n[Excerpt; content omitted]\n";
+	if (start === 0) {
+		const trimmedMarker = "\n[Excerpt; content omitted]";
+		return prefix(content, bytes - encoder.encode(trimmedMarker).length) + trimmedMarker;
+	}
+	const heading = prefix(content, Math.min(400, Math.floor(bytes / 4)));
 	return (
 		heading + marker + prefix(content.slice(start), bytes - encoder.encode(heading + marker).length)
 	);
@@ -363,9 +367,15 @@ export class RerankerService {
 	}
 
 	private buildPayload(input: RerankerInput): unknown {
+		const perDocBudget = Math.min(
+			16_000,
+			Math.max(1_024, Math.floor(128_000 / input.documents.length)),
+		);
 		return {
 			queries: [input.query],
-			documents: input.documents.map((document) => `${document.title ?? ""}\n${document.content}`),
+			documents: input.documents.map((document) =>
+				excerpt(`${document.title ?? ""}\n${document.content}`, input.query, perDocBudget),
+			),
 			top_n: input.topN,
 		};
 	}

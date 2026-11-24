@@ -85,7 +85,7 @@ export function isPublicAddress(address: string): boolean {
 
 export async function assertPublicHost(url: string, signal: AbortSignal): Promise<void> {
 	const host = new URL(publicUrl(url)).hostname;
-	const answers = await Promise.all(
+	const settled = await Promise.allSettled(
 		["A", "AAAA"].map(async (type) => {
 			const response = await fetch(
 				`https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(host)}&type=${type}`,
@@ -100,13 +100,18 @@ export async function assertPublicHost(url: string, signal: AbortSignal): Promis
 				Status: number;
 				Answer?: { type: number; data: string }[];
 			};
-			if (data.Status !== 0) throw new Error("DNS resolution failed.");
+			if (data.Status !== 0) throw new Error(`DNS resolution failed (${type}: ${data.Status}).`);
 			return (data.Answer ?? [])
 				.filter((answer) => answer.type === 1 || answer.type === 28)
 				.map((answer) => answer.data);
 		}),
 	);
-	const addresses = answers.flat();
+	signal.throwIfAborted();
+	const fulfilled = settled.filter(
+		(entry): entry is PromiseFulfilledResult<string[]> => entry.status === "fulfilled",
+	);
+	if (!fulfilled.length) throw new Error("DNS resolution failed.");
+	const addresses = fulfilled.flatMap((entry) => entry.value);
 	if (!addresses.length) throw new Error("DNS returned no public address records.");
 	if (!addresses.every(isPublicAddress))
 		throw new UnsafeUrlError("The destination is not a public website.");

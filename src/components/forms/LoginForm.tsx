@@ -13,7 +13,6 @@ import { Label } from "@/components/ui/Label";
 import { LabelInputContainer } from "@/components/ui/LabelInputContainer";
 import { useAuth } from "@/hooks/useAuth";
 import { useErrorHandler } from "@/hooks/useErrorHandler";
-import { trackEvent } from "@/lib/analytics";
 import { api } from "@/lib/api";
 import { normalizeEmail } from "@/utils/email";
 
@@ -60,12 +59,6 @@ export function LoginForm() {
 				email,
 				password,
 			});
-
-			// Track successful login
-			trackEvent("USER_LOGIN", {
-				method: "email",
-				user_email: email,
-			});
 		} catch (error) {
 			// Use unified error handling
 			const friendlyError = handleError(error, {
@@ -81,12 +74,6 @@ export function LoginForm() {
 
 	const handleOAuthLogin = async (provider: "google" | "github") => {
 		setOauthLoading(provider);
-
-		// Track OAuth login attempt
-		trackEvent("USER_LOGIN", {
-			method: provider,
-			login_type: "oauth",
-		});
 
 		try {
 			// 现代化OAuth流程：获取授权URL然后跳转

@@ -8,7 +8,6 @@ export const PLAN_IDS = {
 
 export const CONTACT = {
 	EMAIL: "bingow@outlook.com",
-	SUPPORT_URL: "/support#contact",
 } as const;
 
 export const PRO_PRICING_OPTIONS: PricingOption[] = [

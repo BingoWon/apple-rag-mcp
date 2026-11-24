@@ -97,8 +97,8 @@ export function AdminAuth({ onAuthenticated }: AdminAuthProps) {
 			<div className="max-w-md w-full space-y-8">
 				{/* Header */}
 				<div className="text-center">
-					<div className="mx-auto h-16 w-16 bg-primary rounded-full flex items-center justify-center">
-						<IconShieldCheck className="h-8 w-8 text-primary-foreground" />
+					<div className="mx-auto h-16 w-16 bg-brand/15 rounded-full flex items-center justify-center">
+						<IconShieldCheck className="h-8 w-8 text-brand" />
 					</div>
 					<h2 className="mt-6 text-3xl font-bold text-foreground">{t("admin.auth_title")}</h2>
 					<p className="mt-2 text-muted-foreground">{t("admin.auth_subtitle")}</p>
@@ -117,7 +117,7 @@ export function AdminAuth({ onAuthenticated }: AdminAuthProps) {
 								type={showPassword ? "text" : "password"}
 								value={password}
 								onChange={(e) => setPassword(e.target.value)}
-								className="relative block w-full px-3 py-3 border border-gray-700 bg-gray-800 text-white placeholder-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand pr-10"
+								className="relative block w-full px-3 py-3 border border-default bg-secondary text-foreground placeholder:text-muted-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand pr-10"
 								placeholder={t("admin.auth_placeholder")}
 								autoComplete="current-password"
 								required
@@ -127,7 +127,8 @@ export function AdminAuth({ onAuthenticated }: AdminAuthProps) {
 								type="button"
 								variant="ghost"
 								size="icon"
-								className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 text-gray-400 hover:text-gray-300"
+								aria-label={showPassword ? t("auth.hide_password") : t("auth.show_password")}
+								className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 text-muted-foreground hover:text-foreground"
 								onClick={() => setShowPassword(!showPassword)}
 								disabled={isLoading}
 							>

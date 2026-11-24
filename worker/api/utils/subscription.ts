@@ -8,14 +8,6 @@ import { OAUTH_SUBSCRIPTION_QUOTAS, TIER_PERMISSIONS } from "../types/permission
 export type PlanType = "hobby" | "pro" | "enterprise";
 export type SubscriptionStatus = "active" | "inactive" | "canceled" | "past_due";
 
-export interface UserSubscription {
-	plan_type: PlanType;
-	status: SubscriptionStatus;
-	current_period_start?: string;
-	current_period_end?: string;
-	cancel_at_period_end: boolean;
-}
-
 /**
  * Get user's current subscription plan type
  * @param userId - User ID
@@ -45,43 +37,6 @@ export function effectivePlanType(
 	)
 		return "hobby";
 	return (result.plan_type as PlanType) || "hobby";
-}
-
-/**
- * Get user's subscription details
- * @param userId - User ID
- * @param db - D1 Database instance
- * @returns Full subscription details
- */
-export async function getUserSubscription(
-	userId: string,
-	db: D1Database,
-): Promise<UserSubscription> {
-	const result = await db
-		.prepare(`
-	        SELECT plan_type, status, current_period_start,
-	               current_period_end, cancel_at_period_end
-	        FROM user_subscriptions
-	        WHERE user_id = ?
-	      `)
-		.bind(userId)
-		.first();
-
-	if (!result) {
-		return {
-			plan_type: "hobby",
-			status: "active",
-			cancel_at_period_end: false,
-		};
-	}
-
-	return {
-		plan_type: (result.plan_type as PlanType) || "hobby",
-		status: (result.status as SubscriptionStatus) || "active",
-		current_period_start: result.current_period_start as string,
-		current_period_end: result.current_period_end as string,
-		cancel_at_period_end: Boolean(result.cancel_at_period_end),
-	};
 }
 
 /**

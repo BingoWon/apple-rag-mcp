@@ -196,13 +196,16 @@ export async function fulfillPass(db: D1Database, session: Stripe.Checkout.Sessi
 			(results[1].results[0] as { current_period_end: string } | undefined)?.current_period_end ??
 				"",
 		);
-		if (!expires) throw Error("Existing recurring entitlement conflicts with paid pass");
 	} catch (error) {
 		if (
 			await db.prepare("SELECT 1 FROM fulfilled_passes WHERE session_id=?").bind(session.id).first()
 		)
 			return "Pass already fulfilled";
 		throw error;
+	}
+	if (!expires) {
+		await db.prepare("DELETE FROM fulfilled_passes WHERE session_id=?").bind(session.id).run();
+		throw Error("Existing recurring entitlement conflicts with paid pass");
 	}
 
 	try {

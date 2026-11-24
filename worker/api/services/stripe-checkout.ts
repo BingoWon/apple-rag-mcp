@@ -92,16 +92,20 @@ export async function reconcileCheckouts(
 		throw new AggregateError(failures, "Unresolved checkout attempts will be retried");
 }
 
+const MAX_UNACKNOWLEDGED_SESSION_SCAN = 500;
+
 async function findUnacknowledgedSession(
 	client: Stripe,
 	attempt: { attempt_id: string; expires_at: number },
 ) {
 	// Stripe accepted a creation within this hour if it committed before the local write failed.
+	let scanned = 0;
 	for await (const session of client.checkout.sessions.list({
 		created: { gte: attempt.expires_at - 3601, lte: attempt.expires_at },
 		limit: 100,
 	})) {
 		if (session.metadata?.attempt === attempt.attempt_id) return session;
+		if (++scanned >= MAX_UNACKNOWLEDGED_SESSION_SCAN) break;
 	}
 }
 

@@ -8,11 +8,14 @@ import { api } from "@/lib/api";
 import { authReturnPath, clearAuthReturn, oauthReturnState } from "@/lib/auth-return";
 import { useAuthStore } from "@/stores/auth";
 
-const loading = (
-	<div className="min-h-screen flex items-center justify-center">
-		<LoaderFive text="Loading..." />
-	</div>
-);
+function AuthLoading() {
+	const { t } = useTranslation();
+	return (
+		<div className="min-h-screen flex items-center justify-center">
+			<LoaderFive text={t("common.loading")} />
+		</div>
+	);
+}
 
 function OAuthReturn({ state }: { state: string }) {
 	const navigate = useNavigate();
@@ -41,15 +44,15 @@ function OAuthReturn({ state }: { state: string }) {
 			active = false;
 		};
 	}, [navigate, t, state]);
-	return loading;
+	return <AuthLoading />;
 }
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
 	const { isHydrated, user, isAuthenticated } = useAuth();
 	const location = useLocation();
-	if (!isHydrated) return loading;
+	if (!isHydrated) return <AuthLoading />;
 	const state = oauthReturnState(location);
 	if (state) return <OAuthReturn key={state} state={state} />;
-	if (!isAuthenticated || !user) return <Navigate to="/login/" replace />;
+	if (!isAuthenticated || !user) return <Navigate to="/login" replace />;
 	return <Fragment key={user.id}>{children}</Fragment>;
 }

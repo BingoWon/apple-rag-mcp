@@ -38,7 +38,7 @@ function buildPricingPlans(): PricingPlan[] {
 			gradientFrom: "from-green-500",
 			gradientTo: "to-brand-tertiary",
 			features: [
-				i18n.t("plans.tool_calls_per_week", { count: 50000 }),
+				i18n.t("plans.tool_calls_per_week", { count: (50000).toLocaleString("en-US") }),
 				i18n.t("plans.requests_per_minute", { count: 50 }),
 				i18n.t("plans.mcp_cli_supported"),
 				i18n.t("plans.semantic_search"),

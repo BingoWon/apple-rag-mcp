@@ -8,8 +8,7 @@ import { fetchOutput, searchOutput } from "../services/tool-results.js";
 import type { AuthContext, RateLimitResult, Services } from "../services/types.js";
 import { MESSAGES } from "./constants.js";
 import { formatFetchResponse, formatRAGResponse } from "./formatters/response-formatter.js";
-import { FetchTool } from "./tools/fetch-tool.js";
-import { SearchTool } from "./tools/search-tool.js";
+import { executeMcpTool } from "./tools.js";
 
 const NOW = Date.parse("2026-10-08T10:00:20Z");
 const RESET = "2026-10-11T00:00:00Z";
@@ -73,13 +72,17 @@ for (const plan of ["anonymous", "hobby", "pro"]) {
 				headers: { "cf-connecting-ip": "203.0.113.100" },
 			});
 			const results = [
-				await new SearchTool(services).handle(
+				await executeMcpTool(
+					"search",
 					{ query: "SwiftUI NavigationStack", result_count: 4 },
+					services,
 					auth,
 					request,
 				),
-				await new FetchTool(services).handle(
+				await executeMcpTool(
+					"fetch",
 					{ url: "https://developer.apple.com/documentation/swiftui" },
+					services,
 					auth,
 					request,
 				),

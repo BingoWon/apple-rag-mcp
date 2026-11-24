@@ -187,8 +187,14 @@ test("serves modern tools/list with cache metadata", async () => {
 			resultType: string;
 			tools: Array<{
 				name: string;
+				title?: string;
 				outputSchema: { type: string };
-				annotations: { readOnlyHint: boolean; destructiveHint: boolean };
+				annotations: {
+					readOnlyHint: boolean;
+					destructiveHint: boolean;
+					idempotentHint: boolean;
+					openWorldHint: boolean;
+				};
 			}>;
 			ttlMs: number;
 			cacheScope: string;
@@ -202,9 +208,12 @@ test("serves modern tools/list with cache metadata", async () => {
 	assert.equal(payload.result.ttlMs, 3_600_000);
 	assert.equal(payload.result.cacheScope, "public");
 	for (const tool of payload.result.tools) {
+		assert.ok(tool.title);
 		assert.equal(tool.outputSchema.type, "object");
 		assert.equal(tool.annotations.readOnlyHint, true);
 		assert.equal(tool.annotations.destructiveHint, false);
+		assert.equal(tool.annotations.idempotentHint, true);
+		assert.equal(tool.annotations.openWorldHint, tool.name === "fetch");
 	}
 });
 
@@ -362,9 +371,10 @@ test("unsupported tool-list subscriptions acknowledge no notifications and close
 	assert.equal(events.at(-1).result.resultType, "complete");
 });
 
-test("request-scoped services close after successful calls and auth failures", async () => {
+test("request-scoped services close after successful calls and are never created on auth failures", async () => {
 	for (const failAuth of [false, true]) {
 		const services = createServices();
+		let created = 0;
 		let closed = 0;
 		services.database.close = async () => {
 			closed++;
@@ -375,7 +385,10 @@ test("request-scoped services close after successful calls and auth failures", a
 			};
 		}
 		const handler = new MCPProtocolHandler(
-			() => services,
+			() => {
+				created++;
+				return services;
+			},
 			(request) => services.auth.optionalAuth(request),
 		);
 		const response = await handler.handleRequest(
@@ -390,7 +403,8 @@ test("request-scoped services close after successful calls and auth failures", a
 			),
 		);
 		assert.equal(response.status, failAuth ? 503 : 200);
-		assert.equal(closed, 1);
+		assert.equal(created, failAuth ? 0 : 1);
+		assert.equal(closed, failAuth ? 0 : 1);
 	}
 });
 
@@ -452,9 +466,10 @@ for (const modern of [false, true]) {
 	});
 }
 
-test("authentication rejection is HTTP 401 with a challenge, never an anonymous tool result", async () => {
+test("authentication rejection is HTTP 401 with a challenge, never creates services or returns an anonymous tool result", async () => {
 	const { MCPAuthenticationError } = await import("../mcp-auth/auth-middleware.js");
 	const services = createServices();
+	let created = 0;
 	let closed = 0;
 	services.auth.optionalAuth = async () => {
 		throw new MCPAuthenticationError();
@@ -463,11 +478,69 @@ test("authentication rejection is HTTP 401 with a challenge, never an anonymous 
 		closed++;
 	};
 	const response = await new MCPProtocolHandler(
-		() => services,
+		() => {
+			created++;
+			return services;
+		},
 		(request) => services.auth.optionalAuth(request),
 	).handleRequest(createRequest({ jsonrpc: "2.0", id: "auth", method: "tools/list" }));
 	assert.equal(response.status, 401);
 	assert.match(response.headers.get("WWW-Authenticate") || "", /invalid_token/);
 	assert.equal(response.headers.get("Cache-Control"), "no-store");
-	assert.equal(closed, 1);
+	assert.equal(created, 0);
+	assert.equal(closed, 0);
+});
+
+test("legacy batch keeps database open until every concurrent tool call finishes", async () => {
+	const events: string[] = [];
+	const services = createServices();
+	services.rag.query = async ({ query }) => {
+		events.push(`start:${query}`);
+		await new Promise((resolve) => setTimeout(resolve, query === "slow" ? 25 : 2));
+		events.push(`end:${query}`);
+		return {
+			success: true,
+			query,
+			results: [],
+			additionalUrls: [],
+			degradations: [],
+			count: 0,
+			processing_time_ms: 1,
+		};
+	};
+	services.database.close = async () => {
+		events.push("database.close");
+	};
+	const handler = new MCPProtocolHandler(
+		() => services,
+		async () => ({ isAuthenticated: false }),
+	);
+	const response = await handler.handleRequest(
+		new Request("https://mcp.apple-rag.com/", {
+			method: "POST",
+			headers: {
+				Accept: "application/json, text/event-stream",
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify([
+				{
+					jsonrpc: "2.0",
+					id: 1,
+					method: "tools/call",
+					params: { name: "search", arguments: { query: "slow" } },
+				},
+				{
+					jsonrpc: "2.0",
+					id: 2,
+					method: "tools/call",
+					params: { name: "search", arguments: { query: "fast" } },
+				},
+			]),
+		}),
+	);
+	assert.equal(response.status, 200);
+	await response.text();
+	assert.equal(events.at(-1), "database.close");
+	assert.ok(events.indexOf("end:slow") < events.indexOf("database.close"));
+	assert.ok(events.indexOf("end:fast") < events.indexOf("database.close"));
 });

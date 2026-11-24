@@ -14,7 +14,7 @@ export function parseToken(value: string): string {
 	if (!parsed.success)
 		throw new CLIError(
 			"INVALID_TOKEN",
-			"Use a CLI API key from Settings → CLI access. MCP Tokens are not accepted.",
+			"Use a CLI API key from Settings → Automation access. MCP Tokens are not accepted.",
 			3,
 		);
 	return parsed.data;
@@ -37,21 +37,28 @@ export class CredentialStore {
 		try {
 			const { AsyncEntry } = await import("@napi-rs/keyring");
 			return new AsyncEntry("apple-rag-cli", this.id, { linux: { store: "secret-service" } });
-		} catch {
-			throw this.unavailable();
+		} catch (error) {
+			throw this.unavailable(error);
 		}
 	}
-	private unavailable() {
+	private unavailable(cause?: unknown) {
+		const detail =
+			cause instanceof Error && cause.message
+				? ` (${cause.message
+						.replace(/[\r\n\t]+/g, " ")
+						.trim()
+						.slice(0, 120)})`
+				: "";
 		return new CLIError(
 			"CREDENTIAL_STORE_UNAVAILABLE",
-			"Cannot access the OS credential store. Unlock it and retry; headless automation can use APPLE_RAG_TOKEN with a dedicated CLI API key.",
+			`Cannot access the OS credential store${detail}. Unlock it and retry; headless automation can use APPLE_RAG_TOKEN with a dedicated CLI API key.`,
 		);
 	}
 	async prepare(): Promise<void> {
 		try {
 			await (await this.entry()).getPassword();
-		} catch {
-			throw this.unavailable();
+		} catch (error) {
+			throw this.unavailable(error);
 		}
 	}
 	async read(): Promise<CLICredentials | undefined> {
@@ -75,8 +82,8 @@ export class CredentialStore {
 		let raw: string | null;
 		try {
 			raw = await (await this.entry()).getPassword();
-		} catch {
-			throw this.unavailable();
+		} catch (error) {
+			throw this.unavailable(error);
 		}
 		if (raw === null) return undefined;
 		let decoded: unknown;
@@ -98,8 +105,8 @@ export class CredentialStore {
 		await chmod(this.directory, 0o700);
 		try {
 			await (await this.entry()).setPassword(JSON.stringify(cliCredentialsSchema.parse(value)));
-		} catch {
-			throw this.unavailable();
+		} catch (error) {
+			throw this.unavailable(error);
 		}
 		const temporary = join(this.directory, `.session-${randomUUID()}.tmp`);
 		try {
@@ -112,13 +119,21 @@ export class CredentialStore {
 			await rm(temporary, { force: true });
 		}
 	}
+	async clearMarker(): Promise<void> {
+		await rm(this.marker, { force: true });
+	}
 	async clear(): Promise<void> {
 		try {
 			await (await this.entry()).deleteCredential();
-		} catch {
-			throw this.unavailable();
+		} catch (error) {
+			const message = error instanceof Error ? error.message : String(error);
+			if (
+				!/no matching entry|noentry|not found|item does not exist|could not be found/i.test(message)
+			) {
+				throw this.unavailable(error);
+			}
 		}
-		await rm(this.marker, { force: true });
+		await this.clearMarker();
 	}
 	async locked<T>(signal: AbortSignal, action: () => Promise<T>): Promise<T> {
 		await mkdir(this.directory, { recursive: true, mode: 0o700 });

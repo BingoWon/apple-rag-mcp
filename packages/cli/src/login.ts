@@ -43,7 +43,9 @@ async function browserLogin(client: AppleRagClient, browser: boolean, name: stri
 		response: ServerResponse,
 		status: number,
 		state: "success" | "denied" | "error",
-	) => response.writeHead(status).end(loginPage(state, client.endpoint, language, theme));
+		lang = language,
+		currentTheme = theme,
+	) => response.writeHead(status).end(loginPage(state, client.endpoint, lang, currentTheme));
 	const server = createServer((request, response) => {
 		response.setHeader("Content-Type", "text/html; charset=utf-8");
 		response.setHeader("Referrer-Policy", "no-referrer");
@@ -52,11 +54,11 @@ async function browserLogin(client: AppleRagClient, browser: boolean, name: stri
 			"Content-Security-Policy",
 			"default-src 'none'; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; frame-ancestors 'none'; form-action 'none'",
 		);
-		language = request.headers["accept-language"]?.startsWith("zh") ? "zh" : "en";
+		const requestLanguage = request.headers["accept-language"]?.startsWith("zh") ? "zh" : "en";
 		response.setHeader("Cache-Control", "no-store");
 		const local = server.address();
 		if (!local || typeof local === "string") {
-			render(response, 400, "error");
+			render(response, 400, "error", requestLanguage, undefined);
 			return;
 		}
 		const host = local.family === "IPv6" ? "[::1]" : "127.0.0.1";
@@ -65,7 +67,7 @@ async function browserLogin(client: AppleRagClient, browser: boolean, name: stri
 		try {
 			url = new URL(request.url ?? "/", redirect);
 		} catch {
-			render(response, 400, "error");
+			render(response, 400, "error", requestLanguage, undefined);
 			return;
 		}
 		const returnedState = url.searchParams.get("state") ?? "";
@@ -77,15 +79,17 @@ async function browserLogin(client: AppleRagClient, browser: boolean, name: stri
 			!timingSafeEqual(Buffer.from(returnedState), Buffer.from(state)) ||
 			url.searchParams.get("iss") !== client.endpoint
 		) {
-			render(response, 400, "error");
+			render(response, 400, "error", requestLanguage, undefined);
 			return;
 		}
-		language = url.searchParams.get("lang") ?? language;
-		theme = url.searchParams.get("theme") ?? undefined;
+		const callbackLanguage = url.searchParams.get("lang") ?? requestLanguage;
+		const callbackTheme = url.searchParams.get("theme") ?? undefined;
 		if (received) {
-			render(response, 409, "error");
+			render(response, 409, "error", callbackLanguage, callbackTheme);
 			return;
 		}
+		language = callbackLanguage;
+		theme = callbackTheme;
 		if (url.searchParams.has("error")) {
 			render(response, 403, "denied");
 			fail(new CLIError("AUTH_DENIED", "CLI authorization was declined.", 3));
@@ -212,12 +216,12 @@ async function saveCredentials(client: AppleRagClient, credentials: CLICredentia
 			return replaced;
 		});
 	} catch (error) {
-		await client.revoke(credentials.refresh_token!).catch(() => {});
+		await client.revoke(credentials.refresh_token ?? credentials.access_token).catch(() => {});
 		throw error;
 	}
-	if (previous?.refresh_token)
+	if (previous)
 		await client
-			.revoke(previous.refresh_token)
+			.revoke(previous.refresh_token ?? previous.access_token)
 			.catch(() =>
 				process.stderr.write(
 					"The previous CLI session could not be revoked. You can remove it in website settings.\n",

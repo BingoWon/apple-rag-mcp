@@ -1,10 +1,6 @@
-import { canonicalIP } from "../../shared/ip";
-/**
- * IP Authentication Service with D1 timeout protection
- */
-
-import type { UserTokenData } from "../mcp-auth/token-validator.js";
-import { backgroundD1Write, type WaitUntilContext, withD1Timeout } from "../services/d1-utils.js";
+import { canonicalIP } from "../../shared/ip.js";
+import { backgroundD1Write, type WaitUntilContext, withD1Timeout } from "./d1-utils.js";
+import type { UserTokenData } from "./types.js";
 
 interface UserRecord {
 	user_id: string;

@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/Badge";
 import { adminUserName, formatAdminInterval } from "@/lib/admin-user";
-import type { AdminSubscription, AdminUserIdentity } from "../../../worker/shared/admin-user";
+import type { AdminSubscription, AdminUserIdentity } from "../../../shared/admin-user";
 
 export function AdminPlanBadge({ subscription }: { subscription: AdminSubscription }) {
 	const { t } = useTranslation();

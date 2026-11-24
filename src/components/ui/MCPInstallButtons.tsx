@@ -36,7 +36,7 @@ function ClientButton({
 			window.open(client.installUrl(token, serverUrl), "_blank", "noopener,noreferrer");
 			toast.success(t("tokens.install_hint", { client: client.label }));
 		} catch {
-			toast.error(t("common.copy_failed"));
+			toast.error(t("tokens.install_error"));
 		}
 	};
 

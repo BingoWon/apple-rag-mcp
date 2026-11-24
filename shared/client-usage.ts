@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { TOOL_CHANNELS } from "../worker/shared/tool-channels.js";
 import { MCP_CLIENT_NAMES, type MCPClientId } from "./mcp-clients.js";
+import { TOOL_CHANNELS } from "./tool-channels.js";
 
 export const CLIENT_PRODUCTS = {
 	...MCP_CLIENT_NAMES,

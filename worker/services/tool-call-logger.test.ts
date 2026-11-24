@@ -2,8 +2,7 @@ import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
 import test from "node:test";
-import { FetchTool } from "../mcp/tools/fetch-tool.js";
-import { SearchTool } from "../mcp/tools/search-tool.js";
+import { executeMcpTool } from "../mcp/tools.js";
 import type { Services } from "../services/types.js";
 import { PageReadError } from "./page-reader.js";
 import { ToolCallLogger } from "./tool-call-logger.js";
@@ -84,11 +83,13 @@ test("tools persist distinct results, provenance, zero-result searches and refun
 	} as unknown as Services;
 	const auth = { isAuthenticated: true, userId: "reader" };
 	const request = new Request("https://mcp.apple-rag.com");
-	await new SearchTool(services).handle({ query: "Swift", result_count: 1 }, auth, request);
+	await executeMcpTool("search", { query: "Swift", result_count: 1 }, services, auth, request);
 	search = { count: 1, degradations: ["EMBEDDING_FALLBACK", "RERANKER_FALLBACK"] };
-	await new SearchTool(services).handle({ query: "Swift", result_count: 1 }, auth, request);
-	const response = await new FetchTool(services).handle(
+	await executeMcpTool("search", { query: "Swift", result_count: 1 }, services, auth, request);
+	const response = await executeMcpTool(
+		"fetch",
 		{ url: "https://docs.example.com/Page" },
+		services,
 		auth,
 		request,
 	);
@@ -96,8 +97,10 @@ test("tools persist distinct results, provenance, zero-result searches and refun
 	fail = true;
 	assert.equal(
 		(
-			await new FetchTool(services).handle(
+			await executeMcpTool(
+				"fetch",
 				{ url: "https://docs.example.com/missing" },
+				services,
 				auth,
 				request,
 			)

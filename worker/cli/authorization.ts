@@ -433,6 +433,9 @@ export class CLIAuthorization {
 		if (header === null) return { isAuthenticated: false, authMethod: "anonymous" };
 		const token = /^Bearer (\S+)$/i.exec(header)?.[1];
 		if (!token) throw new OAuthError("invalid_token", "Invalid CLI credential.", 401);
+		return this.authenticateToken(token);
+	}
+	private async authenticateToken(token: string): Promise<AuthContext> {
 		let session: Session | null;
 		try {
 			if (token.startsWith("ar_cli_a_")) {
@@ -515,9 +518,7 @@ export class CLIAuthorization {
 				const c = await this.verify(token, "r");
 				await this.revokeSession(c.sessionId, c.userId);
 			} else {
-				const auth = await this.authenticate(
-					new Request(this.origin, { headers: { Authorization: `Bearer ${token}` } }),
-				);
+				const auth = await this.authenticateToken(token);
 				if (auth.credentialId && auth.userId)
 					await this.revokeSession(auth.credentialId, auth.userId);
 			}

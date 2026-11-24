@@ -1,10 +1,12 @@
 import { swaggerUI } from "@hono/swagger-ui";
+import { bodyLimit } from "hono/body-limit";
 import { logger as honoLogger } from "hono/logger";
 import { prettyJSON } from "hono/pretty-json";
 import { requestId } from "hono/request-id";
 import { timing } from "hono/timing";
 import packageJson from "../../package.json";
 import { createCLIRoutes } from "../cli/routes.js";
+import { setGlobalAlertUrl } from "../shared/logger.js";
 import { createCorsMiddleware, securityHeaders } from "./middleware/cors.js";
 import adminRoutes from "./routes/admin/index.js";
 import { authRoutes } from "./routes/auth.js";
@@ -21,11 +23,18 @@ import { configureTelegram } from "./utils/telegram-notifier.js";
 
 const apiApp = createOpenAPIApp();
 
+apiApp.openAPIRegistry.registerComponent("securitySchemes", "bearerAuth", {
+	type: "http",
+	scheme: "bearer",
+	bearerFormat: "JWT",
+});
+
 // Callback URLs carry provider authorization codes. Keep those query strings out of request logs.
 const requestLogger = honoLogger();
 apiApp.use("*", (c, next) =>
 	c.req.path.startsWith("/api/oauth/") ? next() : requestLogger(c, next),
 );
+apiApp.use("*", bodyLimit({ maxSize: 512 * 1024 }));
 apiApp.use("*", requestId());
 apiApp.use("*", timing());
 apiApp.use(prettyJSON());
@@ -54,6 +63,7 @@ apiApp.use("*", async (c, next) => {
 		default: c.env.TELEGRAM_DEFAULT_BOT_URL,
 		alerts: c.env.TELEGRAM_ALERT_BOT_URL,
 	});
+	setGlobalAlertUrl(c.env.TELEGRAM_ALERT_BOT_URL);
 	await next();
 });
 
@@ -71,7 +81,7 @@ apiApp.route("/stats", statsRoutes);
 
 apiApp.get("/", (c) => c.json({ name: "Apple RAG API", version: packageJson.version }));
 
-apiApp.doc("/doc", {
+const OPENAPI_CONFIG = {
 	openapi: "3.0.0",
 	info: {
 		version: packageJson.version,
@@ -79,6 +89,14 @@ apiApp.doc("/doc", {
 		description:
 			"Platform API for Apple RAG accounts, subscriptions, and agent access. MCP and CLI use separate credentials and share account usage limits.",
 	},
+};
+
+apiApp.get("/doc", (c) => {
+	const document = apiApp.getOpenAPIDocument(OPENAPI_CONFIG);
+	const publicPaths = Object.fromEntries(
+		Object.entries(document.paths ?? {}).filter(([path]) => !path.startsWith("/admin")),
+	);
+	return c.json({ ...document, paths: publicPaths });
 });
 
 apiApp.get("/ui", swaggerUI({ url: "/api/doc", title: "Apple RAG API Reference" }));

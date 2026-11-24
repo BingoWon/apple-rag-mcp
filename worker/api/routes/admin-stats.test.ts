@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
 import test from "node:test";
-import type { AdminDashboardStats } from "../../../src/types/index.js";
+import type { AdminDashboardStats } from "../../../shared/admin-stats.js";
 import app from "./admin/index.js";
 
 const NOW = Date.parse("2026-10-09T04:15:00.000Z");

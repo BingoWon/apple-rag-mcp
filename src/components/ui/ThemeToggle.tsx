@@ -1,5 +1,6 @@
 import { IconDeviceDesktop, IconMoon, IconSun } from "@tabler/icons-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/Button";
 import { useTheme } from "@/hooks/useTheme";
 import { cn } from "@/lib/utils";
@@ -15,6 +16,7 @@ export function ThemeToggle({
 	variant = "icon",
 	placement = "bottom",
 }: ThemeToggleProps) {
+	const { t } = useTranslation();
 	const { theme, setTheme, isTransitioning } = useTheme();
 	const [isHovered, setIsHovered] = useState(false);
 	const [isClicking, setIsClicking] = useState(false);
@@ -109,16 +111,17 @@ export function ThemeToggle({
 	const getThemeLabel = (themeType: "light" | "dark" | "system") => {
 		switch (themeType) {
 			case "light":
-				return "Light";
+				return t("theme.light");
 			case "dark":
-				return "Dark";
+				return t("theme.dark");
 			case "system":
-				return "System";
+				return t("theme.system");
 		}
 	};
 
 	if (variant === "icon") {
 		const allThemes = getAllThemes();
+		const currentLabel = getThemeLabel(theme);
 
 		return (
 			// biome-ignore lint/a11y/noStaticElementInteractions: hover container for dropdown, child buttons are semantic
@@ -138,7 +141,7 @@ export function ThemeToggle({
 						className,
 					)}
 					onClick={handleCycleTheme}
-					title={`Current theme: ${theme}. Click to cycle themes.`}
+					title={t("theme.cycle_title", { theme: currentLabel })}
 				>
 					<IconSun
 						className={cn(
@@ -160,7 +163,7 @@ export function ThemeToggle({
 								: "rotate-180 scale-0 opacity-0",
 						)}
 					/>
-					<span className="sr-only">Current theme: {theme}</span>
+					<span className="sr-only">{t("theme.current", { theme: currentLabel })}</span>
 				</Button>
 
 				{/* biome-ignore lint/a11y/noStaticElementInteractions: hover dropdown panel */}
@@ -240,7 +243,7 @@ export function ThemeToggle({
 				className={cn("h-8 px-3 transition-all duration-200", theme === "light" && "shadow-sm")}
 			>
 				<IconSun className="h-4 w-4 mr-1" />
-				Light
+				{t("theme.light")}
 			</Button>
 			<Button
 				variant={theme === "dark" ? "default" : "ghost"}
@@ -250,7 +253,7 @@ export function ThemeToggle({
 				className={cn("h-8 px-3 transition-all duration-200", theme === "dark" && "shadow-sm")}
 			>
 				<IconMoon className="h-4 w-4 mr-1" />
-				Dark
+				{t("theme.dark")}
 			</Button>
 			<Button
 				variant={theme === "system" ? "default" : "ghost"}
@@ -260,7 +263,7 @@ export function ThemeToggle({
 				className={cn("h-8 px-3 transition-all duration-200", theme === "system" && "shadow-sm")}
 			>
 				<IconDeviceDesktop className="h-4 w-4 mr-1" />
-				System
+				{t("theme.system")}
 			</Button>
 		</div>
 	);

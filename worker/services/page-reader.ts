@@ -1,10 +1,10 @@
 import { z } from "zod";
+import type { ToolOutcome } from "../../shared/tool-outcomes.js";
 import { AppleAPIClient } from "../collector/AppleAPIClient.js";
 import { ContentProcessor } from "../collector/ContentProcessor.js";
 import type { DatabaseService } from "../services/types.js";
 import { logger } from "../shared/logger.js";
 import { readText } from "../shared/read-text.js";
-import type { ToolOutcome } from "../shared/tool-outcomes.js";
 import type { Env } from "../shared/types.js";
 import {
 	assertPublicHost,
@@ -41,6 +41,7 @@ export class PageReadError extends Error {
 		readonly provider?: string,
 		readonly upstreamStatus?: number,
 		readonly cacheHit = false,
+		readonly spentProviderBudget = false,
 	) {
 		super(message);
 	}
@@ -138,6 +139,7 @@ export class PageReader {
 		if (
 			indexAvailable &&
 			page.provider === "apple_json" &&
+			canCacheUrl(page.url) &&
 			new URL(page.url).hostname === "developer.apple.com"
 		) {
 			await this.database
@@ -321,12 +323,14 @@ export class PageReader {
 				"firecrawl",
 			);
 		const { markdown, metadata } = result.data.data;
-		this.checkTarget(metadata.statusCode, url, "firecrawl");
+		this.checkTarget(metadata.statusCode, url, "firecrawl", false, true);
+		const trimmed = markdown.trim();
 		if (
-			!markdown.trim() ||
-			/(?:#\s*(?:access denied|just a moment|verify you are human|the page you.re looking for can.t be found))/i.test(
-				markdown,
-			)
+			!trimmed ||
+			(trimmed.length < 2000 &&
+				/^#\s*(?:access denied|just a moment|verify you are human|the page you.re looking for can.t be found)\b/im.test(
+					trimmed,
+				))
 		)
 			throw new PageReadError(
 				"NO_USABLE_CONTENT",
@@ -336,6 +340,8 @@ export class PageReader {
 				url,
 				"firecrawl",
 				metadata.statusCode,
+				false,
+				true,
 			);
 		return {
 			url,
@@ -347,7 +353,13 @@ export class PageReader {
 		};
 	}
 
-	private checkTarget(status: number, url: string, provider: string, cacheHit = false): void {
+	private checkTarget(
+		status: number,
+		url: string,
+		provider: string,
+		cacheHit = false,
+		spentProviderBudget = false,
+	): void {
 		if (status >= 200 && status < 300) return;
 		const missing = status === 404 || status === 410;
 		throw new PageReadError(
@@ -367,6 +379,7 @@ export class PageReader {
 			provider,
 			status,
 			cacheHit,
+			spentProviderBudget,
 		);
 	}
 }

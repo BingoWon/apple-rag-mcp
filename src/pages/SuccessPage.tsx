@@ -44,14 +44,12 @@ function SuccessContent() {
 				</div>
 
 				<div className="space-y-3">
-					<Link to="/billing" className="block">
-						<Button className="w-full">{t("success.view_billing")}</Button>
-					</Link>
-					<Link to="/" className="block">
-						<Button variant="outline" className="w-full">
-							{t("success.back_home")}
-						</Button>
-					</Link>
+					<Button className="w-full" asChild>
+						<Link to="/billing">{t("success.view_billing")}</Link>
+					</Button>
+					<Button variant="outline" className="w-full" asChild>
+						<Link to="/">{t("success.back_home")}</Link>
+					</Button>
 				</div>
 			</div>
 		</div>

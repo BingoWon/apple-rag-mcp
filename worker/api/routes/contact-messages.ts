@@ -3,10 +3,13 @@
  * Endpoints for users to submit messages and view replies
  */
 import { createRoute, z } from "@hono/zod-openapi";
+import { extractClientInfo } from "../../services/request-info";
 import { authMiddleware, optionalAuthMiddleware } from "../middleware/auth";
 import { isValidEmail } from "../utils/email";
+import { checkIpRateLimit } from "../utils/ip-rate-limit";
 import { logger } from "../utils/logger";
 import { createOpenAPIApp } from "../utils/openapi";
+import { parsePagination } from "../utils/pagination";
 import { notifyTelegram } from "../utils/telegram-notifier";
 
 const app = createOpenAPIApp();
@@ -83,6 +86,20 @@ const submitContactMessageRoute = createRoute({
 			},
 			description: "Invalid request data",
 		},
+		429: {
+			content: {
+				"application/json": {
+					schema: z.object({
+						success: z.boolean(),
+						error: z.object({
+							code: z.string(),
+							message: z.string(),
+						}),
+					}),
+				},
+			},
+			description: "Too many requests",
+		},
 		500: {
 			content: {
 				"application/json": {
@@ -102,6 +119,21 @@ const submitContactMessageRoute = createRoute({
 
 app.openapi(submitContactMessageRoute, async (c) => {
 	try {
+		// Get client IP address and enforce per-IP rate limit
+		const ipAddress = extractClientInfo(c.req.raw).ip;
+		if (!(await checkIpRateLimit(c.env.DB, ipAddress, "contact_message", 5))) {
+			return c.json(
+				{
+					success: false,
+					error: {
+						code: "RATE_LIMIT_EXCEEDED",
+						message: "Too many messages sent. Please wait a minute before trying again.",
+					},
+				},
+				429,
+			);
+		}
+
 		const { email, message } = c.req.valid("json");
 		const userIdValue = c.get("userId") || null;
 
@@ -118,9 +150,6 @@ app.openapi(submitContactMessageRoute, async (c) => {
 				400,
 			);
 		}
-
-		// Get client IP address and detailed information
-		const ipAddress = c.req.header("CF-Connecting-IP") || "unknown";
 
 		// Get Cloudflare properties (geographic and network info)
 		const rawRequest = c.req.raw;
@@ -549,8 +578,7 @@ app.openapi(getMessageHistoryRoute, async (c) => {
 		const userId = c.get("userId");
 		const { limit: limitStr, offset: offsetStr, filter, search } = c.req.valid("query");
 
-		const limit = Math.min(Number(limitStr), 100);
-		const offset = Number(offsetStr);
+		const { limit, offset } = parsePagination(limitStr, offsetStr, 20, 100);
 
 		// Build WHERE clause based on filter
 		let whereClause = "user_id = ? AND admin_reply IS NOT NULL";
@@ -562,11 +590,12 @@ app.openapi(getMessageHistoryRoute, async (c) => {
 			whereClause += " AND user_read_at IS NOT NULL";
 		}
 
-		// Add search filter if provided
-		if (search) {
-			whereClause += " AND (message LIKE ? OR admin_reply LIKE ?)";
-			const searchPattern = `%${search}%`;
-			bindings.push(searchPattern, searchPattern);
+		// Add search filter if provided (INSTR avoids D1's 50-byte LIKE limit and treats %/_ literally)
+		if (search?.trim()) {
+			const needle = search.trim();
+			whereClause +=
+				" AND (instr(lower(coalesce(message, '')), lower(?)) > 0 OR instr(lower(coalesce(admin_reply, '')), lower(?)) > 0)";
+			bindings.push(needle, needle);
 		}
 
 		// Get total count

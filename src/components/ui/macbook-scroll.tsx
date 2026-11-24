@@ -145,16 +145,37 @@ export const Lid = ({
 	translate: MotionValue<number>;
 	progress: MotionValue<number>;
 }) => {
+	const containerRef = useRef<HTMLDivElement>(null);
 	const video = useRef<HTMLVideoElement>(null);
 	const requestedFrame = useRef(-1);
 	const reducedMotion = useReducedMotion();
+	const [shouldLoad, setShouldLoad] = useState(false);
 	const [failed, setFailed] = useState(false);
 	const poster = "/iphone-duo-hero.webp";
 	const mediaClass =
 		"absolute inset-0 block h-full w-full rounded-lg bg-white object-contain object-bottom";
 	useEffect(() => {
+		const target = containerRef.current;
+		if (!target || reducedMotion || shouldLoad) return;
+		if (typeof IntersectionObserver === "undefined") {
+			setShouldLoad(true);
+			return;
+		}
+		const observer = new IntersectionObserver(
+			(entries) => {
+				if (entries.some((entry) => entry.isIntersecting)) {
+					setShouldLoad(true);
+					observer.disconnect();
+				}
+			},
+			{ rootMargin: "300px" },
+		);
+		observer.observe(target);
+		return () => observer.disconnect();
+	}, [reducedMotion, shouldLoad]);
+	useEffect(() => {
 		const el = video.current;
-		if (!el || reducedMotion || failed) return;
+		if (!el || reducedMotion || failed || !shouldLoad) return;
 		const controller = new AbortController();
 		let source: string;
 		// Static hosting can return 200 to byte-range requests. A local Blob stays seekable.
@@ -174,7 +195,7 @@ export const Lid = ({
 			controller.abort();
 			if (source) URL.revokeObjectURL(source);
 		};
-	}, [failed, reducedMotion]);
+	}, [failed, reducedMotion, shouldLoad]);
 	const syncFrame = () => {
 		const el = video.current;
 		if (!el || el.readyState < 2 || el.seeking || !Number.isFinite(el.duration)) return;
@@ -187,7 +208,7 @@ export const Lid = ({
 	};
 	useMotionValueEvent(progress, "change", syncFrame);
 	return (
-		<div className="relative [perspective:800px]">
+		<div ref={containerRef} className="relative [perspective:800px]">
 			<div
 				style={{
 					transform: "perspective(800px) rotateX(-25deg) translateZ(0px)",
@@ -291,7 +312,7 @@ export const Keypad = () => {
 				</KBtn>
 				<KBtn>
 					<IconPlayerTrackNext className="h-[6px] w-[6px]" />
-					<span className="mt-1 inline-block">F8</span>
+					<span className="mt-1 inline-block">F9</span>
 				</KBtn>
 				<KBtn>
 					<IconVolume3 className="h-[6px] w-[6px]" />

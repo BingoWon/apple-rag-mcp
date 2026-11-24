@@ -6,7 +6,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
 import { EvervaultCard, Icon } from "@/components/ui/evervault-card";
 import { useAuth } from "@/hooks/useAuth";
-import { trackEvent } from "@/lib/analytics";
 import { getPricingTiers } from "@/lib/plans";
 import { useDashboardStore } from "@/stores/dashboard";
 import { activateFabContact } from "@/utils/contact";
@@ -31,30 +30,6 @@ export function PricingSection() {
 			fetchSubscription();
 		}
 	}, [isAuthenticated, subscription, fetchSubscription]);
-
-	// Track pricing section view
-	useEffect(() => {
-		const observer = new IntersectionObserver(
-			(entries) => {
-				entries.forEach((entry) => {
-					if (entry.isIntersecting) {
-						trackEvent("PRICING_VIEW", {
-							section: "pricing_section",
-						});
-						observer.disconnect(); // Only track once per session
-					}
-				});
-			},
-			{ threshold: 0.5 },
-		);
-
-		const pricingElement = document.getElementById("pricing");
-		if (pricingElement) {
-			observer.observe(pricingElement);
-		}
-
-		return () => observer.disconnect();
-	}, []);
 
 	return (
 		<div className="home-section home-content rounded-xl bg-secondary" id="pricing">

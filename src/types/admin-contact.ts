@@ -1,4 +1,4 @@
-import type { AdminUserIdentity } from "../../worker/shared/admin-user";
+import type { AdminUserIdentity } from "../../shared/admin-user";
 export interface AdminContactMessage {
 	id: string;
 	user: AdminUserIdentity;

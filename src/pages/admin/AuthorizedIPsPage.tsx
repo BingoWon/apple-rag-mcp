@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { AdminUserLabel } from "@/components/admin/AdminUserLabel";
 import { api } from "@/lib/api";
-import type { AdminUserIdentity } from "../../../worker/shared/admin-user";
+import type { AdminUserIdentity } from "../../../shared/admin-user";
 
 interface AdminAuthorizedIP {
 	user: AdminUserIdentity;

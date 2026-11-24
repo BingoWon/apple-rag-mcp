@@ -1,17 +1,10 @@
-import { TOKEN_FORMAT } from "../mcp/constants.js";
 import { backgroundD1Write, type WaitUntilContext, withD1Timeout } from "../services/d1-utils.js";
+import { MCP_TOKEN_FORMAT, type UserTokenData } from "../services/types.js";
 
 export interface TokenValidationResult {
 	valid: boolean;
 	error?: string;
 	userData?: UserTokenData;
-}
-
-export interface UserTokenData {
-	userId: string;
-	email: string;
-	name: string;
-	credentialId?: string;
 }
 
 export class TokenValidator {
@@ -21,7 +14,7 @@ export class TokenValidator {
 	) {}
 
 	async validateToken(token: string): Promise<TokenValidationResult> {
-		if (!TOKEN_FORMAT.test(token)) {
+		if (!MCP_TOKEN_FORMAT.test(token)) {
 			return { valid: false, error: "Invalid token format" };
 		}
 
@@ -62,24 +55,5 @@ export class TokenValidator {
 			.prepare("UPDATE mcp_tokens SET last_used_at = ? WHERE mcp_token = ?")
 			.bind(new Date().toISOString(), token)
 			.run();
-	}
-
-	async getUserDataById(userId: string): Promise<UserTokenData> {
-		const result = await withD1Timeout(async () => {
-			const res = await this.d1
-				.prepare("SELECT id, email, name FROM users WHERE id = ?")
-				.bind(userId)
-				.all();
-			if (!res.success || !res.results?.length) throw new Error("User not found");
-			const user = res.results[0] as Record<string, unknown>;
-			return {
-				userId: user.id as string,
-				email: user.email as string,
-				name: (user.name as string) || (user.email as string).split("@")[0],
-			};
-		}, "user_lookup");
-
-		if (!result) throw new Error("User not found");
-		return result;
 	}
 }

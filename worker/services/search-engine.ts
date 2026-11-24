@@ -300,17 +300,9 @@ export class SearchEngine {
 				.map((r) => this.parseChunk(r.content, r.title).content)
 				.join("\n\n---\n\n");
 
-			// Detect complete document merging
-			const isCompleteDocument =
-				chunkIndices.length === primary.total_chunks && chunkIndices.every((idx, i) => idx === i);
-
-			// Determine final chunk representation
-			const [chunk_index, total_chunks] =
-				chunkIndices.length === 1
-					? [chunkIndices[0], primary.total_chunks]
-					: isCompleteDocument
-						? [0, 1]
-						: [Math.min(...chunkIndices), primary.total_chunks];
+			// Keep the real total_chunks so downstream completeness checks match mergedChunkIndices.
+			const chunk_index = chunkIndices[0];
+			const total_chunks = primary.total_chunks;
 
 			return {
 				id: primary.id,

@@ -3,7 +3,7 @@ import { lazy, memo, Suspense, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@/components/providers/ThemeProvider";
 import type { AdminMetricStats } from "@/types";
-import { TOOL_OUTCOMES } from "../../../worker/shared/tool-outcomes";
+import { TOOL_OUTCOMES } from "../../../shared/tool-outcomes";
 
 const ApexChart = lazy(() => import("react-apexcharts"));
 export const OUTCOME_COLORS = {

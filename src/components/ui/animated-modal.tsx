@@ -50,8 +50,13 @@ export const ModalTrigger = ({
 } & React.ButtonHTMLAttributes<HTMLButtonElement>) => {
 	const { setOpen } = useModal();
 
+	const childDisabled =
+		React.isValidElement(children) &&
+		Boolean((children.props as { disabled?: boolean } | null)?.disabled);
+	const isDisabled = disabled ?? childDisabled;
+
 	const handleClick = () => {
-		if (disabled) return;
+		if (isDisabled) return;
 		onClick?.();
 		setOpen(true);
 	};
@@ -60,12 +65,18 @@ export const ModalTrigger = ({
 	if (React.isValidElement(children)) {
 		return React.cloneElement(children as React.ReactElement<Record<string, unknown>>, {
 			onClick: handleClick,
-			disabled,
+			disabled: isDisabled,
 		});
 	}
 
 	return (
-		<button className={className} onClick={handleClick} disabled={disabled} {...props}>
+		<button
+			type="button"
+			className={className}
+			onClick={handleClick}
+			disabled={isDisabled}
+			{...props}
+		>
 			{children}
 		</button>
 	);

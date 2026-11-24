@@ -1,11 +1,7 @@
-import { withAdminUsers } from "./user-identity";
-/**
- * Admin Authorized IPs Routes
- * Admin endpoints for managing authorized IP addresses across all users
- */
-
 import { logger } from "../../utils/logger.js";
 import { createOpenAPIApp } from "../../utils/openapi";
+import { parsePagination } from "../../utils/pagination";
+import { withAdminUsers } from "./user-identity";
 
 const app = createOpenAPIApp();
 
@@ -16,8 +12,7 @@ const app = createOpenAPIApp();
 app.get("/", async (c) => {
 	try {
 		// Parse pagination parameters
-		const limit = Math.min(Number(c.req.query("limit")) || 50, 100); // Max 100 per page
-		const offset = Number(c.req.query("offset")) || 0;
+		const { limit, offset } = parsePagination(c.req.query("limit"), c.req.query("offset"));
 
 		// Get total count
 		const countResult = await c.env.DB.prepare(
@@ -76,7 +71,7 @@ app.delete("/:id", async (c) => {
 		const id = c.req.param("id");
 
 		// Check if the IP exists
-		const existingIP = c.env.DB.prepare("SELECT * FROM user_authorized_ips WHERE id = ?")
+		const existingIP = await c.env.DB.prepare("SELECT * FROM user_authorized_ips WHERE id = ?")
 			.bind(id)
 			.first();
 

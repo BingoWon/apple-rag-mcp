@@ -1,5 +1,6 @@
 import { readText } from "../shared/read-text.js";
 import {
+	decodeHtmlEntities,
 	extractHlsSourceUrl,
 	extractHtmlTranscriptText,
 	fetchHlsSubtitleText,
@@ -120,7 +121,7 @@ class AppleAPIClient {
 
 			// Extract title
 			const titleMatch = html.match(/<meta[^>]+property="og:title"[^>]+content="([^"]+)"/);
-			const title = titleMatch?.[1] ?? "";
+			const title = titleMatch?.[1] ? decodeHtmlEntities(titleMatch[1]) : "";
 
 			const htmlTranscript = extractHtmlTranscriptText(html);
 			if (htmlTranscript) {
@@ -148,7 +149,19 @@ class AppleAPIClient {
 		urls: string[],
 		signal?: AbortSignal,
 	): Promise<BatchResult<AppleAPIResponse>[]> {
-		return await Promise.all(urls.map((url) => this.fetchSingleDocument(url, signal)));
+		const results = new Array<BatchResult<AppleAPIResponse>>(urls.length);
+		let nextIndex = 0;
+		const concurrency = Math.min(6, urls.length);
+
+		async function worker(client: AppleAPIClient): Promise<void> {
+			while (nextIndex < urls.length) {
+				const index = nextIndex++;
+				results[index] = await client.fetchSingleDocument(urls[index]!, signal);
+			}
+		}
+
+		await Promise.all(Array.from({ length: concurrency }, () => worker(this)));
+		return results;
 	}
 
 	private async fetchSingleDocument(
@@ -205,11 +218,12 @@ class AppleAPIClient {
 				return `${AppleAPIClient.API_ENDPOINTS.docc}${doccPath}.json`;
 			}
 
-			const endpoint = url.includes("/documentation/docc")
-				? AppleAPIClient.API_ENDPOINTS.docc
-				: AppleAPIClient.API_ENDPOINTS.default;
+			if (path === "/documentation/docc" || path.startsWith("/documentation/docc/")) {
+				const doccPath = path.replace(/^\/documentation/, "");
+				return `${AppleAPIClient.API_ENDPOINTS.docc}${doccPath}.json${urlObj.search}`;
+			}
 
-			return `${endpoint}${path}.json${urlObj.search}`;
+			return `${AppleAPIClient.API_ENDPOINTS.default}${path}.json${urlObj.search}`;
 		} catch (error) {
 			throw new Error(`Invalid URL: ${error instanceof Error ? error.message : "Unknown error"}`);
 		}

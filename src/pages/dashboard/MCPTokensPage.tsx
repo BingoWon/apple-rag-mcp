@@ -22,7 +22,7 @@ export default function MCPTokensPage() {
 		}
 
 		try {
-			const tokenName = `MCP Token ${new Date().toLocaleDateString()}`;
+			const tokenName = t("tokens.default_name", { date: new Date().toLocaleDateString() });
 			const result = await createMCPToken({
 				name: tokenName,
 				permissions: ["rag.read"], // Fixed permission, user doesn't need to know

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import Stripe from "stripe";
-import { fixture } from "../../packages/cli/test/fixture";
+import { fixture } from "../../../packages/cli/test/fixture";
 import { reconcileBilling } from "./billing-reconciliation";
 
 test("scheduled invoice reconciliation retries incomplete history and counts each paid invoice once", async (t) => {

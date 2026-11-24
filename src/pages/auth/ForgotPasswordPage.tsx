@@ -34,7 +34,10 @@ export default function ForgotPasswordPage() {
 
 		try {
 			const normalizedEmail = normalizeEmail(data.email);
-			await api.forgotPassword(normalizedEmail);
+			const res = await api.forgotPassword(normalizedEmail);
+			if (!res.success) {
+				throw new Error(res.error?.message || t("forgot.failed"));
+			}
 			setIsSubmitted(true);
 			toast.success(t("forgot.sent"));
 		} catch (error) {

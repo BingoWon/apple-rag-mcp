@@ -4,21 +4,20 @@ import {
 	McpServer,
 	preloadSchemas,
 } from "@modelcontextprotocol/server";
-import { BROWSE_DESCRIPTION, browseInputSchema, formatBrowse } from "../../shared/browse.js";
+import { browseInputSchema } from "../../shared/browse.js";
 import {
-	browseOutputSchema,
-	fetchOutputSchema,
-	searchOutputSchema,
+	browseSuccessSchema,
+	fetchInputSchema,
+	fetchSuccessSchema,
+	searchInputSchema,
+	searchSuccessSchema,
 } from "../../shared/contracts.js";
 import { MCPAuthenticationError } from "../mcp-auth/auth-middleware.js";
-import { ToolService } from "../services/tool-service.js";
 import type { AuthContext, Services } from "../services/types.js";
 import { logger } from "../shared/logger.js";
-import { SERVER_NAME, SERVER_VERSION, TOOLS } from "./constants.js";
-import { createSuccessResult, createToolErrorResult } from "./formatters/response-formatter.js";
+import { SERVER_NAME, SERVER_TITLE, SERVER_VERSION, TOOLS } from "./constants.js";
 import { loggedToolInput } from "./tool-input.js";
-import { FETCH_TOOL_INPUT_SCHEMA, FetchTool } from "./tools/fetch-tool.js";
-import { SEARCH_TOOL_INPUT_SCHEMA, SearchTool } from "./tools/search-tool.js";
+import { executeMcpTool } from "./tools.js";
 
 preloadSchemas();
 
@@ -33,17 +32,18 @@ export class MCPProtocolHandler {
 
 	async handleRequest(request: Request): Promise<Response> {
 		let services: Services | undefined;
-		let toolCall: Promise<CallToolResult> | undefined;
+		const activeToolCalls = new Set<Promise<CallToolResult>>();
 		let authFailure: Error | undefined;
 		const trackTool = (promise: Promise<CallToolResult>) => {
-			toolCall = promise;
+			activeToolCalls.add(promise);
+			promise.finally(() => activeToolCalls.delete(promise)).catch(() => {});
 			return promise;
 		};
 		const handler = createMcpHandler(
 			async () => {
 				try {
-					services = await this.servicesFactory();
 					const authContext = await this.authenticate(request);
+					services = await this.servicesFactory();
 					return this.createServer(services, request, authContext, trackTool);
 				} catch (error) {
 					authFailure =
@@ -86,8 +86,8 @@ export class MCPProtocolHandler {
 			return response;
 		} finally {
 			await handler.close();
-			// A disconnected transport finishes before tool cleanup and quota refunds.
-			await toolCall?.catch(() => {});
+			// Wait for all in-flight tool calls (including legacy batches) to finish cleanup/refunds.
+			if (activeToolCalls.size > 0) await Promise.allSettled([...activeToolCalls]);
 			await services?.database.close();
 		}
 	}
@@ -101,6 +101,7 @@ export class MCPProtocolHandler {
 		const server = new McpServer(
 			{
 				name: SERVER_NAME,
+				title: SERVER_TITLE,
 				version: SERVER_VERSION,
 			},
 			{
@@ -113,59 +114,62 @@ export class MCPProtocolHandler {
 			},
 		);
 
-		const searchTool = new SearchTool(services);
-		const fetchTool = new FetchTool(services);
-
 		server.registerTool(
 			TOOLS.SEARCH.NAME,
 			{
+				title: TOOLS.SEARCH.TITLE,
 				description: TOOLS.SEARCH.DESCRIPTION,
-				outputSchema: searchOutputSchema,
-				inputSchema: loggedToolInput(
-					"search",
-					SEARCH_TOOL_INPUT_SCHEMA,
-					services,
-					authContext,
-					request,
-				),
-				annotations: { readOnlyHint: true, destructiveHint: false },
-			},
-			(args, ctx) => trackTool(searchTool.handle(args, authContext, request, ctx.mcpReq.signal)),
-		);
-
-		server.registerTool(
-			"browse",
-			{
-				description: BROWSE_DESCRIPTION,
-				inputSchema: loggedToolInput("browse", browseInputSchema, services, authContext, request),
-				outputSchema: browseOutputSchema,
-				annotations: { readOnlyHint: true, destructiveHint: false },
+				inputSchema: loggedToolInput("search", searchInputSchema, services, authContext, request),
+				outputSchema: searchSuccessSchema,
+				annotations: {
+					readOnlyHint: true,
+					destructiveHint: false,
+					idempotentHint: true,
+					openWorldHint: false,
+				},
 			},
 			(args, ctx) =>
 				trackTool(
-					new ToolService(services)
-						.execute("browse", args, authContext, request, "mcp", ctx.mcpReq.signal)
-						.then((r) =>
-							r.ok ? createSuccessResult(formatBrowse(r), r) : createToolErrorResult(r),
-						),
+					executeMcpTool("search", args, services, authContext, request, ctx.mcpReq.signal),
+				),
+		);
+
+		server.registerTool(
+			TOOLS.BROWSE.NAME,
+			{
+				title: TOOLS.BROWSE.TITLE,
+				description: TOOLS.BROWSE.DESCRIPTION,
+				inputSchema: loggedToolInput("browse", browseInputSchema, services, authContext, request),
+				outputSchema: browseSuccessSchema,
+				annotations: {
+					readOnlyHint: true,
+					destructiveHint: false,
+					idempotentHint: true,
+					openWorldHint: false,
+				},
+			},
+			(args, ctx) =>
+				trackTool(
+					executeMcpTool("browse", args, services, authContext, request, ctx.mcpReq.signal),
 				),
 		);
 
 		server.registerTool(
 			TOOLS.FETCH.NAME,
 			{
+				title: TOOLS.FETCH.TITLE,
 				description: TOOLS.FETCH.DESCRIPTION,
-				outputSchema: fetchOutputSchema,
-				inputSchema: loggedToolInput(
-					"fetch",
-					FETCH_TOOL_INPUT_SCHEMA,
-					services,
-					authContext,
-					request,
-				),
-				annotations: { readOnlyHint: true, destructiveHint: false },
+				inputSchema: loggedToolInput("fetch", fetchInputSchema, services, authContext, request),
+				outputSchema: fetchSuccessSchema,
+				annotations: {
+					readOnlyHint: true,
+					destructiveHint: false,
+					idempotentHint: true,
+					openWorldHint: true,
+				},
 			},
-			(args, ctx) => trackTool(fetchTool.handle(args, authContext, request, ctx.mcpReq.signal)),
+			(args, ctx) =>
+				trackTool(executeMcpTool("fetch", args, services, authContext, request, ctx.mcpReq.signal)),
 		);
 		return server;
 	}

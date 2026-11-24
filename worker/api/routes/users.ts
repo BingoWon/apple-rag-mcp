@@ -209,38 +209,51 @@ app.openapi(getUserToolCallsStatsRoute, async (c) => {
 
 // Update user profile (name only - email cannot be changed for security)
 const updateProfileSchema = z.object({
-	name: z.string().min(2, "Name must be at least 2 characters").optional(),
+	name: z
+		.string()
+		.trim()
+		.min(2, "Name must be at least 2 characters")
+		.max(100, "Name must not exceed 100 characters"),
 });
 
 // Simplified route without complex OpenAPI schema
 app.put("/profile", authMiddleware, async (c) => {
 	const user = c.get("user") as User;
 
+	let updates: unknown;
 	try {
-		const updates = await c.req.json();
-
-		// Validate input
-		const validatedUpdates = updateProfileSchema.parse(updates);
-
-		// Email cannot be changed for security reasons - only name updates allowed
-
-		// Build update query for name only
-		if (!validatedUpdates.name) {
-			return c.json(
-				{
-					success: false,
-					error: {
-						code: "NO_UPDATES",
-						message: "No valid fields to update",
-					},
+		updates = await c.req.json();
+	} catch {
+		return c.json(
+			{
+				success: false,
+				error: {
+					code: ApiErrorCode.VALIDATION_ERROR,
+					message: "Invalid JSON body",
 				},
-				400,
-			);
-		}
+			},
+			400,
+		);
+	}
 
-		// Update only name and timestamp
+	const parsed = updateProfileSchema.safeParse(updates);
+	if (!parsed.success) {
+		return c.json(
+			{
+				success: false,
+				error: {
+					code: ApiErrorCode.VALIDATION_ERROR,
+					message: parsed.error.issues[0]?.message || "Invalid profile update",
+				},
+			},
+			400,
+		);
+	}
+
+	try {
+		// Update only name and timestamp (email cannot be changed for security reasons)
 		await c.env.DB.prepare("UPDATE users SET name = ?, updated_at = ? WHERE id = ?")
-			.bind(validatedUpdates.name, new Date().toISOString(), user.id)
+			.bind(parsed.data.name, new Date().toISOString(), user.id)
 			.run();
 
 		// Fetch updated user data
@@ -340,9 +353,26 @@ app.openapi(deleteAccountRoute, async (c) => {
 			subscription.stripe_subscription_id &&
 			subscription.status !== "canceled"
 		) {
-			await createStripeClient(c.env.STRIPE_SECRET_KEY).subscriptions.cancel(
-				String(subscription.stripe_subscription_id),
-			);
+			try {
+				await createStripeClient(c.env.STRIPE_SECRET_KEY).subscriptions.cancel(
+					String(subscription.stripe_subscription_id),
+				);
+			} catch (stripeError) {
+				const code =
+					typeof stripeError === "object" && stripeError && "code" in stripeError
+						? String(stripeError.code)
+						: undefined;
+				const statusCode =
+					typeof stripeError === "object" && stripeError && "statusCode" in stripeError
+						? Number(stripeError.statusCode)
+						: undefined;
+				const message = stripeError instanceof Error ? stripeError.message : String(stripeError);
+				const alreadyGone =
+					code === "resource_missing" ||
+					statusCode === 404 ||
+					/no such subscription|already canceled/i.test(message);
+				if (!alreadyGone) throw stripeError;
+			}
 		}
 
 		await c.env.DB.prepare("DELETE FROM users WHERE id = ?").bind(user.id).run();

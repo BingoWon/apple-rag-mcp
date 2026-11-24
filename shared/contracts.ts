@@ -128,6 +128,12 @@ export const fetchSuccessSchema = z.object({
 	upstream_status: z.number().int().nullable(),
 	cache_hit: z.boolean(),
 });
+export const browseSuccessSchema = browseDataSchema.extend({
+	ok: z.literal(true),
+	outcome: z.literal("success"),
+	request_id: z.string().optional(),
+	account: accountSchema,
+});
 export const searchOutputSchema = z
 	.union([searchSuccessSchema, toolErrorSchema])
 	.meta({ type: "object" });
@@ -138,14 +144,6 @@ export type SearchOutput = z.infer<typeof searchOutputSchema>;
 export type FetchOutput = z.infer<typeof fetchOutputSchema>;
 
 export const browseOutputSchema = z
-	.union([
-		browseDataSchema.extend({
-			ok: z.literal(true),
-			outcome: z.literal("success"),
-			request_id: z.string().optional(),
-			account: accountSchema,
-		}),
-		toolErrorSchema,
-	])
+	.union([browseSuccessSchema, toolErrorSchema])
 	.meta({ type: "object" });
 export type BrowseOutput = z.infer<typeof browseOutputSchema>;

@@ -99,18 +99,21 @@ export function createCLIRoutes(
 		createServices(env, ctx, "cli"),
 ) {
 	const app = new Hono<AppEnv>();
-	app.use("*", bodyLimit({ maxSize: 16 * 1024 }));
+	app.use("*", bodyLimit({ maxSize: 64 * 1024 }));
 	app.use("*", async (c, next) => {
 		for (const [k, v] of Object.entries(noStore)) c.header(k, v);
 		await next();
 	});
 	app.onError((error, c) => {
 		if (c.req.raw.signal.aborted) return new Response(null, { status: 499, headers: noStore });
-		if (error instanceof OAuthError)
+		if (error instanceof OAuthError) {
+			const headers: Record<string, string> = { ...noStore };
+			if (error.status === 401) headers["WWW-Authenticate"] = 'Bearer error="invalid_token"';
 			return Response.json(
 				{ success: false, error: { code: error.error, message: error.message } },
-				{ status: error.status, headers: noStore },
+				{ status: error.status, headers },
 			);
+		}
 		if (error instanceof z.ZodError)
 			return c.json(
 				{
@@ -151,22 +154,13 @@ export function createCLIRoutes(
 				let input: unknown;
 				const logger = new ToolCallLogger(c.env.DB, c.executionCtx);
 				try {
-					input = await c.req.json();
-				} catch {
-					const result = rejectOperation(logger, operation, {}, identity, c.req.raw, "cli");
-					return Response.json(result, {
-						status: 400,
-						headers: { ...noStore, "X-Request-ID": result.request_id! },
-					});
-				}
-				try {
 					identity = await auth(c.env, c.req.raw).authenticate(c.req.raw);
 				} catch (error) {
 					if (!(error instanceof OAuthError)) throw error;
 					const result = rejectOperation(
 						logger,
 						operation,
-						input,
+						{},
 						identity,
 						c.req.raw,
 						"cli",
@@ -181,6 +175,15 @@ export function createCLIRoutes(
 							"X-Request-ID": result.request_id!,
 							"WWW-Authenticate": 'Bearer error="invalid_token"',
 						},
+					});
+				}
+				try {
+					input = await c.req.json();
+				} catch {
+					const result = rejectOperation(logger, operation, {}, identity, c.req.raw, "cli");
+					return Response.json(result, {
+						status: 400,
+						headers: { ...noStore, "X-Request-ID": result.request_id! },
 					});
 				}
 				const services = await factory(c.env, c.executionCtx);

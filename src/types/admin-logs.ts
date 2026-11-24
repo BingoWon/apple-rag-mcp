@@ -1,8 +1,9 @@
-import type { ToolOutcome } from "../../worker/shared/tool-outcomes";
+import type { AdminUserIdentity } from "../../shared/admin-user";
+import type { ToolOutcome } from "../../shared/tool-outcomes";
 export type AdminLogKind = "search" | "fetch" | "browse";
 export interface AdminLog {
 	id: string;
-	user: import("../../worker/shared/admin-user").AdminUserIdentity;
+	user: AdminUserIdentity;
 	channel: "unknown" | "mcp" | "cli";
 	credential_id: string | null;
 	session_id: string | null;

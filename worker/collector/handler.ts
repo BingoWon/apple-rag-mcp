@@ -57,7 +57,7 @@ async function processAppleContent(
 			database: env.RAG_DB_DATABASE,
 			username: env.RAG_DB_USER,
 			password: env.RAG_DB_PASSWORD || "",
-			ssl: env.RAG_DB_SSLMODE === "require",
+			ssl: env.RAG_DB_SSLMODE !== "disable",
 			max: 1,
 			idle_timeout: 0,
 			connect_timeout: 60,

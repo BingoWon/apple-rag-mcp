@@ -128,7 +128,7 @@ export function PasswordManagement() {
 						<div>
 							<label
 								htmlFor="currentPassword"
-								className="block text-sm font-medium text-text-primary mb-1"
+								className="block text-sm font-medium text-foreground mb-1"
 							>
 								{t("settings.current_password")}
 							</label>
@@ -145,7 +145,7 @@ export function PasswordManagement() {
 						<div>
 							<label
 								htmlFor="newPassword"
-								className="block text-sm font-medium text-text-primary mb-1"
+								className="block text-sm font-medium text-foreground mb-1"
 							>
 								{t("settings.new_password")}
 							</label>
@@ -162,7 +162,7 @@ export function PasswordManagement() {
 						<div>
 							<label
 								htmlFor="confirmPassword"
-								className="block text-sm font-medium text-text-primary mb-1"
+								className="block text-sm font-medium text-foreground mb-1"
 							>
 								{t("settings.confirm_password")}
 							</label>

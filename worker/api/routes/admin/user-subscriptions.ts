@@ -5,6 +5,7 @@
 import { createRoute, z } from "@hono/zod-openapi";
 import { logger } from "../../utils/logger";
 import { createOpenAPIApp } from "../../utils/openapi";
+import { parsePagination } from "../../utils/pagination";
 import { adminUserSchema, withAdminUsers } from "./user-identity";
 
 const app = createOpenAPIApp();
@@ -74,8 +75,7 @@ const getUserSubscriptionsRoute = createRoute({
 app.openapi(getUserSubscriptionsRoute, async (c) => {
 	try {
 		// Parse pagination parameters
-		const limit = Math.min(Number(c.req.query("limit")) || 50, 100); // Max 100 per page
-		const offset = Number(c.req.query("offset")) || 0;
+		const { limit, offset } = parsePagination(c.req.query("limit"), c.req.query("offset"));
 
 		// Get total count
 		const countResult = await c.env.DB.prepare(

@@ -26,7 +26,15 @@ export async function handleAccountRequest(
 						: "Account status is temporarily unavailable.",
 				},
 			},
-			{ status: invalid ? 401 : 503, headers },
+			{
+				status: invalid ? 401 : 503,
+				headers: {
+					...headers,
+					...(invalid
+						? { "WWW-Authenticate": 'Bearer realm="apple-rag-mcp", error="invalid_token"' }
+						: {}),
+				},
+			},
 		);
 	}
 }

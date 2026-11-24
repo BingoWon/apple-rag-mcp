@@ -2,9 +2,11 @@
  * Authentication routes
  */
 import { createRoute, z } from "@hono/zod-openapi";
+import { extractClientInfo } from "../../services/request-info";
 import { authMiddleware } from "../middleware/auth";
 import { AuthService } from "../services/auth-service";
 import type { User } from "../types";
+import { checkIpRateLimit } from "../utils/ip-rate-limit";
 import { createOpenAPIApp } from "../utils/openapi";
 import { notifyTelegram } from "../utils/telegram-notifier";
 import {
@@ -89,11 +91,29 @@ const registerRoute = createRoute({
 				},
 			},
 		},
+		429: {
+			description: "Too many requests",
+			content: { "application/json": { schema: AuthErrorSchema } },
+		},
 	},
 	tags: ["Authentication"],
 });
 
 app.openapi(registerRoute, async (c) => {
+	const ip = extractClientInfo(c.req.raw).ip;
+	if (!(await checkIpRateLimit(c.env.DB, ip, "register", 10))) {
+		return c.json(
+			{
+				success: false,
+				error: {
+					code: "RATE_LIMIT_EXCEEDED",
+					message: "Too many registration attempts. Please try again in a minute.",
+				},
+			},
+			429,
+		);
+	}
+
 	const request = c.req.valid("json");
 	const authService = new AuthService(c.env.DB, c.env);
 
@@ -156,11 +176,29 @@ const loginRoute = createRoute({
 				},
 			},
 		},
+		429: {
+			description: "Too many requests",
+			content: { "application/json": { schema: AuthErrorSchema } },
+		},
 	},
 	tags: ["Authentication"],
 });
 
 app.openapi(loginRoute, async (c) => {
+	const ip = extractClientInfo(c.req.raw).ip;
+	if (!(await checkIpRateLimit(c.env.DB, ip, "login", 15))) {
+		return c.json(
+			{
+				success: false,
+				error: {
+					code: "RATE_LIMIT_EXCEEDED",
+					message: "Too many sign-in attempts. Please try again in a minute.",
+				},
+			},
+			429,
+		);
+	}
+
 	const request = c.req.valid("json");
 	const authService = new AuthService(c.env.DB, c.env);
 
@@ -210,24 +248,36 @@ const forgotPasswordRoute = createRoute({
 			description: "Password reset email sent",
 		},
 		400: {
-			content: {
-				"application/json": {
-					schema: z.object({
-						success: z.boolean(),
-						error: z.object({
-							code: z.string(),
-							message: z.string(),
-						}),
-					}),
-				},
-			},
+			content: { "application/json": { schema: AuthErrorSchema } },
 			description: "Invalid request",
+		},
+		429: {
+			content: { "application/json": { schema: AuthErrorSchema } },
+			description: "Too many requests",
+		},
+		500: {
+			content: { "application/json": { schema: AuthErrorSchema } },
+			description: "Internal server error",
 		},
 	},
 	tags: ["Authentication"],
 });
 
 app.openapi(forgotPasswordRoute, async (c) => {
+	const ip = extractClientInfo(c.req.raw).ip;
+	if (!(await checkIpRateLimit(c.env.DB, ip, "forgot_password", 5))) {
+		return c.json(
+			{
+				success: false,
+				error: {
+					code: "RATE_LIMIT_EXCEEDED",
+					message: "Too many password reset requests. Please try again in a minute.",
+				},
+			},
+			429,
+		);
+	}
+
 	const { email } = c.req.valid("json");
 	const authService = new AuthService(c.env.DB, c.env);
 	const origin = new URL(c.req.url).origin;
@@ -237,7 +287,7 @@ app.openapi(forgotPasswordRoute, async (c) => {
 	if (result.success) {
 		return c.json(result, 200);
 	} else {
-		return c.json(result, 400);
+		return c.json(result, result.error.code === "INTERNAL_ERROR" ? 500 : 400);
 	}
 });
 
@@ -269,24 +319,36 @@ const resetPasswordRoute = createRoute({
 			description: "Password reset successfully",
 		},
 		400: {
-			content: {
-				"application/json": {
-					schema: z.object({
-						success: z.boolean(),
-						error: z.object({
-							code: z.string(),
-							message: z.string(),
-						}),
-					}),
-				},
-			},
+			content: { "application/json": { schema: AuthErrorSchema } },
 			description: "Invalid reset token",
+		},
+		429: {
+			content: { "application/json": { schema: AuthErrorSchema } },
+			description: "Too many requests",
+		},
+		500: {
+			content: { "application/json": { schema: AuthErrorSchema } },
+			description: "Internal server error",
 		},
 	},
 	tags: ["Authentication"],
 });
 
 app.openapi(resetPasswordRoute, async (c) => {
+	const ip = extractClientInfo(c.req.raw).ip;
+	if (!(await checkIpRateLimit(c.env.DB, ip, "reset_password", 10))) {
+		return c.json(
+			{
+				success: false,
+				error: {
+					code: "RATE_LIMIT_EXCEEDED",
+					message: "Too many password reset attempts. Please try again in a minute.",
+				},
+			},
+			429,
+		);
+	}
+
 	const { token, password } = c.req.valid("json");
 	const authService = new AuthService(c.env.DB, c.env);
 
@@ -295,7 +357,7 @@ app.openapi(resetPasswordRoute, async (c) => {
 	if (result.success) {
 		return c.json(result, 200);
 	} else {
-		return c.json(result, 400);
+		return c.json(result, result.error.code === "INTERNAL_ERROR" ? 500 : 400);
 	}
 });
 

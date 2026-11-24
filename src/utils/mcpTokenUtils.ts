@@ -1,3 +1,4 @@
+import i18n from "@/i18n";
 import type { User } from "@/types";
 import { copyText } from "@/utils/clipboard";
 
@@ -30,9 +31,9 @@ export const copyMcpTokenToClipboard = async (
 ): Promise<void> => {
 	try {
 		await copyText(mcpToken);
-		onSuccess?.("MCP Token copied to clipboard");
+		onSuccess?.(i18n.t("tokens.copied_success"));
 	} catch (_error) {
-		onError?.("Failed to copy MCP Token to clipboard");
+		onError?.(i18n.t("tokens.copy_error"));
 	}
 };
 

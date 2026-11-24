@@ -8,6 +8,8 @@ The admin console is a compact personal workspace. Omit introductory headings
 and repeated captions, combine navigation and actions into compact rows, and
 keep one card shell per metric.
 
+> **2026-11-24 note**: The historical bullet points below describe the initial 6-trend / 7-detail-page layout. The current console covers 9 detail pages (including `browse` logs and client usage) and 8 structured tool outcomes alongside model costs and online embedding attempt telemetry.
+
 - Six trends count records created within the selected window: users, tokens,
   authorized IPs, search calls, fetch calls, and contact messages.
 - Search and fetch use stacked bars for success (`200`), rate limits (`429`),

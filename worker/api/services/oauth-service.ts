@@ -14,6 +14,7 @@ const emailConflict = "This email is already registered. Use your existing sign-
 interface GoogleUserInfo {
 	id: string;
 	email: string;
+	verified_email?: boolean;
 	name: string;
 	picture: string;
 }
@@ -119,7 +120,17 @@ export class OAuthService {
 				throw new Error(`Google token exchange failed: ${response.statusText}`);
 			}
 
-			return await response.json();
+			const tokens = (await response.json()) as Partial<OAuthTokens> & {
+				error?: string;
+				error_description?: string;
+			};
+			if (!tokens.access_token) {
+				throw new Error(
+					`Google token exchange returned no access token: ${tokens.error_description || tokens.error || "unknown error"}`,
+				);
+			}
+
+			return tokens as OAuthTokens;
 		}
 
 		if (provider === "github") {
@@ -141,7 +152,17 @@ export class OAuthService {
 				throw new Error(`GitHub token exchange failed: ${response.statusText}`);
 			}
 
-			return await response.json();
+			const tokens = (await response.json()) as Partial<OAuthTokens> & {
+				error?: string;
+				error_description?: string;
+			};
+			if (!tokens.access_token) {
+				throw new Error(
+					`GitHub token exchange failed: ${tokens.error_description || tokens.error || "missing access_token"}`,
+				);
+			}
+
+			return tokens as OAuthTokens;
 		}
 
 		throw new Error(`Unsupported provider: ${provider}`);
@@ -164,6 +185,9 @@ export class OAuthService {
 			}
 
 			const data = (await response.json()) as GoogleUserInfo;
+			if (!data.email || data.verified_email !== true) {
+				throw new Error("Google account email is not verified");
+			}
 			return {
 				email: data.email,
 				name: data.name,
@@ -206,11 +230,13 @@ export class OAuthService {
 				const emailData = (await emailResponse.json()) as Record<string, unknown>[];
 
 				const primaryEmail =
-					emailData.find((email: Record<string, unknown>) => email.primary)?.email ||
-					userData.email;
+					emailData.find(
+						(email: Record<string, unknown>) => email.primary === true && email.verified === true,
+					)?.email ||
+					emailData.find((email: Record<string, unknown>) => email.verified === true)?.email;
 
-				if (!primaryEmail) {
-					throw new Error("No email found in GitHub user data");
+				if (!primaryEmail || typeof primaryEmail !== "string") {
+					throw new Error("No verified email found in GitHub user data");
 				}
 
 				return {

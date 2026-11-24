@@ -42,7 +42,7 @@ export function TestimonialsSection() {
 	return (
 		<section className="home-section bg-background overflow-x-clip" id="testimonials">
 			<div className="home-content mb-20 text-center md:mb-24">
-				<h2 className="text-base font-semibold leading-7 text-brand">
+				<h2 className="text-base font-semibold leading-7 text-action">
 					{t("testimonials.eyebrow")}
 				</h2>
 				<p className="mt-2 text-3xl font-bold tracking-tight text-light sm:text-4xl">

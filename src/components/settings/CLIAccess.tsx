@@ -9,6 +9,7 @@ import {
 import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
 import {
@@ -132,9 +133,9 @@ export function CLIAccess() {
 			<CardContent className="p-0">
 				<div className="border-b border-default bg-secondary/50 px-6 py-4">
 					<p className="text-xs leading-6 text-muted">{t("cli.login_hint")}</p>
-					<a href="/connect#cli" className="mt-2 inline-block text-sm text-brand hover:underline">
+					<Link to="/connect#cli" className="mt-2 inline-block text-sm text-brand hover:underline">
 						{t("nav.cli_guide")} →
-					</a>
+					</Link>
 				</div>
 				{error ? (
 					<div role="alert" className="flex items-center justify-between gap-3 px-6 py-5 text-sm">

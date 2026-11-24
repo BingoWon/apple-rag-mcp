@@ -129,7 +129,16 @@ export async function fixture() {
 					results,
 					count: results.length,
 					processing_time_ms: 1,
-					additionalUrls: [],
+					additionalUrls:
+						query === "additional"
+							? [
+									{
+										url: "https://developer.apple.com/documentation/swiftui/navigationstack",
+										title: "NavigationStack",
+										characterCount: 4200,
+									},
+								]
+							: [],
 					degradations: [],
 				};
 			},

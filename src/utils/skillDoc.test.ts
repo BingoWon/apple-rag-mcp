@@ -44,11 +44,21 @@ test("skill stays a focused, portable instruction file", () => {
 	assert.ok(source.split("\n").length <= 250);
 	assert.match(body, /https:\/\/mcp\.apple-rag\.com/);
 	assert.match(body, /\bsearch\b/);
+	assert.match(body, /\bbrowse\b/);
 	assert.match(body, /\bfetch\b/);
 	assert.ok(
 		!existsSync(new URL("README.md", skillDirectory)),
 		"Skill folders must not ship a README.md",
 	);
+});
+
+test("skill version stays in sync with apple-rag-cli package version", () => {
+	const cliPackage = JSON.parse(
+		readFileSync(new URL("../../packages/cli/package.json", import.meta.url), "utf8"),
+	) as { version: string };
+	const versionMatch = source.match(/^metadata:\n(?:\s+.*\n)*?\s+version:\s*"([^"]+)"/m);
+	assert.ok(versionMatch, "SKILL.md frontmatter must include metadata.version");
+	assert.equal(versionMatch[1], cliPackage.version);
 });
 
 test("skill explains tier-aware access without requiring a subscription for trial use", () => {

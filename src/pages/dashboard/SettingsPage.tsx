@@ -37,9 +37,10 @@ export default function SettingsPage() {
 
 			if (response.success && response.data) {
 				updateUser(response.data);
+				profileForm.reset({ name: response.data.name || data.name });
 				toast.success(t("settings.profile_updated"));
 			} else {
-				throw new Error(response.error?.message || "Failed to update profile");
+				throw new Error(response.error?.message || t("settings.profile_error"));
 			}
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : t("settings.profile_error");

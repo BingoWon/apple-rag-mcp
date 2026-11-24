@@ -1,5 +1,5 @@
 import i18n from "@/i18n";
-import { parseUTCDate } from "../../worker/shared/datetime";
+import { parseUTCDate } from "../../shared/datetime";
 import {
 	DateTimeError,
 	type ParsedDateTime,
@@ -133,7 +133,8 @@ export function formatDateCompact(input: string | Date | number): string {
 	const date = toDate(input);
 	if (!date) return "—";
 
-	return date.toLocaleString("en-US", {
+	const locale = (i18n.language || "en").startsWith("zh") ? "zh-CN" : "en-US";
+	return date.toLocaleString(locale, {
 		year: "numeric",
 		month: "2-digit",
 		day: "2-digit",
@@ -152,11 +153,14 @@ export function formatRelativeTime(input: string | Date | number): string {
 	const diffMin = Math.floor(diffSec / 60);
 	const diffHour = Math.floor(diffMin / 60);
 	const diffDay = Math.floor(diffHour / 24);
+	const isZh = (i18n.language || "en").startsWith("zh");
 
-	if (diffSec < 60) return "just now";
-	if (diffMin < 60) return `${diffMin} minute${diffMin > 1 ? "s" : ""} ago`;
-	if (diffHour < 24) return `${diffHour} hour${diffHour > 1 ? "s" : ""} ago`;
-	if (diffDay < 7) return `${diffDay} day${diffDay > 1 ? "s" : ""} ago`;
+	if (diffSec < 60) return isZh ? "刚刚" : "just now";
+	if (diffMin < 60)
+		return isZh ? `${diffMin} 分钟前` : `${diffMin} minute${diffMin > 1 ? "s" : ""} ago`;
+	if (diffHour < 24)
+		return isZh ? `${diffHour} 小时前` : `${diffHour} hour${diffHour > 1 ? "s" : ""} ago`;
+	if (diffDay < 7) return isZh ? `${diffDay} 天前` : `${diffDay} day${diffDay > 1 ? "s" : ""} ago`;
 
 	return formatDateCompact(input);
 }

@@ -6,10 +6,10 @@ import type {
 	AdminStatsQuery,
 	ModelCostCategory,
 	ModelCostCurrency,
-} from "../../../../src/types";
+} from "../../../../shared/admin-stats.js";
+import { TOOL_CHANNELS, type ToolChannel } from "../../../../shared/tool-channels.js";
+import { emptyOutcomes, TOOL_OUTCOMES } from "../../../../shared/tool-outcomes.js";
 import { MICROSOFT_DECISION_MODEL } from "../../../services/model-usage.js";
-import { TOOL_CHANNELS, type ToolChannel } from "../../../shared/tool-channels.js";
-import { emptyOutcomes, TOOL_OUTCOMES } from "../../../shared/tool-outcomes.js";
 import { logger } from "../../utils/logger";
 import { createOpenAPIApp } from "../../utils/openapi";
 
@@ -225,7 +225,7 @@ app.openapi(statsRoute, async (c) => {
 		});
 		const newAnonymousQuery = c.env.DB.prepare(
 			`WITH all_logs AS (
-				SELECT user_id, created_at FROM tool_activity WHERE user_id LIKE 'anon_%' ESCAPE '\\'
+				SELECT user_id, created_at FROM tool_activity WHERE user_id LIKE 'anon\\_%' ESCAPE '\\'
 			), first_seen AS (
 				SELECT user_id, MIN(created_at) AS first_seen FROM all_logs GROUP BY user_id
 			)
@@ -245,8 +245,8 @@ app.openapi(statsRoute, async (c) => {
 				  AND julianday(created_at) >= julianday(?) AND julianday(created_at) < julianday(?)
 			)
 			SELECT strftime('${format}', created_at, '+8 hours') AS bucket,
-				COUNT(DISTINCT CASE WHEN user_id NOT LIKE 'anon_%' ESCAPE '\\' THEN user_id END) AS registered,
-				COUNT(DISTINCT CASE WHEN user_id LIKE 'anon_%' ESCAPE '\\' THEN user_id END) AS anonymous
+				COUNT(DISTINCT CASE WHEN user_id NOT LIKE 'anon\\_%' ESCAPE '\\' THEN user_id END) AS registered,
+				COUNT(DISTINCT CASE WHEN user_id LIKE 'anon\\_%' ESCAPE '\\' THEN user_id END) AS anonymous
 			FROM all_logs GROUP BY bucket ORDER BY bucket`,
 		).bind(start.slice(0, 10), new Date(range.end + DAY).toISOString().slice(0, 10), start, end);
 		const activeTotalQuery = c.env.DB.prepare(
@@ -255,8 +255,8 @@ app.openapi(statsRoute, async (c) => {
 				WHERE created_at >= ? AND created_at < ?
 				  AND julianday(created_at) >= julianday(?) AND julianday(created_at) < julianday(?)
 			)
-			SELECT COUNT(DISTINCT CASE WHEN user_id NOT LIKE 'anon_%' ESCAPE '\\' THEN user_id END) AS registered,
-				COUNT(DISTINCT CASE WHEN user_id LIKE 'anon_%' ESCAPE '\\' THEN user_id END) AS anonymous
+			SELECT COUNT(DISTINCT CASE WHEN user_id NOT LIKE 'anon\\_%' ESCAPE '\\' THEN user_id END) AS registered,
+				COUNT(DISTINCT CASE WHEN user_id LIKE 'anon\\_%' ESCAPE '\\' THEN user_id END) AS anonymous
 			FROM all_logs`,
 		).bind(start.slice(0, 10), new Date(range.end + DAY).toISOString().slice(0, 10), start, end);
 		const registeredBaselineQuery = c.env.DB.prepare(
@@ -536,12 +536,14 @@ function summarizeModelCosts(
 	});
 	for (const row of rows) {
 		const category = row.cost_category as ModelCostCategory;
+		if (!Object.hasOwn(categories, category)) continue;
 		const attempts = Number(row.attempts);
 		const pricedAttempts = Number(row.priced_attempts);
 		categories[category].attempts += attempts;
 		categories[category].unpriced_attempts += attempts - pricedAttempts;
 		if (row.cost_nanos == null) continue;
 		const currency = row.currency as ModelCostCurrency;
+		if (currency !== "USD" && currency !== "CNY") continue;
 		currencies[currency] ??= {
 			total_nanos: 0,
 			categories: {

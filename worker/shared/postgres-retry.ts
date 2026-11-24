@@ -5,6 +5,7 @@ const TRANSIENT_POSTGRES_CODES = new Set([
 	"08004",
 	"08006",
 	"08P01",
+	"53300",
 	"57P01",
 	"57P02",
 	"57P03",

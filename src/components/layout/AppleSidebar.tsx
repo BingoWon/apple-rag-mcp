@@ -19,8 +19,8 @@ import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { Avatar } from "@/components/ui/OptimizedImage";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
-import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { useDashboardStore } from "@/stores/dashboard";
 import {
 	SIDEBAR_CONTROL_CLASS_NAME,
 	Sidebar,
@@ -33,42 +33,43 @@ const SIDEBAR_LINK_KEYS = [
 	{ labelKey: "nav.connect", href: "/connect", icon: <IconWorld className="h-5 w-5 shrink-0" /> },
 	{
 		labelKey: "nav.overview",
-		href: "/overview/",
+		href: "/overview",
 		icon: <IconDashboard className="h-5 w-5 shrink-0" />,
 	},
 	{
 		labelKey: "nav.mcp_tokens",
-		href: "/mcp-tokens/",
+		href: "/mcp-tokens",
 		icon: <IconKey className="h-5 w-5 shrink-0" />,
 	},
 	{
 		labelKey: "nav.authorized_ips",
-		href: "/authorized-ips/",
+		href: "/authorized-ips",
 		icon: <IconWorld className="h-5 w-5 shrink-0" />,
 	},
 	{
 		labelKey: "nav.usage",
-		href: "/usage/",
+		href: "/usage",
 		icon: <IconChartBar className="h-5 w-5 shrink-0" />,
 	},
 	{
 		labelKey: "nav.billing",
-		href: "/billing/",
+		href: "/billing",
 		icon: <IconCreditCard className="h-5 w-5 shrink-0" />,
 	},
 	{
 		labelKey: "nav.messages",
-		href: "/messages/",
+		href: "/messages",
 		icon: <IconMessageCircle className="h-5 w-5 shrink-0" />,
 	},
 	{
 		labelKey: "nav.settings",
-		href: "/settings/",
+		href: "/settings",
 		icon: <IconSettings className="h-5 w-5 shrink-0" />,
 	},
 ] as const;
 
 function SidebarHeader() {
+	const { t } = useTranslation();
 	const { open, pinned, togglePin } = useSidebar();
 
 	return (
@@ -84,7 +85,8 @@ function SidebarHeader() {
 							? "text-brand hover:text-brand/80 bg-brand/10"
 							: "text-muted hover:text-light hover:bg-secondary",
 					)}
-					title={pinned ? "Auto-collapse sidebar" : "Pin sidebar open"}
+					title={pinned ? t("nav.sidebar_unpin") : t("nav.sidebar_pin")}
+					aria-label={pinned ? t("nav.sidebar_unpin") : t("nav.sidebar_pin")}
 				>
 					{pinned ? (
 						<IconLayoutSidebarLeftCollapse className="h-4 w-4" />
@@ -185,30 +187,16 @@ const AppleSidebarComponent = ({ children }: { children: React.ReactNode }) => {
 	const { user, logout, isAuthenticated } = useAuth();
 	const { pathname } = useLocation();
 	const navigate = useNavigate();
-	const [unreadCount, setUnreadCount] = useState(0);
+	const unreadCount = useDashboardStore((state) => state.unreadReplies.length);
+	const fetchUnreadReplies = useDashboardStore((state) => state.fetchUnreadReplies);
 
 	useEffect(() => {
-		if (!isAuthenticated) {
-			setUnreadCount(0);
-			return;
-		}
+		if (!isAuthenticated) return;
 
-		const fetchUnreadCount = async () => {
-			try {
-				const response = await api.getUnreadReplies();
-				if (response.success && response.data) {
-					const data = response.data as { count?: number };
-					setUnreadCount(data.count || 0);
-				}
-			} catch (error) {
-				console.error("Failed to fetch unread count:", error);
-			}
-		};
-
-		fetchUnreadCount();
-		const interval = setInterval(fetchUnreadCount, 30000);
+		fetchUnreadReplies();
+		const interval = setInterval(fetchUnreadReplies, 30000);
 		return () => clearInterval(interval);
-	}, [isAuthenticated]);
+	}, [isAuthenticated, fetchUnreadReplies]);
 
 	const handleLogout = useCallback(async () => {
 		try {
@@ -231,7 +219,7 @@ const AppleSidebarComponent = ({ children }: { children: React.ReactNode }) => {
 					href: link.href,
 					icon: link.icon,
 				};
-				if (link.href === "/messages/" && unreadCount > 0) {
+				if (link.href === "/messages" && unreadCount > 0) {
 					return {
 						...resolved,
 						badge: unreadCount > 9 ? "9+" : unreadCount.toString(),

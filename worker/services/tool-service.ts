@@ -148,7 +148,8 @@ export class ToolService {
 			}
 			return { ...result, request_id: context.requestId };
 		} catch (error) {
-			if (quota?.allowed)
+			const shouldRefund = !(error instanceof PageReadError && error.spentProviderBudget);
+			if (quota?.allowed && shouldRefund)
 				await this.services.rateLimit
 					.refund(quota)
 					.catch(() => console.error("Quota refund failed for request", context.requestId));

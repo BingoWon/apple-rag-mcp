@@ -48,15 +48,16 @@ export default function NotFound() {
 					}}
 					className="mt-8 flex flex-col sm:flex-row gap-4"
 				>
-					<Link to="/">
-						<Button
-							size="lg"
-							className="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-900 px-6 py-3"
-						>
+					<Button
+						size="lg"
+						className="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-900 px-6 py-3"
+						asChild
+					>
+						<Link to="/">
 							<IconHome className="h-5 w-5" />
 							{t("notfound.home")}
-						</Button>
-					</Link>
+						</Link>
+					</Button>
 
 					<Button
 						variant="outline"

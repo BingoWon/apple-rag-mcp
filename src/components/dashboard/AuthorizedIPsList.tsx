@@ -126,13 +126,11 @@ export function AuthorizedIPsList({
 	if (ips.length === 0) {
 		return (
 			<div className="p-6 text-center">
-				<div className="mx-auto h-12 w-12 text-gray-500 dark:text-gray-400">
+				<div className="mx-auto h-12 w-12 text-muted-foreground">
 					<IconWorld className="h-12 w-12" />
 				</div>
-				<h3 className="mt-2 text-sm font-medium text-gray-100 dark:text-gray-100">
-					{t("ips.empty")}
-				</h3>
-				<p className="mt-1 text-sm text-gray-400 dark:text-gray-400">{t("ips.empty_desc")}</p>
+				<h3 className="mt-2 text-sm font-medium text-foreground">{t("ips.empty")}</h3>
+				<p className="mt-1 text-sm text-muted-foreground">{t("ips.empty_desc")}</p>
 			</div>
 		);
 	}

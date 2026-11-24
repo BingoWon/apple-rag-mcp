@@ -4,7 +4,6 @@ import { useTranslation } from "react-i18next";
 import { BrowserRouter, useLocation } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Providers } from "@/components/providers/Providers";
-import { CookieConsent } from "@/components/ui/CookieConsent";
 import { getSiteMetadata, siteStructuredJSON } from "../shared/site";
 import { oauthReturnState } from "./lib/auth-return";
 import { AppRouter } from "./router";
@@ -95,7 +94,6 @@ if (root) {
 						<AppRouter />
 					</Providers>
 					<CustomerOverlays />
-					<CookieConsent />
 				</ErrorBoundary>
 			</BrowserRouter>
 		</StrictMode>,

@@ -4,6 +4,7 @@ import { cors } from "hono/cors";
 import { MCP_CLIENT_HEADER } from "../shared/mcp-clients.js";
 import { siteSitemap } from "../shared/site.js";
 import { apiApp } from "./api/app.js";
+import { reconcileBilling } from "./api/services/billing-reconciliation.js";
 import { reconcileCheckouts } from "./api/services/stripe-checkout";
 import { configureTelegram } from "./api/utils/telegram-notifier";
 import { CLIAuthorization } from "./cli/authorization.js";
@@ -13,9 +14,9 @@ import { handleAccountRequest } from "./mcp/account.js";
 import { HEALTH_STATUS, SERVER_MANIFEST } from "./mcp/manifest.js";
 import { MCPProtocolHandler } from "./mcp/protocol-handler.js";
 import { AuthMiddleware } from "./mcp-auth/auth-middleware.js";
-import { reconcileBilling } from "./services/billing-reconciliation.js";
 import type { WaitUntilContext } from "./services/d1-utils.js";
 import { createServices } from "./services/index.js";
+import { setGlobalAlertUrl } from "./shared/logger.js";
 import type { Env } from "./shared/types.js";
 import { sitePage } from "./site-pages.js";
 
@@ -28,12 +29,22 @@ const MCP_ALLOWED_ORIGINS = [
 ];
 const MCP_ALLOWED_HEADERS = [
 	MCP_CLIENT_HEADER,
+	"X-Apple-RAG-Version",
 	"Content-Type",
 	"Authorization",
 	"MCP-Protocol-Version",
 	"Mcp-Method",
 	"Mcp-Name",
+	"Mcp-Session-Id",
+	"Last-Event-ID",
 ];
+const MCP_EXPOSED_HEADERS = ["WWW-Authenticate"];
+const WELL_KNOWN_MCP = {
+	name: SERVER_MANIFEST.name,
+	url: SERVER_MANIFEST.endpoints.mcp,
+	manifest: SERVER_MANIFEST.endpoints.manifest,
+	description: SERVER_MANIFEST.description,
+};
 
 type HonoAppEnv = { Bindings: Env };
 
@@ -52,7 +63,7 @@ async function handleMCPRequest(c: {
 		(request) => new AuthMiddleware(c.env.DB, c.executionCtx).optionalAuth(request),
 	);
 	const response = handler.handleRequest(c.req.raw);
-	c.executionCtx.waitUntil(response);
+	c.executionCtx.waitUntil(response.catch(() => {}));
 	return response;
 }
 
@@ -98,6 +109,25 @@ app.get("/.well-known/oauth-authorization-server", (c) =>
 	c.json(authorizationMetadata(new URL(c.req.url).origin)),
 );
 
+app.use(
+	"/mcp",
+	cors({
+		origin: MCP_ALLOWED_ORIGINS,
+		allowMethods: ["POST", "OPTIONS"],
+		allowHeaders: MCP_ALLOWED_HEADERS,
+		exposeHeaders: MCP_EXPOSED_HEADERS,
+	}),
+);
+app.use(
+	"/mcp/*",
+	cors({
+		origin: MCP_ALLOWED_ORIGINS,
+		allowMethods: ["GET", "OPTIONS"],
+		allowHeaders: MCP_ALLOWED_HEADERS,
+		exposeHeaders: MCP_EXPOSED_HEADERS,
+	}),
+);
+
 app.get("/mcp/health", (c) => c.json({ ...HEALTH_STATUS, timestamp: new Date().toISOString() }));
 
 app.get("/mcp/account", (c) => handleAccountRequest(c.req.raw, c.env, c.executionCtx));
@@ -106,36 +136,13 @@ app.get("/mcp/manifest", (c) =>
 	c.json(SERVER_MANIFEST, 200, { "Cache-Control": "public, max-age=3600" }),
 );
 
-app.use(
-	"/mcp",
-	cors({
-		origin: MCP_ALLOWED_ORIGINS,
-		allowMethods: ["POST", "OPTIONS"],
-		allowHeaders: MCP_ALLOWED_HEADERS,
-	}),
-);
-
 app.post("/mcp", (c) => handleMCPRequest(c));
 
-app.on(["GET", "DELETE"], "/mcp", (c) =>
+app.on(["GET", "DELETE", "PUT", "PATCH", "HEAD"], "/mcp", (c) =>
 	c.text("Method Not Allowed", 405, {
 		Allow: "POST, OPTIONS",
-		"Access-Control-Allow-Origin": "*",
 	}),
 );
-
-app.post("/api/collector/trigger", async (c) => {
-	const adminPassword = c.req.header("X-Admin-Password");
-	if (!adminPassword || adminPassword !== c.env.ADMIN_PASSWORD) {
-		return c.json({ error: "Unauthorized" }, 401);
-	}
-	try {
-		await handleScheduled(c.env);
-		return c.json({ message: "Processing completed" });
-	} catch {
-		return c.json({ error: "Processing failed" }, 500);
-	}
-});
 
 app.notFound(async (c) => {
 	if (c.req.path.startsWith("/api/") || c.req.path === "/mcp" || c.req.path.startsWith("/mcp/")) {
@@ -188,6 +195,7 @@ mcpApp.use(
 		origin: MCP_ALLOWED_ORIGINS,
 		allowMethods: ["GET", "POST", "OPTIONS"],
 		allowHeaders: MCP_ALLOWED_HEADERS,
+		exposeHeaders: MCP_EXPOSED_HEADERS,
 	}),
 );
 
@@ -199,12 +207,15 @@ mcpApp.get("/manifest", (c) =>
 	c.json(SERVER_MANIFEST, 200, { "Cache-Control": "public, max-age=3600" }),
 );
 
+mcpApp.get("/.well-known/mcp.json", (c) =>
+	c.json(WELL_KNOWN_MCP, 200, { "Cache-Control": "public, max-age=3600" }),
+);
+
 mcpApp.post("/", (c) => handleMCPRequest(c));
 
-mcpApp.on(["GET", "DELETE"], "/", (c) =>
+mcpApp.on(["GET", "DELETE", "PUT", "PATCH", "HEAD"], "/", (c) =>
 	c.text("Method Not Allowed", 405, {
 		Allow: "POST, OPTIONS",
-		"Access-Control-Allow-Origin": "*",
 	}),
 );
 
@@ -215,6 +226,7 @@ mcpApp.all("*", (c) =>
 // ─── Router ──────────────────────────────────────────────────
 export default {
 	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+		setGlobalAlertUrl(env.TELEGRAM_ALERT_BOT_URL);
 		if (new URL(request.url).hostname === MCP_HOSTNAME) {
 			return mcpApp.fetch(request, env, ctx);
 		}
@@ -222,6 +234,7 @@ export default {
 	},
 
 	async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
+		setGlobalAlertUrl(env.TELEGRAM_ALERT_BOT_URL);
 		if (event.cron === "7 * * * *") {
 			configureTelegram({
 				default: env.TELEGRAM_DEFAULT_BOT_URL,

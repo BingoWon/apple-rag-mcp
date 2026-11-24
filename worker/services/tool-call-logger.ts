@@ -1,5 +1,5 @@
+import type { ToolOutcome } from "../../shared/tool-outcomes.js";
 import { backgroundD1Write, type WaitUntilContext } from "../services/d1-utils.js";
-import type { ToolOutcome } from "../shared/tool-outcomes.js";
 import type { OperationContext } from "./operation-context.js";
 
 interface LogEntry extends OperationContext {

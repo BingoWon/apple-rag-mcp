@@ -2,8 +2,10 @@
  * Admin API Routes
  * Password-protected administrative access and statistics.
  */
+import { handleScheduled } from "../../../collector/handler.js";
 import { logger } from "../../utils/logger.js";
 import { createOpenAPIApp } from "../../utils/openapi";
+import { timingSafeEqual } from "../../utils/security.js";
 import authorizedIPsAdmin from "./authorized-ips";
 import clientsAdmin from "./clients";
 import contactMessagesAdmin from "./contact-messages";
@@ -36,7 +38,7 @@ app.use("*", async (c, next) => {
 		);
 	}
 
-	if (adminPassword !== expectedPassword) {
+	if (!(await timingSafeEqual(adminPassword, expectedPassword))) {
 		// Log unauthorized access attempt
 		logger.info(
 			`Unauthorized admin access attempt from ${c.req.header("CF-Connecting-IP") || "unknown"} to ${c.req.path}`,
@@ -69,6 +71,21 @@ app.route("/fetch-logs", fetchLogsAdmin);
 app.route("/user-subscriptions", userSubscriptionsAdmin);
 app.route("/contact-messages", contactMessagesAdmin);
 
+app.post("/collector/trigger", async (c) => {
+	try {
+		await handleScheduled(c.env);
+		return c.json({ success: true, data: { message: "Processing completed" } });
+	} catch (error) {
+		await logger.error(
+			`Collector trigger failed: ${error instanceof Error ? error.message : String(error)}`,
+		);
+		return c.json(
+			{ success: false, error: { code: "INTERNAL_ERROR", message: "Processing failed" } },
+			500,
+		);
+	}
+});
+
 // Admin dashboard info
 app.get("/", (c) => {
 	return c.json({
@@ -86,6 +103,7 @@ app.get("/", (c) => {
 				"/admin/fetch-logs",
 				"/admin/user-subscriptions",
 				"/admin/contact-messages",
+				"/admin/collector/trigger",
 			],
 			info: "Access protected by admin password authentication",
 		},

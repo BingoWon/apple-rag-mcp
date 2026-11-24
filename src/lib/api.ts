@@ -5,6 +5,7 @@ import type {
 	ApiResponse,
 	CorpusStats,
 	CurrentUsage,
+	User,
 } from "@/types";
 import type { AdminLogFilters, AdminLogKind, AdminLogsResponse } from "@/types/admin-logs";
 import { normalizeEmail } from "@/utils/email";
@@ -340,8 +341,8 @@ class ApiClient {
 	}
 
 	// User profile
-	async updateUserProfile(updates: { name?: string }) {
-		return this.put("/users/profile", updates);
+	async updateUserProfile(updates: { name?: string }): Promise<ApiResponse<User>> {
+		return this.put<User>("/users/profile", updates);
 	}
 
 	// Delete user account (hard delete)

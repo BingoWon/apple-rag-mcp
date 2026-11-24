@@ -4,12 +4,13 @@
 
 ## Database
 
-- `docker-compose.yml` runs PostgreSQL 16 with pgvector.
-- `postgresql.conf` contains the production tuning and observability settings.
-- `pg_hba.conf` requires SCRAM authentication for remote connections.
+- `docker-compose.yml` runs PostgreSQL 16 with pgvector (`mem_limit: 3g`).
+- `postgresql.conf` contains the production tuning and observability settings (updated 2026-11-24 to fit the 3 GB container budget: `shared_buffers = 1GB`, `effective_cache_size = 2GB`, `maintenance_work_mem = 256MB`, `autovacuum_work_mem = 128MB`).
+- `pg_hba.conf` requires TLS (`hostssl`) + SCRAM authentication for remote connections (updated 2026-11-24; apply on VPS per [2026-11-24 review](reviews/2026-11-24-global-review-and-remediation.md)).
 - `configure_firewall.sh` exposes PostgreSQL through UFW and removes conflicting Docker reset rules.
 - `postgresql_canonicalize_urls.sql` is the one-time Apple URL deduplication migration.
-- `postgresql_indexes.sql` and `postgresql_runtime_maintenance.sql` contain online maintenance changes.
+- `postgresql_indexes.sql`, `postgresql_keyword_symbols.sql`, `postgresql_catalog.sql`, `postgresql_web_retrieval.sql`, `postgresql_harden_roles.sql`, and `postgresql_runtime_maintenance.sql` contain schema, indexing, and maintenance scripts.
+- `publish_catalog.py` and `systemd/apple-rag-catalog.*` publish the read-only `browse` topic catalog hourly.
 
 ## Backups
 

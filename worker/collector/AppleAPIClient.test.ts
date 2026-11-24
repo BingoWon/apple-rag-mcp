@@ -32,3 +32,37 @@ test("permanent document removal requires the original page to confirm 404 or 41
 	const [result] = await new AppleAPIClient().fetchDocuments([url]);
 	assert.match(result.error!, /PERMANENT_ERROR:410/);
 });
+
+test("DocC paths map cleanly to swift.org without duplicating /documentation", async (t) => {
+	const requested: string[] = [];
+	t.mock.method(globalThis, "fetch", async (input) => {
+		requested.push(String(input));
+		return Response.json({
+			metadata: { title: "DocC" },
+			primaryContentSections: [{ kind: "content", content: [{ type: "paragraph" }] }],
+		});
+	});
+	const [result] = await new AppleAPIClient().fetchDocuments([
+		"https://developer.apple.com/documentation/docc/formatting-your-documentation-content",
+	]);
+	assert.ok(result.data);
+	assert.equal(
+		requested[0],
+		"https://www.swift.org/data/documentation/docc/formatting-your-documentation-content.json",
+	);
+});
+
+test("video titles decode HTML entities", async (t) => {
+	t.mock.method(
+		globalThis,
+		"fetch",
+		async () =>
+			new Response(
+				'<meta property="og:title" content="What&#x27;s new in SwiftUI &amp; UIKit"><section id="transcript-content"><span data-start="0.0">Hello world.</span></section>',
+			),
+	);
+	const [result] = await new AppleAPIClient().fetchVideos([
+		"https://developer.apple.com/videos/play/wwdc2026/101",
+	]);
+	assert.equal(result.data?.title, "What's new in SwiftUI & UIKit");
+});

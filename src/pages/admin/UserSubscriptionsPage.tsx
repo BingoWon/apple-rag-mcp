@@ -9,7 +9,7 @@ import { AdminUserLabel } from "@/components/admin/AdminUserLabel";
 import { formatAdminInterval } from "@/lib/admin-user";
 import { api } from "@/lib/api";
 import { formatCurrency } from "@/lib/utils";
-import type { AdminUserIdentity } from "../../../worker/shared/admin-user";
+import type { AdminUserIdentity } from "../../../shared/admin-user";
 
 interface AdminUserSubscription {
 	user: AdminUserIdentity;

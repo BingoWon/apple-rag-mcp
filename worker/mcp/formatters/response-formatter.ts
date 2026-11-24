@@ -1,11 +1,16 @@
-import type { BrowseOutput } from "../../../shared/contracts.js";
 /**
  * Response Formatting Utilities
  * Professional response formatting for MCP protocol
  */
 
 import type { CallToolResult } from "@modelcontextprotocol/server";
-import type { FetchOutput, SearchOutput, ToolError } from "../../../shared/contracts.js";
+import { formatBrowse } from "../../../shared/browse.js";
+import type {
+	BrowseOutput,
+	FetchOutput,
+	SearchOutput,
+	ToolError,
+} from "../../../shared/contracts.js";
 import { MESSAGES } from "../constants.js";
 
 /**
@@ -16,12 +21,12 @@ export function formatRAGResponse(
 	isAuthenticated: boolean,
 ): string {
 	if (!ragResult.results || ragResult.results.length === 0) {
-		return (
+		const base =
 			MESSAGES.NO_RESULTS +
 			(ragResult.degradations.length
 				? " Some retrieval paths were unavailable; retry before concluding the topic is absent."
-				: "")
-		);
+				: "");
+		return isAuthenticated ? base : `${base}\n\n${MESSAGES.ANONYMOUS_ACCESS}`;
 	}
 
 	const results = ragResult.results;
@@ -98,6 +103,14 @@ export function formatFetchResponse(
 	response += result.content;
 	if (!isAuthenticated) response += `\n\n${MESSAGES.ANONYMOUS_ACCESS}`;
 	return response;
+}
+
+export function formatBrowseResponse(
+	result: Extract<BrowseOutput, { ok: true }>,
+	isAuthenticated: boolean,
+): string {
+	const text = formatBrowse(result);
+	return isAuthenticated ? text : `${text}\n\n${MESSAGES.ANONYMOUS_ACCESS}`;
 }
 
 export function createSuccessResult(

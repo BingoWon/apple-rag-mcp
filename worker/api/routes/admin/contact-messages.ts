@@ -1,15 +1,11 @@
-import { withAdminUsers } from "./user-identity";
-/**
- * Admin Contact Messages Routes
- * Admin endpoints for managing contact messages with reply functionality
- */
-
 import { Hono } from "hono";
 import { z } from "zod";
 import { EmailService } from "../../services/email-service";
 import type { AppEnv } from "../../types/hono";
 import { logger } from "../../utils/logger";
+import { parsePagination } from "../../utils/pagination";
 import { notifyTelegram } from "../../utils/telegram-notifier";
+import { withAdminUsers } from "./user-identity";
 
 const app = new Hono<AppEnv>();
 
@@ -24,8 +20,7 @@ app.get("/", async (c) => {
 	try {
 		logger.info("Admin fetching contact messages");
 
-		const limit = Math.min(Number(c.req.query("limit")) || 50, 100);
-		const offset = Number(c.req.query("offset")) || 0;
+		const { limit, offset } = parsePagination(c.req.query("limit"), c.req.query("offset"));
 
 		// Get total count
 		const countResult = await c.env.DB.prepare(
@@ -157,11 +152,11 @@ app.post("/:id/reply", async (c) => {
 			);
 		}
 
-		// Update message with reply
+		// Update message with reply and clear user_read_at so edited replies appear unread
 		const now = new Date().toISOString();
 		await c.env.DB.prepare(
 			`UPDATE contact_messages
-       SET admin_reply = ?, replied_at = ?
+       SET admin_reply = ?, replied_at = ?, user_read_at = NULL
        WHERE id = ?`,
 		)
 			.bind(replyMessage, now, messageId)

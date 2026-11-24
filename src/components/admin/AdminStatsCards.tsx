@@ -12,7 +12,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/Card";
 import type { AdminDashboardStats, AdminMetricStats, AdminStatsQuery } from "@/types";
-import { TOOL_CHANNELS, type ToolChannel } from "../../../worker/shared/tool-channels";
+import { TOOL_CHANNELS, type ToolChannel } from "../../../shared/tool-channels";
 import { TrendChart } from "../charts/TrendChart";
 
 import { AdminBilling } from "./AdminBilling";
@@ -365,7 +365,11 @@ export function AdminStatsCards({
 							href: "/admin/user-subscriptions",
 						},
 					].map((item) => (
-						<Link key={item.key} to={item.href} className="p-5 transition-colors hover:bg-hover">
+						<Link
+							key={item.key}
+							to={item.href}
+							className="p-5 transition-colors hover:bg-secondary/60"
+						>
 							<span className="text-xs text-muted">{t(item.title)}</span>
 							<p className="mt-2 text-2xl font-semibold tabular-nums text-light">
 								{item.key === "subscriptions"

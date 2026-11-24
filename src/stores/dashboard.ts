@@ -1,11 +1,19 @@
 import { create } from "zustand";
-import { trackEvent } from "@/lib/analytics";
 import { api } from "@/lib/api";
 import type { CurrentUsage, MCPToken, Subscription } from "@/types";
+
+export interface UnreadReplyItem {
+	id: string;
+	message: string;
+	admin_reply: string;
+	replied_at: string;
+	created_at: string;
+}
 
 interface DashboardState {
 	// Data
 	mcpTokens: MCPToken[];
+	unreadReplies: UnreadReplyItem[];
 
 	currentUsage: CurrentUsage | null;
 	subscription: Subscription | null;
@@ -32,16 +40,22 @@ interface DashboardState {
 
 	fetchCurrentUsage: () => Promise<boolean>;
 	fetchSubscription: () => Promise<boolean>;
+	fetchUnreadReplies: () => Promise<UnreadReplyItem[]>;
+	markReplyRead: (id: string) => Promise<boolean>;
 }
 
 let generation = 0;
+let unreadInFlight: Promise<UnreadReplyItem[]> | null = null;
+
 export function resetDashboard() {
 	generation++;
+	unreadInFlight = null;
 	useDashboardStore.setState(useDashboardStore.getInitialState(), true);
 }
 export const useDashboardStore = create<DashboardState>((set, get) => ({
 	// Initial state
 	mcpTokens: [],
+	unreadReplies: [],
 
 	currentUsage: null,
 	subscription: null,
@@ -104,12 +118,6 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
 				errors: { ...state.errors, tokens: null },
 			}));
 
-			// Track MCP token creation
-			trackEvent("MCP_TOKEN_CREATE", {
-				token_name: newToken.name,
-				token_count: get().mcpTokens.length,
-			});
-
 			return newToken;
 		} catch (error) {
 			if (owner !== generation) return null;
@@ -118,7 +126,7 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
 				errors: { ...state.errors, tokens: errorMessage },
 			}));
 			console.error("Failed to create MCP token:", error);
-			return null;
+			throw error;
 		}
 	},
 
@@ -147,25 +155,14 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
 	deleteMCPToken: async (id): Promise<void> => {
 		const owner = generation;
 		try {
-			// Get token info before deletion for tracking
-			const tokenToDelete = get().mcpTokens.find((token) => token.id === id);
-
 			const result = await api.deleteMCPToken(id);
 			if (owner !== generation) return;
-			if (!result.success) throw Error(result.error?.message ?? "Token update failed");
+			if (!result.success) throw Error(result.error?.message ?? "Token deletion failed");
 
 			set((state) => ({
 				mcpTokens: state.mcpTokens.filter((token) => token.id !== id),
 				errors: { ...state.errors, tokens: null },
 			}));
-
-			// Track MCP token deletion
-			if (tokenToDelete) {
-				trackEvent("MCP_TOKEN_DELETE", {
-					token_name: tokenToDelete.name,
-					token_count: get().mcpTokens.length,
-				});
-			}
 		} catch (error) {
 			if (owner !== generation) return;
 			const errorMessage = error instanceof Error ? error.message : "Failed to delete MCP token";
@@ -240,5 +237,41 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
 			});
 			return false;
 		}
+	},
+
+	fetchUnreadReplies: async (): Promise<UnreadReplyItem[]> => {
+		if (unreadInFlight) return unreadInFlight;
+		const owner = generation;
+		unreadInFlight = (async () => {
+			try {
+				const response = await api.getUnreadReplies();
+				if (owner !== generation) return [];
+				const messages =
+					response.success && response.data
+						? (response.data as { unreadMessages?: UnreadReplyItem[] }).unreadMessages || []
+						: [];
+				set({ unreadReplies: messages });
+				return messages;
+			} catch (error) {
+				console.error("Failed to fetch unread replies:", error);
+				return get().unreadReplies;
+			} finally {
+				unreadInFlight = null;
+			}
+		})();
+		return unreadInFlight;
+	},
+
+	markReplyRead: async (id: string): Promise<boolean> => {
+		const owner = generation;
+		const response = await api.markMessageAsRead(id);
+		if (owner !== generation) return false;
+		if (response.success) {
+			set((state) => ({
+				unreadReplies: state.unreadReplies.filter((item) => item.id !== id),
+			}));
+			return true;
+		}
+		return false;
 	},
 }));

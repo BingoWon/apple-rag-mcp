@@ -1,7 +1,7 @@
 export default function PrivacyPolicyContent() {
 	return (
 		<div className="bg-gradient-to-br from-primary to-secondary border border-default rounded-2xl p-8 md:p-12">
-			<div className="prose prose-invert max-w-none text-muted leading-relaxed">
+			<div className="max-w-none text-muted leading-relaxed">
 				<section className="mb-8">
 					<h2 className="text-2xl font-bold text-light mb-4">1. Introduction</h2>
 					<p className="mb-0">
@@ -18,9 +18,9 @@ export default function PrivacyPolicyContent() {
 					<div className="mb-6">
 						<h3 className="text-lg font-semibold text-light mb-3">2.1 Account Information</h3>
 						<p className="mb-0">
-							When you create an account, we collect your email address, name, and authentication
-							credentials. We use OAuth providers (Google, GitHub) to securely authenticate your
-							identity.
+							When you create an account, we collect your email address, display name, and
+							authentication credentials — either a hashed password for email sign-up or profile
+							metadata from OAuth providers (Google, GitHub).
 						</p>
 					</div>
 
@@ -74,10 +74,18 @@ export default function PrivacyPolicyContent() {
 						<li>To protect our rights, property, or safety, or that of our users</li>
 						<li>In connection with a business transfer or acquisition</li>
 					</ul>
+					<p className="mb-4">
+						<strong>Third-Party Infrastructure &amp; AI Processors:</strong> To serve retrieval,
+						relevance ranking, live webpage reading, payments, and transactional emails, your
+						requests may be processed by our upstream service providers: Cloudflare (edge hosting
+						and database), SiliconFlow and DeepInfra (embeddings and fallback reranking), TypeSafe
+						and ZenMux (relevance ranking), Firecrawl (live third-party webpage extraction), Stripe
+						(billing and payments), and Resend (password reset and support emails).
+					</p>
 					<p className="mb-0">
-						<strong>Note:</strong> Our service queries Apple's public documentation. We do not share
-						your personal queries with Apple, but the documentation content comes from Apple's
-						public resources.
+						<strong>Apple Documentation:</strong> Our service indexes Apple's public developer
+						documentation and WWDC transcripts. When a page is not cached and must be read live, we
+						fetch the requested public Apple page without attaching your account identity.
 					</p>
 				</section>
 

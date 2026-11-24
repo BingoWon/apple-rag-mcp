@@ -10,7 +10,7 @@ import {
 	clientReport,
 } from "../../../../shared/client-usage.js";
 import { TOOL_KINDS } from "../../../../shared/tool-activity.js";
-import { TOOL_CHANNELS, type ToolChannel } from "../../../shared/tool-channels.js";
+import { TOOL_CHANNELS, type ToolChannel } from "../../../../shared/tool-channels.js";
 import { logWindowPredicate, logWindowValues } from "../../utils/activity.js";
 import { createOpenAPIApp } from "../../utils/openapi.js";
 

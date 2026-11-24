@@ -7,7 +7,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import { useAdminLogs } from "@/hooks/useAdminLogs";
 import { formatAdminDateTime, formatAdminResponseTime } from "@/lib/admin-utils";
 import type { AdminLog, AdminLogFilters, AdminLogKind } from "@/types/admin-logs";
-import { TOOL_OUTCOMES } from "../../../worker/shared/tool-outcomes";
+import { TOOL_OUTCOMES } from "../../../shared/tool-outcomes";
 import { AdminPagedList } from "./AdminPagedList";
 import { AdminUserLabel } from "./AdminUserLabel";
 import { LogDetails } from "./LogDetails";

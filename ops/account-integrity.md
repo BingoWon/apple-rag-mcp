@@ -79,7 +79,9 @@ as tool requests. The daily receipt check is described in [Admin billing](admin-
 
 ## Storage and rollout
 
-Apply D1 migrations through `0017_auth_and_checkout_recovery.sql` before deploying the Worker.
+Apply D1 migrations through `0019` (originally `0017_auth_and_checkout_recovery.sql`; `0018` adds online embedding attempt telemetry and `0019` covers subsequent schema updates) before deploying the Worker.
+
+> **2026-11-24 update**: Password reset tokens are now stored and looked up as SHA-256 hashes; email auth/reset/contact endpoints enforce IP rate limits; Google and GitHub OAuth enforce verified email flags; and the unused unauthenticated `POST /api/mcp-tokens/validate` endpoint has been removed. See [2026-11-24 review](reviews/2026-11-24-global-review-and-remediation.md).
 Migration 0016 adds web sessions, checkout and billing state, quota reservations and log
 pagination indexes. The existing recurring catalog used USD. Migration 0017 adds expiring OAuth attempts and the checkout retry time. Historic one-time
 passes without a recorded currency keep a null currency. Historical Stripe

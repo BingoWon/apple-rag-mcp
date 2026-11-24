@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import type { AdminDashboardStats } from "@/types";
 import { TOOL_KINDS, type ToolKind } from "../../../shared/tool-activity";
-import { TOOL_OUTCOMES } from "../../../worker/shared/tool-outcomes";
+import { TOOL_OUTCOMES } from "../../../shared/tool-outcomes";
 import { OUTCOME_COLORS, TrendChart } from "../charts/TrendChart";
 import { TOOL_COLORS } from "../charts/tool-series";
 import { Card } from "../ui/Card";

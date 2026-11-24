@@ -1,7 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readText } from "./read-text.js";
-import { canCacheUrl, isAppleUrl, isPublicAddress, publicUrl } from "./web-url.js";
+import {
+	assertPublicHost,
+	canCacheUrl,
+	isAppleUrl,
+	isPublicAddress,
+	publicUrl,
+} from "./web-url.js";
 
 test("URL identities preserve queries and case outside Apple documentation", () => {
 	assert.equal(
@@ -57,5 +63,27 @@ test("streamed response limits are enforced even without Content-Length", async 
 	await assert.rejects(
 		readText(new Response("Hello", { headers: { "content-length": "100" } }), 5),
 		/size limit/,
+	);
+});
+
+test("assertPublicHost tolerates AAAA failure for IPv4-only hosts while rejecting dual-stack private IPv6", async (t) => {
+	t.mock.method(globalThis, "fetch", async (input: string | URL | Request) => {
+		const url = String(input);
+		if (url.includes("type=AAAA")) return Response.json({ Status: 4 }); // NOTIMP
+		return Response.json({ Status: 0, Answer: [{ type: 1, data: "93.184.216.34" }] });
+	});
+	await assert.doesNotReject(() =>
+		assertPublicHost("https://docs.swift.org/guide", new AbortController().signal),
+	);
+
+	t.mock.method(globalThis, "fetch", async (input: string | URL | Request) => {
+		const url = String(input);
+		if (url.includes("type=AAAA"))
+			return Response.json({ Status: 0, Answer: [{ type: 28, data: "fd00::1" }] });
+		return Response.json({ Status: 0, Answer: [{ type: 1, data: "93.184.216.34" }] });
+	});
+	await assert.rejects(
+		() => assertPublicHost("https://docs.swift.org/guide", new AbortController().signal),
+		/not a public website/,
 	);
 });

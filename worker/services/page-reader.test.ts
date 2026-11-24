@@ -171,6 +171,42 @@ test("provider HTTP 200 with target 404 is a negative cache entry, never a succe
 	assert.equal(s.cache.get(external)?.status, 404);
 });
 
+test("query-string Apple JSON reads are never enqueued into the canonical collector queue", async (t) => {
+	const s = setup(t, (url) =>
+		url.includes(".json") ? Response.json(document) : new Response("HTML"),
+	);
+	const page = await s.reader.getPage(`${apple}?arbitrary=1`, signal());
+	assert.equal(page.provider, "apple_json");
+	assert.deepEqual(s.queued, []);
+});
+
+test("long technical pages containing an Access Denied section heading are not falsely blocked", async (t) => {
+	const longDoc = `# Authentication Errors\n\n${"Detailed API documentation explaining permission scopes and error recovery. ".repeat(40)}\n\n## Access Denied\n\nHandle HTTP 403 responses by prompting the user.`;
+	const s = setup(t, () => scrape(200, longDoc));
+	const page = await s.reader.getPage(external, signal());
+	assert.equal(page.provider, "firecrawl");
+	assert.match(page.content, /## Access Denied/);
+});
+
+test("live Firecrawl target errors mark spentProviderBudget while cached 404s do not", async (t) => {
+	const s = setup(t, () => scrape(404, "Not found"));
+	await assert.rejects(
+		s.reader.getPage(external, signal()),
+		(error: unknown) =>
+			error instanceof PageReadError &&
+			error.reason === "PAGE_NOT_FOUND" &&
+			error.spentProviderBudget === true,
+	);
+	await assert.rejects(
+		s.reader.getPage(external, signal()),
+		(error: unknown) =>
+			error instanceof PageReadError &&
+			error.reason === "PAGE_NOT_FOUND" &&
+			error.cacheHit === true &&
+			error.spentProviderBudget === false,
+	);
+});
+
 test("a genuine Apple 404 is not sent to a paid provider", async (t) => {
 	const s = setup(t, () => new Response("Not found", { status: 404 }));
 	await assert.rejects(s.reader.getPage(apple, signal()), /does not exist/);
