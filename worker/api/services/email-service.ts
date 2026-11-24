@@ -64,7 +64,7 @@ export class EmailService {
         </head>
         <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #2563eb; margin: 0;">Apple RAG</h1>
+            <h1 style="color: #60a5fa; margin: 0;">Apple RAG</h1>
           </div>
 
           <div style="background: #f8fafc; border-radius: 8px; padding: 30px; margin-bottom: 30px;">
@@ -72,7 +72,7 @@ export class EmailService {
             <p style="margin-bottom: 20px;">We received a request to reset your password. Click the button below to create a new password:</p>
 
             <div style="text-align: center; margin: 30px 0;">
-              <a href="${resetUrl}" style="background: #2563eb; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: 500;">Reset Password</a>
+              <a href="${resetUrl}" style="background: #60a5fa; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: 500;">Reset Password</a>
             </div>
 
             <p style="color: #64748b; font-size: 14px; margin-bottom: 0;">This link will expire in 1 hour for security reasons.</p>
@@ -143,7 +143,7 @@ export class EmailService {
         </head>
         <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #2563eb; margin: 0;">Apple RAG Support</h1>
+            <h1 style="color: #60a5fa; margin: 0;">Apple RAG Support</h1>
           </div>
 
           <div style="background: #f8fafc; border-radius: 8px; padding: 30px; margin-bottom: 30px;">
@@ -158,7 +158,7 @@ export class EmailService {
 
             <div style="margin-bottom: 24px;">
               <p style="color: #1e293b; font-size: 14px; margin-bottom: 8px; font-weight: 600;">Our Reply:</p>
-              <div style="background: white; border-left: 3px solid #2563eb; padding: 12px 16px; border-radius: 4px;">
+              <div style="background: white; border-left: 3px solid #60a5fa; padding: 12px 16px; border-radius: 4px;">
                 <p style="margin: 0; color: #1e293b; white-space: pre-wrap;">${safeReplyMessage}</p>
               </div>
             </div>

@@ -43,7 +43,7 @@
   /* Brand Colors - generates bg-brand, text-brand, from-brand, etc. */
   --color-brand: #60a5fa;
   --color-brand-secondary: #3b82f6;
-  --color-brand-tertiary: #2563eb;
+  --color-brand-tertiary: #3b82f6;
 
   /* TypeSafe logo hue, with lightness variants for its search section. */
   --color-typesafe-lightest: #F5B8E3;
@@ -141,7 +141,7 @@
 	--color-card-foreground: #0f172a;
 	--color-muted-foreground: #64748b;
 	--color-brand-foreground: #0a0a0a;
-	--color-action: #2563eb;
+	--color-action: #60a5fa;
 	--color-action-foreground: #ffffff;
 	--color-popover: #ffffff;
 	--color-popover-foreground: #0f172a;

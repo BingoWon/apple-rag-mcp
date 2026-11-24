@@ -8,7 +8,7 @@ import { TrendChart } from "../charts/TrendChart";
 const CATEGORIES = [
 	{ key: "jev", color: "#7c3aed" },
 	{ key: "microsoft_decision", color: "#c68121" },
-	{ key: "embedding", color: "#2563eb" },
+	{ key: "embedding", color: "#60a5fa" },
 	{ key: "reranking", color: "#0d9488" },
 ] as const;
 const CURRENCIES = ["USD", "CNY"] as const;

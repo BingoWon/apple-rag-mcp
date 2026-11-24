@@ -2,7 +2,7 @@
 export const AUTH_MARK =
 	'<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 7 5 5-5 5M13 17h6"/></svg>';
 const light =
-	"--ap-bg:#f7f8fa;--ap-panel:#fff;--ap-text:#182230;--ap-muted:#667085;--ap-line:#e6e9ee;--ap-soft:#f8fafc;--ap-accent:#2563eb;--ap-accent-text:#fff;--ap-tint:#eff6ff;--ap-green:#087443;--ap-green-bg:#ecfdf3;--ap-red:#b42318;--ap-red-bg:#fef3f2;--ap-shadow:0 12px 40px -20px #18223030;";
+	"--ap-bg:#f7f8fa;--ap-panel:#fff;--ap-text:#182230;--ap-muted:#667085;--ap-line:#e6e9ee;--ap-soft:#f8fafc;--ap-accent:#60a5fa;--ap-accent-text:#fff;--ap-tint:#eff6ff;--ap-green:#087443;--ap-green-bg:#ecfdf3;--ap-red:#b42318;--ap-red-bg:#fef3f2;--ap-shadow:0 12px 40px -20px #18223030;";
 const dark =
 	"--ap-bg:#101114;--ap-panel:#191b20;--ap-text:#f0f2f5;--ap-muted:#a0a6b2;--ap-line:#2c3038;--ap-soft:#202329;--ap-accent:#8ab4ff;--ap-accent-text:#102044;--ap-tint:#222f45;--ap-green:#75d6a8;--ap-green-bg:#18362b;--ap-red:#fda29b;--ap-red-bg:#402724;--ap-shadow:0 16px 48px -24px #0008;";
 export const AUTH_STYLES = `

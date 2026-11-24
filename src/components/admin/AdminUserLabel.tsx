@@ -14,7 +14,7 @@ export function AdminPlanBadge({ subscription }: { subscription: AdminSubscripti
 		<Badge
 			variant={paid ? "secondary" : "outline"}
 			title={t("admin.current_user_plan")}
-			className={`shrink-0 rounded px-1.5 py-0 text-[10px] leading-5 transition-none ${paid ? "bg-brand/10 text-brand-tertiary dark:text-brand" : ""}`}
+			className={`shrink-0 rounded px-1.5 py-0 text-[10px] leading-5 transition-none ${paid ? "bg-brand/10 text-brand" : ""}`}
 		>
 			{plan}
 			{paid && interval ? ` · ${interval}` : ""}

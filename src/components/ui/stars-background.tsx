@@ -99,7 +99,7 @@ export const StarsBackground: React.FC<StarBackgroundProps> = ({
 				if (resolvedTheme === "light") {
 					// Use brand colors for light mode - assign a color to each star
 					if (!star.color) {
-						const colors = ["#60a5fa", "#3b82f6", "#2563eb", "#22c55e", "#fbbf24"];
+						const colors = ["#60a5fa", "#3b82f6", "#93c5fd", "#22c55e", "#fbbf24"];
 						star.color = colors[Math.floor(Math.random() * colors.length)];
 					}
 					const color = star.color.replace("#", "");

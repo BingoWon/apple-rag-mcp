@@ -20,7 +20,7 @@ import { AdminModelCosts } from "./AdminModelCosts";
 import { ToolActivityCard } from "./ToolActivityCard";
 
 const METRICS = [
-	{ key: "users", title: "admin.users", href: "/admin/users", icon: IconUsers, color: "#2563eb" },
+	{ key: "users", title: "admin.users", href: "/admin/users", icon: IconUsers, color: "#60a5fa" },
 	{
 		key: "tokens",
 		title: "nav.mcp_tokens",
@@ -234,7 +234,7 @@ function AudienceCard({
 	const { t, i18n } = useTranslation();
 	const isNew = kind === "new_users";
 	const Icon = isNew ? IconUserPlus : IconActivity;
-	const color = isNew ? "#2563eb" : "#0d9488";
+	const color = isNew ? "#60a5fa" : "#0d9488";
 	return (
 		<Card className="p-4 md:col-span-2 xl:col-span-2">
 			<div className="flex items-center gap-2">

@@ -106,7 +106,7 @@ export default function AdminContactMessagesPage() {
 						setSelectedMessage(message);
 					}}
 					size="sm"
-					className="bg-blue-600 text-white hover:bg-blue-700 whitespace-nowrap"
+					className="bg-brand text-white hover:bg-brand/90 whitespace-nowrap"
 				>
 					<IconMessageCircle className="w-4 h-4 mr-1.5" />
 					{t("admin.reply")}
@@ -238,7 +238,7 @@ export default function AdminContactMessagesPage() {
 							<tr>
 								<td colSpan={4} className="px-6 py-12 text-center">
 									<div className="flex items-center justify-center">
-										<div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+										<div className="w-8 h-8 border-4 border-brand border-t-transparent rounded-full animate-spin" />
 									</div>
 								</td>
 							</tr>

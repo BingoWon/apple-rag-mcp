@@ -44,7 +44,7 @@ test("desktop sidebar defaults to pinned open and respects saved choices", async
 	}
 });
 
-test("navigation shares one color between labels and icons and uses a deeper active blue", async () => {
+test("navigation shares one color between labels and icons and uses the brand active blue", async () => {
 	const storage = Object.getOwnPropertyDescriptor(globalThis, "localStorage");
 	Object.defineProperty(globalThis, "localStorage", {
 		configurable: true,
@@ -65,7 +65,7 @@ test("navigation shares one color between labels and icons and uses a deeper act
 			);
 			assert.equal(html.split("text-inherit").length - 1, 2);
 			assert.ok(html.includes("font-medium"));
-			assert.ok(html.includes(active ? "bg-brand-tertiary text-white" : "text-light/90"));
+			assert.ok(html.includes(active ? "bg-brand text-white" : "text-light/90"));
 			assert.ok(!html.includes("text-muted"));
 		}
 	} finally {
