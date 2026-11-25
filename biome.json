@@ -36,7 +36,8 @@
 				"useIterableCallbackReturn": "warn"
 			},
 			"style": {
-				"noNonNullAssertion": "off"
+				"noNonNullAssertion": "off",
+				"useTemplate": "off"
 			},
 			"complexity": {
 				"noForEach": "off",

@@ -24,8 +24,8 @@ systemctl enable --now apple-rag-postgres-backup-check.timer
 
 ## Deployment
 
-Run `pnpm build` (lint, type checking, tests and build), then commit and push to
-`main`; Cloudflare Workers deploys that commit automatically. Do not run manual
+Run `pnpm verify && pnpm build` locally (concurrent lint, typecheck, core tests, and Vite build), then commit and push to
+`main`; Cloudflare Workers deploys that commit automatically using pure `pnpm build` (`vite build`, without re-running `verify` or CLI builds). Do not run manual
 `wrangler deploy` for routine changes. Apply D1 migrations with `pnpm db:migrate`
 after inspecting the live schema, Time Travel point and write budget. Table copies
 must name columns explicitly. Rebuilds and index work can exhaust D1's free daily
@@ -35,11 +35,11 @@ write allowance even on small databases. Verify real MCP tool results after rele
 ## Releases
 
 Update `package.json` and `server.json` to the same new version, then push to `main`.
-After the `check` job in `.github/workflows/ci.yml` succeeds, the `release` job creates its `vX.Y.Z` tag and GitHub release directly (independent of CLI publication).
+`.github/workflows/ci.yml` runs concurrent lint, typecheck, core tests, and build in `check` (path-gating PostgreSQL container tests to `pg-integration` and CLI builds/tests/portability to CLI/shared/skill changes), then creates the `vX.Y.Z` tag and GitHub release via `ops/scripts/create-release.mjs`.
 An existing tag is skipped. `chore(release): vX.Y.Z` is the release commit naming convention,
 not the trigger; changing the commit message without changing the version does not publish a release.
 
-Cross-platform `cli-portability` (macOS/Windows) and `publish-cli` (npm OIDC with `--provenance`) only run when CLI/shared/skill files change or when `packages/cli/package.json` introduces a new unpublished version. See [CLI operations](cli.md).
+Cross-platform `cli-portability` (macOS/Windows) and `publish-cli` (npm OIDC with `--provenance`) only run when CLI/shared/skill/lockfile changes occur or when `packages/cli/package.json` introduces a new unpublished version. See [CLI operations](cli.md).
 
 ## Interface Checks
 

@@ -16,9 +16,115 @@ permissions:
 jobs:
   check:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     outputs:
-      cli_changed: ${{ steps.cli.outputs.changed }}
-      publish_cli: ${{ steps.cli.outputs.publish }}
+      pg_changed: ${{ steps.scope.outputs.pg_changed }}
+      cli_changed: ${{ steps.scope.outputs.cli_changed }}
+      publish_cli: ${{ steps.scope.outputs.publish_cli }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+
+      - name: Detect changed scopes
+        id: scope
+        run: |
+          set -euo pipefail
+          PG_CHANGED="false"
+          CLI_CHANGED="false"
+          OPS_CHANGED="false"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            PG_CHANGED="true"
+            CLI_CHANGED="true"
+            OPS_CHANGED="true"
+          else
+            BASE="${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}"
+            if [ -n "$BASE" ] && [ "$BASE" != "0000000000000000000000000000000000000000" ] && git cat-file -e "$BASE^{commit}" 2>/dev/null; then
+              CHANGED_FILES=$(git diff --name-only "$BASE" HEAD)
+              if echo "$CHANGED_FILES" | grep -Eq '^(worker/collector/|worker/services/(database|catalog)|ops/server/|migrations/|patches/|pnpm-lock\.yaml)'; then
+                PG_CHANGED="true"
+              fi
+              if echo "$CHANGED_FILES" | grep -Eq '^(packages/cli/|worker/cli/|shared/|skills/|ops/cli/|pnpm-lock\.yaml)'; then
+                CLI_CHANGED="true"
+              fi
+              if echo "$CHANGED_FILES" | grep -Eq '^(ops/(collector|jev)/|patches/|pnpm-lock\.yaml)'; then
+                OPS_CHANGED="true"
+              fi
+            else
+              PG_CHANGED="true"
+              CLI_CHANGED="true"
+              OPS_CHANGED="true"
+            fi
+          fi
+          PUBLISH_CLI="false"
+          if [ "${{ github.event_name }}" = "push" ] && [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            OUT=$(mktemp)
+            GITHUB_OUTPUT="$OUT" node ops/cli/npm-release.mjs
+            if grep -qx "publish=true" "$OUT"; then
+              PUBLISH_CLI="true"
+              CLI_CHANGED="true"
+            fi
+            rm -f "$OUT"
+          fi
+          echo "pg_changed=$PG_CHANGED" >> "$GITHUB_OUTPUT"
+          echo "cli_changed=$CLI_CHANGED" >> "$GITHUB_OUTPUT"
+          echo "ops_changed=$OPS_CHANGED" >> "$GITHUB_OUTPUT"
+          echo "publish_cli=$PUBLISH_CLI" >> "$GITHUB_OUTPUT"
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Verify and build (concurrent)
+        run: >-
+          node ops/scripts/run-parallel.mjs
+          "lint::pnpm lint"
+          "tsc:web::npx tsc --noEmit -p tsconfig.json"
+          "tsc:worker::npx tsc --noEmit -p worker/tsconfig.json"
+          "test::pnpm test"
+          "build::pnpm build"
+
+      - name: Run ops utility tests
+        if: steps.scope.outputs.ops_changed == 'true'
+        run: pnpm test:ops
+
+      - name: Verify CLI package and tests
+        if: steps.scope.outputs.cli_changed == 'true'
+        run: >-
+          node ops/scripts/run-parallel.mjs
+          "tsc:cli::pnpm typecheck:cli"
+          "build:cli::pnpm build:cli"
+          "test:cli::pnpm test:cli"
+          && node --import tsx ops/cli/verify-package.mjs
+        env:
+          APPLE_RAG_RELEASE_DIR: ${{ runner.temp }}/apple-rag-cli-release
+
+      - name: Upload verified CLI artifact
+        if: steps.scope.outputs.publish_cli == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: apple-rag-cli
+          path: ${{ runner.temp }}/apple-rag-cli-release/*
+          if-no-files-found: error
+
+      - name: Create GitHub release for new version
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.scope.outputs.pg_changed != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node ops/scripts/create-release.mjs
+
+  pg-integration:
+    needs: [check]
+    if: needs.check.outputs.pg_changed == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
     services:
       postgres:
         image: postgres:16
@@ -39,93 +145,19 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-
       - uses: pnpm/action-setup@v6
-
       - uses: actions/setup-node@v7
         with:
           node-version-file: .node-version
           cache: pnpm
-
       - run: pnpm install --frozen-lockfile
-
-      - name: Verify and build
-        run: pnpm build
-
-      - name: Verify atomic catalog publication on PostgreSQL
-        run: python3 ops/server/test_publish_catalog.py
-
-      - name: Detect CLI changes and release need
-        id: cli
-        run: |
-          set -euo pipefail
-          CHANGED="false"
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            CHANGED="true"
-          else
-            BASE="${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}"
-            if [ -n "$BASE" ] && [ "$BASE" != "0000000000000000000000000000000000000000" ] && git cat-file -e "$BASE^{commit}" 2>/dev/null; then
-              if git diff --name-only "$BASE" HEAD -- packages/cli shared skills ops/cli | grep -q .; then
-                CHANGED="true"
-              fi
-            else
-              CHANGED="true"
-            fi
-          fi
-          PUBLISH="false"
-          if [ "${{ github.event_name }}" = "push" ] && [ "${{ github.ref }}" = "refs/heads/main" ]; then
-            OUT=$(mktemp)
-            GITHUB_OUTPUT="$OUT" node ops/cli/npm-release.mjs
-            if grep -qx "publish=true" "$OUT"; then
-              PUBLISH="true"
-              CHANGED="true"
-            fi
-            rm -f "$OUT"
-          fi
-          echo "changed=$CHANGED" >> "$GITHUB_OUTPUT"
-          echo "publish=$PUBLISH" >> "$GITHUB_OUTPUT"
-
-      - name: Verify distributable CLI in an isolated consumer
-        if: steps.cli.outputs.changed == 'true'
-        run: node --import tsx ops/cli/verify-package.mjs
-        env:
-          APPLE_RAG_RELEASE_DIR: ${{ runner.temp }}/apple-rag-cli-release
-
-      - name: Upload verified CLI artifact
-        if: steps.cli.outputs.publish == 'true'
-        uses: actions/upload-artifact@v7
-        with:
-          name: apple-rag-cli
-          path: ${{ runner.temp }}/apple-rag-cli-release/*
-          if-no-files-found: error
-
-  release:
-    needs: [check]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-
+      - name: Run PostgreSQL collector & catalog integration tests
+        run: pnpm test:pg && python3 ops/server/test_publish_catalog.py
       - name: Create GitHub release for new version
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          VERSION="v$(node -p "require('./package.json').version")"
-
-          if git rev-parse "$VERSION" >/dev/null 2>&1; then
-            echo "$VERSION already exists."
-            exit 0
-          fi
-
-          gh release create "$VERSION" \
-            --target "$GITHUB_SHA" \
-            --title "$VERSION" \
-            --generate-notes
+        run: node ops/scripts/create-release.mjs
 
   cli-portability:
     needs: [check]
@@ -147,8 +179,7 @@ jobs:
           node-version: ${{ matrix.node }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter apple-rag-cli build
-      - run: pnpm --filter apple-rag-cli test
+      - run: pnpm build:cli && pnpm --filter apple-rag-cli test
 
   publish-cli:
     needs: [check, cli-portability]
