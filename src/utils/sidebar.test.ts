@@ -73,3 +73,45 @@ test("navigation shares one color between labels and icons and uses the brand ac
 		else Reflect.deleteProperty(globalThis, "localStorage");
 	}
 });
+
+test("dashboard sidebar starts with Overview and excludes public top-nav pages", async () => {
+	const storage = Object.getOwnPropertyDescriptor(globalThis, "localStorage");
+	Object.defineProperty(globalThis, "localStorage", {
+		configurable: true,
+		value: { getItem: () => "true" },
+	});
+	try {
+		const { MemoryRouter } = await import("react-router-dom");
+		const { I18nextProvider } = await import("react-i18next");
+		const i18n = (await import("@/i18n")).default;
+		const { ThemeProvider } = await import("@/components/providers/ThemeProvider");
+		const { AppleSidebar } = await import("@/components/layout/AppleSidebar");
+		await i18n.changeLanguage("en");
+
+		const html = renderToStaticMarkup(
+			createElement(
+				I18nextProvider,
+				{ i18n },
+				createElement(
+					MemoryRouter,
+					{ initialEntries: ["/overview"] },
+					createElement(
+						ThemeProvider,
+						null,
+						createElement(AppleSidebar, null, createElement("div")),
+					),
+				),
+			),
+		);
+
+		const sidebarHrefMatches = [...html.matchAll(/<a[^>]*\shref="(\/[^"]*)"/g)].map((m) => m[1]);
+		// First non-logo navigation link in the sidebar must be /overview
+		const navHrefs = sidebarHrefMatches.filter((href) => href !== "/");
+		assert.equal(navHrefs[0], "/overview");
+		assert.ok(!navHrefs.includes("/connect"));
+		assert.ok(!navHrefs.includes("/updates"));
+	} finally {
+		if (storage) Object.defineProperty(globalThis, "localStorage", storage);
+		else Reflect.deleteProperty(globalThis, "localStorage");
+	}
+});
