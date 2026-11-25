@@ -148,6 +148,7 @@ class AppleAPIClient {
 	async fetchDocuments(
 		urls: string[],
 		signal?: AbortSignal,
+		etags?: ReadonlyMap<string, string | null>,
 	): Promise<BatchResult<AppleAPIResponse>[]> {
 		const results = new Array<BatchResult<AppleAPIResponse>>(urls.length);
 		let nextIndex = 0;
@@ -156,7 +157,8 @@ class AppleAPIClient {
 		async function worker(client: AppleAPIClient): Promise<void> {
 			while (nextIndex < urls.length) {
 				const index = nextIndex++;
-				results[index] = await client.fetchSingleDocument(urls[index]!, signal);
+				const url = urls[index]!;
+				results[index] = await client.fetchSingleDocument(url, signal, etags?.get(url));
 			}
 		}
 
@@ -167,14 +169,30 @@ class AppleAPIClient {
 	private async fetchSingleDocument(
 		documentUrl: string,
 		signal?: AbortSignal,
+		etag?: string | null,
 	): Promise<BatchResult<AppleAPIResponse>> {
-		const result = await BatchErrorHandler.safeExecute(documentUrl, async () => {
+		try {
 			const url = this.convertUrlToJsonApi(documentUrl);
+			const headers: Record<string, string> = { ...AppleAPIClient.DEFAULT_HEADERS };
+			if (etag) {
+				headers["If-None-Match"] = etag;
+			}
 			const response = await fetch(url, {
-				headers: AppleAPIClient.DEFAULT_HEADERS,
+				headers,
 				signal: signal ?? AbortSignal.timeout(AppleAPIClient.PAGE_FETCH_TIMEOUT_MS),
 				redirect: "manual",
 			});
+
+			if (response.status === 304) {
+				await response.body?.cancel();
+				return {
+					url: documentUrl,
+					data: null,
+					notModified: true,
+					etag: response.headers.get("etag") ?? etag ?? null,
+					lastModified: response.headers.get("last-modified") ?? null,
+				};
+			}
 
 			if (AppleAPIClient.PERMANENT_ERROR_CODES.includes(response.status)) {
 				await response.body?.cancel();
@@ -195,12 +213,23 @@ class AppleAPIClient {
 				throw new Error(`HTTP ${response.status}: ${response.statusText}`);
 			}
 
+			const responseEtag = response.headers.get("etag");
+			const lastModified = response.headers.get("last-modified");
 			const data = JSON.parse(await readText(response)) as AppleAPIResponse;
 			this.validateDocumentData(data);
-			return data;
-		});
-
-		return result;
+			return {
+				url: documentUrl,
+				data,
+				etag: responseEtag,
+				lastModified,
+			};
+		} catch (error) {
+			return {
+				url: documentUrl,
+				data: null,
+				error: error instanceof Error ? error.message : String(error),
+			};
+		}
 	}
 
 	private convertUrlToJsonApi(url: string): string {

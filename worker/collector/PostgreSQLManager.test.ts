@@ -175,6 +175,9 @@ test("collector database operations remain safe under concurrency and interrupte
 		raw_json jsonb,
 		title text,
 		content text NOT NULL DEFAULT '',
+		http_etag text,
+		source_modified_at timestamptz,
+		radar_checked_at timestamptz,
 		collect_count integer NOT NULL DEFAULT 0,
 		created_at timestamptz NOT NULL DEFAULT now(),
 		updated_at timestamptz

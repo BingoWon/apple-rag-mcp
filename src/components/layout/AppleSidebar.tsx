@@ -7,6 +7,7 @@ import {
 	IconLayoutSidebarLeftCollapse,
 	IconLayoutSidebarLeftExpand,
 	IconMessageCircle,
+	IconRadar2,
 	IconSettings,
 	IconWorld,
 } from "@tabler/icons-react";
@@ -31,6 +32,7 @@ import {
 
 const SIDEBAR_LINK_KEYS = [
 	{ labelKey: "nav.connect", href: "/connect", icon: <IconWorld className="h-5 w-5 shrink-0" /> },
+	{ labelKey: "nav.updates", href: "/updates", icon: <IconRadar2 className="h-5 w-5 shrink-0" /> },
 	{
 		labelKey: "nav.overview",
 		href: "/overview",

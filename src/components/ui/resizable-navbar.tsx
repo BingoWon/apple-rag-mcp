@@ -310,6 +310,7 @@ export function AppNavbar() {
 		{ name: t("nav.features"), link: "/#features" },
 		{ name: t("nav.pricing"), link: "/#pricing" },
 		{ name: t("nav.connect"), link: "/connect" },
+		{ name: t("nav.updates"), link: "/updates" },
 		{ name: t("nav.contact"), link: "#contact" },
 	];
 

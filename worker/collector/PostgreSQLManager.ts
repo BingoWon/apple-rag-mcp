@@ -1,9 +1,11 @@
 import type postgres from "postgres";
+import type { DocSweepSource } from "../../shared/doc-updates.js";
 import { readCorpusStats } from "../shared/corpus-stats.js";
 import {
 	isTransientPostgresConnectionError,
 	retryTransientPostgres,
 } from "../shared/postgres-retry.js";
+import type { DetectedDocChange } from "./change-detector.js";
 import type { DatabaseRecord } from "./types/index.js";
 import { logger } from "./utils/logger.js";
 
@@ -143,7 +145,7 @@ class PostgreSQLManager {
 			return this.sql<DatabaseRecord[]>`
             WITH targets AS (SELECT id FROM pages WHERE id=ANY(${ids}::uuid[]) AND url LIKE 'https://developer.apple.com/%' ORDER BY id FOR UPDATE)
             UPDATE pages SET collect_count=collect_count+1 WHERE id IN (SELECT id FROM targets)
-            RETURNING id,url,title,content,collect_count,created_at,updated_at`;
+            RETURNING id,url,title,content,raw_json,http_etag,collect_count,created_at,updated_at`;
 		// Atomic operation: SELECT records with minimum collect_count and UPDATE them
 		// This ensures different workers get different records by always taking the minimum collect_count
 		return this.sql<DatabaseRecord[]>`
@@ -165,8 +167,120 @@ class PostgreSQLManager {
       UPDATE pages
       SET collect_count = collect_count + 1
       WHERE id IN (SELECT id FROM min_count_records)
-      RETURNING id, url, title, content, collect_count, created_at, updated_at
+      RETURNING id, url, title, content, raw_json, http_etag, collect_count, created_at, updated_at
     `;
+	}
+
+	async getRadarBatchRecords(batchSize: number): Promise<DatabaseRecord[]> {
+		return this.withRetry(
+			"radar batch claim",
+			(sql) =>
+				sql<DatabaseRecord[]>`
+        WITH radar_targets AS (
+          SELECT id FROM pages
+          WHERE (
+            url ~ '^https://developer\\.apple\\.com/documentation/[^/]+$'
+            OR url LIKE 'https://developer.apple.com/documentation/%-release-notes%'
+            OR url LIKE 'https://developer.apple.com/documentation/updates%'
+          )
+            AND (radar_checked_at IS NULL OR radar_checked_at < now() - interval '45 minutes')
+          ORDER BY radar_checked_at ASC NULLS FIRST, url ASC
+          LIMIT ${batchSize}
+          FOR UPDATE SKIP LOCKED
+        )
+        UPDATE pages
+        SET collect_count = collect_count + 1,
+            radar_checked_at = now()
+        WHERE id IN (SELECT id FROM radar_targets)
+        RETURNING id, url, title, content, raw_json, http_etag, collect_count, created_at, updated_at
+      `,
+		);
+	}
+
+	async updateHttpMetadata(
+		records: Array<{
+			id: string;
+			collect_count: number;
+			etag: string | null;
+			sourceModifiedAt: Date | null;
+		}>,
+	): Promise<void> {
+		const valid = records.filter((r) => r.etag || r.sourceModifiedAt);
+		if (!valid.length) return;
+		await this.withTransaction("update HTTP cache metadata", async (sql: postgres.Sql) => {
+			for (const r of valid) {
+				await sql`
+          UPDATE pages
+          SET http_etag = COALESCE(${r.etag}, http_etag),
+              source_modified_at = COALESCE(${r.sourceModifiedAt}, source_modified_at)
+          WHERE id = ${r.id} AND collect_count = ${r.collect_count}
+        `;
+			}
+		});
+	}
+
+	async recordChangeEvents(events: readonly DetectedDocChange[]): Promise<number> {
+		if (!events.length) return 0;
+		return this.withTransaction("record doc change events", async (sql: postgres.Sql) => {
+			let inserted = 0;
+			for (const event of events) {
+				await sql`
+          INSERT INTO doc_change_events (
+            url, framework, title, symbol_kind, change_kind, significance,
+            sweep_source, summary, change_flags, diff_snippet, source_modified_at
+          ) VALUES (
+            ${event.url},
+            ${event.framework},
+            ${event.title},
+            ${event.symbol_kind},
+            ${event.change_kind},
+            ${event.significance},
+            ${event.sweep_source},
+            ${event.summary},
+            ${JSON.stringify(event.change_flags)}::jsonb,
+            ${event.diff_snippet},
+            ${event.source_modified_at}
+          )
+        `;
+				inserted++;
+			}
+			return inserted;
+		});
+	}
+
+	async recordCollectorRun(run: {
+		startedAt: Date;
+		durationMs: number;
+		sweepSource: Exclude<DocSweepSource, "backfill">;
+		claimed: number;
+		notModified: number;
+		updated: number;
+		unchanged: number;
+		added: number;
+		deleted: number;
+		failed: number;
+		eventsRecorded: number;
+	}): Promise<void> {
+		await this.withRetry("record collector run log", async (sql) => {
+			await sql`
+        INSERT INTO collector_run_logs (
+          started_at, duration_ms, sweep_source, claimed, not_modified,
+          updated, unchanged, added, deleted, failed, events_recorded
+        ) VALUES (
+          ${run.startedAt},
+          ${Math.max(0, Math.round(run.durationMs))},
+          ${run.sweepSource},
+          ${run.claimed},
+          ${run.notModified},
+          ${run.updated},
+          ${run.unchanged},
+          ${run.added},
+          ${run.deleted},
+          ${run.failed},
+          ${run.eventsRecorded}
+        )
+      `;
+		});
 	}
 
 	getStats() {
@@ -202,7 +316,13 @@ class PostgreSQLManager {
 	}
 
 	async batchUpdateFullRecords(
-		records: Array<DatabaseRecord & { raw_json: string | null }>,
+		records: Array<
+			DatabaseRecord & {
+				raw_json: string | null;
+				http_etag?: string | null;
+				source_modified_at?: Date | null;
+			}
+		>,
 		chunks: Array<{
 			url: string;
 			title: string | null;
@@ -224,7 +344,7 @@ class PostgreSQLManager {
 			}
 			for (const record of records) {
 				if (urls.has(record.url))
-					await sql`UPDATE pages SET raw_json=${record.raw_json}::text::jsonb,title=${record.title},content=${record.content},updated_at=${record.updated_at} WHERE id=${record.id}`;
+					await sql`UPDATE pages SET raw_json=${record.raw_json}::text::jsonb,title=${record.title},content=${record.content},http_etag=COALESCE(${record.http_etag ?? null}, http_etag),source_modified_at=COALESCE(${record.source_modified_at ?? null}, source_modified_at),updated_at=${record.updated_at} WHERE id=${record.id}`;
 			}
 			return [...urls];
 		});

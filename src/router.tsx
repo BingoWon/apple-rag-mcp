@@ -4,6 +4,7 @@ import { Route, Routes } from "react-router-dom";
 import { lazyWithRecovery } from "@/lib/deployment-recovery";
 
 const ConnectPage = lazyWithRecovery(() => import("@/pages/ConnectPage"));
+const UpdatesPage = lazyWithRecovery(() => import("@/pages/UpdatesPage"));
 const CLIAuthorizePage = lazyWithRecovery(() => import("@/pages/cli/AuthorizePage"));
 const DashboardLayout = lazyWithRecovery(() => import("@/components/layout/DashboardLayout"));
 const HomePage = lazyWithRecovery(() => import("@/pages/HomePage"));
@@ -63,6 +64,7 @@ export function AppRouter() {
 				{/* Home */}
 				<Route path="/" element={<HomePage />} />
 				<Route path="/connect" element={<ConnectPage />} />
+				<Route path="/updates" element={<UpdatesPage />} />
 
 				{/* Auth */}
 				<Route element={<AuthLayout />}>

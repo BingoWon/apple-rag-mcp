@@ -28,6 +28,17 @@ export const SITE_PAGES: Record<string, SitePage> = {
 				"获取 MCP / CLI 接入提示词，根据智能体的运行环境选择接入方式，了解账号授权与共享额度。",
 		},
 	},
+	"/updates": {
+		title: "Apple Developer Docs Pulse & Changelog — Apple RAG",
+		description:
+			"Live Apple Developer Documentation change radar, structured API diffs, deprecation alerts, and daily AI trend digests across SwiftUI, UIKit, Xcode, and WWDC.",
+		indexable: true,
+		zh: {
+			title: "Apple 官方文档动态与更新分析 — Apple RAG",
+			description:
+				"实时追踪 Apple 开发者文档与 WWDC 的新增 API、废弃预警、接口变更 Diff 与每日趋势研报，直观验证 Apple RAG 语料同步新鲜度。",
+		},
+	},
 	"/privacy-policy": {
 		title: "Privacy Policy — Apple RAG",
 		description:

@@ -82,19 +82,22 @@ async function processAppleContent(
 			}
 		}
 
-		logger.info(`Starting one batch of ${config.batchSize} URLs`);
+		logger.info("Starting hot radar pass (up to 40 framework & release-note URLs)");
+		const radarResult = await collector.executeRadar(40);
+
+		logger.info(`Starting deep sweep batch of ${config.batchSize} URLs`);
 		const result = await collector.execute();
 		const durationSeconds = Math.round((Date.now() - startTime) / 1000);
 
 		logger.info(
-			`Collector completed in ${durationSeconds}s: ${result.totalChunks} chunks generated`,
+			`Collector completed in ${durationSeconds}s: radar=${radarResult.claimed}(304:${radarResult.notModified},upd:${radarResult.updated}), sweep=${result.claimed}(304:${result.notModified},upd:${result.updated}), chunks=${radarResult.totalChunks + result.totalChunks}`,
 		);
 
 		if (shouldDiscoverVideos) {
 			const stats = await dbManager.getStats();
 			const statsMessage =
 				`Collector Completed\n` +
-				`${durationSeconds}s | ${result.claimed} claimed | ${result.updated} updated | ${result.unchanged} unchanged | ${result.failed} failed | ${result.deleted} removed | ${result.stale} superseded\n` +
+				`${durationSeconds}s | radar ${radarResult.claimed} (304:${radarResult.notModified}, upd:${radarResult.updated}, events:${radarResult.eventsRecorded}) | sweep ${result.claimed} (304:${result.notModified}, upd:${result.updated}, events:${result.eventsRecorded})\n` +
 				`Corpus: ${stats.docs_total} document URLs, ${stats.videos_total} video URLs\n` +
 				`Readable pages: ${stats.readable_pages} | Indexed: ${stats.indexed_pages} | Chunks: ${stats.chunks_total}`;
 

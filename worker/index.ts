@@ -15,6 +15,7 @@ import { HEALTH_STATUS, SERVER_MANIFEST } from "./mcp/manifest.js";
 import { MCPProtocolHandler } from "./mcp/protocol-handler.js";
 import { AuthMiddleware } from "./mcp-auth/auth-middleware.js";
 import type { WaitUntilContext } from "./services/d1-utils.js";
+import { runScheduledDigests } from "./services/doc-digest.js";
 import { createServices } from "./services/index.js";
 import { setGlobalAlertUrl } from "./shared/logger.js";
 import type { Env } from "./shared/types.js";
@@ -261,6 +262,7 @@ export default {
 				alerts: env.TELEGRAM_ALERT_BOT_URL,
 			});
 			ctx.waitUntil(reconcileCheckouts(env, event.scheduledTime));
+			ctx.waitUntil(runScheduledDigests(env, event.scheduledTime));
 			return reconcileBilling(env, event.scheduledTime);
 		}
 		ctx.waitUntil(

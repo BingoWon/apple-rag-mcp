@@ -3,6 +3,11 @@
  * Password-protected administrative access and statistics.
  */
 import { handleScheduled } from "../../../collector/handler.js";
+import {
+	formatIsoWeekKey,
+	formatUtcDayKey,
+	generateDocDigest,
+} from "../../../services/doc-digest.js";
 import { logger } from "../../utils/logger.js";
 import { createOpenAPIApp } from "../../utils/openapi";
 import { timingSafeEqual } from "../../utils/security.js";
@@ -81,6 +86,41 @@ app.post("/collector/trigger", async (c) => {
 		);
 		return c.json(
 			{ success: false, error: { code: "INTERNAL_ERROR", message: "Processing failed" } },
+			500,
+		);
+	}
+});
+
+app.post("/updates/generate-digest", async (c) => {
+	try {
+		const body = (await c.req.json().catch(() => ({}))) as {
+			period_type?: "daily" | "weekly";
+			days?: number;
+			period_key?: string;
+			force?: boolean;
+		};
+		const periodType = body.period_type === "weekly" ? "weekly" : "daily";
+		const windowEnd = new Date();
+		const defaultDays = periodType === "weekly" ? 7 : 1;
+		const days = Math.min(30, Math.max(1, body.days ?? defaultDays));
+		const windowStart = new Date(windowEnd.getTime() - days * 86_400_000);
+		const periodKey =
+			body.period_key?.trim() ||
+			(periodType === "weekly" ? formatIsoWeekKey(windowEnd) : formatUtcDayKey(windowEnd));
+		const digest = await generateDocDigest(c.env, {
+			periodType,
+			periodKey,
+			windowStart,
+			windowEnd,
+			force: body.force ?? true,
+		});
+		return c.json({ success: true, data: digest });
+	} catch (error) {
+		await logger.error(
+			`Admin digest generation failed: ${error instanceof Error ? error.message : String(error)}`,
+		);
+		return c.json(
+			{ success: false, error: { code: "INTERNAL_ERROR", message: "Digest generation failed" } },
 			500,
 		);
 	}

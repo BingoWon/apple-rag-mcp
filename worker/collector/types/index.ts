@@ -17,6 +17,8 @@ interface DatabaseRecord {
 	readonly url: string;
 	readonly title: string | null;
 	readonly content: string;
+	readonly raw_json?: unknown;
+	readonly http_etag?: string | null;
 	readonly collect_count: number;
 	readonly created_at: Date;
 	readonly updated_at: Date | null;
@@ -40,6 +42,9 @@ interface BatchResult<T> {
 	readonly url: string;
 	readonly data: T | null;
 	readonly error?: string;
+	readonly notModified?: boolean;
+	readonly etag?: string | null;
+	readonly lastModified?: string | null;
 }
 
 // Apple API content section interface

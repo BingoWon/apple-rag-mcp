@@ -19,7 +19,10 @@ mode = "smart"
 directory = "./dist"
 binding = "ASSETS"
 not_found_handling = "none"
-run_worker_first = ["/", "/connect", "/connect/", "/api/*", "/mcp*", "/oauth/cli/*", "/.well-known/*"]
+run_worker_first = ["/", "/connect", "/connect/", "/updates", "/updates/", "/api/*", "/mcp*", "/oauth/cli/*", "/.well-known/*"]
+
+[ai]
+binding = "AI"
 
 [[d1_databases]]
 binding = "DB"

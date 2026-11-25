@@ -9,6 +9,11 @@ import type {
 } from "@/types";
 import type { AdminLogFilters, AdminLogKind, AdminLogsResponse } from "@/types/admin-logs";
 import { normalizeEmail } from "@/utils/email";
+import type {
+	UpdatesDigestsResponse,
+	UpdatesFeedResponse,
+	UpdatesSummaryResponse,
+} from "../../shared/doc-updates";
 import type { ToolActivity, UsagePeriod } from "../../shared/tool-activity";
 import { ADMIN_PASSWORD_HEADER, ADMIN_SESSION_KEY } from "./constants";
 import { importWithRecovery, observeServerVersion } from "./deployment-recovery";
@@ -233,6 +238,32 @@ class ApiClient {
 
 	async getCorpusStats(signal?: AbortSignal) {
 		return this.get<CorpusStats>("/stats/corpus", { signal });
+	}
+
+	async getUpdatesSummary(signal?: AbortSignal) {
+		return this.get<UpdatesSummaryResponse>("/updates/summary", { signal });
+	}
+
+	async getUpdatesFeed(
+		params: {
+			framework?: string;
+			kind?: string;
+			significance?: string;
+			days?: number;
+			q?: string;
+			limit?: number;
+			offset?: number;
+		},
+		signal?: AbortSignal,
+	) {
+		return this.get<UpdatesFeedResponse>("/updates/feed", { params, signal });
+	}
+
+	async getUpdatesDigests(period: "daily" | "weekly", limit = 14, signal?: AbortSignal) {
+		return this.get<UpdatesDigestsResponse>("/updates/digests", {
+			params: { period, limit },
+			signal,
+		});
 	}
 
 	async getUsageLogs(

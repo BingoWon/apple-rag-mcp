@@ -1,11 +1,19 @@
-import { IconCircleCheck, IconDatabase, IconFileText, IconVideo } from "@tabler/icons-react";
+import {
+	IconArrowRight,
+	IconCircleCheck,
+	IconDatabase,
+	IconFileText,
+	IconVideo,
+} from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import type { CorpusStats } from "@/types";
+import type { UpdatesSummaryResponse } from "../../../shared/doc-updates";
 
 const metrics = [
 	{
@@ -41,6 +49,7 @@ const metrics = [
 export default function StatsCards() {
 	const { t, i18n } = useTranslation();
 	const [data, setData] = useState<CorpusStats | null>();
+	const [pulse, setPulse] = useState<UpdatesSummaryResponse | null>(null);
 	useEffect(() => {
 		if (data !== undefined) return;
 		const controller = new AbortController();
@@ -64,9 +73,31 @@ export default function StatsCards() {
 			.catch(() => {
 				if (!controller.signal.aborted) setData(null);
 			});
+		api
+			.getUpdatesSummary(controller.signal)
+			.then(({ success, data }) => {
+				if (!controller.signal.aborted && success && data) setPulse(data);
+			})
+			.catch(() => {});
 		return () => controller.abort();
 	}, [data]);
-	const locale = i18n.resolvedLanguage;
+	const locale = i18n.resolvedLanguage ?? "en";
+	const isZh = locale.startsWith("zh");
+	const activeDigest = pulse?.latest_daily ?? pulse?.latest_weekly ?? null;
+	const digestHeadline = activeDigest
+		? isZh
+			? activeDigest.content_zh.headline
+			: activeDigest.content_en.headline
+		: null;
+	const lastRunLabel = (() => {
+		const iso = pulse?.heartbeat.last_run_at;
+		if (!iso) return null;
+		const diffMin = Math.max(1, Math.round((Date.now() - Date.parse(iso)) / 60_000));
+		const rtf = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
+		return diffMin < 60
+			? rtf.format(-diffMin, "minute")
+			: rtf.format(-Math.round(diffMin / 60), "hour");
+	})();
 	return (
 		<Card className="mb-6 @container">
 			<CardContent className="p-6">
@@ -155,6 +186,53 @@ export default function StatsCards() {
 					<p role="status" className="text-center text-sm text-muted">
 						{t("admin.stats_loading")}
 					</p>
+				)}
+
+				{data && (
+					<div className="mt-5 rounded-xl border border-default bg-secondary p-3.5">
+						<div className="flex flex-wrap items-center justify-between gap-2">
+							<div className="flex items-center gap-2 text-xs text-muted-foreground">
+								<span className="h-2 w-2 shrink-0 rounded-full bg-success" aria-hidden="true" />
+								<span>
+									{pulse && lastRunLabel
+										? t("dashboard.stats_pulse_meta", {
+												time: lastRunLabel,
+												scanned: new Intl.NumberFormat(locale).format(pulse.heartbeat.scanned_24h),
+												changed: new Intl.NumberFormat(locale).format(pulse.heartbeat.changed_24h),
+											})
+										: t("dashboard.stats_pulse_default")}
+								</span>
+							</div>
+							<Link
+								to="/updates"
+								className="inline-flex items-center gap-1 text-xs font-semibold text-action hover:underline"
+							>
+								<span>{t("dashboard.stats_pulse_link")}</span>
+								<IconArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+							</Link>
+						</div>
+
+						{digestHeadline && (
+							<p className="mt-2 line-clamp-1 text-xs font-medium text-light sm:text-sm">
+								{digestHeadline}
+							</p>
+						)}
+
+						{pulse && pulse.top_frameworks_7d.length > 0 && (
+							<div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+								{pulse.top_frameworks_7d.slice(0, 3).map((fw) => (
+									<Link
+										key={fw.framework}
+										to={`/updates?framework=${encodeURIComponent(fw.framework)}`}
+										className="inline-flex items-center gap-1 rounded-md border border-default bg-card px-2 py-0.5 text-[11px] font-medium text-muted-foreground hover:border-brand/50 hover:text-light"
+									>
+										<span>{fw.framework}</span>
+										<span className="font-mono text-brand">{fw.count}</span>
+									</Link>
+								))}
+							</div>
+						)}
+					</div>
 				)}
 			</CardContent>
 		</Card>

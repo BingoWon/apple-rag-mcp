@@ -11,6 +11,7 @@ export function Footer() {
 			{ name: t("nav.features"), href: "/#features" },
 			{ name: t("nav.mcp_guide"), href: "/connect#mcp" },
 			{ name: t("nav.cli_guide"), href: "/connect#cli" },
+			{ name: t("nav.updates"), href: "/updates" },
 			{ name: t("nav.pricing"), href: "/#pricing" },
 			{ name: t("nav.contact"), href: "#", action: "contact" },
 		],

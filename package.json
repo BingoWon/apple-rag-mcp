@@ -1,6 +1,6 @@
 {
 	"name": "apple-rag-mcp",
-	"version": "5.15.19",
+	"version": "5.16.0",
 	"mcpName": "com.apple-rag/mcp-server",
 	"private": true,
 	"license": "MIT",

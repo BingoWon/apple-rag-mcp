@@ -2,6 +2,7 @@ export interface Env {
 	// Cloudflare Bindings
 	DB: D1Database;
 	ASSETS: Fetcher;
+	AI?: Ai;
 
 	// API: Authentication secrets
 	JWT_SECRET: string;

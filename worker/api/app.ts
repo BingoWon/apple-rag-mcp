@@ -16,6 +16,7 @@ import mcpTokenRoutes from "./routes/mcp-tokens.js";
 import { oauthRoutes } from "./routes/oauth.js";
 import statsRoutes from "./routes/stats.js";
 import stripeRoutes from "./routes/stripe.js";
+import updatesRoutes from "./routes/updates.js";
 import usageLogsRoutes from "./routes/usage-logs.js";
 import userRoutes from "./routes/users.js";
 import { createOpenAPIApp } from "./utils/openapi.js";
@@ -79,6 +80,7 @@ apiApp.route("/usage-logs", usageLogsRoutes);
 apiApp.route("/admin", adminRoutes);
 apiApp.route("/stripe", stripeRoutes);
 apiApp.route("/stats", statsRoutes);
+apiApp.route("/updates", updatesRoutes);
 
 apiApp.get("/", (c) => c.json({ name: "Apple RAG API", version: packageJson.version }));
 

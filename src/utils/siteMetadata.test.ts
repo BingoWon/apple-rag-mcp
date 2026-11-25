@@ -18,7 +18,7 @@ test("every frontend route has intentional metadata instead of a homepage fallba
 	assert.equal(getSiteMetadata("/admin/users").title, SITE_PAGES["/admin"].title);
 });
 test("only public content is indexed and listed in the sitemap", () => {
-	const publicPaths = ["/", "/connect", "/privacy-policy", "/terms-of-service"];
+	const publicPaths = ["/", "/connect", "/updates", "/privacy-policy", "/terms-of-service"];
 	const sitemap = siteSitemap();
 	for (const [path, page] of Object.entries(SITE_PAGES)) {
 		const meta = getSiteMetadata(path);

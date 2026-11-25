@@ -9,7 +9,7 @@
 - `pg_hba.conf` requires TLS (`hostssl`) + SCRAM authentication for remote connections (updated 2026-11-24; apply on VPS per [2026-11-24 review](reviews/2026-11-24-global-review-and-remediation.md)).
 - `configure_firewall.sh` exposes PostgreSQL through UFW and removes conflicting Docker reset rules.
 - `postgresql_canonicalize_urls.sql` is the one-time Apple URL deduplication migration.
-- `postgresql_indexes.sql`, `postgresql_keyword_symbols.sql`, `postgresql_catalog.sql`, `postgresql_web_retrieval.sql`, `postgresql_harden_roles.sql`, and `postgresql_runtime_maintenance.sql` contain schema, indexing, and maintenance scripts.
+- `postgresql_indexes.sql`, `postgresql_keyword_symbols.sql`, `postgresql_catalog.sql`, `postgresql_web_retrieval.sql`, `postgresql_doc_updates.sql`, `postgresql_harden_roles.sql`, and `postgresql_runtime_maintenance.sql` contain schema, indexing, and maintenance scripts.
 - `publish_catalog.py` and `systemd/apple-rag-catalog.*` publish the read-only `browse` topic catalog hourly.
 
 ## Backups
