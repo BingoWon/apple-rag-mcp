@@ -13,8 +13,13 @@ import {
 } from "./doc-digest.js";
 
 test("estimateNeurons matches Cloudflare Workers AI pricing table and fits within 10k daily free tier", () => {
-	const deepseek = WORKERS_AI_DIGEST_MODELS[0]!;
+	const gptOss = WORKERS_AI_DIGEST_MODELS[0]!;
+	const deepseek = WORKERS_AI_DIGEST_MODELS[1]!;
 	const gemma = WORKERS_AI_DIGEST_MODELS[2]!;
+
+	// 15K input + 3.5K output on gpt-oss-120b => ~716 neurons (<8% of 10k daily free quota)
+	const gptOssNeurons = estimateNeurons(gptOss, 15_000, 3_500);
+	assert.ok(gptOssNeurons > 650 && gptOssNeurons < 800, `got ${gptOssNeurons}`);
 
 	// 15K input + 3.5K output on deepseek-v4.1-flash-1017 => ~791 neurons (<8% of 10k daily free quota)
 	const deepseekNeurons = estimateNeurons(deepseek, 15_000, 3_500);

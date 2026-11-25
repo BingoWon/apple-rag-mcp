@@ -249,7 +249,7 @@ class PostgreSQLManager {
             ${event.significance},
             ${event.sweep_source},
             ${event.summary},
-            ${JSON.stringify(event.change_flags)}::jsonb,
+            ${JSON.stringify(event.change_flags)}::text::jsonb,
             ${event.diff_snippet},
             ${event.source_modified_at}
           )

@@ -23,15 +23,15 @@ interface WorkersAIModelSpec {
 
 export const WORKERS_AI_DIGEST_MODELS: readonly WorkersAIModelSpec[] = [
 	{
-		id: "@cf/deepseek-ai/deepseek-v4.1-flash-1017",
-		inputNeuronsPerM: 27_273,
-		outputNeuronsPerM: 109_091,
-		reasoningEffort: "low",
-	},
-	{
 		id: "@cf/openai/gpt-oss-120b",
 		inputNeuronsPerM: 31_818,
 		outputNeuronsPerM: 68_182,
+		reasoningEffort: "low",
+	},
+	{
+		id: "@cf/deepseek-ai/deepseek-v4.1-flash-1017",
+		inputNeuronsPerM: 27_273,
+		outputNeuronsPerM: 109_091,
 		reasoningEffort: "low",
 	},
 	{
@@ -643,9 +643,9 @@ export async function generateDocDigest(
 				${neuronsEstimated},
 				${inputTokens},
 				${outputTokens},
-				${JSON.stringify(stats)}::jsonb,
-				${JSON.stringify(contentEn)}::jsonb,
-				${JSON.stringify(contentZh)}::jsonb,
+				${JSON.stringify(stats)}::text::jsonb,
+				${JSON.stringify(contentEn)}::text::jsonb,
+				${JSON.stringify(contentZh)}::text::jsonb,
 				now()
 			)
 			ON CONFLICT (period_type, period_key) DO UPDATE SET
