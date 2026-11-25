@@ -104,11 +104,11 @@ export default function StatsCards() {
 				{data && (
 					<div className="flex justify-center mb-5">
 						<div className="flex max-w-full items-center gap-2 rounded-full bg-brand px-1.5 py-1">
-							<div className="w-fit rounded-full bg-white px-2 py-0.5 text-xs font-semibold text-brand sm:text-sm text-center flex items-center gap-1">
+							<div className="w-fit shrink-0 rounded-full bg-white px-2 py-0.5 text-xs font-semibold text-brand sm:text-sm text-center flex items-center gap-1">
 								<IconCircleCheck aria-hidden="true" className="w-4 h-4" />
 								<span className="hidden sm:inline">{t("common.status")}</span>
 							</div>
-							<p className="min-w-0 pr-2 text-xs font-semibold text-white @[450px]:text-base">
+							<p className="min-w-0 pr-2 text-xs font-semibold text-white @[450px]:text-sm @[450px]:whitespace-nowrap">
 								{t("dashboard.stats_freshness")}
 							</p>
 						</div>

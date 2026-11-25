@@ -262,7 +262,7 @@
 		"jev_integration": "It scores Apple sources for relevance to your question, putting the best matches first.",
 		"welcome_oauth": "Welcome {{name}}! Successfully authenticated via OAuth.",
 		"auth_failed": "Authentication failed. Please try again.",
-		"stats_freshness": "We collect and index updates to Apple’s developer documentation.",
+		"stats_freshness": "Data automatically updated daily to ensure freshness!",
 		"stats_heading": "Apple sources indexed for your agents",
 		"stats_date": "Data as of {{date}}",
 		"stats_doc_pages": "Apple Doc Pages",
