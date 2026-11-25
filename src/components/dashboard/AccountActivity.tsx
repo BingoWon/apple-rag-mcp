@@ -145,9 +145,7 @@ export function AccountActivity() {
 								{data ? number(data.total) : "—"}
 							</p>
 						</div>
-						<div className={style.spark}>
-							{data && <CallsSparkline data={data} colors={colors} />}
-						</div>
+						<div className={style.spark}>{data && <CallsSparkline data={data} />}</div>
 					</div>
 					<WeeklyQuota />
 				</div>

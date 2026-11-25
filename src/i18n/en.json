@@ -269,7 +269,7 @@
 		"stats_wwdc_videos": "WWDC Videos",
 		"stats_chunks": "Chunks",
 		"stats_coverage_detail": "{{indexed}} of {{readable}} readable pages indexed. The catalog also lists {{navigation}} navigation-only pages.",
-		"stats_embedded": "Readable pages indexed",
+		"stats_embedded": "Indexed",
 		"stats_pulse_meta": "Last checked {{time}} · {{scanned}} pages verified (24h) · {{changed}} changes",
 		"stats_pulse_default": "Continuously tracking live Apple Developer docs and WWDC updates",
 		"stats_pulse_link": "Explore Docs Pulse"

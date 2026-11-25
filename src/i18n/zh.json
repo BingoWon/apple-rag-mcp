@@ -258,7 +258,7 @@
 		"stats_wwdc_videos": "WWDC 视频",
 		"stats_chunks": "向量分块",
 		"stats_coverage_detail": "{{readable}} 个可读页面中，{{indexed}} 个已建索引；目录另含 {{navigation}} 个导航页。",
-		"stats_embedded": "可读页面索引覆盖率",
+		"stats_embedded": "已索引",
 		"stats_pulse_meta": "上次巡检 {{time}} · 近 24h 巡检 {{scanned}} 页 · 捕获 {{changed}} 处变更",
 		"stats_pulse_default": "持续追踪 Apple 官方文档与 WWDC 实时更新",
 		"stats_pulse_link": "查看文档动态"

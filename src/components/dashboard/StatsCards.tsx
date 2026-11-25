@@ -165,7 +165,7 @@ export default function StatsCards() {
 									</strong>
 									<span
 										className={cn(
-											"text-xs font-semibold @[450px]:text-sm",
+											"px-1.5 text-xs font-semibold leading-tight whitespace-nowrap @[450px]:text-sm",
 											url && "underline-offset-2 group-hover:underline",
 										)}
 									>
