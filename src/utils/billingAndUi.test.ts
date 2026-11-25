@@ -1,24 +1,15 @@
 import assert from "node:assert/strict";
-import { registerHooks } from "node:module";
 import test from "node:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { I18nextProvider } from "react-i18next";
 import { MemoryRouter } from "react-router-dom";
+import { SubscriptionCard } from "@/components/billing/SubscriptionCard";
 import { fittedCountAxis } from "@/components/charts/TrendChart";
 import { PaginationControls } from "@/components/ui/PaginationControls";
 import i18n from "@/i18n";
 import { formatCurrency } from "@/lib/utils";
 import type { CurrentUsage, Subscription } from "@/types";
-
-registerHooks({
-	load(url, context, nextLoad) {
-		if (url.endsWith(".css")) {
-			return { format: "module", shortCircuit: true, source: "" };
-		}
-		return nextLoad(url, context);
-	},
-});
 
 const baseUsage: CurrentUsage = {
 	current_usage: 120,
@@ -29,7 +20,6 @@ const baseUsage: CurrentUsage = {
 };
 
 test("SubscriptionCard renders complimentary Pro without showing Free", async () => {
-	const { SubscriptionCard } = await import("@/components/billing/SubscriptionCard");
 	const subscription: Subscription = {
 		id: "sub_comp",
 		plan_id: "pro",
@@ -74,7 +64,6 @@ test("SubscriptionCard renders complimentary Pro without showing Free", async ()
 });
 
 test("SubscriptionCard shows past_due payment recovery without Hobby/price contradiction", async () => {
-	const { SubscriptionCard } = await import("@/components/billing/SubscriptionCard");
 	const subscription: Subscription = {
 		id: "sub_past_due",
 		plan_id: "hobby",
@@ -113,7 +102,6 @@ test("SubscriptionCard shows past_due payment recovery without Hobby/price contr
 });
 
 test("SubscriptionCard handles Enterprise unlimited quota and expired Pro Pass cleanly", async () => {
-	const { SubscriptionCard } = await import("@/components/billing/SubscriptionCard");
 	await i18n.changeLanguage("zh");
 	const enterprise: Subscription = {
 		id: "sub_ent",

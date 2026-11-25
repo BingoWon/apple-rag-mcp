@@ -1,4 +1,3 @@
-import "./PricingModal.css";
 import { IconCreditCard, IconLock } from "@tabler/icons-react";
 import Alipay from "@thesvg/react/alipay";
 import { spring } from "motion";
