@@ -107,16 +107,19 @@ export function DigestPanel({
 					</div>
 				</div>
 
-				{loading ? (
-					<div className="py-10 text-center text-sm text-muted-foreground" role="status">
+				{loading && !active ? (
+					<div
+						className="flex min-h-[320px] items-center justify-center text-sm text-muted-foreground"
+						role="status"
+					>
 						{t("common.loading")}
 					</div>
 				) : !active || !copy ? (
-					<div className="py-10 text-center">
+					<div className="flex min-h-[240px] items-center justify-center text-center">
 						<p className="text-sm text-muted-foreground">{t("updates.digest_empty")}</p>
 					</div>
 				) : (
-					<div className="mt-5 space-y-6">
+					<div className="mt-5 min-h-[320px] space-y-6">
 						<div>
 							<div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
 								<span className="rounded-md border border-default bg-secondary px-2 py-0.5 font-mono">

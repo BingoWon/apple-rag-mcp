@@ -10,7 +10,6 @@ import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth";
-import { activateFabContact } from "@/utils/contact";
 
 // 创建 Context 来传递 visible 状态
 const NavbarContext = createContext<{ visible: boolean }>({ visible: false });
@@ -142,31 +141,41 @@ export const NavItems = ({ items, className, onItemClick }: NavItemsProps) => {
 				className,
 			)}
 		>
-			{items.map((item, idx) => (
-				<a
-					onMouseEnter={() => setHovered(idx)}
-					onClick={(e) => {
-						if (item.link === "#contact") {
-							e.preventDefault();
-							activateFabContact();
-						} else {
-							onItemClick?.();
-						}
-					}}
-					className="relative px-4 py-2 text-muted"
-					key={`link-${idx}`}
-					href={item.link === "#contact" ? "#" : item.link}
-					data-nav-action={item.link === "#contact" ? "fab-contact" : undefined}
-				>
-					{hovered === idx && (
-						<motion.div
-							layoutId="hovered"
-							className="absolute inset-0 h-full w-full rounded-lg bg-secondary"
-						/>
-					)}
-					<span className="relative z-20">{item.name}</span>
-				</a>
-			))}
+			{items.map((item, idx) =>
+				item.link.startsWith("/") && !item.link.includes("#") ? (
+					<Link
+						onMouseEnter={() => setHovered(idx)}
+						onClick={onItemClick}
+						className="relative px-4 py-2 text-muted"
+						key={`link-${idx}`}
+						to={item.link}
+					>
+						{hovered === idx && (
+							<motion.div
+								layoutId="hovered"
+								className="absolute inset-0 h-full w-full rounded-lg bg-secondary"
+							/>
+						)}
+						<span className="relative z-20">{item.name}</span>
+					</Link>
+				) : (
+					<a
+						onMouseEnter={() => setHovered(idx)}
+						onClick={onItemClick}
+						className="relative px-4 py-2 text-muted"
+						key={`link-${idx}`}
+						href={item.link}
+					>
+						{hovered === idx && (
+							<motion.div
+								layoutId="hovered"
+								className="absolute inset-0 h-full w-full rounded-lg bg-secondary"
+							/>
+						)}
+						<span className="relative z-20">{item.name}</span>
+					</a>
+				),
+			)}
 		</motion.div>
 	);
 };
@@ -311,7 +320,6 @@ export function AppNavbar() {
 		{ name: t("nav.pricing"), link: "/#pricing" },
 		{ name: t("nav.connect"), link: "/connect" },
 		{ name: t("nav.updates"), link: "/updates" },
-		{ name: t("nav.contact"), link: "#contact" },
 	];
 
 	return (
@@ -373,16 +381,9 @@ export function AppNavbar() {
 						) : (
 							<a
 								key={`mobile-nav-${idx}`}
-								href={item.link === "#contact" ? "#" : item.link}
-								onClick={(e) => {
-									if (item.link === "#contact") {
-										e.preventDefault();
-										activateFabContact();
-									}
-									handleMenuClose();
-								}}
+								href={item.link}
+								onClick={handleMenuClose}
 								className="text-muted hover:text-light transition-fast"
-								data-nav-action={item.link === "#contact" ? "fab-contact" : undefined}
 							>
 								{item.name}
 							</a>

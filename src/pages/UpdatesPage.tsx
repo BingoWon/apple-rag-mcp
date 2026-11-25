@@ -50,9 +50,16 @@ export default function UpdatesPage() {
 	const [summary, setSummary] = useState<UpdatesSummaryResponse | null>(null);
 	const [corpus, setCorpus] = useState<CorpusStats | null>(null);
 	const [digestPeriod, setDigestPeriod] = useState<DigestPeriodType>("daily");
-	const [digests, setDigests] = useState<DocChangeDigest[]>([]);
-	const [selectedDigestKey, setSelectedDigestKey] = useState<string | null>(null);
-	const [digestsLoading, setDigestsLoading] = useState(true);
+	const [digestsByPeriod, setDigestsByPeriod] = useState<
+		Record<DigestPeriodType, DocChangeDigest[]>
+	>({ daily: [], weekly: [] });
+	const [selectedKeyByPeriod, setSelectedKeyByPeriod] = useState<
+		Record<DigestPeriodType, string | null>
+	>({ daily: null, weekly: null });
+	const [loadedPeriods, setLoadedPeriods] = useState<Record<DigestPeriodType, boolean>>({
+		daily: false,
+		weekly: false,
+	});
 
 	const [radarRange, setRadarRange] = useState<"7d" | "30d">("7d");
 	const [framework, setFramework] = useState<string>(searchParams.get("framework") ?? "");
@@ -68,40 +75,57 @@ export default function UpdatesPage() {
 	const [feedLoading, setFeedLoading] = useState(true);
 	const [loadingMore, setLoadingMore] = useState(false);
 
-	// Load summary + corpus stats once
+	// Load summary, corpus stats, and both daily & weekly digest histories in parallel
+	// so switching between daily/weekly tabs is instantaneous with zero layout jump.
 	useEffect(() => {
 		const controller = new AbortController();
-		Promise.all([
-			api.getUpdatesSummary(controller.signal).catch(() => null),
-			api.getCorpusStats(controller.signal).catch(() => null),
-		]).then(([sumRes, corpRes]) => {
-			if (controller.signal.aborted) return;
-			if (sumRes?.success && sumRes.data) setSummary(sumRes.data);
-			if (corpRes?.success && corpRes.data) setCorpus(corpRes.data);
-		});
+
+		api
+			.getUpdatesSummary(controller.signal)
+			.then((res) => {
+				if (controller.signal.aborted || !res.success || !res.data) return;
+				const sum = res.data;
+				setSummary(sum);
+				setDigestsByPeriod((prev) => ({
+					daily: prev.daily.length || !sum.latest_daily ? prev.daily : [sum.latest_daily],
+					weekly: prev.weekly.length || !sum.latest_weekly ? prev.weekly : [sum.latest_weekly],
+				}));
+				setSelectedKeyByPeriod((prev) => ({
+					daily: prev.daily ?? sum.latest_daily?.period_key ?? null,
+					weekly: prev.weekly ?? sum.latest_weekly?.period_key ?? null,
+				}));
+			})
+			.catch(() => {});
+
+		api
+			.getCorpusStats(controller.signal)
+			.then((res) => {
+				if (!controller.signal.aborted && res.success && res.data) setCorpus(res.data);
+			})
+			.catch(() => {});
+
+		for (const period of ["daily", "weekly"] as const) {
+			api
+				.getUpdatesDigests(period, 14, controller.signal)
+				.then((res) => {
+					if (controller.signal.aborted) return;
+					const list = res.success && res.data ? res.data.digests : [];
+					setDigestsByPeriod((prev) => ({ ...prev, [period]: list }));
+					setSelectedKeyByPeriod((prev) => ({
+						...prev,
+						[period]: prev[period] ?? list[0]?.period_key ?? null,
+					}));
+				})
+				.catch(() => {})
+				.finally(() => {
+					if (!controller.signal.aborted) {
+						setLoadedPeriods((prev) => ({ ...prev, [period]: true }));
+					}
+				});
+		}
+
 		return () => controller.abort();
 	}, []);
-
-	// Load digests when period switches
-	useEffect(() => {
-		const controller = new AbortController();
-		setDigestsLoading(true);
-		api
-			.getUpdatesDigests(digestPeriod, 14, controller.signal)
-			.then((res) => {
-				if (controller.signal.aborted) return;
-				const list = res.success && res.data ? res.data.digests : [];
-				setDigests(list);
-				setSelectedDigestKey(list[0]?.period_key ?? null);
-			})
-			.catch(() => {
-				if (!controller.signal.aborted) setDigests([]);
-			})
-			.finally(() => {
-				if (!controller.signal.aborted) setDigestsLoading(false);
-			});
-		return () => controller.abort();
-	}, [digestPeriod]);
 
 	// Debounce search input
 	useEffect(() => {
@@ -300,10 +324,12 @@ export default function UpdatesPage() {
 					<DigestPanel
 						period={digestPeriod}
 						onPeriodChange={setDigestPeriod}
-						digests={digests}
-						selectedKey={selectedDigestKey}
-						onSelectKey={setSelectedDigestKey}
-						loading={digestsLoading}
+						digests={digestsByPeriod[digestPeriod]}
+						selectedKey={selectedKeyByPeriod[digestPeriod]}
+						onSelectKey={(key) =>
+							setSelectedKeyByPeriod((prev) => ({ ...prev, [digestPeriod]: key }))
+						}
+						loading={!loadedPeriods[digestPeriod] && digestsByPeriod[digestPeriod].length === 0}
 						onFilterFramework={applyFrameworkFilter}
 					/>
 				</section>
@@ -504,8 +530,12 @@ export default function UpdatesPage() {
 						</div>
 					)}
 
-					<div className="mt-4 space-y-3">
-						{feedLoading ? (
+					<div
+						className={`mt-4 space-y-3 transition-opacity duration-150 ${
+							feedLoading && events.length > 0 ? "opacity-60" : "opacity-100"
+						}`}
+					>
+						{feedLoading && events.length === 0 ? (
 							<div
 								className="rounded-xl border border-default bg-card py-12 text-center text-sm text-muted-foreground"
 								role="status"
