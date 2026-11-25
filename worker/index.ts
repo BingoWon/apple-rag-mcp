@@ -270,6 +270,7 @@ export default {
 				.cleanup()
 				.catch(() => console.error("CLI authorization cleanup failed.")),
 		);
+		ctx.waitUntil(runScheduledDigests(env, event.scheduledTime));
 		await handleScheduled(env);
 	},
 };

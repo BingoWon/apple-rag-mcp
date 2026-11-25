@@ -673,30 +673,45 @@ export async function generateDocDigest(
 
 export async function runScheduledDigests(env: Env, scheduledTime: number): Promise<void> {
 	const now = new Date(scheduledTime);
-	// Run once per day at 00:07 UTC, right after Workers AI daily free Neurons reset at 00:00 UTC.
-	if (now.getUTCHours() !== 0) return;
-
 	const todayStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
 	const yesterdayStart = new Date(todayStart.getTime() - 86_400_000);
 	const dailyKey = formatUtcDayKey(yesterdayStart);
+	const weekStart = new Date(todayStart.getTime() - 7 * 86_400_000);
+	const weeklyKey = formatIsoWeekKey(yesterdayStart);
 
+	// Fast single-query check: exit immediately (<2ms) when both current digests already exist.
+	const sql = createPgClient(env);
+	let hasDaily = false;
+	let hasWeekly = false;
 	try {
-		await generateDocDigest(env, {
-			periodType: "daily",
-			periodKey: dailyKey,
-			windowStart: yesterdayStart,
-			windowEnd: todayStart,
-		});
-	} catch (error) {
-		await logger.error(
-			`Scheduled daily doc digest (${dailyKey}) failed: ${error instanceof Error ? error.message : String(error)}`,
-		);
+		const existing = await sql<{ period_type: string; period_key: string }[]>`
+			SELECT period_type, period_key
+			FROM doc_change_digests
+			WHERE (period_type = 'daily' AND period_key = ${dailyKey})
+			   OR (period_type = 'weekly' AND period_key = ${weeklyKey})
+		`;
+		hasDaily = existing.some((r) => r.period_type === "daily");
+		hasWeekly = existing.some((r) => r.period_type === "weekly");
+	} finally {
+		await sql.end().catch(() => {});
 	}
 
-	// Weekly digest every Monday at 00:07 UTC covering the prior 7 UTC days.
-	if (now.getUTCDay() === 1) {
-		const weekStart = new Date(todayStart.getTime() - 7 * 86_400_000);
-		const weeklyKey = formatIsoWeekKey(weekStart);
+	if (!hasDaily) {
+		try {
+			await generateDocDigest(env, {
+				periodType: "daily",
+				periodKey: dailyKey,
+				windowStart: yesterdayStart,
+				windowEnd: todayStart,
+			});
+		} catch (error) {
+			await logger.error(
+				`Scheduled daily doc digest (${dailyKey}) failed: ${error instanceof Error ? error.message : String(error)}`,
+			);
+		}
+	}
+
+	if (!hasWeekly) {
 		try {
 			await generateDocDigest(env, {
 				periodType: "weekly",

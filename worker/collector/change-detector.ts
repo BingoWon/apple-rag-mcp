@@ -416,7 +416,10 @@ export function detectDocumentChange(input: {
 	}
 
 	const diff = buildCompactUnifiedDiff(input.oldContent, input.newContent);
-	const titleChanged = (input.oldTitle ?? "").trim() !== (input.newTitle ?? "").trim();
+	const cleanOldTitle = cleanSingleLineTitle(oldMeta.title, input.oldTitle, "");
+	const cleanNewTitle = cleanSingleLineTitle(newMeta.title, input.newTitle, "");
+	const titleChanged =
+		cleanOldTitle.length > 0 && cleanNewTitle.length > 0 && cleanOldTitle !== cleanNewTitle;
 
 	const hasOldMeta = Boolean(input.oldRawJson);
 	const deprecatedAdded = hasOldMeta && !oldMeta.hasDeprecation && newMeta.hasDeprecation;
@@ -490,7 +493,7 @@ export function detectDocumentChange(input: {
 		}
 		if (topicDelta > 0) summaryParts.push(`Added ${topicDelta} topic entries`);
 		else if (topicDelta < 0) summaryParts.push(`Removed ${Math.abs(topicDelta)} topic entries`);
-		else if (titleChanged) summaryParts.push(`Renamed from "${input.oldTitle ?? ""}"`);
+		else if (titleChanged) summaryParts.push(`Renamed from "${cleanOldTitle}"`);
 		else summaryParts.push(`Documentation revised in ${framework}`);
 	}
 
