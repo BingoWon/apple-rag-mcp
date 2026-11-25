@@ -67,12 +67,12 @@ export function ErrorFallback({
 
 	return (
 		<div className={wrapperClass} role="alert">
-			<div className="w-full max-w-md rounded-2xl border border-default bg-card p-6 text-center shadow-[var(--shadow-complex)] sm:p-8">
+			<div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 text-center shadow-complex sm:p-8">
 				<div
 					className={
 						chunkError
 							? "mx-auto flex h-12 w-12 items-center justify-center rounded-xl border border-brand/25 bg-brand/10 text-brand"
-							: "mx-auto flex h-12 w-12 items-center justify-center rounded-xl border border-error/25 bg-error/10 text-error"
+							: "mx-auto flex h-12 w-12 items-center justify-center rounded-xl border border-destructive/25 bg-destructive/10 text-destructive"
 					}
 				>
 					{chunkError ? (
@@ -82,10 +82,10 @@ export function ErrorFallback({
 					)}
 				</div>
 
-				<Heading className="mt-5 text-xl font-semibold tracking-tight text-light sm:text-2xl">
+				<Heading className="mt-5 text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
 					{t(chunkError ? "errorboundary.update_title" : "errorboundary.title")}
 				</Heading>
-				<p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+				<p className="mt-2 text-sm leading-relaxed text-subtle">
 					{t(chunkError ? "errorboundary.update_subtitle" : "errorboundary.subtitle")}
 				</p>
 
@@ -111,17 +111,17 @@ export function ErrorFallback({
 				</div>
 
 				{detailText && (
-					<details className="mt-6 rounded-xl border border-default bg-secondary text-left">
-						<summary className="flex cursor-pointer items-center justify-between gap-2 px-3.5 py-2.5 text-xs font-medium text-muted-foreground select-none hover:text-light">
+					<details className="mt-6 rounded-xl border border-border bg-surface text-left">
+						<summary className="flex cursor-pointer items-center justify-between gap-2 px-3.5 py-2.5 text-xs font-medium text-subtle select-none hover:text-foreground">
 							<span>{t("errorboundary.details")}</span>
 							<span className="font-mono text-[11px] opacity-75">v{APP_VERSION}</span>
 						</summary>
-						<div className="border-t border-default px-3.5 py-3">
+						<div className="border-t border-border px-3.5 py-3">
 							<div className="mb-2 flex justify-end">
 								<button
 									type="button"
 									onClick={handleCopy}
-									className="inline-flex items-center gap-1 rounded-md border border-default bg-card px-2 py-1 text-[11px] font-medium text-muted-foreground hover:bg-tertiary hover:text-light"
+									className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-[11px] font-medium text-subtle hover:bg-surface-subtle hover:text-foreground"
 								>
 									{copied ? (
 										<IconCheck className="h-3.5 w-3.5 text-success" aria-hidden="true" />
@@ -131,7 +131,7 @@ export function ErrorFallback({
 									<span>{t(copied ? "errorboundary.copied" : "errorboundary.copy_details")}</span>
 								</button>
 							</div>
-							<pre className="max-h-40 overflow-auto whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-muted-foreground">
+							<pre className="max-h-40 overflow-auto whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-subtle">
 								{detailText}
 							</pre>
 						</div>
@@ -146,8 +146,8 @@ function LoadingState({ scope = "root" }: { scope?: "root" | "page" }) {
 	const { t } = useTranslation();
 	const wrapperClass =
 		scope === "root"
-			? "flex min-h-dvh w-full items-center justify-center bg-background text-sm text-muted-foreground"
-			: "flex min-h-[55vh] w-full items-center justify-center text-sm text-muted-foreground";
+			? "flex min-h-dvh w-full items-center justify-center bg-background text-sm text-subtle"
+			: "flex min-h-[55vh] w-full items-center justify-center text-sm text-subtle";
 	return (
 		<div className={wrapperClass} role="status">
 			{t("common.loading")}

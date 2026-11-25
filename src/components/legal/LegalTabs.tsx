@@ -57,12 +57,12 @@ export default function LegalTabs() {
 							<motion.div
 								layoutId="clickedbutton"
 								transition={{ type: "spring", bounce: 0.3, duration: 0.6 }}
-								className="absolute inset-0 bg-gray-800 dark:bg-gray-200 rounded-full shadow-lg"
+								className="absolute inset-0 bg-foreground rounded-full shadow-lg"
 							/>
 						)}
 						<span
 							className={`relative block font-bold ${
-								activeIndex === idx ? "text-white dark:text-gray-800" : "text-foreground"
+								activeIndex === idx ? "text-background" : "text-foreground"
 							}`}
 						>
 							{tab.title}

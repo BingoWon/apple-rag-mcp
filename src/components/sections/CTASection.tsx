@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { ArrowButton } from "@/components/ui/arrow-button";
-import { TypewriterEffectSmooth } from "@/components/ui/typewriter-effect";
+import { ArrowButton } from "@/components/effects/arrow-button";
+import { TypewriterEffectSmooth } from "@/components/effects/typewriter-effect";
 
 export function CTASection() {
 	const { t } = useTranslation();
@@ -8,23 +8,23 @@ export function CTASection() {
 	const words = [
 		{
 			text: t("cta.ready"),
-			className: "text-light",
+			className: "text-foreground",
 		},
 		{
 			text: t("cta.to"),
-			className: "text-light",
+			className: "text-foreground",
 		},
 		{
 			text: t("cta.empower"),
-			className: "text-light",
+			className: "text-foreground",
 		},
 		{
 			text: t("cta.your"),
-			className: "text-light",
+			className: "text-foreground",
 		},
 		{
 			text: t("cta.ai_agents"),
-			className: "text-brand-secondary",
+			className: "text-brand-strong",
 		},
 	];
 
@@ -39,7 +39,7 @@ export function CTASection() {
 						"linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)",
 				}}
 			>
-				<div className="absolute inset-0 bg-gradient-to-br from-secondary via-tertiary to-secondary"></div>
+				<div className="absolute inset-0 bg-gradient-to-br from-surface via-surface-subtle to-surface"></div>
 				<div className="absolute inset-0 bg-gradient-to-r from-brand/10 via-transparent to-brand/10"></div>
 				<div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(96,165,250,0.1),transparent_50%)] dark:bg-[radial-gradient(circle_at_30%_20%,rgba(96,165,250,0.05),transparent_50%)]"></div>
 				<div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(96,165,250,0.1),transparent_50%)] dark:bg-[radial-gradient(circle_at_70%_80%,rgba(96,165,250,0.05),transparent_50%)]"></div>
@@ -49,8 +49,8 @@ export function CTASection() {
 			<div className="relative px-6 py-32 sm:py-40 lg:px-8">
 				<div className="text-center">
 					<TypewriterEffectSmooth words={words} />
-					<p className="mt-6 text-lg leading-8 text-light/90">
-						<span className="font-extrabold text-white bg-gradient-to-r from-brand to-brand-secondary px-2 py-1 rounded-lg text-xl tracking-wide transform -rotate-5 inline-block hover:rotate-0 transition-transform duration-300">
+					<p className="mt-6 text-lg leading-8 text-foreground/90">
+						<span className="font-extrabold text-white bg-gradient-to-r from-brand to-brand-strong px-2 py-1 rounded-lg text-xl tracking-wide transform -rotate-5 inline-block hover:rotate-0 transition-transform duration-300">
 							Vibe Coding
 						</span>{" "}
 						{t("cta.subtitle")}

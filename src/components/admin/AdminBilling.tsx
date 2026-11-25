@@ -26,7 +26,7 @@ export function AdminBilling({
 	return (
 		<section className="space-y-4">
 			<div>
-				<h2 className="text-lg font-semibold text-light">{t("admin.billing_title")}</h2>
+				<h2 className="text-lg font-semibold text-foreground">{t("admin.billing_title")}</h2>
 				<p className="mt-1 text-xs leading-5 text-muted">{t("admin.billing_scope")}</p>
 			</div>
 			{billing?.synced_at && stats && (
@@ -40,7 +40,7 @@ export function AdminBilling({
 				</p>
 			)}
 			{!ready && (
-				<p role="status" className="rounded-lg border border-default px-4 py-3 text-sm text-muted">
+				<p role="status" className="rounded-lg border border-border px-4 py-3 text-sm text-muted">
 					{t(
 						loading
 							? "admin.stats_loading"
@@ -55,7 +55,7 @@ export function AdminBilling({
 					<div className="flex items-start justify-between gap-4">
 						<div>
 							<h3 className="text-sm text-muted">{t("admin.billing_receipts")}</h3>
-							<p className="mt-2 text-3xl font-semibold tabular-nums text-light">
+							<p className="mt-2 text-3xl font-semibold tabular-nums text-foreground">
 								{ready ? formatMoney(revenue.total) : "—"}
 							</p>
 						</div>
@@ -64,7 +64,7 @@ export function AdminBilling({
 							<select
 								value={currency}
 								onChange={(e) => setSelected(e.target.value)}
-								className="ml-2 rounded-md border border-default bg-card px-2 py-1.5 text-light"
+								className="ml-2 rounded-md border border-border bg-card px-2 py-1.5 text-foreground"
 							>
 								{(currencies.length ? currencies : ["USD"]).map((code) => (
 									<option key={code}>{code}</option>
@@ -86,7 +86,7 @@ export function AdminBilling({
 				<Card className="flex flex-col justify-between gap-6 p-5">
 					<div>
 						<h3 className="text-sm text-muted">{t("admin.stats_paid_users")}</h3>
-						<p className="mt-2 text-3xl font-semibold tabular-nums text-light">
+						<p className="mt-2 text-3xl font-semibold tabular-nums text-foreground">
 							{stats?.subscriptions.total ?? "—"}
 						</p>
 						<p className="mt-2 text-xs text-muted">
@@ -94,11 +94,11 @@ export function AdminBilling({
 							{stats?.subscriptions.enterprise ?? "—"}
 						</p>
 					</div>
-					<dl className="grid grid-cols-2 gap-4 border-t border-default pt-5">
+					<dl className="grid grid-cols-2 gap-4 border-t border-border pt-5">
 						{(["new_subscribers", "renewing_subscribers"] as const).map((key) => (
 							<div key={key}>
 								<dt className="text-xs text-muted">{t(`admin.billing_${key}`)}</dt>
-								<dd className="mt-2 text-2xl font-semibold tabular-nums text-light">
+								<dd className="mt-2 text-2xl font-semibold tabular-nums text-foreground">
 									{ready ? billing[key].total.toLocaleString(i18n.resolvedLanguage) : "—"}
 								</dd>
 							</div>
@@ -108,7 +108,7 @@ export function AdminBilling({
 				</Card>
 			</div>
 			<Card className="p-5">
-				<h3 className="text-sm font-medium text-light">{t("admin.billing_people_trend")}</h3>
+				<h3 className="text-sm font-medium text-foreground">{t("admin.billing_people_trend")}</h3>
 				{ready && (
 					<TrendChart
 						metric={{

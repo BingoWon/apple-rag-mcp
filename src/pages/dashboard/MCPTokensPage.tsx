@@ -40,7 +40,7 @@ export default function MCPTokensPage() {
 		<div className="space-y-6">
 			{/* Header */}
 			<div>
-				<h1 className="text-2xl font-bold text-light">{t("tokens.title")}</h1>
+				<h1 className="text-2xl font-bold text-foreground">{t("tokens.title")}</h1>
 				<p className="mt-1 text-sm text-muted">{t("tokens.subtitle")}</p>
 			</div>
 
@@ -49,10 +49,10 @@ export default function MCPTokensPage() {
 				<CardContent className="p-4">
 					<div className="flex">
 						<div className="flex-shrink-0">
-							<IconInfoCircle className="h-5 w-5 text-info" />
+							<IconInfoCircle className="h-5 w-5 text-brand" />
 						</div>
 						<div className="ml-3">
-							<h3 className="text-sm font-medium text-light">{t("tokens.security_title")}</h3>
+							<h3 className="text-sm font-medium text-foreground">{t("tokens.security_title")}</h3>
 							<div className="mt-2 text-sm text-muted">
 								<p>{t("tokens.security_desc")}</p>
 							</div>

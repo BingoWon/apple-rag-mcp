@@ -26,7 +26,7 @@ export function DropdownMenu({ trigger, items, align = "right", className }: Dro
 					sideOffset={6}
 					collisionPadding={8}
 					className={cn(
-						"z-50 min-w-40 rounded-lg border border-default bg-card p-1 text-foreground shadow-lg",
+						"z-50 min-w-40 rounded-lg border border-border bg-card p-1 text-foreground shadow-lg",
 						className,
 					)}
 				>
@@ -34,10 +34,7 @@ export function DropdownMenu({ trigger, items, align = "right", className }: Dro
 						item.type === "separator" ? (
 							<Menu.Separator key={item.key} className="my-1 h-px bg-border" />
 						) : item.type === "label" ? (
-							<Menu.Label
-								key={item.key}
-								className="px-3 py-2 text-xs font-medium text-muted-foreground"
-							>
+							<Menu.Label key={item.key} className="px-3 py-2 text-xs font-medium text-subtle">
 								{item.label}
 							</Menu.Label>
 						) : (
@@ -46,8 +43,8 @@ export function DropdownMenu({ trigger, items, align = "right", className }: Dro
 								disabled={item.disabled}
 								onSelect={item.onClick}
 								className={cn(
-									"flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm outline-none data-[highlighted]:bg-secondary data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
-									item.variant === "destructive" && "text-error",
+									"flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm outline-none data-[highlighted]:bg-surface data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+									item.variant === "destructive" && "text-destructive",
 								)}
 							>
 								{item.icon}

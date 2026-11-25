@@ -81,7 +81,7 @@ export function EditableName({ id, initialName, onUpdate, onRefresh, type }: Edi
 					value={name}
 					onChange={(e) => setName(e.target.value)}
 					onKeyDown={handleKeyDown}
-					className="text-sm font-medium text-light bg-tertiary border border-default rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent"
+					className="text-sm font-medium text-foreground bg-surface-subtle border border-border rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent"
 					disabled={isLoading}
 				/>
 				<Button
@@ -100,7 +100,7 @@ export function EditableName({ id, initialName, onUpdate, onRefresh, type }: Edi
 					size="icon"
 					onClick={handleCancel}
 					disabled={isLoading}
-					className="h-8 w-8 text-error hover:text-error/80"
+					className="h-8 w-8 text-destructive hover:text-destructive/80"
 					title={t("common.cancel")}
 					aria-label={t("common.cancel")}
 				>
@@ -117,7 +117,7 @@ export function EditableName({ id, initialName, onUpdate, onRefresh, type }: Edi
 				variant="ghost"
 				size="icon"
 				onClick={() => setIsEditing(true)}
-				className="h-8 w-8 text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity"
+				className="h-8 w-8 text-subtle hover:text-foreground opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity"
 				title={t("common.edit_name")}
 				aria-label={t("common.edit_name")}
 			>

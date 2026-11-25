@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { WobbleCard } from "../ui/wobble-card";
+import { WobbleCard } from "../effects/wobble-card";
 
 export function DataSourcesShowcase() {
 	const { t } = useTranslation();
@@ -7,10 +7,10 @@ export function DataSourcesShowcase() {
 		<div className="home-section relative">
 			<div className="home-content">
 				<div className="home-section-heading lg:text-center">
-					<h2 className="text-base font-semibold leading-7 text-action">
+					<h2 className="text-base font-semibold leading-7 text-brand">
 						{t("datasources.eyebrow")}
 					</h2>
-					<p className="mt-2 text-3xl font-bold tracking-tight text-light sm:text-4xl">
+					<p className="mt-2 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
 						{t("datasources.title")}
 					</p>
 					<p className="mt-6 text-lg leading-8 text-muted">{t("datasources.subtitle")}</p>
@@ -58,7 +58,7 @@ export function DataSourcesShowcase() {
 						/>
 					</WobbleCard>
 					<WobbleCard
-						containerClassName="col-span-1 lg:col-span-3 bg-brand-tertiary/80 min-h-[440px] xl:min-h-[250px] cursor-pointer"
+						containerClassName="col-span-1 lg:col-span-3 bg-brand-strong/80 min-h-[440px] xl:min-h-[250px] cursor-pointer"
 						href="https://developer.apple.com/videos/"
 						label={t("datasources.videos_title")}
 					>

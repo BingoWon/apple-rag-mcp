@@ -36,7 +36,7 @@ function buildPricingPlans(): PricingPlan[] {
 			popular: true,
 			action: "modal",
 			gradientFrom: "from-green-500",
-			gradientTo: "to-brand-tertiary",
+			gradientTo: "to-brand-strong",
 			features: [
 				i18n.t("plans.tool_calls_per_week", { count: (50000).toLocaleString("en-US") }),
 				i18n.t("plans.requests_per_minute", { count: 50 }),
@@ -59,7 +59,7 @@ function buildPricingPlans(): PricingPlan[] {
 			popular: false,
 			action: "contact",
 			gradientFrom: "from-red-400",
-			gradientTo: "to-brand-tertiary",
+			gradientTo: "to-brand-strong",
 			features: [
 				i18n.t("plans.team_usage"),
 				i18n.t("plans.request_capacity"),

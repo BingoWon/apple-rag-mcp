@@ -99,7 +99,7 @@ function Breakdown({
 					{t(`admin.channel_${row.channel}`)} · {t("activity.calls")} {number(row.calls)}
 				</DialogDescription>
 			</DialogHeader>
-			<dl className="mb-5 grid grid-cols-2 gap-3 rounded-lg bg-secondary p-3 text-sm sm:grid-cols-3">
+			<dl className="mb-5 grid grid-cols-2 gap-3 rounded-lg bg-surface p-3 text-sm sm:grid-cols-3">
 				{(
 					[
 						["accounts", row.accounts],
@@ -111,7 +111,7 @@ function Breakdown({
 					] as const
 				).map(([key, n]) => (
 					<div key={key}>
-						<dt className="text-xs text-muted-foreground">{t(`client_stats.${key}`)}</dt>
+						<dt className="text-xs text-subtle">{t(`client_stats.${key}`)}</dt>
 						<dd className="font-semibold tabular-nums">{number(n)}</dd>
 					</div>
 				))}
@@ -155,7 +155,7 @@ function Breakdown({
 					<>
 						<table className="w-full text-left text-sm [&_td]:px-3 [&_th]:px-3">
 							<thead>
-								<tr className="border-b border-default text-xs text-muted-foreground">
+								<tr className="border-b border-border text-xs text-subtle">
 									<th scope="col" className="py-2">
 										{t(`client_stats.${dimension}`)}
 									</th>
@@ -181,7 +181,7 @@ function Breakdown({
 									return (
 										<tr
 											key={JSON.stringify([r.label, r.version])}
-											className="border-b border-default/60"
+											className="border-b border-border/60"
 										>
 											<td className="py-2 break-words">{value}</td>
 											<td className="text-right tabular-nums">{number(r.calls)}</td>
@@ -190,9 +190,7 @@ function Breakdown({
 								})}
 							</tbody>
 						</table>
-						{!data.total && (
-							<p className="py-3 text-sm text-muted-foreground">{t("client_stats.empty")}</p>
-						)}
+						{!data.total && <p className="py-3 text-sm text-subtle">{t("client_stats.empty")}</p>}
 					</>
 				)}
 			</AdminPagedList>
@@ -214,7 +212,7 @@ function ClientButton({ row, period, end }: { row: ClientRow; period: ClientPeri
 					className="inline-flex min-h-9 items-center gap-1 text-left font-medium hover:text-brand focus-visible:outline-brand"
 				>
 					{name}
-					<IconChevronRight className="size-3 shrink-0 text-muted-foreground" aria-hidden />
+					<IconChevronRight className="size-3 shrink-0 text-subtle" aria-hidden />
 				</button>
 			</DialogTrigger>
 			{open && (
@@ -257,7 +255,7 @@ function ChannelTable({
 						style: "percent",
 						maximumFractionDigits: 1,
 					})}
-					<div aria-hidden className="mt-1 h-1 rounded bg-secondary">
+					<div aria-hidden className="mt-1 h-1 rounded bg-surface">
 						<div
 							className="h-full rounded bg-brand"
 							style={{ width: `${(100 * row.calls) / total}%` }}
@@ -309,7 +307,7 @@ export default function ClientsPage() {
 				<div className="flex flex-wrap items-center gap-2">
 					<select
 						aria-label={t("client_stats.sort")}
-						className="h-9 rounded-md border border-default bg-card px-2 text-sm"
+						className="h-9 rounded-md border border-border bg-card px-2 text-sm"
 						value={sort}
 						onChange={(e) => setSort(e.target.value === "accounts" ? "accounts" : "calls")}
 					>
@@ -350,7 +348,7 @@ export default function ClientsPage() {
 				</p>
 			) : (
 				<>
-					<p className="text-xs text-muted-foreground">
+					<p className="text-xs text-subtle">
 						{data.start ? formatAdminDateTime(data.start) : t("client_stats.all")} —{" "}
 						{formatAdminDateTime(data.end)} · UTC+8
 					</p>
@@ -363,7 +361,7 @@ export default function ClientsPage() {
 							] as const
 						).map(([key, value]) => (
 							<div key={key} className="px-4 py-3">
-								<p className="text-xs text-muted-foreground">{t(`client_stats.${key}`)}</p>
+								<p className="text-xs text-subtle">{t(`client_stats.${key}`)}</p>
 								<p className="mt-1 text-xl font-semibold tabular-nums">{value}</p>
 							</div>
 						))}
@@ -382,13 +380,13 @@ export default function ClientsPage() {
 							>
 								<div className="flex flex-wrap items-baseline gap-x-3">
 									<h2 className="font-semibold">{t(`admin.channel_${channel}`)}</h2>
-									<span className="text-sm text-muted-foreground">
+									<span className="text-sm text-subtle">
 										{t("activity.calls")} {number(channelRow?.calls ?? 0)} ·{" "}
 										{t("client_stats.accounts")} {number(channelRow?.accounts ?? 0)}
 									</span>
 								</div>
 								{channel === "cli" && (
-									<p className="text-xs text-muted-foreground">{t("client_stats.cli_note")}</p>
+									<p className="text-xs text-subtle">{t("client_stats.cli_note")}</p>
 								)}
 								{rows.length ? (
 									<ChannelTable
@@ -398,14 +396,14 @@ export default function ClientsPage() {
 										total={channelRow!.calls}
 									/>
 								) : (
-									<p className="rounded-lg border border-default p-4 text-sm text-muted-foreground">
+									<p className="rounded-lg border border-border p-4 text-sm text-subtle">
 										{t("client_stats.empty")}
 									</p>
 								)}
 							</section>
 						);
 					})}
-					<p className="text-xs leading-5 text-muted-foreground">{t("client_stats.method")}</p>
+					<p className="text-xs leading-5 text-subtle">{t("client_stats.method")}</p>
 				</>
 			)}
 		</div>

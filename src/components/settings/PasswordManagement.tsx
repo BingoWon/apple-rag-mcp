@@ -103,7 +103,7 @@ export function PasswordManagement() {
 					<CardDescription>{t("settings.auth_load_error")}</CardDescription>
 				</CardHeader>
 				<CardContent>
-					<p className="text-sm text-gray-500">{t("settings.auth_load_retry")}</p>
+					<p className="text-sm text-subtle">{t("settings.auth_load_retry")}</p>
 				</CardContent>
 			</Card>
 		);

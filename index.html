@@ -74,17 +74,14 @@
     <script>
       try {
         const theme = localStorage.getItem('theme') || 'system';
-        const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-        const effectiveTheme = theme === 'system' ? systemTheme : theme;
-        document.documentElement.classList.remove('light', 'dark');
-        document.documentElement.classList.add(effectiveTheme);
+        const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.classList.toggle('dark', isDark);
       } catch (_e) {
-        const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-        document.documentElement.classList.add(systemTheme);
+        document.documentElement.classList.toggle('dark', window.matchMedia('(prefers-color-scheme: dark)').matches);
       }
     </script>
   </head>
-  <body class="min-h-screen bg-background text-foreground antialiased font-sans transition-all duration-200 leading-relaxed m-0 p-0">
+  <body class="min-h-dvh bg-background text-foreground antialiased font-sans transition-colors duration-200 leading-relaxed m-0 p-0">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

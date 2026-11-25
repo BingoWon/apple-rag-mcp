@@ -37,7 +37,7 @@ export function DataTable<T extends object>({
 		}
 
 		if (value === null || value === undefined) {
-			return <span className="text-muted-foreground italic">—</span>;
+			return <span className="text-subtle italic">—</span>;
 		}
 
 		return String(value);
@@ -47,11 +47,11 @@ export function DataTable<T extends object>({
 	if (error) {
 		return (
 			<div role="alert" className={`text-center py-8 ${className}`}>
-				<div className="mx-auto h-12 w-12 text-red-500 mb-4">
+				<div className="mx-auto h-12 w-12 text-destructive mb-4">
 					<IconXboxX className="h-12 w-12" />
 				</div>
 				<h3 className="text-lg font-medium text-foreground mb-2">{t("table.error")}</h3>
-				<p className="text-muted-foreground">{error}</p>
+				<p className="text-subtle">{error}</p>
 			</div>
 		);
 	}
@@ -64,7 +64,7 @@ export function DataTable<T extends object>({
 				</div>
 			) : data.length === 0 ? (
 				<div className="text-center py-12">
-					<p className="text-muted-foreground">{t("table.no_data")}</p>
+					<p className="text-subtle">{t("table.no_data")}</p>
 				</div>
 			) : (
 				<div
@@ -85,7 +85,7 @@ export function DataTable<T extends object>({
 									<th
 										key={column.key}
 										scope="col"
-										className="text-left py-3 px-3 font-medium text-muted-foreground text-sm uppercase tracking-wider select-none"
+										className="text-left py-3 px-3 font-medium text-subtle text-sm uppercase tracking-wider select-none"
 									>
 										{column.label}
 									</th>
@@ -97,8 +97,8 @@ export function DataTable<T extends object>({
 								<tr
 									key={(row as { id?: Key }).id ?? index}
 									className={`transition-colors duration-200 ${
-										index % 2 === 0 ? "bg-secondary/50" : "bg-background"
-									} hover:bg-secondary`}
+										index % 2 === 0 ? "bg-surface/50" : "bg-background"
+									} hover:bg-surface`}
 								>
 									{columns.map((column) => (
 										<td key={column.key} className="py-3 px-3 align-middle">

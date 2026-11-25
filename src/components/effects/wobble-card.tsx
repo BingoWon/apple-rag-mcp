@@ -59,7 +59,7 @@ export const WobbleCard = ({
 						}
 			}
 			className={cn(
-				"block focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action mx-auto w-full bg-indigo-800 relative rounded-2xl overflow-hidden",
+				"block focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand mx-auto w-full bg-indigo-800 relative rounded-2xl overflow-hidden",
 				containerClassName,
 			)}
 		>

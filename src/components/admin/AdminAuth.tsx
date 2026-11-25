@@ -88,7 +88,7 @@ export function AdminAuth({ onAuthenticated }: AdminAuthProps) {
 	};
 
 	return (
-		<div className="min-h-screen bg-background flex items-center justify-center px-4 relative">
+		<div className="min-h-dvh bg-background flex items-center justify-center px-4 relative">
 			{/* Theme Toggle in top right corner */}
 			<div className="absolute top-4 right-4">
 				<ThemeToggle />
@@ -101,7 +101,7 @@ export function AdminAuth({ onAuthenticated }: AdminAuthProps) {
 						<IconShieldCheck className="h-8 w-8 text-brand" />
 					</div>
 					<h2 className="mt-6 text-3xl font-bold text-foreground">{t("admin.auth_title")}</h2>
-					<p className="mt-2 text-muted-foreground">{t("admin.auth_subtitle")}</p>
+					<p className="mt-2 text-subtle">{t("admin.auth_subtitle")}</p>
 				</div>
 
 				{/* Form */}
@@ -117,7 +117,7 @@ export function AdminAuth({ onAuthenticated }: AdminAuthProps) {
 								type={showPassword ? "text" : "password"}
 								value={password}
 								onChange={(e) => setPassword(e.target.value)}
-								className="relative block w-full px-3 py-3 border border-default bg-secondary text-foreground placeholder:text-muted-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand pr-10"
+								className="relative block w-full px-3 py-3 border border-border bg-surface text-foreground placeholder:text-subtle rounded-lg focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand pr-10"
 								placeholder={t("admin.auth_placeholder")}
 								autoComplete="current-password"
 								required
@@ -128,7 +128,7 @@ export function AdminAuth({ onAuthenticated }: AdminAuthProps) {
 								variant="ghost"
 								size="icon"
 								aria-label={showPassword ? t("auth.hide_password") : t("auth.show_password")}
-								className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 text-muted-foreground hover:text-foreground"
+								className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 text-subtle hover:text-foreground"
 								onClick={() => setShowPassword(!showPassword)}
 								disabled={isLoading}
 							>
@@ -142,7 +142,7 @@ export function AdminAuth({ onAuthenticated }: AdminAuthProps) {
 					</div>
 
 					{error && (
-						<div className="text-red-400 text-sm text-center bg-red-900/20 border border-red-800 rounded-lg p-3">
+						<div className="text-destructive text-sm text-center bg-destructive/10 border border-destructive/30 rounded-lg p-3">
 							{error}
 						</div>
 					)}
@@ -160,7 +160,7 @@ export function AdminAuth({ onAuthenticated }: AdminAuthProps) {
 
 				{/* Footer */}
 				<div className="text-center">
-					<p className="text-xs text-gray-500">{t("admin.auth_notice")}</p>
+					<p className="text-xs text-subtle">{t("admin.auth_notice")}</p>
 				</div>
 			</div>
 		</div>

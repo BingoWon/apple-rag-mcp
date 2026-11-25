@@ -75,7 +75,7 @@ function ChannelUsageCard({
 	return (
 		<Card className="min-w-0 p-4">
 			<div className="flex flex-wrap items-center justify-between gap-3">
-				<h3 className="flex items-center gap-2 text-sm font-medium text-light">
+				<h3 className="flex items-center gap-2 text-sm font-medium text-foreground">
 					<IconActivity className="h-4 w-4 text-brand" />
 					{t("admin.stats_channels")}
 					<span className="ml-1 text-xl font-semibold tabular-nums">
@@ -89,7 +89,7 @@ function ChannelUsageCard({
 						onChange={(event) =>
 							onChannelChange((event.target.value || undefined) as ToolChannel | undefined)
 						}
-						className="h-9 rounded-md border border-default bg-card px-3 text-sm text-light focus-visible:outline-2 focus-visible:outline-brand"
+						className="h-9 rounded-md border border-border bg-card px-3 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-brand"
 					>
 						<option value="">{t("admin.all")}</option>
 						{visible.map((key) => (
@@ -128,7 +128,7 @@ function ChannelUsageCard({
 							/>
 							{t(`admin.channel_${key}`)}
 						</dt>
-						<dd className="mt-1 text-lg font-semibold tabular-nums text-light">
+						<dd className="mt-1 text-lg font-semibold tabular-nums text-foreground">
 							{stats ? format(stats.channels[key].total) : "--"}{" "}
 							<span className="ml-2 text-xs font-normal text-muted">
 								{stats ? percent.format(total ? stats.channels[key].total / total : 0) : "--"}
@@ -166,17 +166,17 @@ function CumulativeUsersCard({
 		<Card className="p-4 md:col-span-2 xl:col-span-4">
 			<div className="flex items-center gap-2">
 				<IconTrendingUp className="h-4 w-4 shrink-0 text-[#7c3aed]" />
-				<h3 className="min-w-0 flex-1 truncate text-sm font-medium text-light">
+				<h3 className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
 					{t("admin.stats_cumulative_users")}
 				</h3>
-				<span className="shrink-0 text-xl font-semibold tabular-nums text-light">
+				<span className="shrink-0 text-xl font-semibold tabular-nums text-foreground">
 					{metric ? format(metric.total) : "--"}
 				</span>
 				<Link
 					to="/admin/users"
 					title={t("admin.stats_view_details")}
 					aria-label={t("admin.stats_view_details")}
-					className="shrink-0 rounded p-1 text-muted hover:text-light focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+					className="shrink-0 rounded p-1 text-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
 				>
 					<IconArrowUpRight className="h-4 w-4" />
 				</Link>
@@ -190,7 +190,7 @@ function CumulativeUsersCard({
 								<h4 className="text-xs font-medium" style={{ color: side.color }}>
 									{t(side.label)}
 								</h4>
-								<span className="text-sm font-semibold tabular-nums text-light">
+								<span className="text-sm font-semibold tabular-nums text-foreground">
 									{series ? format(series.total) : "--"}
 								</span>
 							</div>
@@ -239,17 +239,17 @@ function AudienceCard({
 		<Card className="p-4 md:col-span-2 xl:col-span-2">
 			<div className="flex items-center gap-2">
 				<Icon className="h-4 w-4 shrink-0" style={{ color }} />
-				<h3 className="min-w-0 flex-1 truncate text-sm font-medium text-light">
+				<h3 className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
 					{t(isNew ? "admin.stats_new_users" : "admin.stats_active_users")}
 				</h3>
-				<span className="shrink-0 text-xl font-semibold tabular-nums text-light">
+				<span className="shrink-0 text-xl font-semibold tabular-nums text-foreground">
 					{metric ? metric.total.toLocaleString(i18n.resolvedLanguage) : "--"}
 				</span>
 				<Link
 					to={isNew ? "/admin/users" : "/admin/search-logs"}
 					title={t("admin.stats_view_details")}
 					aria-label={t("admin.stats_view_details")}
-					className="shrink-0 rounded p-1 text-muted hover:text-light focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+					className="shrink-0 rounded p-1 text-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
 				>
 					<IconArrowUpRight className="h-4 w-4" />
 				</Link>
@@ -281,14 +281,14 @@ function AudienceCard({
 						).map(([key, label]) => (
 							<tr key={key}>
 								<td className="py-0.5">{t(label)}</td>
-								<td className="py-0.5 text-right font-medium text-light">
+								<td className="py-0.5 text-right font-medium text-foreground">
 									{metric.breakdown![key].toLocaleString(i18n.resolvedLanguage)}
 								</td>
 							</tr>
 						))}
-						<tr className="border-t border-default">
-							<td className="pt-1 font-medium text-light">{t("admin.stats_total")}</td>
-							<td className="pt-1 text-right font-semibold text-light">
+						<tr className="border-t border-border">
+							<td className="pt-1 font-medium text-foreground">{t("admin.stats_total")}</td>
+							<td className="pt-1 text-right font-semibold text-foreground">
 								{metric.total.toLocaleString(i18n.resolvedLanguage)}
 							</td>
 						</tr>
@@ -321,7 +321,7 @@ export function AdminStatsCards({
 	return (
 		<div className="space-y-8" aria-busy={loading}>
 			<section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-				<h2 className="text-lg font-semibold text-light md:col-span-2 xl:col-span-4">
+				<h2 className="text-lg font-semibold text-foreground md:col-span-2 xl:col-span-4">
 					{t("admin.audience_title")}
 				</h2>
 				<CumulativeUsersCard
@@ -343,7 +343,9 @@ export function AdminStatsCards({
 				/>
 			</section>
 			<section className="grid gap-4 lg:grid-cols-2">
-				<h2 className="text-lg font-semibold text-light lg:col-span-2">{t("admin.usage_title")}</h2>
+				<h2 className="text-lg font-semibold text-foreground lg:col-span-2">
+					{t("admin.usage_title")}
+				</h2>
 				<ChannelUsageCard
 					stats={stats}
 					loading={loading}
@@ -355,8 +357,10 @@ export function AdminStatsCards({
 			<AdminModelCosts stats={stats} channel={query.channel} loading={loading} />
 			<AdminBilling stats={stats} loading={loading} />
 			<section>
-				<h2 className="mb-4 text-lg font-semibold text-light">{t("admin.operations_title")}</h2>
-				<Card className="grid divide-y divide-default sm:grid-cols-2 lg:grid-cols-5 lg:divide-x lg:divide-y-0">
+				<h2 className="mb-4 text-lg font-semibold text-foreground">
+					{t("admin.operations_title")}
+				</h2>
+				<Card className="grid divide-y divide-border sm:grid-cols-2 lg:grid-cols-5 lg:divide-x lg:divide-y-0">
 					{[
 						...METRICS,
 						{
@@ -368,10 +372,10 @@ export function AdminStatsCards({
 						<Link
 							key={item.key}
 							to={item.href}
-							className="p-5 transition-colors hover:bg-secondary/60"
+							className="p-5 transition-colors hover:bg-surface/60"
 						>
 							<span className="text-xs text-muted">{t(item.title)}</span>
-							<p className="mt-2 text-2xl font-semibold tabular-nums text-light">
+							<p className="mt-2 text-2xl font-semibold tabular-nums text-foreground">
 								{item.key === "subscriptions"
 									? (stats?.subscriptions.total ?? "—")
 									: (stats?.metrics[item.key as keyof AdminDashboardStats["metrics"]].total ?? "—")}

@@ -41,7 +41,7 @@ export function AdminLayout() {
 
 	if (isLoading) {
 		return (
-			<div className="min-h-screen bg-background flex items-center justify-center">
+			<div className="min-h-dvh bg-background flex items-center justify-center">
 				<LoaderFive text={t("admin.loading")} />
 			</div>
 		);
@@ -73,8 +73,8 @@ export function AdminLayout() {
 									to={item.href}
 									className={`shrink-0 whitespace-nowrap border-b-2 py-2.5 px-1 text-sm font-medium transition-colors ${
 										isActive
-											? "border-brand text-action bg-brand/10"
-											: "border-transparent text-muted-foreground hover:text-foreground hover:border-primary"
+											? "border-brand text-brand bg-brand/10"
+											: "border-transparent text-subtle hover:text-foreground hover:border-border-strong"
 									}`}
 								>
 									{t(item.labelKey)}

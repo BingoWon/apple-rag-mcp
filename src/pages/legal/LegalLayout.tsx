@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, Outlet } from "react-router-dom";
+import { ShootingStars } from "@/components/effects/shooting-stars";
+import { StarsBackground } from "@/components/effects/stars-background";
 import { Brand } from "@/components/layout/Brand";
 import LegalTabs from "@/components/legal/LegalTabs";
-import { ShootingStars } from "@/components/ui/shooting-stars";
-import { StarsBackground } from "@/components/ui/stars-background";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 export function LegalLayout() {
@@ -15,19 +15,19 @@ export function LegalLayout() {
 
 	if (!mounted) {
 		return (
-			<div className="min-h-screen bg-primary relative">
+			<div className="min-h-screen bg-background relative">
 				<div className="fixed inset-0 z-0">
 					<ShootingStars />
 					<StarsBackground />
 				</div>
 				<div className="relative z-10">
-					<nav className="border-b border-default bg-primary/80 backdrop-blur-sm sticky top-0 z-50">
+					<nav className="border-b border-border bg-background/80 backdrop-blur-sm sticky top-0 z-50">
 						<div className="max-w-5xl mx-auto px-4 py-4">
 							<div className="flex items-center justify-between">
 								<Link to="/" className="flex items-center">
 									<Brand />
 								</Link>
-								<div className="animate-pulse w-10 h-10 bg-secondary rounded-lg" />
+								<div className="animate-pulse w-10 h-10 bg-surface rounded-lg" />
 							</div>
 						</div>
 					</nav>
@@ -44,13 +44,13 @@ export function LegalLayout() {
 	}
 
 	return (
-		<div className="min-h-screen bg-primary relative">
+		<div className="min-h-screen bg-background relative">
 			<div className="fixed inset-0 z-0">
 				<ShootingStars />
 				<StarsBackground />
 			</div>
 			<div className="relative z-10">
-				<nav className="border-b border-default bg-primary/80 backdrop-blur-sm sticky top-0 z-50">
+				<nav className="border-b border-border bg-background/80 backdrop-blur-sm sticky top-0 z-50">
 					<div className="max-w-5xl mx-auto px-4 py-4">
 						<div className="flex items-center justify-between">
 							<Link to="/" className="flex items-center hover:opacity-80 transition-opacity">

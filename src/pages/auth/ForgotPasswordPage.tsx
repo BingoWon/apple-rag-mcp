@@ -60,12 +60,12 @@ export default function ForgotPasswordPage() {
 		return (
 			<div className="text-center">
 				<h1 className="auth-title">{t("forgot.sent_title")}</h1>
-				<p className="text-muted-foreground mb-6">
+				<p className="text-subtle mb-6">
 					{t("forgot.sent_description")}
 					<br />
 					<span className="font-medium">{getValues("email")}</span>
 				</p>
-				<p className="text-sm text-muted-foreground mb-6">{t("forgot.retry_note")}</p>
+				<p className="text-sm text-subtle mb-6">{t("forgot.retry_note")}</p>
 				<div className="space-y-4">
 					<Button onClick={() => setIsSubmitted(false)} variant="primary" className="w-full">
 						{t("common.retry")}
@@ -84,7 +84,7 @@ export default function ForgotPasswordPage() {
 		<form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
 			<div>
 				<h1 className="auth-title">{t("forgot.title")}</h1>
-				<p className="text-muted-foreground text-center mb-6">{t("forgot.description")}</p>
+				<p className="text-subtle text-center mb-6">{t("forgot.description")}</p>
 			</div>
 
 			<Input

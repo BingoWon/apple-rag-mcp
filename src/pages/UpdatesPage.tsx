@@ -226,7 +226,7 @@ export default function UpdatesPage() {
 							<IconRadar2 className="h-3.5 w-3.5" aria-hidden="true" />
 							<span>{t("updates.eyebrow")}</span>
 						</div>
-						<h1 className="mt-3 text-3xl font-bold tracking-tight text-light sm:text-4xl">
+						<h1 className="mt-3 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
 							{t("updates.title")}
 						</h1>
 						<p className="mt-2.5 text-sm leading-relaxed text-muted sm:text-base">
@@ -255,30 +255,30 @@ export default function UpdatesPage() {
 					aria-label={t("updates.heartbeat_aria")}
 					className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4"
 				>
-					<div className="rounded-xl border border-default bg-card p-4">
-						<div className="flex items-center gap-2 text-xs text-muted-foreground">
+					<div className="rounded-xl border border-border bg-card p-4">
+						<div className="flex items-center gap-2 text-xs text-subtle">
 							<span className="h-2 w-2 rounded-full bg-success" aria-hidden="true" />
 							<span>{t("updates.metric_last_run")}</span>
 						</div>
-						<p className="mt-2 text-lg font-bold tabular-nums text-light">
+						<p className="mt-2 text-lg font-bold tabular-nums text-foreground">
 							{formatRelativeMinutes(summary?.heartbeat.last_run_at ?? null, locale)}
 						</p>
-						<p className="mt-0.5 text-[11px] text-muted-foreground">
+						<p className="mt-0.5 text-[11px] text-subtle">
 							{summary?.heartbeat.last_sweep_source
 								? t(`updates.source_${summary.heartbeat.last_sweep_source}`)
 								: t("updates.cadence_label")}
 						</p>
 					</div>
 
-					<div className="rounded-xl border border-default bg-card p-4">
-						<div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+					<div className="rounded-xl border border-border bg-card p-4">
+						<div className="flex items-center gap-1.5 text-xs text-subtle">
 							<IconActivity className="h-3.5 w-3.5 text-brand" aria-hidden="true" />
 							<span>{t("updates.metric_scanned_24h")}</span>
 						</div>
-						<p className="mt-2 text-lg font-bold tabular-nums text-light">
+						<p className="mt-2 text-lg font-bold tabular-nums text-foreground">
 							{summary ? fmtNum(summary.heartbeat.scanned_24h) : "—"}
 						</p>
-						<p className="mt-0.5 text-[11px] text-muted-foreground">
+						<p className="mt-0.5 text-[11px] text-subtle">
 							{summary
 								? t("updates.metric_not_modified", {
 										count: fmtNum(summary.heartbeat.not_modified_24h),
@@ -287,31 +287,29 @@ export default function UpdatesPage() {
 						</p>
 					</div>
 
-					<div className="rounded-xl border border-default bg-card p-4">
-						<div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+					<div className="rounded-xl border border-border bg-card p-4">
+						<div className="flex items-center gap-1.5 text-xs text-subtle">
 							<IconDatabase className="h-3.5 w-3.5 text-brand" aria-hidden="true" />
 							<span>{t("updates.metric_changes")}</span>
 						</div>
-						<p className="mt-2 text-lg font-bold tabular-nums text-light">
+						<p className="mt-2 text-lg font-bold tabular-nums text-foreground">
 							{summary ? fmtNum(summary.heartbeat.changed_24h) : "—"}
-							<span className="ml-1.5 text-xs font-normal text-muted-foreground">
+							<span className="ml-1.5 text-xs font-normal text-subtle">
 								/ 7d: {summary ? fmtNum(summary.heartbeat.changed_7d) : "—"}
 							</span>
 						</p>
-						<p className="mt-0.5 text-[11px] text-muted-foreground">
-							{t("updates.metric_changes_hint")}
-						</p>
+						<p className="mt-0.5 text-[11px] text-subtle">{t("updates.metric_changes_hint")}</p>
 					</div>
 
-					<div className="rounded-xl border border-default bg-card p-4">
-						<div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+					<div className="rounded-xl border border-border bg-card p-4">
+						<div className="flex items-center gap-1.5 text-xs text-subtle">
 							<IconCheck className="h-3.5 w-3.5 text-success" aria-hidden="true" />
 							<span>{t("updates.metric_coverage")}</span>
 						</div>
-						<p className="mt-2 text-lg font-bold tabular-nums text-light">
+						<p className="mt-2 text-lg font-bold tabular-nums text-foreground">
 							{corpus?.embedded_percentage != null ? `${corpus.embedded_percentage}%` : "—"}
 						</p>
-						<p className="mt-0.5 text-[11px] text-muted-foreground">
+						<p className="mt-0.5 text-[11px] text-subtle">
 							{corpus
 								? t("updates.metric_docs_total", { count: fmtNum(corpus.docs_total) })
 								: "\u00A0"}
@@ -336,16 +334,16 @@ export default function UpdatesPage() {
 
 				{/* Framework & Kind Radar */}
 				<section className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-12">
-					<Card className="border-default bg-card lg:col-span-7">
+					<Card className="border-border bg-card lg:col-span-7">
 						<CardContent className="p-5">
 							<div className="flex items-center justify-between gap-2">
 								<div>
-									<h2 className="text-sm font-semibold text-light">
+									<h2 className="text-sm font-semibold text-foreground">
 										{t("updates.frameworks_title")}
 									</h2>
-									<p className="text-xs text-muted-foreground">{t("updates.frameworks_hint")}</p>
+									<p className="text-xs text-subtle">{t("updates.frameworks_hint")}</p>
 								</div>
-								<div className="inline-flex rounded-lg border border-default bg-secondary p-0.5">
+								<div className="inline-flex rounded-lg border border-border bg-surface p-0.5">
 									{(["7d", "30d"] as const).map((r) => (
 										<button
 											key={r}
@@ -354,7 +352,7 @@ export default function UpdatesPage() {
 											className={
 												radarRange === r
 													? "rounded-md bg-brand px-2.5 py-0.5 text-xs font-semibold text-brand-foreground"
-													: "rounded-md px-2.5 py-0.5 text-xs text-muted-foreground hover:text-light"
+													: "rounded-md px-2.5 py-0.5 text-xs text-subtle hover:text-foreground"
 											}
 										>
 											{r}
@@ -364,9 +362,7 @@ export default function UpdatesPage() {
 							</div>
 
 							{topFrameworks.length === 0 ? (
-								<p className="py-8 text-center text-xs text-muted-foreground">
-									{t("updates.no_data")}
-								</p>
+								<p className="py-8 text-center text-xs text-subtle">{t("updates.no_data")}</p>
 							) : (
 								<div className="mt-4 space-y-2">
 									{topFrameworks.slice(0, 10).map((item) => {
@@ -380,19 +376,19 @@ export default function UpdatesPage() {
 												className={`group flex w-full items-center gap-3 rounded-lg border px-3 py-2 text-left transition-colors ${
 													active
 														? "border-brand bg-brand/10"
-														: "border-transparent bg-secondary/50 hover:border-default"
+														: "border-transparent bg-surface/50 hover:border-border"
 												}`}
 											>
-												<span className="w-36 shrink-0 truncate text-xs font-semibold text-light">
+												<span className="w-36 shrink-0 truncate text-xs font-semibold text-foreground">
 													{item.framework}
 												</span>
-												<div className="h-2 flex-1 overflow-hidden rounded-full bg-tertiary">
+												<div className="h-2 flex-1 overflow-hidden rounded-full bg-surface-subtle">
 													<div
 														className="h-full rounded-full bg-brand"
 														style={{ width: `${pct}%` }}
 													/>
 												</div>
-												<span className="w-10 shrink-0 text-right font-mono text-xs font-semibold tabular-nums text-muted-foreground">
+												<span className="w-10 shrink-0 text-right font-mono text-xs font-semibold tabular-nums text-subtle">
 													{fmtNum(item.count)}
 												</span>
 											</button>
@@ -403,10 +399,10 @@ export default function UpdatesPage() {
 						</CardContent>
 					</Card>
 
-					<Card className="border-default bg-card lg:col-span-5">
+					<Card className="border-border bg-card lg:col-span-5">
 						<CardContent className="p-5">
-							<h2 className="text-sm font-semibold text-light">{t("updates.kinds_title")}</h2>
-							<p className="text-xs text-muted-foreground">{t("updates.kinds_hint")}</p>
+							<h2 className="text-sm font-semibold text-foreground">{t("updates.kinds_title")}</h2>
+							<p className="text-xs text-subtle">{t("updates.kinds_hint")}</p>
 
 							<div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1">
 								{DOC_CHANGE_KINDS.map((k) => {
@@ -420,11 +416,11 @@ export default function UpdatesPage() {
 											className={`flex items-center justify-between rounded-lg border px-3 py-2 text-xs transition-colors ${
 												active
 													? "border-brand bg-brand/10 font-semibold text-brand"
-													: "border-default bg-secondary/40 text-light hover:border-border-light"
+													: "border-border bg-surface/40 text-foreground hover:border-border-strong"
 											}`}
 										>
 											<span>{t(`updates.kind_${k}`)}</span>
-											<span className="font-mono font-semibold tabular-nums text-muted-foreground">
+											<span className="font-mono font-semibold tabular-nums text-subtle">
 												{fmtNum(count)}
 											</span>
 										</button>
@@ -439,8 +435,8 @@ export default function UpdatesPage() {
 				<section className="mt-8">
 					<div className="flex flex-wrap items-center justify-between gap-3">
 						<div>
-							<h2 className="text-lg font-bold text-light">{t("updates.timeline_title")}</h2>
-							<p className="text-xs text-muted-foreground">
+							<h2 className="text-lg font-bold text-foreground">{t("updates.timeline_title")}</h2>
+							<p className="text-xs text-subtle">
 								{t("updates.timeline_count", { count: fmtNum(totalEvents) })}
 							</p>
 						</div>
@@ -448,7 +444,7 @@ export default function UpdatesPage() {
 						<div className="flex flex-wrap items-center gap-2">
 							<div className="relative">
 								<IconSearch
-									className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground"
+									className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-subtle"
 									aria-hidden="true"
 								/>
 								<input
@@ -456,7 +452,7 @@ export default function UpdatesPage() {
 									value={searchInput}
 									onChange={(e) => setSearchInput(e.target.value)}
 									placeholder={t("updates.search_placeholder")}
-									className="h-8 w-48 rounded-lg border border-default bg-card pl-8 pr-3 text-xs text-light placeholder:text-muted-foreground focus:border-brand focus:outline-none sm:w-56"
+									className="h-8 w-48 rounded-lg border border-border bg-card pl-8 pr-3 text-xs text-foreground placeholder:text-subtle focus:border-brand focus:outline-none sm:w-56"
 								/>
 							</div>
 
@@ -464,7 +460,7 @@ export default function UpdatesPage() {
 								aria-label={t("updates.range_label")}
 								value={days}
 								onChange={(e) => setDays(Number(e.target.value))}
-								className="h-8 rounded-lg border border-default bg-card px-2.5 text-xs font-medium text-light focus:border-brand focus:outline-none"
+								className="h-8 rounded-lg border border-border bg-card px-2.5 text-xs font-medium text-foreground focus:border-brand focus:outline-none"
 							>
 								<option value={1}>{t("updates.range_1d")}</option>
 								<option value={7}>{t("updates.range_7d")}</option>
@@ -480,7 +476,7 @@ export default function UpdatesPage() {
 								className={
 									significance === "all"
 										? "h-8 rounded-lg border border-brand bg-brand/10 px-2.5 text-xs font-semibold text-brand"
-										: "h-8 rounded-lg border border-default bg-card px-2.5 text-xs font-medium text-muted-foreground hover:text-light"
+										: "h-8 rounded-lg border border-border bg-card px-2.5 text-xs font-medium text-subtle hover:text-foreground"
 								}
 							>
 								{t(
@@ -521,7 +517,7 @@ export default function UpdatesPage() {
 										setSearchInput("");
 										setQuery("");
 									}}
-									className="inline-flex items-center gap-1 rounded-full border border-default bg-secondary px-2.5 py-1 text-xs text-light"
+									className="inline-flex items-center gap-1 rounded-full border border-border bg-surface px-2.5 py-1 text-xs text-foreground"
 								>
 									<span>“{query}”</span>
 									<IconX className="h-3 w-3" aria-hidden="true" />
@@ -537,14 +533,14 @@ export default function UpdatesPage() {
 					>
 						{feedLoading && events.length === 0 ? (
 							<div
-								className="rounded-xl border border-default bg-card py-12 text-center text-sm text-muted-foreground"
+								className="rounded-xl border border-border bg-card py-12 text-center text-sm text-subtle"
 								role="status"
 							>
 								{t("common.loading")}
 							</div>
 						) : events.length === 0 ? (
-							<div className="rounded-xl border border-default bg-card py-12 text-center">
-								<p className="text-sm text-muted-foreground">{t("updates.timeline_empty")}</p>
+							<div className="rounded-xl border border-border bg-card py-12 text-center">
+								<p className="text-sm text-subtle">{t("updates.timeline_empty")}</p>
 							</div>
 						) : (
 							<>
@@ -573,10 +569,12 @@ export default function UpdatesPage() {
 				</section>
 
 				{/* Subtle Agent CTA */}
-				<section className="mt-10 rounded-2xl border border-default bg-card p-6 sm:flex sm:items-center sm:justify-between sm:gap-6">
+				<section className="mt-10 rounded-2xl border border-border bg-card p-6 sm:flex sm:items-center sm:justify-between sm:gap-6">
 					<div>
-						<h2 className="text-base font-bold text-light sm:text-lg">{t("updates.cta_title")}</h2>
-						<p className="mt-1 text-sm text-muted-foreground">{t("updates.cta_subtitle")}</p>
+						<h2 className="text-base font-bold text-foreground sm:text-lg">
+							{t("updates.cta_title")}
+						</h2>
+						<p className="mt-1 text-sm text-subtle">{t("updates.cta_subtitle")}</p>
 					</div>
 					<Button variant="primary" asChild className="mt-4 shrink-0 sm:mt-0">
 						<Link to="/connect">

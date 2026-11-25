@@ -50,7 +50,7 @@ export function AdminTable<T extends object>({
 			}
 
 			if (value === null || value === undefined) {
-				return <span className="text-muted-foreground italic">—</span>;
+				return <span className="text-subtle italic">—</span>;
 			}
 
 			if (col.key === "country_code") {
@@ -93,7 +93,7 @@ export function AdminTable<T extends object>({
 			if (typeof value === "boolean") {
 				return (
 					<span
-						className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${value ? "bg-green-900 text-green-200" : "bg-red-900 text-red-200"}`}
+						className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${value ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}
 					>
 						{t(value ? "common.yes" : "common.no")}
 					</span>
@@ -115,9 +115,7 @@ export function AdminTable<T extends object>({
 				<>
 					<div className="min-w-0 flex-[1_1_12rem] py-1">
 						<CardTitle>{title}</CardTitle>
-						{description && (
-							<p className="text-sm text-muted-foreground mt-1 font-normal">{description}</p>
-						)}
+						{description && <p className="text-sm text-subtle mt-1 font-normal">{description}</p>}
 					</div>
 					{onRefresh && (
 						<Button

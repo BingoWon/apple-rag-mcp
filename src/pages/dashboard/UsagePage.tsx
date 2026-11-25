@@ -88,7 +88,7 @@ function UsageContent({
 		{
 			key: "result_count",
 			label: t("usage.result_count"),
-			render: (value) => <div className="text-muted-foreground text-sm">{String(value)}</div>,
+			render: (value) => <div className="text-subtle text-sm">{String(value)}</div>,
 		},
 		{
 			key: "status",
@@ -99,9 +99,7 @@ function UsageContent({
 			key: "created_at",
 			label: t("usage.time"),
 			render: (value) => (
-				<div className="text-muted-foreground text-sm">
-					{DataTableRenderers.formatDate(value as string)}
-				</div>
+				<div className="text-subtle text-sm">{DataTableRenderers.formatDate(value as string)}</div>
 			),
 		},
 	];
@@ -139,7 +137,7 @@ function UsageContent({
 									}
 								}}
 								title={t("common.copy_url")}
-								className="text-muted hover:text-light h-8 w-8"
+								className="text-muted hover:text-foreground h-8 w-8"
 							>
 								<IconClipboard className="h-4 w-4" />
 							</Button>
@@ -157,9 +155,7 @@ function UsageContent({
 			key: "created_at",
 			label: t("usage.time"),
 			render: (value) => (
-				<div className="text-muted-foreground text-sm">
-					{DataTableRenderers.formatDate(value as string)}
-				</div>
+				<div className="text-subtle text-sm">{DataTableRenderers.formatDate(value as string)}</div>
 			),
 		},
 	];
@@ -176,12 +172,12 @@ function UsageContent({
 						<CardTitle className="flex items-center justify-between">
 							<div>
 								<span>{t(`usage.${id}_calls`)}</span>
-								<p className="text-sm text-muted-foreground mt-1 font-normal">
+								<p className="text-sm text-subtle mt-1 font-normal">
 									{t(`usage.${id}_calls_desc`)}
 								</p>
 							</div>
 							<div className="flex items-center gap-4">
-								<div className="flex items-center gap-2 text-sm text-muted-foreground">
+								<div className="flex items-center gap-2 text-sm text-subtle">
 									<IconClock className="h-4 w-4" />
 									{t("common.last_updated", { time: new Date().toLocaleTimeString() })}
 								</div>
@@ -225,7 +221,7 @@ function UsageContent({
 		<div className="space-y-6">
 			{/* Header */}
 			<div>
-				<h1 className="text-2xl font-bold text-light">{t("usage.title")}</h1>
+				<h1 className="text-2xl font-bold text-foreground">{t("usage.title")}</h1>
 				<p className="mt-1 text-sm text-muted">{t("usage.subtitle")}</p>
 			</div>
 

@@ -7,7 +7,7 @@ export const EvervaultCard = ({
 	children,
 	className,
 	gradientFrom = "from-green-500",
-	gradientTo = "to-brand-tertiary",
+	gradientTo = "to-brand-strong",
 }: {
 	children: React.ReactNode;
 	className?: string;
@@ -92,7 +92,7 @@ export function CardPattern({
 					WebkitMaskImage: maskImage,
 				}}
 			>
-				<p className="absolute inset-0 text-xs break-words whitespace-pre-wrap text-primary-foreground font-mono font-bold overflow-hidden leading-4">
+				<p className="absolute inset-0 text-xs break-words whitespace-pre-wrap text-white font-mono font-bold overflow-hidden leading-4">
 					{randomString}
 				</p>
 			</motion.div>

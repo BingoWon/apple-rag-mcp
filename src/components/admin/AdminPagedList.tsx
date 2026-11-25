@@ -30,7 +30,7 @@ export function AdminPagedList({
 					showPageSizeSelector={false}
 					showInfo={false}
 					showNavigation={multiplePages}
-					className="shrink-0 justify-start gap-2 rounded-t-lg border border-default bg-card py-2"
+					className="shrink-0 justify-start gap-2 rounded-t-lg border border-border bg-card py-2"
 				>
 					{header}
 				</PaginationControls>

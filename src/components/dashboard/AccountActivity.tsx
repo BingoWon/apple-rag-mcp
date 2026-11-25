@@ -38,9 +38,9 @@ function WeeklyQuota() {
 			<div>
 				<h3 className={style.label}>
 					{t("activity.weekly_remaining")}
-					<IconCircleCheck aria-hidden className="text-muted-foreground" />
+					<IconCircleCheck aria-hidden className="text-subtle" />
 				</h3>
-				<p className="mt-1 flex flex-wrap items-baseline gap-x-1.5 text-3xl font-bold tabular-nums text-light">
+				<p className="mt-1 flex flex-wrap items-baseline gap-x-1.5 text-3xl font-bold tabular-nums text-foreground">
 					{data ? (data.limit === -1 ? t("activity.unlimited") : num(data.remaining)) : "—"}
 					{data && data.limit >= 0 && (
 						<span className="whitespace-nowrap text-sm font-medium text-muted">
@@ -139,9 +139,9 @@ export function AccountActivity() {
 						<div>
 							<h3 className={style.label}>
 								{t("activity.total_calls")}
-								<IconActivity aria-hidden className="text-muted-foreground" />
+								<IconActivity aria-hidden className="text-subtle" />
 							</h3>
-							<p className="mt-1 text-3xl font-bold tabular-nums text-light">
+							<p className="mt-1 text-3xl font-bold tabular-nums text-foreground">
 								{data ? number(data.total) : "—"}
 							</p>
 						</div>
@@ -167,7 +167,7 @@ export function AccountActivity() {
 										style={{ background: colors[k] }}
 									/>
 									{t("activity." + k)}{" "}
-									<strong className="font-semibold tabular-nums text-light">
+									<strong className="font-semibold tabular-nums text-foreground">
 										{number(data.by_tool[k])}
 									</strong>
 									<IconArrowUpRight aria-hidden className="size-3" />

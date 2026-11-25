@@ -36,7 +36,9 @@ export function Footer() {
 					</div>
 					<div className="mt-16 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">
 						<div>
-							<h3 className="text-sm font-semibold leading-6 text-light">{t("nav.product")}</h3>
+							<h3 className="text-sm font-semibold leading-6 text-foreground">
+								{t("nav.product")}
+							</h3>
 							<ul className="mt-6 space-y-4">
 								{navigation.product.map((item) => (
 									<li key={item.name}>
@@ -47,14 +49,14 @@ export function Footer() {
 													e.preventDefault();
 													activateFabContact();
 												}}
-												className="text-sm leading-6 text-muted hover:text-light cursor-pointer"
+												className="text-sm leading-6 text-muted hover:text-foreground cursor-pointer"
 											>
 												{item.name}
 											</button>
 										) : (
 											<Link
 												to={item.href}
-												className="text-sm leading-6 text-muted hover:text-light"
+												className="text-sm leading-6 text-muted hover:text-foreground"
 											>
 												{item.name}
 											</Link>
@@ -64,13 +66,16 @@ export function Footer() {
 							</ul>
 						</div>
 						<div>
-							<h3 className="text-sm font-semibold leading-6 text-light">
+							<h3 className="text-sm font-semibold leading-6 text-foreground">
 								{t("common.dashboard")}
 							</h3>
 							<ul className="mt-6 space-y-4">
 								{navigation.dashboard.map((item) => (
 									<li key={item.name}>
-										<Link to={item.href} className="text-sm leading-6 text-muted hover:text-light">
+										<Link
+											to={item.href}
+											className="text-sm leading-6 text-muted hover:text-foreground"
+										>
 											{item.name}
 										</Link>
 									</li>
@@ -79,16 +84,16 @@ export function Footer() {
 						</div>
 					</div>
 				</div>
-				<div className="mt-16 border-t border-default pt-4 space-y-4">
+				<div className="mt-16 border-t border-border pt-4 space-y-4">
 					<p className="text-xs leading-5 text-muted text-center md:text-left">
 						{t("footer.copyright")}
 					</p>
 					<div className="flex flex-col items-center space-y-4 md:flex-row md:justify-between md:space-y-0">
 						<div className="flex space-x-4 text-xs">
-							<Link to="/privacy-policy" className="text-muted hover:text-light">
+							<Link to="/privacy-policy" className="text-muted hover:text-foreground">
 								{t("footer.privacy")}
 							</Link>
-							<Link to="/terms-of-service" className="text-muted hover:text-light">
+							<Link to="/terms-of-service" className="text-muted hover:text-foreground">
 								{t("footer.terms")}
 							</Link>
 						</div>

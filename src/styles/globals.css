@@ -1,164 +1,133 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 /*
- * ========================================
- * APPLE RAG DESIGN SYSTEM - TAILWIND V4 DUAL MODE
- * ========================================
- *
- * ✨ Enhanced dual-mode design system
- * ✨ Based on original working @theme architecture
- * ✨ Seamless light/dark mode switching
- * ✨ Brand color integration: #60a5fa
- *
- * ========================================
+ * Apple RAG Design System — Single Semantic Token Architecture (Tailwind CSS v4)
+ * :root defines the light baseline; .dark defines the dark override.
+ * @theme inline maps tokens directly to Tailwind utilities with zero runtime.
  */
 
-@theme {
-  /* Font Families - overrides Tailwind defaults for font-sans / font-mono */
-  --font-sans: "Inter", "Noto Sans SC", ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+:root {
+	color-scheme: light;
 
-  /* Background Colors - generates bg-primary, bg-secondary, etc. */
-  --color-primary: #0a0a0a;
-  --color-secondary: #0f0f0f;
-  --color-tertiary: #1a1a1a;
-  --color-elevated: #111111;
-  --color-overlay: rgba(10, 10, 10, 0.9);
-  --color-glass: rgba(10, 10, 10, 0.8);
+	/* Surfaces */
+	--background: #ffffff;
+	--surface: #f8fafc;
+	--surface-subtle: #f1f5f9;
+	--card: #ffffff;
+	--overlay: rgba(255, 255, 255, 0.9);
 
-  /* Text Colors - generates text-light, text-muted, etc. */
-  --color-light: #ffffff;
-  --color-muted: #e5e5e5;
-  --color-subtle: #cccccc;
-  --color-faint: #999999;
-  --color-inverse: #0a0a0a;
+	/* Text */
+	--foreground: #0f172a;
+	--muted: #475569;
+	--subtle: #64748b;
 
-  /* Border Colors - generates border-default, border-light, etc. */
-  --color-default: #333333;
-  --color-border-light: #444444;
-  --color-border-dark: #222222;
-  --color-focus: #60a5fa;
+	/* Borders */
+	--border: #e2e8f0;
+	--border-strong: #cbd5e1;
 
-  /* Brand Colors - generates bg-brand, text-brand, from-brand, etc. */
-  --color-brand: #60a5fa;
-  --color-brand-secondary: #3b82f6;
-  --color-brand-tertiary: #3b82f6;
+	/* Brand */
+	--brand: #60a5fa;
+	--brand-strong: #3b82f6;
+	--brand-foreground: #ffffff;
 
-  /* TypeSafe logo hue, with lightness variants for its search section. */
-  --color-typesafe-lightest: #F5B8E3;
-  --color-typesafe-light: #ED82CE;
-  --color-typesafe: #E650BB;
-  --color-typesafe-dark: #DB1FA5;
-  --color-typesafe-deep: #AA1880;
+	/* Status */
+	--success: #22c55e;
+	--warning: #fbbf24;
+	--destructive: #ef4444;
+	--destructive-foreground: #ffffff;
 
-  /* Status Colors - generates bg-success, text-success, etc. */
-  --color-success: #22c55e;
-  --color-warning: #fbbf24;
-  --color-error: #ef4444;
-  --color-info: #60a5fa;
-
-  /* Semantic Colors for shadcn/ui compatibility */
-  --color-background: #0a0a0a;
-  --color-foreground: #ffffff;
-  --color-card: #111111;
-  --color-card-foreground: #ffffff;
-  --color-muted-foreground: #a0a6b2;
-  --color-brand-foreground: #0a0a0a;
-  --color-action: #60a5fa;
-  --color-action-foreground: #0a0a0a;
-  --color-popover: #111111;
-  --color-popover-foreground: #ffffff;
-  --color-accent: #1a1a1a;
-  --color-accent-foreground: #ffffff;
-  --color-destructive: #ef4444;
-  --color-destructive-foreground: #ffffff;
-  --color-border: #333333;
-  --color-input: #333333;
-  --color-ring: #60a5fa;
-
-  /* Chart specific colors */
-  --color-chart-queries: #2afadf; /* 青绿色 - 查询图表主色 */
-  --color-chart-results: #ee9ae5; /* 粉紫色 - 结果图表主色 */
-  --color-chart-gradient-1: #4c83ff; /* 蓝色渐变1 */
-  --color-chart-gradient-2: #5961f9; /* 蓝色渐变2 */
-
-  /* Chart variables for ApexCharts */
-  --chart-1: 174 100% 59%; /* #2AFADF - 查询图表 */
-  --chart-2: 225 100% 65%; /* #4C83FF - 查询图表渐变 */
-  --chart-3: 309 77% 74%; /* #EE9AE5 - 结果图表 */
-  --chart-4: 243 93% 67%; /* #5961F9 - 结果图表渐变 */
-
-  /* Dark Mode Shadows - single layer only */
-  --shadow-input: 0px 1px 3px rgba(0, 0, 0, 0.2);
-  --shadow-button: 0px 2px 4px rgba(0, 0, 0, 0.25);
-  --shadow-complex: 0px 3px 6px rgba(0, 0, 0, 0.3);
-
-  /* Global Transition System - generates smooth, smooth-colors, etc. */
-  --transition-duration: 200ms;
-  --transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
+	/* Elevation */
+	--elevation-input: 0px 1px 3px rgba(0, 0, 0, 0.08);
+	--elevation-button: 0px 2px 4px rgba(0, 0, 0, 0.12);
+	--elevation-complex: 0px 3px 6px rgba(0, 0, 0, 0.15);
 }
 
-/* Light Mode Override */
-:root:not(.dark) {
-	/* Light Mode Background Colors */
-	--color-primary: #ffffff;
-	--color-secondary: #f8fafc;
-	--color-tertiary: #f1f5f9;
-	--color-elevated: #ffffff;
-	--color-overlay: rgba(255, 255, 255, 0.9);
-	--color-glass: rgba(255, 255, 255, 0.8);
+.dark {
+	color-scheme: dark;
 
-	/* Light Mode Text Colors */
-	--color-light: #0f172a;
-	--color-muted: #64748b;
-	--color-subtle: #475569;
-	--color-faint: #94a3b8;
-	--color-inverse: #ffffff;
+	/* Surfaces */
+	--background: #0a0a0a;
+	--surface: #0f0f0f;
+	--surface-subtle: #1a1a1a;
+	--card: #111111;
+	--overlay: rgba(10, 10, 10, 0.9);
 
-	/* Light Mode Border Colors */
-	--color-default: #e2e8f0;
-	--color-border-light: #cbd5e1;
-	--color-border-dark: #94a3b8;
-	--color-focus: #60a5fa;
+	/* Text */
+	--foreground: #ffffff;
+	--muted: #cbd5e1;
+	--subtle: #94a3b8;
 
-	/* Chart specific colors (same as dark mode) */
-	--color-chart-queries: #2afadf; /* 青绿色 - 查询图表主色 */
-	--color-chart-results: #ee9ae5; /* 粉紫色 - 结果图表主色 */
-	--color-chart-gradient-1: #4c83ff; /* 蓝色渐变1 */
-	--color-chart-gradient-2: #5961f9; /* 蓝色渐变2 */
+	/* Borders */
+	--border: #333333;
+	--border-strong: #444444;
 
-	/* Chart variables for ApexCharts (same as dark mode) */
-	--chart-1: 174 100% 59%; /* #2AFADF - 查询图表 */
-	--chart-2: 225 100% 65%; /* #4C83FF - 查询图表渐变 */
-	--chart-3: 309 77% 74%; /* #EE9AE5 - 结果图表 */
-	--chart-4: 243 93% 67%; /* #5961F9 - 结果图表渐变 */
+	/* Brand */
+	--brand: #60a5fa;
+	--brand-strong: #3b82f6;
+	--brand-foreground: #0a0a0a;
 
-	/* Light Mode Semantic Colors */
-	--color-background: #ffffff;
-	--color-foreground: #0f172a;
-	--color-card: #ffffff;
-	--color-card-foreground: #0f172a;
-	--color-muted-foreground: #64748b;
-	--color-brand-foreground: #0a0a0a;
-	--color-action: #60a5fa;
-	--color-action-foreground: #ffffff;
-	--color-popover: #ffffff;
-	--color-popover-foreground: #0f172a;
-	--color-accent: #f1f5f9;
-	--color-accent-foreground: #0f172a;
-	--color-border: #e2e8f0;
-	--color-input: #e2e8f0;
+	/* Status */
+	--success: #22c55e;
+	--warning: #fbbf24;
+	--destructive: #ef4444;
+	--destructive-foreground: #ffffff;
 
-	/* Light Mode Shadows - single layer only */
-	--shadow-input: 0px 1px 3px rgba(0, 0, 0, 0.08);
-	--shadow-button: 0px 2px 4px rgba(0, 0, 0, 0.12);
-	--shadow-complex: 0px 3px 6px rgba(0, 0, 0, 0.15);
+	/* Elevation */
+	--elevation-input: 0px 1px 3px rgba(0, 0, 0, 0.2);
+	--elevation-button: 0px 2px 4px rgba(0, 0, 0, 0.25);
+	--elevation-complex: 0px 3px 6px rgba(0, 0, 0, 0.3);
 }
 
-/* Global Smooth Scrolling */
+@theme inline {
+	/* Typography */
+	--font-sans: "Inter", "Noto Sans SC", ui-sans-serif, system-ui, -apple-system, sans-serif;
+	--font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+
+	/* Semantic Color Tokens */
+	--color-background: var(--background);
+	--color-surface: var(--surface);
+	--color-surface-subtle: var(--surface-subtle);
+	--color-card: var(--card);
+	--color-overlay: var(--overlay);
+
+	--color-foreground: var(--foreground);
+	--color-muted: var(--muted);
+	--color-subtle: var(--subtle);
+
+	--color-border: var(--border);
+	--color-border-strong: var(--border-strong);
+
+	--color-brand: var(--brand);
+	--color-brand-strong: var(--brand-strong);
+	--color-brand-foreground: var(--brand-foreground);
+
+	--color-success: var(--success);
+	--color-warning: var(--warning);
+	--color-destructive: var(--destructive);
+	--color-destructive-foreground: var(--destructive-foreground);
+
+	/* TypeSafe / Jev Partner Palette */
+	--color-typesafe-lightest: #F5B8E3;
+	--color-typesafe-light: #ED82CE;
+	--color-typesafe: #E650BB;
+	--color-typesafe-dark: #DB1FA5;
+	--color-typesafe-deep: #AA1880;
+
+	/* Elevation */
+	--shadow-input: var(--elevation-input);
+	--shadow-button: var(--elevation-button);
+	--shadow-complex: var(--elevation-complex);
+}
+
 html {
 	scroll-behavior: smooth;
+}
+
+#root {
+	min-height: 100dvh;
 }
 
 .home-content {
@@ -166,7 +135,6 @@ html {
 }
 
 .home-section {
-	/* Adjacent sections each supply half of the space between their contents. */
 	padding-block: clamp(2.5rem, 6.25vw, 3.5rem);
 	scroll-margin-block-start: 4rem;
 }
@@ -181,17 +149,6 @@ html {
 	margin-block-end: clamp(2rem, 5vw, 3rem);
 }
 
-/* Global Transition for All Interactive Elements */
-button,
-a {
-	transition: color var(--transition-duration) var(--transition-timing),
-		background-color var(--transition-duration) var(--transition-timing),
-		border-color var(--transition-duration) var(--transition-timing),
-		opacity var(--transition-duration) var(--transition-timing),
-		box-shadow var(--transition-duration) var(--transition-timing);
-}
-
-/* Global Cursor for All Interactive Elements (Desktop Only) */
 @media (hover: hover) and (pointer: fine) {
 	button,
 	a,
@@ -202,21 +159,11 @@ a {
 	}
 }
 
-/* Optional: Utility classes for specific needs */
-.smooth {
-	transition: color var(--transition-duration) var(--transition-timing),
-		background-color var(--transition-duration) var(--transition-timing),
-		border-color var(--transition-duration) var(--transition-timing),
-		opacity var(--transition-duration) var(--transition-timing),
-		box-shadow var(--transition-duration) var(--transition-timing);
-}
-
 @keyframes spotlight-sweep-left {
 	0%,
 	100% {
 		transform: translate3d(0, 0, 0);
 	}
-
 	50% {
 		transform: translate3d(100px, 0, 0);
 	}
@@ -227,7 +174,6 @@ a {
 	100% {
 		transform: translate3d(0, 0, 0);
 	}
-
 	50% {
 		transform: translate3d(-100px, 0, 0);
 	}
@@ -246,13 +192,6 @@ a {
 	animation: spotlight-sweep-right 7s ease-in-out infinite;
 }
 
-/* Essential layout styles only */
-main,
-#root {
-	background-color: transparent;
-	min-height: 100vh;
-}
-/* Hide scrollbar for Aceternity UI Animated Tabs */
 .no-visible-scrollbar {
 	scrollbar-width: none;
 	-ms-overflow-style: none;
@@ -263,15 +202,15 @@ main,
 	display: none;
 }
 
+.jev-brand-name {
+	text-shadow: 0.07em 0.07em 0 var(--color-typesafe);
+}
+
 .hero-stickers {
 	position: absolute;
 	inset: 0;
 	z-index: 20;
 	pointer-events: none;
-}
-
-.jev-brand-name {
-	text-shadow: 0.07em 0.07em 0 var(--color-typesafe);
 }
 
 .hero-sticker {

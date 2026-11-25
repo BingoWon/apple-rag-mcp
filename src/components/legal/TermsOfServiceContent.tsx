@@ -1,9 +1,9 @@
 export default function TermsOfServiceContent() {
 	return (
-		<div className="bg-gradient-to-br from-primary to-secondary border border-default rounded-2xl p-8 md:p-12">
+		<div className="bg-gradient-to-br from-background to-surface border border-border rounded-2xl p-8 md:p-12">
 			<div className="max-w-none text-muted leading-relaxed">
 				<section className="mb-8">
-					<h2 className="text-2xl font-bold text-light mb-4">1. Acceptance of Terms</h2>
+					<h2 className="text-2xl font-bold text-foreground mb-4">1. Acceptance of Terms</h2>
 					<p className="mb-0">
 						By accessing and using Apple RAG services ("the Service"), you accept and agree to be
 						bound by the terms and provisions of this agreement. If you do not agree to abide by
@@ -12,7 +12,7 @@ export default function TermsOfServiceContent() {
 				</section>
 
 				<section className="mb-8">
-					<h2 className="text-2xl font-bold text-light mb-4">2. Description of Service</h2>
+					<h2 className="text-2xl font-bold text-foreground mb-4">2. Description of Service</h2>
 					<p className="mb-4">
 						Apple RAG provides MCP and CLI access that enables AI agents and applications to search
 						and retrieve information from Apple's developer documentation. Our service includes:
@@ -27,10 +27,12 @@ export default function TermsOfServiceContent() {
 				</section>
 
 				<section className="mb-8">
-					<h2 className="text-2xl font-bold text-light mb-6">3. User Accounts and Registration</h2>
+					<h2 className="text-2xl font-bold text-foreground mb-6">
+						3. User Accounts and Registration
+					</h2>
 
 					<div className="mb-6">
-						<h3 className="text-lg font-semibold text-light mb-3">3.1 Account Creation</h3>
+						<h3 className="text-lg font-semibold text-foreground mb-3">3.1 Account Creation</h3>
 						<p className="mb-0">
 							Anonymous usage is available within anonymous rate limits. To unlock higher quotas or
 							paid plans, you can create an account using email and password or OAuth authentication
@@ -40,7 +42,9 @@ export default function TermsOfServiceContent() {
 					</div>
 
 					<div className="mb-0">
-						<h3 className="text-lg font-semibold text-light mb-3">3.2 Account Responsibility</h3>
+						<h3 className="text-lg font-semibold text-foreground mb-3">
+							3.2 Account Responsibility
+						</h3>
 						<p className="mb-0">
 							You are responsible for all activities that occur under your account. You must notify
 							us immediately of any unauthorized use of your account or any other breach of
@@ -50,10 +54,10 @@ export default function TermsOfServiceContent() {
 				</section>
 
 				<section className="mb-8">
-					<h2 className="text-2xl font-bold text-light mb-6">4. Acceptable Use Policy</h2>
+					<h2 className="text-2xl font-bold text-foreground mb-6">4. Acceptable Use Policy</h2>
 
 					<div className="mb-6">
-						<h3 className="text-lg font-semibold text-light mb-3">4.1 Permitted Uses</h3>
+						<h3 className="text-lg font-semibold text-foreground mb-3">4.1 Permitted Uses</h3>
 						<p className="mb-3">You may use our Service for:</p>
 						<ul className="list-disc pl-6 space-y-2 mb-0">
 							<li>Legitimate development and research purposes</li>
@@ -64,7 +68,7 @@ export default function TermsOfServiceContent() {
 					</div>
 
 					<div className="mb-0">
-						<h3 className="text-lg font-semibold text-light mb-3">4.2 Prohibited Uses</h3>
+						<h3 className="text-lg font-semibold text-foreground mb-3">4.2 Prohibited Uses</h3>
 						<p className="mb-3">You may not use our Service to:</p>
 						<ul className="list-disc pl-6 space-y-2 mb-0">
 							<li>Violate any applicable laws or regulations</li>
@@ -77,10 +81,10 @@ export default function TermsOfServiceContent() {
 				</section>
 
 				<section className="mb-8">
-					<h2 className="text-2xl font-bold text-light mb-6">5. API Usage and Rate Limits</h2>
+					<h2 className="text-2xl font-bold text-foreground mb-6">5. API Usage and Rate Limits</h2>
 
 					<div className="mb-6">
-						<h3 className="text-lg font-semibold text-light mb-3">5.1 Rate Limits</h3>
+						<h3 className="text-lg font-semibold text-foreground mb-3">5.1 Rate Limits</h3>
 						<p className="mb-0">
 							We implement rate limits to ensure fair usage and service availability. Rate limits
 							vary based on your account type and authentication status.
@@ -88,7 +92,7 @@ export default function TermsOfServiceContent() {
 					</div>
 
 					<div className="mb-0">
-						<h3 className="text-lg font-semibold text-light mb-3">5.2 API Tokens</h3>
+						<h3 className="text-lg font-semibold text-foreground mb-3">5.2 API Tokens</h3>
 						<p className="mb-0">
 							API tokens may be provided for authentication and enhanced usage limits. You must keep
 							any tokens secure and report compromised tokens immediately.
@@ -97,10 +101,10 @@ export default function TermsOfServiceContent() {
 				</section>
 
 				<section className="mb-8">
-					<h2 className="text-2xl font-bold text-light mb-6">6. Intellectual Property</h2>
+					<h2 className="text-2xl font-bold text-foreground mb-6">6. Intellectual Property</h2>
 
 					<div className="mb-6">
-						<h3 className="text-lg font-semibold text-light mb-3">6.1 Our Content</h3>
+						<h3 className="text-lg font-semibold text-foreground mb-3">6.1 Our Content</h3>
 						<p className="mb-0">
 							The Service and its original content, features, and functionality are owned by Apple
 							RAG and are protected by international copyright, trademark, patent, trade secret, and
@@ -109,7 +113,7 @@ export default function TermsOfServiceContent() {
 					</div>
 
 					<div className="mb-0">
-						<h3 className="text-lg font-semibold text-light mb-3">6.2 Apple Documentation</h3>
+						<h3 className="text-lg font-semibold text-foreground mb-3">6.2 Apple Documentation</h3>
 						<p className="mb-0">
 							The Apple developer documentation accessed through our Service is owned by Apple Inc.
 							We provide access to this public information but do not claim ownership of Apple's
@@ -119,7 +123,7 @@ export default function TermsOfServiceContent() {
 				</section>
 
 				<section className="mb-8">
-					<h2 className="text-2xl font-bold text-light mb-4">
+					<h2 className="text-2xl font-bold text-foreground mb-4">
 						7. Service Availability and Performance
 					</h2>
 					<p className="mb-4">
@@ -141,12 +145,12 @@ export default function TermsOfServiceContent() {
 				</section>
 
 				<section className="mb-8">
-					<h2 className="text-2xl font-bold text-light mb-6">
+					<h2 className="text-2xl font-bold text-foreground mb-6">
 						8. Disclaimers and Limitation of Liability
 					</h2>
 
 					<div className="mb-6">
-						<h3 className="text-lg font-semibold text-light mb-3">8.1 Service Disclaimers</h3>
+						<h3 className="text-lg font-semibold text-foreground mb-3">8.1 Service Disclaimers</h3>
 						<p className="mb-4">
 							The Service is provided on an "as is" and "as available" basis without warranties of
 							any kind, whether express or implied. We disclaim all warranties, including but not
@@ -162,7 +166,9 @@ export default function TermsOfServiceContent() {
 					</div>
 
 					<div className="mb-6">
-						<h3 className="text-lg font-semibold text-light mb-3">8.2 Limitation of Liability</h3>
+						<h3 className="text-lg font-semibold text-foreground mb-3">
+							8.2 Limitation of Liability
+						</h3>
 						<p className="mb-4">
 							To the fullest extent permitted by applicable law, in no event shall Apple RAG, its
 							affiliates, officers, directors, employees, agents, or licensors be liable for any
@@ -185,7 +191,7 @@ export default function TermsOfServiceContent() {
 					</div>
 
 					<div className="mb-0">
-						<h3 className="text-lg font-semibold text-light mb-3">8.3 Maximum Liability</h3>
+						<h3 className="text-lg font-semibold text-foreground mb-3">8.3 Maximum Liability</h3>
 						<p className="mb-0">
 							Our total liability to you for all claims arising out of or relating to the Service
 							shall not exceed the amount you have paid us in the twelve (12) months preceding the
@@ -196,7 +202,7 @@ export default function TermsOfServiceContent() {
 				</section>
 
 				<section className="mb-0">
-					<h2 className="text-2xl font-bold text-light mb-4">9. Contact Information</h2>
+					<h2 className="text-2xl font-bold text-foreground mb-4">9. Contact Information</h2>
 					<p className="mb-0">
 						If you have any questions about these Terms of Service, please contact us through our
 						support system in the user dashboard.

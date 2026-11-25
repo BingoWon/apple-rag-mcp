@@ -108,7 +108,7 @@ export const MacbookScroll = () => {
 					progress={videoProgress}
 				/>
 				{/* Base area */}
-				<div className="relative -z-10 h-[22rem] w-[32rem] overflow-hidden rounded-2xl bg-tertiary">
+				<div className="relative -z-10 h-[22rem] w-[32rem] overflow-hidden rounded-2xl bg-surface-subtle">
 					{/* above keyboard bar */}
 					<div className="relative h-10 w-full">
 						<div className="absolute inset-x-0 mx-auto h-4 w-[80%] bg-[#050505]" />

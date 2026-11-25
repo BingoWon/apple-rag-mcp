@@ -54,7 +54,7 @@ export default function SettingsPage() {
 		<div className="space-y-6">
 			{/* Header */}
 			<div>
-				<h1 className="text-2xl font-bold text-light">{t("settings.title")}</h1>
+				<h1 className="text-2xl font-bold text-foreground">{t("settings.title")}</h1>
 				<p className="mt-1 text-sm text-muted">{t("settings.subtitle")}</p>
 			</div>
 
@@ -74,7 +74,7 @@ export default function SettingsPage() {
 
 						{/* Email display (disabled input style) */}
 						<div>
-							<label htmlFor="email" className="block text-sm font-medium text-light mb-1">
+							<label htmlFor="email" className="block text-sm font-medium text-foreground mb-1">
 								{t("settings.email_label")}
 							</label>
 							<input
@@ -82,10 +82,10 @@ export default function SettingsPage() {
 								type="email"
 								value={user?.email || ""}
 								disabled
-								className="w-full px-3 py-2 bg-secondary border border-default rounded-md text-sm text-faint cursor-not-allowed"
+								className="w-full px-3 py-2 bg-surface border border-border rounded-md text-sm text-subtle cursor-not-allowed"
 								readOnly
 							/>
-							<p className="text-xs text-faint mt-1">{t("settings.email_locked")}</p>
+							<p className="text-xs text-subtle mt-1">{t("settings.email_locked")}</p>
 						</div>
 						<Button
 							type="submit"

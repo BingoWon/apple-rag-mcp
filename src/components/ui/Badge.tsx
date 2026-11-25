@@ -6,12 +6,12 @@ const badgeVariants = cva(
 	{
 		variants: {
 			variant: {
-				default: "bg-brand text-inverse font-semibold",
-				secondary: "bg-tertiary text-muted",
-				destructive: "bg-error text-inverse font-semibold",
-				success: "bg-success text-inverse font-semibold",
-				warning: "bg-warning text-inverse font-semibold",
-				outline: "border border-default text-muted",
+				default: "bg-brand text-brand-foreground font-semibold",
+				secondary: "bg-surface-subtle text-muted",
+				destructive: "bg-destructive text-destructive-foreground font-semibold",
+				success: "bg-success text-brand-foreground font-semibold",
+				warning: "bg-warning text-brand-foreground font-semibold",
+				outline: "border border-border text-muted",
 			},
 		},
 		defaultVariants: {

@@ -154,7 +154,7 @@ export default function AdminDashboard() {
 							max={customEnd || today}
 							value={customStart}
 							onChange={(event) => setCustomStart(event.target.value)}
-							className="block rounded-md border border-default bg-card px-3 py-2 text-sm text-light [color-scheme:light_dark]"
+							className="block rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground [color-scheme:light_dark]"
 						/>
 					</label>
 					<label className="space-y-1 text-xs text-muted">
@@ -166,7 +166,7 @@ export default function AdminDashboard() {
 							max={today}
 							value={customEnd}
 							onChange={(event) => setCustomEnd(event.target.value)}
-							className="block rounded-md border border-default bg-card px-3 py-2 text-sm text-light [color-scheme:light_dark]"
+							className="block rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground [color-scheme:light_dark]"
 						/>
 					</label>
 					<Button
@@ -179,7 +179,7 @@ export default function AdminDashboard() {
 						<IconCheck className="h-4 w-4" />
 					</Button>
 					{rangeError && (
-						<p role="alert" className="text-xs text-error">
+						<p role="alert" className="text-xs text-destructive">
 							{t("admin.stats_range_error")}
 						</p>
 					)}
@@ -188,7 +188,7 @@ export default function AdminDashboard() {
 			{error && (
 				<div
 					role="alert"
-					className="flex flex-wrap items-center justify-between gap-3 border-l-2 border-error py-2 pl-3 text-sm text-error"
+					className="flex flex-wrap items-center justify-between gap-3 border-l-2 border-destructive py-2 pl-3 text-sm text-destructive"
 				>
 					{t("admin.stats_load_error")}
 					<Button variant="secondary" size="sm" onClick={() => refresh.current()}>

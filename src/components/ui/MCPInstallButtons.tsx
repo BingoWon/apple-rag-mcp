@@ -50,8 +50,8 @@ function ClientButton({
 				"px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200",
 				"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2",
 				"disabled:opacity-50 disabled:cursor-not-allowed",
-				"bg-tertiary text-light border border-default",
-				"hover:bg-secondary hover:border-light hover:shadow-sm hover:scale-[1.02]",
+				"bg-surface-subtle text-foreground border border-border",
+				"hover:bg-surface hover:border-foreground hover:shadow-sm hover:scale-[1.02]",
 				"active:scale-[0.98]",
 			)}
 		>

@@ -170,7 +170,7 @@ export function ThemeToggle({
 				<div
 					className={cn(
 						"absolute left-1/2 transform -translate-x-1/2 p-1 z-50",
-						"bg-background border border-default rounded-lg shadow-lg",
+						"bg-background border border-border rounded-lg shadow-lg",
 						"min-w-[120px] py-1",
 						"transition-all duration-200 ease-out",
 						placement === "top"
@@ -200,13 +200,13 @@ export function ThemeToggle({
 									"disabled:opacity-50 disabled:cursor-not-allowed",
 									isSelected
 										? "bg-brand text-brand-foreground font-semibold shadow-sm"
-										: "text-foreground hover:bg-accent hover:text-accent-foreground",
+										: "text-foreground hover:bg-surface-subtle hover:text-foreground",
 								)}
 							>
 								<span
 									className={cn(
 										"transition-colors duration-200",
-										isSelected ? "text-brand-foreground" : "text-muted-foreground",
+										isSelected ? "text-brand-foreground" : "text-subtle",
 									)}
 								>
 									{getThemeIcon(themeOption)}
@@ -230,7 +230,7 @@ export function ThemeToggle({
 	return (
 		<div
 			className={cn(
-				"flex items-center gap-1 p-1 bg-secondary border border-default rounded-lg transition-opacity duration-200 shadow-sm",
+				"flex items-center gap-1 p-1 bg-surface border border-border rounded-lg transition-opacity duration-200 shadow-sm",
 				isTransitioning && "opacity-70",
 				className,
 			)}

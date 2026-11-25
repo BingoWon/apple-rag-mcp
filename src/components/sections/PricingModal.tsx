@@ -112,7 +112,7 @@ export function PricingModal({ children, defaultTab = "subscription" }: PricingM
 			<DialogTrigger asChild>{children}</DialogTrigger>
 			<DialogContent
 				style={panelMotion}
-				className="pricing-dialog max-w-2xl space-y-4 bg-card/95 p-4 shadow-[var(--shadow-complex)] backdrop-blur-xl sm:space-y-6 sm:p-8 md:rounded-3xl md:p-10"
+				className="pricing-dialog max-w-2xl space-y-4 bg-card/95 p-4 shadow-complex backdrop-blur-xl sm:space-y-6 sm:p-8 md:rounded-3xl md:p-10"
 			>
 				<DialogHeader className="px-6 text-center">
 					<DialogTitle className="text-2xl">
@@ -120,7 +120,7 @@ export function PricingModal({ children, defaultTab = "subscription" }: PricingM
 					</DialogTitle>
 					<DialogDescription>{t("pricing.choose_cycle")}</DialogDescription>
 				</DialogHeader>
-				<div className="flex gap-1 rounded-lg border border-default bg-secondary p-1">
+				<div className="flex gap-1 rounded-lg border border-border bg-surface p-1">
 					{(["subscription", "one_time"] as const).map((type) => {
 						const recurring = type === "subscription";
 						const locked = recurring ? subscriptionTabDisabled : onetimeTabDisabled;
@@ -167,12 +167,12 @@ export function PricingModal({ children, defaultTab = "subscription" }: PricingM
 						<label
 							key={option.id}
 							className={cn(
-								"relative flex cursor-pointer items-center gap-3 rounded-xl border-2 px-3 py-3 focus-within:ring-2 focus-within:ring-action sm:p-5",
+								"relative flex cursor-pointer items-center gap-3 rounded-xl border-2 px-3 py-3 focus-within:ring-2 focus-within:ring-brand sm:p-5",
 								selectedOption === option.id
-									? "border-action bg-action/10 shadow-lg"
+									? "border-brand bg-brand/10 shadow-lg"
 									: option.popular
 										? "border-dashed border-yellow-400"
-										: "border-default hover:bg-accent",
+										: "border-border hover:bg-surface-subtle",
 							)}
 						>
 							<input
@@ -181,7 +181,7 @@ export function PricingModal({ children, defaultTab = "subscription" }: PricingM
 								value={option.id}
 								checked={selectedOption === option.id}
 								onChange={() => setSelectedOption(option.id)}
-								className="accent-action"
+								className="accent-brand"
 							/>
 							<span className="min-w-0 flex-1">
 								<span className="block font-semibold">{t(`pricing.${option.id}`)}</span>
@@ -211,7 +211,7 @@ export function PricingModal({ children, defaultTab = "subscription" }: PricingM
 					))}
 				</fieldset>
 				{isOneTime && <p className="text-sm text-muted">{t("pricing.onetime_note")}</p>}
-				<div className="flex flex-wrap justify-end gap-2 border-t border-default pt-4">
+				<div className="flex flex-wrap justify-end gap-2 border-t border-border pt-4">
 					<DialogClose asChild>
 						<Button variant="outline" className="flex-1">
 							{t("common.cancel")}

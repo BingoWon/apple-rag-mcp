@@ -137,7 +137,7 @@ export const NavItems = ({ items, className, onItemClick }: NavItemsProps) => {
 		<motion.div
 			onMouseLeave={() => setHovered(null)}
 			className={cn(
-				"absolute inset-0 hidden flex-1 flex-row items-center justify-center space-x-2 text-md font-semibold text-muted transition duration-200 hover:text-light lg:flex lg:space-x-2",
+				"absolute inset-0 hidden flex-1 flex-row items-center justify-center space-x-2 text-md font-semibold text-muted transition duration-200 hover:text-foreground lg:flex lg:space-x-2",
 				className,
 			)}
 		>
@@ -153,7 +153,7 @@ export const NavItems = ({ items, className, onItemClick }: NavItemsProps) => {
 						{hovered === idx && (
 							<motion.div
 								layoutId="hovered"
-								className="absolute inset-0 h-full w-full rounded-lg bg-secondary"
+								className="absolute inset-0 h-full w-full rounded-lg bg-surface"
 							/>
 						)}
 						<span className="relative z-20">{item.name}</span>
@@ -169,7 +169,7 @@ export const NavItems = ({ items, className, onItemClick }: NavItemsProps) => {
 						{hovered === idx && (
 							<motion.div
 								layoutId="hovered"
-								className="absolute inset-0 h-full w-full rounded-lg bg-secondary"
+								className="absolute inset-0 h-full w-full rounded-lg bg-surface"
 							/>
 						)}
 						<span className="relative z-20">{item.name}</span>
@@ -246,7 +246,7 @@ export const MobileNavToggle = ({ isOpen, onClick }: { isOpen: boolean; onClick:
 			onClick={onClick}
 			aria-label={isOpen ? t("common.close") : t("nav.menu")}
 			aria-expanded={isOpen}
-			className="inline-flex items-center justify-center rounded-md p-1.5 text-light hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+			className="inline-flex items-center justify-center rounded-md p-1.5 text-foreground hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
 		>
 			{isOpen ? <IconX className="h-5 w-5" /> : <IconMenu2 className="h-5 w-5" />}
 		</button>
@@ -262,23 +262,23 @@ export const UserMenu = ({ user, onLogout }: Omit<UserMenuProps, "visible">) => 
 			<div className="relative group">
 				<button
 					type="button"
-					className="text-sm font-semibold text-muted hover:text-light transition-colors cursor-pointer"
+					className="text-sm font-semibold text-muted hover:text-foreground transition-colors cursor-pointer"
 				>
 					{user?.name || user?.email}
 				</button>
 
-				<div className="absolute right-0 top-full mt-2 w-48 bg-primary border border-default rounded-lg shadow-complex opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus-within:opacity-100 group-focus-within:visible transition-all duration-200 z-50">
+				<div className="absolute right-0 top-full mt-2 w-48 bg-background border border-border rounded-lg shadow-complex opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus-within:opacity-100 group-focus-within:visible transition-all duration-200 z-50">
 					<div className="p-2 space-y-1">
 						<Link
 							to="/overview"
-							className="block px-3 py-2 text-sm text-muted hover:text-light hover:bg-secondary rounded-md"
+							className="block px-3 py-2 text-sm text-muted hover:text-foreground hover:bg-surface rounded-md"
 						>
 							{t("common.dashboard")}
 						</Link>
 						<button
 							type="button"
 							onClick={onLogout}
-							className="block w-full text-left px-3 py-2 text-sm text-muted hover:text-light hover:bg-secondary rounded-md"
+							className="block w-full text-left px-3 py-2 text-sm text-muted hover:text-foreground hover:bg-surface rounded-md"
 						>
 							{t("common.logout")}
 						</button>
@@ -328,7 +328,7 @@ export function AppNavbar() {
 			<NavBody>
 				<Link
 					to="/"
-					className="relative z-20 mr-4 flex items-center text-sm font-medium text-light transition-fast hover:text-brand"
+					className="relative z-20 mr-4 flex items-center text-sm font-medium text-foreground transition-colors duration-150 hover:text-brand"
 				>
 					<Brand />
 				</Link>
@@ -353,7 +353,7 @@ export function AppNavbar() {
 				<MobileNavHeader>
 					<Link
 						to="/"
-						className="relative z-20 mr-4 flex items-center text-sm font-medium text-light transition-fast hover:text-brand"
+						className="relative z-20 mr-4 flex items-center text-sm font-medium text-foreground transition-colors duration-150 hover:text-brand"
 					>
 						<Brand />
 					</Link>
@@ -374,7 +374,7 @@ export function AppNavbar() {
 								key={`mobile-nav-${idx}`}
 								to={item.link}
 								onClick={handleMenuClose}
-								className="text-muted hover:text-light transition-fast"
+								className="text-muted hover:text-foreground transition-colors duration-150"
 							>
 								{item.name}
 							</Link>
@@ -383,21 +383,23 @@ export function AppNavbar() {
 								key={`mobile-nav-${idx}`}
 								href={item.link}
 								onClick={handleMenuClose}
-								className="text-muted hover:text-light transition-fast"
+								className="text-muted hover:text-foreground transition-colors duration-150"
 							>
 								{item.name}
 							</a>
 						),
 					)}
 
-					<div className="flex w-full flex-col items-center gap-4 pt-4 border-t border-default">
+					<div className="flex w-full flex-col items-center gap-4 pt-4 border-t border-border">
 						<div className="w-full flex justify-center">
 							<ThemeToggle variant="dropdown" className="w-full max-w-xs" />
 						</div>
 						{isAuthenticated ? (
 							<>
 								<div className="text-center">
-									<p className="text-sm font-semibold text-light">{user?.name || user?.email}</p>
+									<p className="text-sm font-semibold text-foreground">
+										{user?.name || user?.email}
+									</p>
 								</div>
 								<Button variant="gradient" className="w-full" asChild>
 									<Link to="/overview" onClick={handleMenuClose}>

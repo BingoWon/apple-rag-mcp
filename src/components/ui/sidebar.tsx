@@ -24,7 +24,7 @@ interface SidebarContextProps {
 const STORAGE_KEY = "sidebar-pinned";
 
 export const SIDEBAR_CONTROL_CLASS_NAME =
-	"size-9 rounded-md border-default/60 bg-transparent text-light/90 shadow-none backdrop-blur-none transition-all duration-200 hover:border-default hover:bg-tertiary hover:text-light hover:shadow-none [&_svg]:size-4.5";
+	"size-9 rounded-md border-border/60 bg-transparent text-foreground/90 shadow-none backdrop-blur-none transition-all duration-200 hover:border-border hover:bg-surface-subtle hover:text-foreground hover:shadow-none [&_svg]:size-4.5";
 
 const SidebarContext = createContext<SidebarContextProps | undefined>(undefined);
 
@@ -116,7 +116,7 @@ export const DesktopSidebar = ({
 	return (
 		<motion.div
 			className={cn(
-				"h-full py-4 hidden md:flex md:flex-col bg-secondary w-[300px] shrink-0",
+				"h-full py-4 hidden md:flex md:flex-col bg-surface w-[300px] shrink-0",
 				className,
 			)}
 			animate={{
@@ -143,7 +143,7 @@ export const MobileSidebar = ({ className, children, ...props }: React.Component
 	return (
 		<div
 			className={cn(
-				"h-10 px-4 py-4 flex flex-row md:hidden  items-center justify-end bg-secondary w-full",
+				"h-10 px-4 py-4 flex flex-row md:hidden  items-center justify-end bg-surface w-full",
 			)}
 			{...props}
 		>
@@ -152,7 +152,7 @@ export const MobileSidebar = ({ className, children, ...props }: React.Component
 				<LanguageSwitcher className={SIDEBAR_CONTROL_CLASS_NAME} />
 				<ThemeToggle variant="icon" className={SIDEBAR_CONTROL_CLASS_NAME} />
 				<IconMenu2
-					className="text-light cursor-pointer hover:text-muted transition-colors p-1"
+					className="text-foreground cursor-pointer hover:text-muted transition-colors p-1"
 					onClick={() => setMenuOpen(!mobileOpen)}
 				/>
 			</div>
@@ -177,13 +177,13 @@ export const MobileSidebar = ({ className, children, ...props }: React.Component
 								ease: "easeInOut",
 							}}
 							className={cn(
-								"fixed h-full w-[80%] inset-y-0 left-0 bg-background/95 backdrop-blur-md border-r border-default p-6 z-[100] flex flex-col justify-between shadow-2xl",
+								"fixed h-full w-[80%] inset-y-0 left-0 bg-background/95 backdrop-blur-md border-r border-border p-6 z-[100] flex flex-col justify-between shadow-2xl",
 								className,
 							)}
 						>
 							<button
 								type="button"
-								className="absolute right-6 top-6 z-50 text-light cursor-pointer hover:text-muted transition-colors"
+								className="absolute right-6 top-6 z-50 text-foreground cursor-pointer hover:text-muted transition-colors"
 								onClick={() => setMenuOpen(false)}
 							>
 								<IconX />
@@ -225,7 +225,7 @@ export const SidebarLink = ({
 				"flex items-center group/sidebar py-2 rounded-lg transition-colors duration-200 relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand",
 				isActive
 					? "bg-brand text-white font-semibold"
-					: "font-medium text-light/90 hover:text-light hover:bg-tertiary",
+					: "font-medium text-foreground/90 hover:text-foreground hover:bg-surface-subtle",
 				className,
 			)}
 			style={{
@@ -241,7 +241,7 @@ export const SidebarLink = ({
 				{link.icon}
 
 				{link.badge && !open && (
-					<span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />
+					<span className="absolute -top-1 -right-1 w-2 h-2 bg-destructive rounded-full" />
 				)}
 			</div>
 
@@ -272,7 +272,7 @@ export const SidebarLink = ({
 						duration: 0.2,
 						ease: "easeInOut",
 					}}
-					className="ml-auto flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full"
+					className="ml-auto flex items-center justify-center w-5 h-5 text-xs font-bold text-destructive-foreground bg-destructive rounded-full"
 				>
 					{link.badge}
 				</motion.span>

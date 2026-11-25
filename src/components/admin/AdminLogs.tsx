@@ -14,7 +14,7 @@ import { LogDetails } from "./LogDetails";
 import { LogOutcome } from "./LogOutcome";
 
 const fieldClass =
-	"h-9 min-w-0 rounded-md border border-default bg-background px-3 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-brand";
+	"h-9 min-w-0 rounded-md border border-border bg-background px-3 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-brand";
 export function AdminLogs({ kind }: { kind: AdminLogKind }) {
 	const { t } = useTranslation();
 	const logs = useAdminLogs(kind);
@@ -50,7 +50,7 @@ export function AdminLogs({ kind }: { kind: AdminLogKind }) {
 						>
 							<span className="block truncate">{String(value || "—")}</span>
 						</button>
-						<div className="mt-1 text-xs text-muted-foreground">
+						<div className="mt-1 text-xs text-subtle">
 							<AdminUserLabel user={row.user} />
 						</div>
 					</div>
@@ -87,9 +87,7 @@ export function AdminLogs({ kind }: { kind: AdminLogKind }) {
 							render: (_: unknown, row: AdminLog) => (
 								<div>
 									<span>{row.content_source ? t(`admin.source_${row.content_source}`) : "—"}</span>
-									<span className="mt-1 block text-xs text-muted-foreground">
-										{row.provider || "—"}
-									</span>
+									<span className="mt-1 block text-xs text-subtle">{row.provider || "—"}</span>
 								</div>
 							),
 						},
@@ -123,8 +121,8 @@ export function AdminLogs({ kind }: { kind: AdminLogKind }) {
 		<label
 			className={
 				name === "outcome"
-					? "flex items-center gap-2 text-xs text-muted-foreground"
-					: "min-w-0 space-y-1 text-xs text-muted-foreground"
+					? "flex items-center gap-2 text-xs text-subtle"
+					: "min-w-0 space-y-1 text-xs text-subtle"
 			}
 		>
 			<span className="block">{label}</span>
@@ -147,9 +145,9 @@ export function AdminLogs({ kind }: { kind: AdminLogKind }) {
 			<header className="flex items-start justify-between gap-3">
 				<div className="min-w-0 flex-1">
 					<h1 className="text-xl font-semibold tracking-tight">{t(`admin.${kind}_logs`)}</h1>
-					<p className="mt-1 text-sm text-muted-foreground">{t("admin.log_list_desc")}</p>
+					<p className="mt-1 text-sm text-subtle">{t("admin.log_list_desc")}</p>
 					{(filters.from || filters.to) && (
-						<p className="mt-1 text-xs text-muted-foreground">
+						<p className="mt-1 text-xs text-subtle">
 							{t("admin.stats_exact_range", {
 								start: filters.from ? formatAdminDateTime(filters.from) : "—",
 								end: filters.to ? formatAdminDateTime(filters.to) : "—",
@@ -166,7 +164,7 @@ export function AdminLogs({ kind }: { kind: AdminLogKind }) {
 			{logs.error && (
 				<div
 					role="alert"
-					className="flex items-center justify-between gap-3 rounded-lg border border-error/30 p-3 text-sm text-error"
+					className="flex items-center justify-between gap-3 rounded-lg border border-destructive/30 p-3 text-sm text-destructive"
 				>
 					{t("admin.logs_load_failed")}
 					<Button variant="secondary" size="sm" onClick={logs.refresh}>
@@ -256,7 +254,7 @@ export function AdminLogs({ kind }: { kind: AdminLogKind }) {
 								)
 							}
 						>
-							<summary className="w-fit cursor-pointer rounded py-2 text-xs text-muted-foreground focus-visible:outline-2 focus-visible:outline-brand">
+							<summary className="w-fit cursor-pointer rounded py-2 text-xs text-subtle focus-visible:outline-2 focus-visible:outline-brand">
 								<IconAdjustmentsHorizontal className="mr-1 inline h-3.5 w-3.5" />
 								{t("admin.more_filters")}
 							</summary>
@@ -269,7 +267,7 @@ export function AdminLogs({ kind }: { kind: AdminLogKind }) {
 										label: t(`admin.channel_${value}`),
 									})),
 								)}
-								<label className="space-y-1 text-xs text-muted-foreground">
+								<label className="space-y-1 text-xs text-subtle">
 									<span className="block">{t("admin.col_reason")}</span>
 									<input
 										name="reason"
@@ -305,7 +303,7 @@ export function AdminLogs({ kind }: { kind: AdminLogKind }) {
 									</>
 								)}
 								{(["start", "end"] as const).map((name) => (
-									<label key={name} className="space-y-1 text-xs text-muted-foreground">
+									<label key={name} className="space-y-1 text-xs text-subtle">
 										<span className="block">
 											{t(name === "start" ? "admin.stats_start_date" : "admin.stats_end_date")} ·
 											UTC+8
@@ -321,7 +319,7 @@ export function AdminLogs({ kind }: { kind: AdminLogKind }) {
 							</div>
 						</details>
 						{rangeError && (
-							<p role="alert" className="order-last basis-full text-sm text-error">
+							<p role="alert" className="order-last basis-full text-sm text-destructive">
 								{t("admin.log_date_range_error")}
 							</p>
 						)}
@@ -334,7 +332,7 @@ export function AdminLogs({ kind }: { kind: AdminLogKind }) {
 							<li key={row.id}>
 								<button
 									type="button"
-									className="block w-full min-w-0 space-y-2 p-4 text-left hover:bg-secondary focus-visible:outline-2 focus-visible:outline-brand"
+									className="block w-full min-w-0 space-y-2 p-4 text-left hover:bg-surface focus-visible:outline-2 focus-visible:outline-brand"
 									aria-label={t("admin.open_log", {
 										value: (row.requested_url || row.requested_query || row.id).slice(0, 120),
 									})}
@@ -344,7 +342,7 @@ export function AdminLogs({ kind }: { kind: AdminLogKind }) {
 									}}
 								>
 									<span className="flex items-center justify-between gap-2">
-										<span className="font-mono text-[11px] text-muted-foreground">
+										<span className="font-mono text-[11px] text-subtle">
 											{formatAdminDateTime(row.created_at)}
 										</span>
 										<span className="flex flex-wrap items-center gap-2">
@@ -355,7 +353,7 @@ export function AdminLogs({ kind }: { kind: AdminLogKind }) {
 									<span className="block truncate text-sm text-brand">
 										{row.requested_url || row.requested_query || "—"}
 									</span>
-									<span className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+									<span className="flex items-center justify-between gap-2 text-xs text-subtle">
 										<span className="truncate">
 											{kind === "fetch"
 												? row.content_source

@@ -33,9 +33,9 @@ test("ErrorFallback uses semantic theme tokens with zero hardcoded light-mode or
 
 	assert.match(html, /bg-background/);
 	assert.match(html, /bg-card/);
-	assert.match(html, /border-default/);
-	assert.match(html, /text-light/);
-	assert.match(html, /text-muted-foreground/);
+	assert.match(html, /border-border/);
+	assert.match(html, /text-foreground/);
+	assert.match(html, /text-subtle/);
 
 	assert.doesNotMatch(html, /\bbg-gray-50\b/);
 	assert.doesNotMatch(html, /\btext-gray-900\b/);
@@ -66,7 +66,7 @@ test("ErrorFallback distinguishes stale-deployment chunk errors from runtime err
 	assert.match(enRuntime, /Try again/);
 	assert.match(enRuntime, /Back to home/);
 	assert.match(enRuntime, /Cannot render widget/);
-	assert.match(enRuntime, /bg-error\/10/);
+	assert.match(enRuntime, /bg-destructive\/10/);
 	assert.match(enRuntime, /min-h-\[55vh\]/);
 	assert.match(enRuntime, /<h2\b/);
 });

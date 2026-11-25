@@ -2,7 +2,7 @@ import { IconCheck, IconMessageCircle, IconX } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
-import { CardSpotlight } from "@/components/ui/card-spotlight";
+import { CardSpotlight } from "@/components/effects/card-spotlight";
 import { formatDateCompact } from "@/lib/datetime";
 import { useAuthStore } from "@/stores/auth";
 import { useDashboardStore } from "@/stores/dashboard";
@@ -73,13 +73,13 @@ export function UnreadReplyNotification() {
 
 	return (
 		<div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay backdrop-blur-sm animate-in fade-in duration-300">
-			<CardSpotlight className="max-w-2xl w-full mx-4 max-h-[85vh] border border-default flex flex-col">
+			<CardSpotlight className="max-w-2xl w-full mx-4 max-h-[85vh] border border-border flex flex-col">
 				{/* Scrollable Content Area */}
 				<div className="relative z-20 p-8 pb-6 overflow-y-auto flex-1">
 					{/* Header */}
 					<div className="flex items-start justify-between mb-6">
 						<div>
-							<p className="text-2xl font-bold text-light flex items-center gap-2">
+							<p className="text-2xl font-bold text-foreground flex items-center gap-2">
 								{t("notification.got_reply")}
 							</p>
 							{remainingCount > 1 && (
@@ -96,7 +96,7 @@ export function UnreadReplyNotification() {
 						<button
 							type="button"
 							onClick={handleClose}
-							className="text-muted hover:text-light transition-all p-1 rounded-lg hover:bg-secondary/80 backdrop-blur-sm"
+							className="text-muted hover:text-foreground transition-all p-1 rounded-lg hover:bg-surface/80 backdrop-blur-sm"
 							aria-label={t("notification.close_for_now")}
 						>
 							<IconX className="w-6 h-6" />
@@ -109,10 +109,12 @@ export function UnreadReplyNotification() {
 						<div>
 							<div className="flex items-center justify-between mb-2">
 								<p className="text-sm font-semibold text-muted">{t("notification.your_message")}</p>
-								<p className="text-xs text-faint">{formatDateCompact(currentMessage.created_at)}</p>
+								<p className="text-xs text-subtle">
+									{formatDateCompact(currentMessage.created_at)}
+								</p>
 							</div>
-							<div className="p-4 rounded-lg bg-secondary backdrop-blur-sm border border-default">
-								<p className="text-light whitespace-pre-wrap leading-relaxed">
+							<div className="p-4 rounded-lg bg-surface backdrop-blur-sm border border-border">
+								<p className="text-foreground whitespace-pre-wrap leading-relaxed">
 									{currentMessage.message}
 								</p>
 							</div>
@@ -122,10 +124,12 @@ export function UnreadReplyNotification() {
 						<div>
 							<div className="flex items-center justify-between mb-2">
 								<p className="text-sm font-semibold text-brand">{t("notification.our_response")}</p>
-								<p className="text-xs text-faint">{formatDateCompact(currentMessage.replied_at)}</p>
+								<p className="text-xs text-subtle">
+									{formatDateCompact(currentMessage.replied_at)}
+								</p>
 							</div>
-							<div className="p-4 rounded-lg bg-blue-500/10 backdrop-blur-sm border border-blue-500/30">
-								<p className="text-light whitespace-pre-wrap leading-relaxed">
+							<div className="p-4 rounded-lg bg-brand/10 backdrop-blur-sm border border-brand/30">
+								<p className="text-foreground whitespace-pre-wrap leading-relaxed">
 									{currentMessage.admin_reply}
 								</p>
 							</div>
@@ -134,11 +138,11 @@ export function UnreadReplyNotification() {
 				</div>
 
 				{/* Fixed Footer - Actions */}
-				<div className="relative z-20 flex items-center justify-between gap-3 px-8 py-4 border-t border-default">
+				<div className="relative z-20 flex items-center justify-between gap-3 px-8 py-4 border-t border-border">
 					<button
 						type="button"
 						onClick={handleClose}
-						className="px-4 py-2 text-sm text-muted hover:text-light transition-all flex items-center gap-2 rounded-lg hover:bg-secondary/80 backdrop-blur-sm"
+						className="px-4 py-2 text-sm text-muted hover:text-foreground transition-all flex items-center gap-2 rounded-lg hover:bg-surface/80 backdrop-blur-sm"
 					>
 						<IconX className="w-4 h-4" />
 						<span>{t("notification.close_for_now")}</span>
@@ -147,7 +151,7 @@ export function UnreadReplyNotification() {
 						type="button"
 						onClick={handleMarkAsRead}
 						disabled={isMarking}
-						className="px-6 py-2 bg-brand text-white rounded-lg font-semibold hover:bg-brand-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+						className="px-6 py-2 bg-brand text-white rounded-lg font-semibold hover:bg-brand-strong transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
 					>
 						{isMarking ? (
 							<>
@@ -167,11 +171,11 @@ export function UnreadReplyNotification() {
 				<Link
 					to="/messages"
 					onClick={() => setIsVisible(false)}
-					className="relative z-20 px-8 py-4 border-t border-default flex items-center justify-center gap-2 text-brand hover:text-brand-secondary transition-all group rounded-b-lg hover:bg-secondary/80 backdrop-blur-sm"
+					className="relative z-20 px-8 py-4 border-t border-border flex items-center justify-center gap-2 text-brand hover:text-brand-strong transition-all group rounded-b-lg hover:bg-surface/80 backdrop-blur-sm"
 				>
 					<IconMessageCircle className="w-5 h-5" />
 					<span className="font-medium">{t("notification.view_all")}</span>
-					<span className="text-xs text-muted group-hover:text-faint">
+					<span className="text-xs text-muted group-hover:text-subtle">
 						{t("notification.unread_suffix", { count: remainingCount })}
 					</span>
 				</Link>

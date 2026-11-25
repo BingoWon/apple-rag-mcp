@@ -140,9 +140,9 @@ export const TracingBeam = ({
 						delay: TRACING_BEAM_CONFIG.DOT_ANIMATION_DELAY,
 					}}
 					animate={{
-						boxShadow: scrollYProgress.get() > 0 ? "none" : "var(--shadow-complex)",
+						boxShadow: scrollYProgress.get() > 0 ? "none" : "var(--elevation-complex)",
 					}}
-					className={`border-netural-200 ${isMobile ? TRACING_BEAM_CONFIG.MOBILE_DOT_MARGIN : TRACING_BEAM_CONFIG.DESKTOP_DOT_MARGIN} flex ${TRACING_BEAM_CONFIG.DOT_OUTER_SIZE} items-center justify-center rounded-full border shadow-sm`}
+					className={`border-border ${isMobile ? TRACING_BEAM_CONFIG.MOBILE_DOT_MARGIN : TRACING_BEAM_CONFIG.DESKTOP_DOT_MARGIN} flex ${TRACING_BEAM_CONFIG.DOT_OUTER_SIZE} items-center justify-center rounded-full border shadow-sm`}
 				>
 					<motion.div
 						transition={{
@@ -150,12 +150,10 @@ export const TracingBeam = ({
 							delay: TRACING_BEAM_CONFIG.DOT_ANIMATION_DELAY,
 						}}
 						animate={{
-							backgroundColor:
-								scrollYProgress.get() > 0 ? "hsl(var(--background))" : "hsl(var(--success))",
-							borderColor:
-								scrollYProgress.get() > 0 ? "hsl(var(--background))" : "hsl(var(--success))",
+							backgroundColor: scrollYProgress.get() > 0 ? "var(--background)" : "var(--success)",
+							borderColor: scrollYProgress.get() > 0 ? "var(--background)" : "var(--success)",
 						}}
-						className={`${TRACING_BEAM_CONFIG.DOT_INNER_SIZE} rounded-full border border-neutral-300 bg-white`}
+						className={`${TRACING_BEAM_CONFIG.DOT_INNER_SIZE} rounded-full border border-border-strong bg-background`}
 					/>
 				</motion.div>
 				<svg

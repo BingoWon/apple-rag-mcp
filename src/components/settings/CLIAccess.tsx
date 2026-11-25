@@ -90,14 +90,14 @@ export function CLIAccess() {
 	const renderSession = (row: Session) => (
 		<li key={row.id} className="flex items-center justify-between gap-3 px-6 py-4">
 			<div className="flex min-w-0 items-center gap-3">
-				<div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-default bg-secondary text-muted-foreground">
+				<div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-surface text-subtle">
 					{row.kind === "device" ? <IconDeviceLaptop size={18} /> : <IconKey size={18} />}
 				</div>
 				<div className="min-w-0">
 					<p className="truncate text-sm font-medium" title={row.name}>
 						{row.name}
 					</p>
-					<div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground">
+					<div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-subtle">
 						<span>{t(row.kind === "device" ? "cli.device" : "cli.api_key")}</span>
 						<span aria-hidden="true">·</span>
 						<span>{t("cli.expires", { date: new Date(row.expires_at).toLocaleDateString() })}</span>
@@ -107,7 +107,7 @@ export function CLIAccess() {
 			<Button
 				size="sm"
 				variant="link"
-				className="shrink-0 text-muted-foreground hover:text-error"
+				className="shrink-0 text-subtle hover:text-destructive"
 				onClick={() => setTarget(row)}
 				aria-label={t("cli.revoke_named", { name: row.name })}
 			>
@@ -117,9 +117,9 @@ export function CLIAccess() {
 	);
 	return (
 		<Card id="cli-access" className="rounded-xl shadow-none">
-			<CardHeader className="flex-row flex-wrap items-start justify-between gap-4 border-b border-default space-y-0">
+			<CardHeader className="flex-row flex-wrap items-start justify-between gap-4 border-b border-border space-y-0">
 				<div className="flex gap-3">
-					<div className="flex h-10 w-10 items-center justify-center rounded-xl border border-default bg-secondary">
+					<div className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-surface">
 						<IconTerminal2 size={20} className="text-brand" />
 					</div>
 					<div>
@@ -131,7 +131,7 @@ export function CLIAccess() {
 				</div>
 			</CardHeader>
 			<CardContent className="p-0">
-				<div className="border-b border-default bg-secondary/50 px-6 py-4">
+				<div className="border-b border-border bg-surface/50 px-6 py-4">
 					<p className="text-xs leading-6 text-muted">{t("cli.login_hint")}</p>
 					<Link to="/connect#cli" className="mt-2 inline-block text-sm text-brand hover:underline">
 						{t("nav.cli_guide")} →
@@ -145,21 +145,21 @@ export function CLIAccess() {
 						</Button>
 					</div>
 				) : loading ? (
-					<div role="status" className="px-6 py-8 text-center text-sm text-muted-foreground">
+					<div role="status" className="px-6 py-8 text-center text-sm text-subtle">
 						{t("common.loading")}
 					</div>
 				) : rows.filter((row) => row.kind === "device").length === 0 ? (
 					<div className="px-6 py-8 text-center">
-						<IconDeviceLaptop size={24} className="mx-auto mb-3 text-muted-foreground" />
+						<IconDeviceLaptop size={24} className="mx-auto mb-3 text-subtle" />
 						<p className="text-sm font-medium">{t("cli.no_sessions_title")}</p>
-						<p className="mt-1 text-xs text-muted-foreground">{t("cli.no_sessions")}</p>
+						<p className="mt-1 text-xs text-subtle">{t("cli.no_sessions")}</p>
 					</div>
 				) : (
 					<ul className="divide-y divide-border">
 						{rows.filter((row) => row.kind === "device").map(renderSession)}
 					</ul>
 				)}
-				<details className="border-t border-default">
+				<details className="border-t border-border">
 					<summary className="cursor-pointer px-6 py-5 text-sm font-medium">
 						{t("cli.automation_title")}
 					</summary>
@@ -213,7 +213,7 @@ export function CLIAccess() {
 							<span className="font-medium">{t("cli.validity")}</span>
 							<select
 								id="cli-key-validity"
-								className="h-11 w-full rounded-lg border border-default bg-background px-3 text-sm focus-visible:outline-2 focus-visible:outline-brand"
+								className="h-11 w-full rounded-lg border border-border bg-background px-3 text-sm focus-visible:outline-2 focus-visible:outline-brand"
 								value={days}
 								onChange={(e) => setDays(Number(e.target.value))}
 							>
@@ -254,7 +254,7 @@ export function CLIAccess() {
 						<DialogTitle>{t("cli.key_created")}</DialogTitle>
 						<DialogDescription>{t("cli.key_once")}</DialogDescription>
 					</DialogHeader>
-					<code className="block break-all rounded-lg border border-default bg-secondary p-4 text-xs leading-relaxed">
+					<code className="block break-all rounded-lg border border-border bg-surface p-4 text-xs leading-relaxed">
 						{key}
 					</code>
 					<div className="mt-5 flex justify-end gap-2">

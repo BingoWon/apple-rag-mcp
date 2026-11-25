@@ -139,7 +139,7 @@ export function MCPTokensList({ tokens, onRefresh, isLoading = false }: MCPToken
 			render: (_, row: MCPToken) => (
 				<div className="space-y-2">
 					<div className="flex items-center space-x-2">
-						<code className="text-sm font-mono text-subtle bg-tertiary px-2 py-1 rounded border border-default font-mono tracking-wider break-all flex-1 min-w-0">
+						<code className="text-sm font-mono text-muted bg-surface-subtle px-2 py-1 rounded border border-border font-mono tracking-wider break-all flex-1 min-w-0">
 							{getMcpTokenDisplayText(row.mcp_token, visibleTokens.has(row.id))}
 						</code>
 						<div className="flex space-x-1 flex-shrink-0">
@@ -148,7 +148,7 @@ export function MCPTokensList({ tokens, onRefresh, isLoading = false }: MCPToken
 								variant="ghost"
 								onClick={() => toggleTokenVisibility(row.id)}
 								title={visibleTokens.has(row.id) ? t("tokens.hide_token") : t("tokens.show_token")}
-								className="text-muted hover:text-light"
+								className="text-muted hover:text-foreground"
 							>
 								{visibleTokens.has(row.id) ? (
 									<IconEyeOff className="h-4 w-4" />
@@ -161,7 +161,7 @@ export function MCPTokensList({ tokens, onRefresh, isLoading = false }: MCPToken
 								variant="ghost"
 								onClick={() => handleCopyMcpToken(row)}
 								title={t("tokens.copy_token")}
-								className="text-muted hover:text-light"
+								className="text-muted hover:text-foreground"
 							>
 								<IconClipboard className="h-4 w-4" />
 							</Button>
@@ -174,16 +174,14 @@ export function MCPTokensList({ tokens, onRefresh, isLoading = false }: MCPToken
 			key: "created_at",
 			label: t("common.created"),
 			render: (value) => (
-				<div className="text-sm text-muted-foreground select-none">
-					{formatDate(value as string)}
-				</div>
+				<div className="text-sm text-subtle select-none">{formatDate(value as string)}</div>
 			),
 		},
 		{
 			key: "last_used_at",
 			label: t("tokens.last_used"),
 			render: (value) => (
-				<div className="text-sm text-muted-foreground select-none">
+				<div className="text-sm text-subtle select-none">
 					{value ? formatDate(value as string) : t("common.never")}
 				</div>
 			),
@@ -198,7 +196,7 @@ export function MCPTokensList({ tokens, onRefresh, isLoading = false }: MCPToken
 							<Button
 								size="icon"
 								variant="ghost"
-								className="h-8 w-8 text-muted hover:text-light"
+								className="h-8 w-8 text-muted hover:text-foreground"
 								disabled={isDeleting === row.id}
 							>
 								{isDeleting === row.id ? (
@@ -227,11 +225,11 @@ export function MCPTokensList({ tokens, onRefresh, isLoading = false }: MCPToken
 	if (tokens.length === 0) {
 		return (
 			<div className="p-6 text-center">
-				<div className="mx-auto h-12 w-12 text-muted-foreground">
+				<div className="mx-auto h-12 w-12 text-subtle">
 					<IconKey className="h-12 w-12" />
 				</div>
 				<h3 className="mt-2 text-sm font-medium text-foreground">{t("tokens.empty")}</h3>
-				<p className="mt-1 text-sm text-muted-foreground">{t("tokens.empty_desc")}</p>
+				<p className="mt-1 text-sm text-subtle">{t("tokens.empty_desc")}</p>
 			</div>
 		);
 	}

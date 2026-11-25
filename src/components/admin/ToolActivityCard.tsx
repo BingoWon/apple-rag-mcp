@@ -30,14 +30,14 @@ export function ToolActivityCard({
 	return (
 		<Card className="min-w-0 p-4">
 			<div className="flex flex-wrap items-center justify-between gap-3">
-				<h3 className="text-sm font-semibold text-light">
+				<h3 className="text-sm font-semibold text-foreground">
 					{t("activity.tool_calls")}
 					<span className="ml-2 text-xl tabular-nums">{format(active?.total ?? total)}</span>
 				</h3>
 				<button
 					type="button"
 					aria-pressed={!selected}
-					className="rounded-md border border-default px-3 py-1.5 text-xs font-medium text-muted aria-pressed:text-brand hover:text-brand focus-visible:outline-2 focus-visible:outline-brand"
+					className="rounded-md border border-border px-3 py-1.5 text-xs font-medium text-muted aria-pressed:text-brand hover:text-brand focus-visible:outline-2 focus-visible:outline-brand"
 					onClick={() => setSelected(null)}
 				>
 					{t("activity.all_tools")}
@@ -80,7 +80,7 @@ export function ToolActivityCard({
 				</ul>
 			)}
 			<table className="mt-3 w-full text-right text-xs tabular-nums">
-				<thead className="border-b border-default text-muted">
+				<thead className="border-b border-border text-muted">
 					<tr>
 						{["tool", "calls", "failed", "limited", "logs"].map((v, i) => (
 							<th
@@ -97,12 +97,12 @@ export function ToolActivityCard({
 					{TOOL_KINDS.map((k) => {
 						const metric = stats?.metrics[metricKeys[k]];
 						return (
-							<tr key={k} className="border-b border-default last:border-0">
+							<tr key={k} className="border-b border-border last:border-0">
 								<th scope="row" className="text-left">
 									<button
 										type="button"
 										aria-pressed={selected === k}
-										className="inline-flex min-h-10 items-center gap-1.5 rounded text-left font-medium text-light aria-pressed:text-brand hover:text-brand focus-visible:outline-2 focus-visible:outline-brand"
+										className="inline-flex min-h-10 items-center gap-1.5 rounded text-left font-medium text-foreground aria-pressed:text-brand hover:text-brand focus-visible:outline-2 focus-visible:outline-brand"
 										onClick={() => setSelected(k)}
 									>
 										<span

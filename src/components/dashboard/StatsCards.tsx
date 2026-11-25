@@ -115,7 +115,7 @@ export default function StatsCards() {
 					</div>
 				)}
 				<div className="mb-5 text-center">
-					<h3 className="text-xl font-bold text-light">{t("dashboard.stats_heading")}</h3>
+					<h3 className="text-xl font-bold text-foreground">{t("dashboard.stats_heading")}</h3>
 					{data && (
 						<p className="mt-1 text-xs text-muted">
 							{t("dashboard.stats_date", {
@@ -146,7 +146,7 @@ export default function StatsCards() {
 											: undefined
 									}
 									className={cn(
-										"group flex h-24 min-w-0 flex-col items-center justify-center gap-1 rounded-[10px] text-center focus-visible:outline-2 focus-visible:outline-action @[450px]:h-32 @[450px]:gap-2",
+										"group flex h-24 min-w-0 flex-col items-center justify-center gap-1 rounded-[10px] text-center focus-visible:outline-2 focus-visible:outline-brand @[450px]:h-32 @[450px]:gap-2",
 										url &&
 											"motion-safe:transition-transform motion-safe:duration-[350ms] motion-safe:hover:scale-110",
 									)}
@@ -189,9 +189,9 @@ export default function StatsCards() {
 				)}
 
 				{data && (
-					<div className="mt-5 rounded-xl border border-default bg-secondary p-3.5">
+					<div className="mt-5 rounded-xl border border-border bg-surface p-3.5">
 						<div className="flex flex-wrap items-center justify-between gap-2">
-							<div className="flex items-center gap-2 text-xs text-muted-foreground">
+							<div className="flex items-center gap-2 text-xs text-subtle">
 								<span className="h-2 w-2 shrink-0 rounded-full bg-success" aria-hidden="true" />
 								<span>
 									{pulse && lastRunLabel
@@ -205,7 +205,7 @@ export default function StatsCards() {
 							</div>
 							<Link
 								to="/updates"
-								className="inline-flex items-center gap-1 text-xs font-semibold text-action hover:underline"
+								className="inline-flex items-center gap-1 text-xs font-semibold text-brand hover:underline"
 							>
 								<span>{t("dashboard.stats_pulse_link")}</span>
 								<IconArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
@@ -213,7 +213,7 @@ export default function StatsCards() {
 						</div>
 
 						{digestHeadline && (
-							<p className="mt-2 line-clamp-1 text-xs font-medium text-light sm:text-sm">
+							<p className="mt-2 line-clamp-1 text-xs font-medium text-foreground sm:text-sm">
 								{digestHeadline}
 							</p>
 						)}
@@ -224,7 +224,7 @@ export default function StatsCards() {
 									<Link
 										key={fw.framework}
 										to={`/updates?framework=${encodeURIComponent(fw.framework)}`}
-										className="inline-flex items-center gap-1 rounded-md border border-default bg-card px-2 py-0.5 text-[11px] font-medium text-muted-foreground hover:border-brand/50 hover:text-light"
+										className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-0.5 text-[11px] font-medium text-subtle hover:border-brand/50 hover:text-foreground"
 									>
 										<span>{fw.framework}</span>
 										<span className="font-mono text-brand">{fw.count}</span>

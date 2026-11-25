@@ -36,7 +36,7 @@ export function Tabs({ items, activeTab, className, onTabChange }: TabsProps) {
 								"whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors",
 								activeTab === item.id
 									? "border-brand text-brand"
-									: "border-transparent text-muted-foreground hover:text-foreground hover:border-border-light",
+									: "border-transparent text-subtle hover:text-foreground hover:border-border-strong",
 							)}
 							aria-current={activeTab === item.id ? "page" : undefined}
 						>
@@ -48,7 +48,7 @@ export function Tabs({ items, activeTab, className, onTabChange }: TabsProps) {
 											"inline-flex items-center justify-center px-2 py-1 text-xs font-bold rounded-full transition-colors",
 											activeTab === item.id
 												? "bg-brand text-white"
-												: "bg-subtle text-inverse border border-border-light",
+												: "bg-surface-subtle text-muted border border-border",
 										)}
 									>
 										{item.badge}

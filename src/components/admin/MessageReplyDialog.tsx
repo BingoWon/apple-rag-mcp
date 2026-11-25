@@ -98,33 +98,35 @@ export function MessageReplyDialog({
 				}}
 			>
 				{/* Header */}
-				<div className="flex items-center justify-between p-6 border-b border-default">
-					<DialogTitle className="text-xl font-bold text-light">
+				<div className="flex items-center justify-between p-6 border-b border-border">
+					<DialogTitle className="text-xl font-bold text-foreground">
 						{isAlreadyReplied ? t("admin.reply_title") : t("admin.reply_to")}
 					</DialogTitle>
 				</div>
 
 				<DialogDescription className="sr-only">{t("admin.original_message")}</DialogDescription>
 				{/* Content */}
-				<div className="flex-1 overflow-y-auto p-6 space-y-6 bg-primary">
+				<div className="flex-1 overflow-y-auto p-6 space-y-6 bg-background">
 					{/* User Info */}
-					<div className="bg-secondary rounded-lg p-4 space-y-2 border border-default">
+					<div className="bg-surface rounded-lg p-4 space-y-2 border border-border">
 						<div className="flex items-center justify-between">
 							<div>
 								<p className="text-sm text-muted">{t("admin.from")}</p>
-								<div className="font-medium text-light">
+								<div className="font-medium text-foreground">
 									<AdminUserLabel user={message.user} />
 								</div>
 							</div>
 							<div className="text-right">
 								<p className="text-sm text-muted">{t("admin.date")}</p>
-								<p className="font-medium text-light">{formatDateCompact(message.created_at)}</p>
+								<p className="font-medium text-foreground">
+									{formatDateCompact(message.created_at)}
+								</p>
 							</div>
 						</div>
 						{message.ip_address && (
 							<div>
 								<p className="text-sm text-muted">{t("admin.ip_address")}</p>
-								<p className="font-mono text-sm text-light">{message.ip_address}</p>
+								<p className="font-mono text-sm text-foreground">{message.ip_address}</p>
 							</div>
 						)}
 					</div>
@@ -132,14 +134,14 @@ export function MessageReplyDialog({
 					{/* Original Message */}
 					<div>
 						<div className="flex items-center justify-between mb-2">
-							<p className="text-sm font-semibold text-subtle">{t("admin.original_message")}</p>
+							<p className="text-sm font-semibold text-muted">{t("admin.original_message")}</p>
 							<Button variant="ghost" size="sm" onClick={handleCopyMessage}>
 								<IconCopy className="w-3.5 h-3.5 mr-1.5" />
 								{t("common.copy")}
 							</Button>
 						</div>
-						<div className="bg-secondary rounded-lg p-4 border-l-4 border-default">
-							<p className="text-light whitespace-pre-wrap">{message.message}</p>
+						<div className="bg-surface rounded-lg p-4 border-l-4 border-border">
+							<p className="text-foreground whitespace-pre-wrap">{message.message}</p>
 						</div>
 					</div>
 
@@ -148,31 +150,31 @@ export function MessageReplyDialog({
 						/* View Mode - Already Replied */
 						<div>
 							<div className="flex items-center justify-between mb-2">
-								<p className="text-sm font-semibold text-subtle">
+								<p className="text-sm font-semibold text-muted">
 									{t("admin.admin_reply_label", { date: formatDateCompact(message.replied_at!) })}
 								</p>
 								{message.user_read_at && (
-									<span className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
+									<span className="text-xs text-success flex items-center gap-1">
 										✓ {t("admin.read_by_user", { date: formatDateCompact(message.user_read_at) })}
 									</span>
 								)}
 							</div>
 							<div className="bg-brand/10 rounded-lg p-4 border-l-4 border-brand">
-								<p className="text-light whitespace-pre-wrap">{message.admin_reply}</p>
+								<p className="text-foreground whitespace-pre-wrap">{message.admin_reply}</p>
 							</div>
 						</div>
 					) : (
 						/* Edit Mode - New Reply */
 						<form onSubmit={handleSubmit} className="space-y-4">
 							<div>
-								<label htmlFor="reply" className="block text-sm font-semibold text-subtle mb-2">
+								<label htmlFor="reply" className="block text-sm font-semibold text-muted mb-2">
 									{t("admin.your_reply")}
 								</label>
 								<textarea
 									id="reply"
 									value={reply}
 									onChange={(e) => setReply(e.target.value)}
-									className="w-full h-40 px-4 py-3 border border-input rounded-lg focus:ring-2 focus:ring-focus focus:border-transparent bg-secondary text-light resize-none shadow-input transition-colors"
+									className="w-full h-40 px-4 py-3 border border-border rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent bg-surface text-foreground resize-none shadow-input transition-colors"
 									placeholder={t("admin.reply_placeholder")}
 									disabled={isSubmitting}
 								/>
@@ -188,7 +190,7 @@ export function MessageReplyDialog({
 											<IconMailOff className="w-5 h-5 text-muted" />
 										)}
 										<div>
-											<p className="text-sm font-semibold text-subtle">
+											<p className="text-sm font-semibold text-muted">
 												{sendEmail ? t("admin.email_sent") : t("admin.in_app_only")}
 											</p>
 											<p className="text-xs text-muted">
@@ -201,7 +203,7 @@ export function MessageReplyDialog({
 										onClick={() => setSendEmail(!sendEmail)}
 										disabled={isSubmitting}
 										className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 ${
-											sendEmail ? "bg-brand" : "bg-gray-300 dark:bg-gray-600"
+											sendEmail ? "bg-brand" : "bg-border-strong"
 										}`}
 										role="switch"
 										aria-checked={sendEmail}
@@ -214,13 +216,13 @@ export function MessageReplyDialog({
 									</button>
 								</div>
 							) : (
-								<div className="flex items-center gap-3 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg border border-default">
+								<div className="flex items-center gap-3 p-4 bg-surface-subtle rounded-lg border border-border">
 									<IconMailOff className="w-5 h-5 text-muted" />
 									<div>
 										<p className="text-sm font-semibold text-muted">
 											{t("admin.email_unavailable")}
 										</p>
-										<p className="text-xs text-faint">{t("admin.email_unavailable_desc")}</p>
+										<p className="text-xs text-subtle">{t("admin.email_unavailable_desc")}</p>
 									</div>
 								</div>
 							)}
@@ -229,7 +231,7 @@ export function MessageReplyDialog({
 				</div>
 
 				{/* Footer */}
-				<div className="flex items-center justify-end gap-3 p-6 border-t border-default bg-secondary">
+				<div className="flex items-center justify-end gap-3 p-6 border-t border-border bg-surface">
 					{isAlreadyReplied ? (
 						/* View Mode - Only Close Button */
 						<Button variant="primary" onClick={onClose}>

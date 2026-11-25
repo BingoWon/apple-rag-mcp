@@ -126,9 +126,7 @@ export function LoginForm() {
 						<div className="w-full border-t border-border" />
 					</div>
 					<div className="relative flex justify-center text-xs uppercase">
-						<span className="bg-card px-3 text-muted-foreground font-medium">
-							{t("auth.or_email")}
-						</span>
+						<span className="bg-card px-3 text-subtle font-medium">{t("auth.or_email")}</span>
 					</div>
 				</div>
 
@@ -191,7 +189,7 @@ export function LoginForm() {
 
 				{/* Sign up link */}
 				<div className="text-center pt-4 border-t border-border">
-					<span className="text-sm text-muted-foreground">
+					<span className="text-sm text-subtle">
 						{t("auth.no_account")}{" "}
 						<Link
 							to="/register"

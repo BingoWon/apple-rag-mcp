@@ -91,7 +91,7 @@ export default function MessagesPage() {
 			{/* Header */}
 			<div className="flex items-start justify-between gap-4">
 				<div>
-					<h1 className="text-2xl font-bold text-light">{t("messages.title")}</h1>
+					<h1 className="text-2xl font-bold text-foreground">{t("messages.title")}</h1>
 					<p className="mt-1 text-sm text-muted">{t("messages.subtitle")}</p>
 				</div>
 				<Button
@@ -107,11 +107,11 @@ export default function MessagesPage() {
 
 			{/* Unread Count Banner */}
 			{unreadCount > 0 && (
-				<Card className="bg-blue-500/10 border-blue-500/30">
+				<Card className="bg-brand/10 border-brand/30">
 					<CardContent className="p-4">
 						<div className="flex items-center gap-2">
-							<IconMessageCircle className="w-5 h-5 text-blue-400" />
-							<p className="text-blue-400 font-medium">
+							<IconMessageCircle className="w-5 h-5 text-brand" />
+							<p className="text-brand font-medium">
 								{unreadCount === 1
 									? t("messages.unread_banner", { count: unreadCount })
 									: t("messages.unread_banner_plural", { count: unreadCount })}
@@ -198,24 +198,24 @@ export default function MessagesPage() {
 							<p>{t("messages.empty")}</p>
 						</div>
 					) : (
-						<div className="divide-y divide-default">
+						<div className="divide-y divide-border">
 							{messages.map((message) => (
 								<div
 									key={message.id}
-									className={cn("p-6 transition-colors", !message.user_read_at && "bg-blue-500/5")}
+									className={cn("p-6 transition-colors", !message.user_read_at && "bg-brand/5")}
 								>
 									{/* Message Header */}
 									<div className="flex items-start justify-between mb-4">
 										<div className="flex items-center gap-2">
 											{message.user_read_at ? (
-												<IconCheck className="w-5 h-5 text-neutral-500" />
+												<IconCheck className="w-5 h-5 text-subtle" />
 											) : (
-												<IconClock className="w-5 h-5 text-blue-400" />
+												<IconClock className="w-5 h-5 text-brand" />
 											)}
 											<span
 												className={cn(
 													"text-sm font-medium",
-													message.user_read_at ? "text-neutral-500" : "text-blue-400",
+													message.user_read_at ? "text-subtle" : "text-brand",
 												)}
 											>
 												{message.user_read_at ? t("messages.read") : t("messages.unread")}
@@ -231,8 +231,10 @@ export default function MessagesPage() {
 										<h4 className="text-sm font-medium text-muted mb-2">
 											{t("messages.your_message")}
 										</h4>
-										<div className="bg-secondary rounded-lg p-4 border border-default">
-											<p className="text-light text-sm whitespace-pre-wrap">{message.message}</p>
+										<div className="bg-surface rounded-lg p-4 border border-border">
+											<p className="text-foreground text-sm whitespace-pre-wrap">
+												{message.message}
+											</p>
 										</div>
 									</div>
 
@@ -242,12 +244,12 @@ export default function MessagesPage() {
 											<h4 className="text-sm font-medium text-muted mb-2">
 												{t("messages.our_response")}
 											</h4>
-											<div className="bg-blue-500/10 rounded-lg p-4 border border-blue-500/30">
-												<p className="text-light text-sm whitespace-pre-wrap">
+											<div className="bg-brand/10 rounded-lg p-4 border border-brand/30">
+												<p className="text-foreground text-sm whitespace-pre-wrap">
 													{message.admin_reply}
 												</p>
 												{message.replied_at && (
-													<p className="text-xs text-blue-400 mt-2">
+													<p className="text-xs text-brand mt-2">
 														{t("messages.replied_on", {
 															date: formatDateCompact(message.replied_at),
 														})}

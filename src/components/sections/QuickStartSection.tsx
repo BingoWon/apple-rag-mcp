@@ -28,10 +28,10 @@ export function QuickStartSection() {
 		<section className="home-section" id="quickstart" aria-labelledby="quickstart-title">
 			<div className="home-content">
 				<header className="home-section-heading text-center">
-					<p className="text-sm font-semibold text-action">{t("quickstart.eyebrow")}</p>
+					<p className="text-sm font-semibold text-brand">{t("quickstart.eyebrow")}</p>
 					<h2
 						id="quickstart-title"
-						className="mt-3 text-balance text-3xl font-bold tracking-tight text-light sm:text-4xl"
+						className="mt-3 text-balance text-3xl font-bold tracking-tight text-foreground sm:text-4xl"
 					>
 						{t("quickstart.title")}
 					</h2>
@@ -57,7 +57,7 @@ export function QuickStartSection() {
 							{t("quickstart.free_access")} {t("quickstart.shared")}{" "}
 							<Link
 								to="/connect"
-								className="whitespace-nowrap font-medium text-action hover:underline"
+								className="whitespace-nowrap font-medium text-brand hover:underline"
 							>
 								{t("connect.details")} →
 							</Link>
@@ -66,26 +66,26 @@ export function QuickStartSection() {
 
 					<a
 						href="#pricing"
-						className="group flex flex-col items-start gap-3 border-t border-default bg-secondary/30 p-5 transition-colors hover:bg-secondary/70 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-4"
+						className="group flex flex-col items-start gap-3 border-t border-border bg-surface/30 p-5 transition-colors hover:bg-surface/70 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-4"
 					>
 						<div>
-							<p className="flex flex-wrap items-baseline gap-2 text-sm font-semibold text-light">
+							<p className="flex flex-wrap items-baseline gap-2 text-sm font-semibold text-foreground">
 								Pro <span aria-hidden="true">·</span>
-								<strong className="text-xl font-bold text-action">{t("plans.price_pro")}</strong>
+								<strong className="text-xl font-bold text-brand">{t("plans.price_pro")}</strong>
 							</p>
 							<p className="mt-1 text-xs leading-5 text-muted">
 								{t("quickstart.pro_weekly_calls")} <span aria-hidden="true">·</span>{" "}
 								{t("quickstart.pro_minute_calls")}
 							</p>
 						</div>
-						<span className="whitespace-nowrap text-sm font-medium text-action group-hover:underline">
+						<span className="whitespace-nowrap text-sm font-medium text-brand group-hover:underline">
 							{t("quickstart.pro_cta")} →
 						</span>
 					</a>
 				</Card>
 
 				<div className="mt-10 text-center">
-					<h3 className="text-sm font-semibold text-light mb-2">
+					<h3 className="text-sm font-semibold text-foreground mb-2">
 						{t("quickstart.supported_clients")}
 					</h3>
 					<ul className="flex flex-wrap justify-center gap-x-5 gap-y-3">
@@ -95,7 +95,7 @@ export function QuickStartSection() {
 									href={client.href}
 									target="_blank"
 									rel="noopener noreferrer"
-									className="inline-flex items-center gap-2 rounded-sm text-sm text-muted transition-colors hover:text-light focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+									className="inline-flex items-center gap-2 rounded-sm text-sm text-muted transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
 								>
 									<span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white">
 										<client.Logo aria-hidden="true" className="size-4 text-neutral-900" />

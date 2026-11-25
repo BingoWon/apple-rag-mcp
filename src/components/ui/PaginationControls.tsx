@@ -59,7 +59,7 @@ export function PaginationControls({
 				<div className="flex flex-wrap items-center gap-3">
 					{showPageSizeSelector && onPageSizeChange && (
 						<div className="flex items-center gap-2">
-							<span className="text-sm text-muted-foreground">{t("pagination.show")}</span>
+							<span className="text-sm text-subtle">{t("pagination.show")}</span>
 							<div className="flex items-center gap-1">
 								{pageSizeOptions.map((size) => (
 									<Button
@@ -74,12 +74,12 @@ export function PaginationControls({
 									</Button>
 								))}
 							</div>
-							<span className="text-sm text-muted-foreground">{t("pagination.per_page")}</span>
+							<span className="text-sm text-subtle">{t("pagination.per_page")}</span>
 						</div>
 					)}
 
 					{showInfo && (
-						<div className="text-sm text-muted-foreground">
+						<div className="text-sm text-subtle">
 							{t("common.showing_range", {
 								from: total > 0 ? startIndex : 0,
 								to: total > 0 ? endIndex : 0,

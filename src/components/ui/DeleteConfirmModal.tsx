@@ -52,10 +52,10 @@ export function DeleteConfirmModal({
 
 				{/* Content */}
 				<div className="text-center space-y-2">
-					<p className="text-sm text-muted-foreground">
+					<p className="text-sm text-subtle">
 						{t("delete_modal.confirm_text", { name: itemName })}
 					</p>
-					<p className="text-xs text-muted-foreground/80">{t("delete_modal.warning")}</p>
+					<p className="text-xs text-subtle/80">{t("delete_modal.warning")}</p>
 				</div>
 
 				{/* Actions */}

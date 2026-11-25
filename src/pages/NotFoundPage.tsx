@@ -2,8 +2,8 @@ import { IconArrowLeft, IconHome } from "@tabler/icons-react";
 import { motion } from "motion/react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
+import { LampContainer } from "@/components/effects/lamp";
 import { Button } from "@/components/ui/Button";
-import { LampContainer } from "@/components/ui/lamp";
 import { activateFabContact } from "@/utils/contact";
 
 export default function NotFound() {

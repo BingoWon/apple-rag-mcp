@@ -13,7 +13,7 @@ const commands =
 	'npm install -g apple-rag-cli\napple-rag auth login\napple-rag search "SwiftUI NavigationStack path binding" --limit 3 --json\napple-rag browse --json\napple-rag fetch "https://developer.apple.com/documentation/swiftui" --json';
 
 const plainCommands = (
-	<pre className="overflow-x-auto rounded-lg bg-secondary p-4 text-sm">{commands}</pre>
+	<pre className="overflow-x-auto rounded-lg bg-surface p-4 text-sm">{commands}</pre>
 );
 
 const CodeBlock = lazyWithRecovery(() =>
@@ -29,7 +29,7 @@ export default function ConnectPage() {
 			<AppNavbar />
 			<main className="mx-auto max-w-3xl px-6 pb-12 pt-28 sm:pt-32">
 				<header className="mb-8">
-					<p className="text-sm font-medium text-action">MCP / CLI</p>
+					<p className="text-sm font-medium text-brand">MCP / CLI</p>
 					<h1 className="mt-3 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
 						{t("connect.title")}
 					</h1>
@@ -40,7 +40,7 @@ export default function ConnectPage() {
 					<AgentSetupCard mode="cli" />
 				</div>
 				{(["mcp", "cli"] as const).map((mode) => (
-					<section key={mode} id={mode} className="scroll-mt-28 border-b border-default py-10">
+					<section key={mode} id={mode} className="scroll-mt-28 border-b border-border py-10">
 						<h2 className="text-2xl font-semibold text-foreground">{t(`connect.${mode}_setup`)}</h2>
 						<ol className="my-6 list-decimal space-y-4 pl-5 text-sm leading-7 text-muted sm:text-base">
 							{[1, 2, 3].map((step) => (
@@ -49,7 +49,7 @@ export default function ConnectPage() {
 						</ol>
 						{mode === "mcp" ? (
 							<>
-								<code className="block overflow-x-auto rounded-xl border border-default bg-secondary p-4 text-sm text-foreground">
+								<code className="block overflow-x-auto rounded-xl border border-border bg-surface p-4 text-sm text-foreground">
 									https://mcp.apple-rag.com
 								</code>
 								<Button asChild variant="outline" className="mt-6">
@@ -60,7 +60,7 @@ export default function ConnectPage() {
 							<>
 								<details
 									onToggle={(event) => setReferenceOpen(event.currentTarget.open)}
-									className="mb-6 rounded-xl border border-default p-4"
+									className="mb-6 rounded-xl border border-border p-4"
 								>
 									<summary className="cursor-pointer text-sm font-medium text-foreground">
 										{t("connect.reference")}
@@ -75,7 +75,7 @@ export default function ConnectPage() {
 										</Suspense>
 									</div>
 								</details>
-								<div className="flex flex-wrap gap-5 text-sm text-action">
+								<div className="flex flex-wrap gap-5 text-sm text-brand">
 									<a
 										href="https://www.npmjs.com/package/apple-rag-cli"
 										target="_blank"
@@ -88,14 +88,14 @@ export default function ConnectPage() {
 										{t("connect.skill")} →
 									</a>
 								</div>
-								<aside className="mt-8 rounded-xl border border-default bg-card p-6">
+								<aside className="mt-8 rounded-xl border border-border bg-card p-6">
 									<h3 className="font-semibold text-foreground">{t("connect.automation")}</h3>
 									<p className="mt-3 text-sm leading-7 text-muted">
 										{t("connect.automation_body")}
 									</p>
 									<Link
 										to="/settings#cli-access"
-										className="mt-4 inline-block text-sm text-action hover:underline"
+										className="mt-4 inline-block text-sm text-brand hover:underline"
 									>
 										{t("connect.settings")} →
 									</Link>

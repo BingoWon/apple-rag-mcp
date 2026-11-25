@@ -23,7 +23,7 @@ function QuoteText({ text }: { text: string }) {
 	}, [text]);
 
 	return (
-		<motion.p className="mt-8 text-lg text-subtle leading-relaxed">
+		<motion.p className="mt-8 text-lg text-muted leading-relaxed">
 			{segments.map((segment, index) => (
 				<motion.span
 					key={index}
@@ -133,7 +133,7 @@ export const AnimatedTestimonials = ({
 										loading="lazy"
 										decoding="async"
 										draggable={false}
-										className="h-full w-full rounded-2xl object-cover object-center shadow-complex border border-default"
+										className="h-full w-full rounded-2xl object-cover object-center shadow-complex border border-border"
 									/>
 								</motion.div>
 							))}
@@ -160,7 +160,7 @@ export const AnimatedTestimonials = ({
 							ease: [0.4, 0, 0.2, 1],
 						}}
 					>
-						<h3 className="text-2xl font-bold text-light">{testimonials[active].name}</h3>
+						<h3 className="text-2xl font-bold text-foreground">{testimonials[active].name}</h3>
 						<p className="text-sm text-muted mt-1">{testimonials[active].designation}</p>
 						<QuoteText text={testimonials[active].quote} />
 					</motion.div>
@@ -169,17 +169,17 @@ export const AnimatedTestimonials = ({
 							type="button"
 							onClick={handlePrev}
 							aria-label={t("common.previous")}
-							className="group/button flex h-10 w-10 items-center justify-center rounded-xl bg-card border border-default hover:border-brand hover:bg-accent transition-all duration-200 shadow-button"
+							className="group/button flex h-10 w-10 items-center justify-center rounded-xl bg-card border border-border hover:border-brand hover:bg-surface-subtle transition-all duration-200 shadow-button"
 						>
-							<IconArrowLeft className="h-5 w-5 text-light transition-all duration-200 group-hover/button:rotate-12 group-hover/button:text-brand" />
+							<IconArrowLeft className="h-5 w-5 text-foreground transition-all duration-200 group-hover/button:rotate-12 group-hover/button:text-brand" />
 						</button>
 						<button
 							type="button"
 							onClick={handleNext}
 							aria-label={t("common.next")}
-							className="group/button flex h-10 w-10 items-center justify-center rounded-xl bg-card border border-default hover:border-brand hover:bg-accent transition-all duration-200 shadow-button"
+							className="group/button flex h-10 w-10 items-center justify-center rounded-xl bg-card border border-border hover:border-brand hover:bg-surface-subtle transition-all duration-200 shadow-button"
 						>
-							<IconArrowRight className="h-5 w-5 text-light transition-all duration-200 group-hover/button:-rotate-12 group-hover/button:text-brand" />
+							<IconArrowRight className="h-5 w-5 text-foreground transition-all duration-200 group-hover/button:-rotate-12 group-hover/button:text-brand" />
 						</button>
 					</div>
 				</div>

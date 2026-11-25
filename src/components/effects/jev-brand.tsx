@@ -7,7 +7,7 @@ export function JevBrand() {
 			target="_blank"
 			rel="noopener noreferrer"
 			onClick={(event) => event.stopPropagation()}
-			className="jev-brand relative inline-block pl-[1.15em] align-baseline whitespace-nowrap text-light focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-typesafe"
+			className="jev-brand relative inline-block pl-[1.15em] align-baseline whitespace-nowrap text-foreground focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-typesafe"
 		>
 			<img
 				src="/typesafe-logo.webp"

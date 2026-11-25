@@ -115,7 +115,7 @@ export function LogDetails({
 										{t("common.copy")}
 									</Button>
 								</div>
-								<pre className="max-h-64 overflow-auto whitespace-pre-wrap rounded-lg border border-default bg-background p-3 text-xs leading-relaxed [overflow-wrap:anywhere]">
+								<pre className="max-h-64 overflow-auto whitespace-pre-wrap rounded-lg border border-border bg-background p-3 text-xs leading-relaxed [overflow-wrap:anywhere]">
 									{value || "—"}
 								</pre>
 							</section>
@@ -128,7 +128,7 @@ export function LogDetails({
 										key={label}
 										className="grid grid-cols-[7rem_minmax(0,1fr)] gap-3 border-b border-border/50 pb-3 text-sm"
 									>
-										<dt className="text-muted-foreground">{t(String(label))}</dt>
+										<dt className="text-subtle">{t(String(label))}</dt>
 										<dd className="min-w-0 [overflow-wrap:anywhere]">{value ?? "—"}</dd>
 									</div>
 								))}

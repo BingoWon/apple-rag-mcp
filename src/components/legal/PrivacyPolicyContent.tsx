@@ -1,9 +1,9 @@
 export default function PrivacyPolicyContent() {
 	return (
-		<div className="bg-gradient-to-br from-primary to-secondary border border-default rounded-2xl p-8 md:p-12">
+		<div className="bg-gradient-to-br from-background to-surface border border-border rounded-2xl p-8 md:p-12">
 			<div className="max-w-none text-muted leading-relaxed">
 				<section className="mb-8">
-					<h2 className="text-2xl font-bold text-light mb-4">1. Introduction</h2>
+					<h2 className="text-2xl font-bold text-foreground mb-4">1. Introduction</h2>
 					<p className="mb-0">
 						Apple RAG ("we," "our," or "us") is committed to protecting your privacy. This Privacy
 						Policy explains how we collect, use, disclose, and safeguard your information when you
@@ -13,10 +13,10 @@ export default function PrivacyPolicyContent() {
 				</section>
 
 				<section className="mb-8">
-					<h2 className="text-2xl font-bold text-light mb-6">2. Information We Collect</h2>
+					<h2 className="text-2xl font-bold text-foreground mb-6">2. Information We Collect</h2>
 
 					<div className="mb-6">
-						<h3 className="text-lg font-semibold text-light mb-3">2.1 Account Information</h3>
+						<h3 className="text-lg font-semibold text-foreground mb-3">2.1 Account Information</h3>
 						<p className="mb-0">
 							When you create an account, we collect your email address, display name, and
 							authentication credentials — either a hashed password for email sign-up or profile
@@ -25,7 +25,7 @@ export default function PrivacyPolicyContent() {
 					</div>
 
 					<div className="mb-6">
-						<h3 className="text-lg font-semibold text-light mb-3">2.2 Usage Data</h3>
+						<h3 className="text-lg font-semibold text-foreground mb-3">2.2 Usage Data</h3>
 						<p className="mb-3">
 							We collect information about how you use our services, including:
 						</p>
@@ -39,7 +39,9 @@ export default function PrivacyPolicyContent() {
 					</div>
 
 					<div className="mb-0">
-						<h3 className="text-lg font-semibold text-light mb-3">2.3 Technical Information</h3>
+						<h3 className="text-lg font-semibold text-foreground mb-3">
+							2.3 Technical Information
+						</h3>
 						<p className="mb-0">
 							We automatically collect certain technical information, including your IP address,
 							browser type, device information, and operating system to provide and improve our
@@ -49,7 +51,9 @@ export default function PrivacyPolicyContent() {
 				</section>
 
 				<section className="mb-8">
-					<h2 className="text-2xl font-bold text-light mb-4">3. How We Use Your Information</h2>
+					<h2 className="text-2xl font-bold text-foreground mb-4">
+						3. How We Use Your Information
+					</h2>
 					<p className="mb-3">We use the collected information for the following purposes:</p>
 					<ul className="list-disc pl-6 space-y-2 mb-0">
 						<li>Providing and maintaining our services</li>
@@ -63,7 +67,9 @@ export default function PrivacyPolicyContent() {
 				</section>
 
 				<section className="mb-8">
-					<h2 className="text-2xl font-bold text-light mb-4">4. Data Sharing and Disclosure</h2>
+					<h2 className="text-2xl font-bold text-foreground mb-4">
+						4. Data Sharing and Disclosure
+					</h2>
 					<p className="mb-4">
 						We do not sell, trade, or otherwise transfer your personal information to third parties,
 						except in the following circumstances:
@@ -90,7 +96,7 @@ export default function PrivacyPolicyContent() {
 				</section>
 
 				<section className="mb-8">
-					<h2 className="text-2xl font-bold text-light mb-4">5. Data Security</h2>
+					<h2 className="text-2xl font-bold text-foreground mb-4">5. Data Security</h2>
 					<p className="mb-3">
 						We implement industry-standard security measures to protect your information:
 					</p>
@@ -104,7 +110,7 @@ export default function PrivacyPolicyContent() {
 				</section>
 
 				<section className="mb-8">
-					<h2 className="text-2xl font-bold text-light mb-4">6. Data Retention</h2>
+					<h2 className="text-2xl font-bold text-foreground mb-4">6. Data Retention</h2>
 					<p className="mb-3">
 						We retain your information for as long as necessary to provide our services and comply
 						with legal obligations. Specifically:
@@ -118,7 +124,7 @@ export default function PrivacyPolicyContent() {
 				</section>
 
 				<section className="mb-8">
-					<h2 className="text-2xl font-bold text-light mb-4">7. Your Rights</h2>
+					<h2 className="text-2xl font-bold text-foreground mb-4">7. Your Rights</h2>
 					<p className="mb-3">You have the following rights regarding your personal information:</p>
 					<ul className="list-disc pl-6 space-y-2 mb-0">
 						<li>Access: Request a copy of your personal data</li>
@@ -130,7 +136,7 @@ export default function PrivacyPolicyContent() {
 				</section>
 
 				<section className="mb-8">
-					<h2 className="text-2xl font-bold text-light mb-4">
+					<h2 className="text-2xl font-bold text-foreground mb-4">
 						8. Service Limitations and Disclaimers
 					</h2>
 					<p className="mb-4">
@@ -153,7 +159,7 @@ export default function PrivacyPolicyContent() {
 				</section>
 
 				<section className="mb-0">
-					<h2 className="text-2xl font-bold text-light mb-4">9. Contact Us</h2>
+					<h2 className="text-2xl font-bold text-foreground mb-4">9. Contact Us</h2>
 					<p className="mb-0">
 						If you have any questions about this Privacy Policy or our data practices, please
 						contact us through our support system in the dashboard.

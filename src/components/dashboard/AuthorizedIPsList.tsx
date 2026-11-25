@@ -64,7 +64,7 @@ export function AuthorizedIPsList({
 				key: "ip_address",
 				label: t("ips.ip_label"),
 				render: (value) => (
-					<code className="text-sm font-mono text-subtle bg-tertiary px-2 py-1 rounded border border-default font-mono tracking-wider">
+					<code className="text-sm font-mono text-muted bg-surface-subtle px-2 py-1 rounded border border-border font-mono tracking-wider">
 						{String(value)}
 					</code>
 				),
@@ -73,16 +73,14 @@ export function AuthorizedIPsList({
 				key: "created_at",
 				label: t("common.created"),
 				render: (value) => (
-					<div className="text-sm text-muted-foreground select-none">
-						{formatDate(value as string)}
-					</div>
+					<div className="text-sm text-subtle select-none">{formatDate(value as string)}</div>
 				),
 			},
 			{
 				key: "last_used_at",
 				label: t("tokens.last_used"),
 				render: (value) => (
-					<div className="text-sm text-muted-foreground select-none">
+					<div className="text-sm text-subtle select-none">
 						{value ? formatDate(value as string) : t("common.never")}
 					</div>
 				),
@@ -97,7 +95,7 @@ export function AuthorizedIPsList({
 							variant="ghost"
 							onClick={() => handleDeleteClick(row.id, row.name)}
 							disabled={isDeleting === row.id}
-							className="text-error hover:text-error/80"
+							className="text-destructive hover:text-destructive/80"
 							title={t("ips.delete_label")}
 						>
 							{isDeleting === row.id ? (
@@ -126,11 +124,11 @@ export function AuthorizedIPsList({
 	if (ips.length === 0) {
 		return (
 			<div className="p-6 text-center">
-				<div className="mx-auto h-12 w-12 text-muted-foreground">
+				<div className="mx-auto h-12 w-12 text-subtle">
 					<IconWorld className="h-12 w-12" />
 				</div>
 				<h3 className="mt-2 text-sm font-medium text-foreground">{t("ips.empty")}</h3>
-				<p className="mt-1 text-sm text-muted-foreground">{t("ips.empty_desc")}</p>
+				<p className="mt-1 text-sm text-subtle">{t("ips.empty_desc")}</p>
 			</div>
 		);
 	}

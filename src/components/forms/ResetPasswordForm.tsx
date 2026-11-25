@@ -99,7 +99,7 @@ export function ResetPasswordForm() {
 						<IconCheck className="w-8 h-8 text-success" />
 					</div>
 
-					<p className="text-muted-foreground">{t("auth.reset_redirect")}</p>
+					<p className="text-subtle">{t("auth.reset_redirect")}</p>
 
 					<Button variant="primary" className="w-full" asChild>
 						<Link to="/login">{t("auth.continue_signin")}</Link>
@@ -132,12 +132,12 @@ export function ResetPasswordForm() {
 							size="icon"
 							aria-label={showPassword ? t("auth.hide_password") : t("auth.show_password")}
 							onClick={() => setShowPassword(!showPassword)}
-							className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 text-muted-foreground hover:text-foreground"
+							className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 text-subtle hover:text-foreground"
 						>
 							{showPassword ? <IconEyeOff className="w-4 h-4" /> : <IconEye className="w-4 h-4" />}
 						</Button>
 					</div>
-					<p className="text-sm text-muted-foreground">{t("auth.password_min_length")}</p>
+					<p className="text-sm text-subtle">{t("auth.password_min_length")}</p>
 				</LabelInputContainer>
 
 				<LabelInputContainer>
@@ -160,7 +160,7 @@ export function ResetPasswordForm() {
 							size="icon"
 							aria-label={showConfirmPassword ? t("auth.hide_password") : t("auth.show_password")}
 							onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-							className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 text-muted-foreground hover:text-foreground"
+							className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 text-subtle hover:text-foreground"
 						>
 							{showConfirmPassword ? (
 								<IconEyeOff className="w-4 h-4" />

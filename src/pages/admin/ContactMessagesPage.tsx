@@ -89,7 +89,7 @@ export default function AdminContactMessagesPage() {
 				<Button
 					disabled
 					size="sm"
-					className="bg-gray-200 dark:bg-gray-800 text-gray-500 dark:text-gray-400 cursor-not-allowed hover:bg-gray-200 dark:hover:bg-gray-800"
+					className="bg-surface-subtle text-subtle cursor-not-allowed hover:bg-surface-subtle"
 				>
 					<IconLock className="w-4 h-4 mr-1.5" />
 					{t("admin.read_only")}
@@ -124,12 +124,12 @@ export default function AdminContactMessagesPage() {
 							setSelectedMessage(message);
 						}}
 						size="sm"
-						className="bg-green-600 text-white hover:bg-green-700 whitespace-nowrap"
+						className="bg-success text-white font-semibold hover:bg-success/90 whitespace-nowrap"
 					>
 						<IconEyeCheck className="w-4 h-4 mr-1.5" />
 						{t("admin.read")}
 					</Button>
-					<span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
+					<span className="text-xs text-subtle whitespace-nowrap">
 						{formatDateCompact(message.replied_at!)}
 					</span>
 				</div>
@@ -145,12 +145,12 @@ export default function AdminContactMessagesPage() {
 						setSelectedMessage(message);
 					}}
 					size="sm"
-					className="bg-orange-600 text-white hover:bg-orange-700 whitespace-nowrap"
+					className="bg-warning text-slate-950 font-semibold hover:bg-warning/90 whitespace-nowrap"
 				>
 					<IconEye className="w-4 h-4 mr-1.5" />
 					{t("admin.unread")}
 				</Button>
-				<span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
+				<span className="text-xs text-subtle whitespace-nowrap">
 					{formatDateCompact(message.replied_at!)}
 				</span>
 			</div>
@@ -166,12 +166,8 @@ export default function AdminContactMessagesPage() {
 			{/* Header */}
 			<div className="flex items-center justify-between">
 				<div>
-					<h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-						{t("admin.contact_messages")}
-					</h1>
-					<p className="text-gray-600 dark:text-gray-400 mt-1">
-						{t("admin.contact_messages_subtitle")}
-					</p>
+					<h1 className="text-2xl font-bold text-foreground">{t("admin.contact_messages")}</h1>
+					<p className="text-subtle mt-1">{t("admin.contact_messages_subtitle")}</p>
 				</div>
 				<Button
 					ref={refreshButton}
@@ -186,8 +182,8 @@ export default function AdminContactMessagesPage() {
 
 			{/* Error State */}
 			{error && (
-				<div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-					<p className="text-red-800 dark:text-red-400">{error}</p>
+				<div className="bg-destructive/10 border border-destructive/30 rounded-lg p-4">
+					<p className="text-destructive">{error}</p>
 				</div>
 			)}
 
@@ -209,7 +205,7 @@ export default function AdminContactMessagesPage() {
 							] as const
 						).map(([key, value]) => (
 							<div key={key} className="flex items-baseline gap-1.5">
-								<dt className="text-muted-foreground">{t(`admin.${key}`)}</dt>
+								<dt className="text-subtle">{t(`admin.${key}`)}</dt>
 								<dd className="font-semibold tabular-nums">{value}</dd>
 							</div>
 						))}
@@ -217,23 +213,23 @@ export default function AdminContactMessagesPage() {
 				}
 			>
 				<table className="w-full min-w-2xl table-fixed">
-					<thead className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+					<thead className="sticky top-0 z-10 bg-surface border-b border-border">
 						<tr>
-							<th className="w-1/5 px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+							<th className="w-1/5 px-6 py-3 text-left text-xs font-medium text-subtle uppercase tracking-wider">
 								{t("admin.col_user_name")}
 							</th>
-							<th className="w-2/5 px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+							<th className="w-2/5 px-6 py-3 text-left text-xs font-medium text-subtle uppercase tracking-wider">
 								{t("admin.col_message")}
 							</th>
-							<th className="w-1/6 px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+							<th className="w-1/6 px-6 py-3 text-left text-xs font-medium text-subtle uppercase tracking-wider">
 								{t("admin.date")}
 							</th>
-							<th className="w-1/6 px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+							<th className="w-1/6 px-6 py-3 text-left text-xs font-medium text-subtle uppercase tracking-wider">
 								{t("admin.action")}
 							</th>
 						</tr>
 					</thead>
-					<tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+					<tbody className="divide-y divide-border">
 						{isLoading ? (
 							<tr>
 								<td colSpan={4} className="px-6 py-12 text-center">
@@ -244,19 +240,16 @@ export default function AdminContactMessagesPage() {
 							</tr>
 						) : messages.length === 0 ? (
 							<tr>
-								<td colSpan={4} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+								<td colSpan={4} className="px-6 py-12 text-center text-subtle">
 									{t("admin.no_messages")}
 								</td>
 							</tr>
 						) : (
 							messages.map((message) => (
-								<tr
-									key={message.id}
-									className="hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors"
-								>
+								<tr key={message.id} className="hover:bg-surface/60 transition-colors">
 									<td className="px-6 py-4">
 										<div className="text-sm">
-											<div className="font-medium text-gray-900 dark:text-white">
+											<div className="font-medium text-foreground">
 												<AdminUserLabel user={message.user} />
 											</div>
 											<p className="text-xs text-muted">
@@ -266,17 +259,17 @@ export default function AdminContactMessagesPage() {
 									</td>
 									<td className="px-6 py-4 max-w-md">
 										<div className="space-y-1">
-											<p className="text-sm text-gray-900 dark:text-white line-clamp-2 break-words">
+											<p className="text-sm text-foreground line-clamp-2 break-words">
 												{message.message}
 											</p>
 											{message.admin_reply && (
-												<p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-1 break-words">
+												<p className="text-xs text-subtle line-clamp-1 break-words">
 													{t("admin.reply_preview", { reply: message.admin_reply })}
 												</p>
 											)}
 										</div>
 									</td>
-									<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+									<td className="px-6 py-4 whitespace-nowrap text-sm text-subtle">
 										{formatDateCompact(message.created_at)}
 									</td>
 									<td className="px-6 py-4">{getActionButton(message)}</td>

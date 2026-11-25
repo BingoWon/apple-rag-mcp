@@ -31,8 +31,8 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
 							.join(" ") || undefined
 					}
 					className={cn(
-						"flex h-11 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground shadow-none transition-colors placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-50",
-						error && "border-error",
+						"flex h-11 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground shadow-none transition-colors placeholder:text-subtle focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-50",
+						error && "border-destructive",
 						className,
 					)}
 				/>
@@ -40,10 +40,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
 					<p
 						id={hintId}
 						role={error ? "alert" : undefined}
-						className={cn(
-							"text-xs leading-relaxed",
-							error ? "text-error" : "text-muted-foreground",
-						)}
+						className={cn("text-xs leading-relaxed", error ? "text-destructive" : "text-subtle")}
 					>
 						{error || helperText}
 					</p>

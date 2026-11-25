@@ -1,7 +1,7 @@
 import { useScroll, useTransform } from "motion/react";
 import { useRef } from "react";
-import { GoogleGeminiEffect } from "@/components/ui/google-gemini-effect";
-import { JevText } from "@/components/ui/jev-brand";
+import { GoogleGeminiEffect } from "@/components/effects/google-gemini-effect";
+import { JevText } from "@/components/effects/jev-brand";
 
 export function JevSection() {
 	const drawingRef = useRef<HTMLDivElement>(null);

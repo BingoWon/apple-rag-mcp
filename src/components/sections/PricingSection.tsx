@@ -3,8 +3,8 @@ import Alipay from "@thesvg/react/alipay";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
+import { EvervaultCard, Icon } from "@/components/effects/evervault-card";
 import { Button } from "@/components/ui/Button";
-import { EvervaultCard, Icon } from "@/components/ui/evervault-card";
 import { useAuth } from "@/hooks/useAuth";
 import { getPricingTiers } from "@/lib/plans";
 import { useDashboardStore } from "@/stores/dashboard";
@@ -32,22 +32,28 @@ export function PricingSection() {
 	}, [isAuthenticated, subscription, fetchSubscription]);
 
 	return (
-		<div className="home-section home-content rounded-xl bg-secondary" id="pricing">
+		<div className="home-section home-content rounded-xl bg-surface" id="pricing">
 			<div className="home-section-heading text-center">
-				<h2 className="text-base font-semibold leading-7 text-action">{t("pricing.eyebrow")}</h2>
-				<p className="mt-2 text-3xl font-bold tracking-tight text-light sm:text-4xl">
+				<h2 className="text-base font-semibold leading-7 text-brand">{t("pricing.eyebrow")}</h2>
+				<p className="mt-2 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
 					{t("pricing.title")}
 				</p>
 				<p className="mt-4 sm:mt-6 text-lg leading-8 text-muted">{t("pricing.subtitle")}</p>
 			</div>
 			<div className="mx-auto grid max-w-md grid-cols-1 gap-y-6 lg:mx-0 lg:max-w-none lg:grid-cols-3 lg:gap-x-8 lg:gap-y-0 lg:items-start">
 				{tiers.map((tier) => (
-					<div key={tier.id} className="border border-default flex flex-col w-full relative">
+					<div key={tier.id} className="border border-border flex flex-col w-full relative">
 						{/* Corner Icons */}
-						<Icon aria-hidden="true" className="absolute h-6 w-6 -top-3 -left-3 text-light" />
-						<Icon aria-hidden="true" className="absolute h-6 w-6 -bottom-3 -left-3 text-light" />
-						<Icon aria-hidden="true" className="absolute h-6 w-6 -top-3 -right-3 text-light" />
-						<Icon aria-hidden="true" className="absolute h-6 w-6 -bottom-3 -right-3 text-light" />
+						<Icon aria-hidden="true" className="absolute h-6 w-6 -top-3 -left-3 text-foreground" />
+						<Icon
+							aria-hidden="true"
+							className="absolute h-6 w-6 -bottom-3 -left-3 text-foreground"
+						/>
+						<Icon aria-hidden="true" className="absolute h-6 w-6 -top-3 -right-3 text-foreground" />
+						<Icon
+							aria-hidden="true"
+							className="absolute h-6 w-6 -bottom-3 -right-3 text-foreground"
+						/>
 						<EvervaultCard
 							className="w-full h-full"
 							gradientFrom={tier.gradientFrom}
@@ -59,7 +65,7 @@ export function PricingSection() {
 										<h3
 											id={tier.id}
 											className={`text-lg font-semibold leading-8 ${
-												tier.popular ? "text-action" : "text-light"
+												tier.popular ? "text-brand" : "text-foreground"
 											}`}
 										>
 											{tier.name}
@@ -82,8 +88,8 @@ export function PricingSection() {
 										<span
 											className={
 												tier.popular
-													? "text-4xl font-bold text-action"
-													: "text-4xl font-bold text-light"
+													? "text-4xl font-bold text-brand"
+													: "text-4xl font-bold text-foreground"
 											}
 										>
 											{tier.displayPrice}
@@ -92,7 +98,7 @@ export function PricingSection() {
 									<ul className="mt-6 sm:mt-8 space-y-2 sm:space-y-3 text-sm leading-6 text-muted">
 										{tier.features.map((feature) => (
 											<li key={feature} className="flex gap-x-3">
-												<IconCheck className="h-6 w-5 flex-none text-action" aria-hidden="true" />
+												<IconCheck className="h-6 w-5 flex-none text-brand" aria-hidden="true" />
 												<span className="min-w-0">{feature}</span>
 											</li>
 										))}

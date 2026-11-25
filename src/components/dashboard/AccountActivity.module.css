@@ -16,10 +16,10 @@
 	padding: 1rem 1.25rem 0;
 	border-radius: 0.5rem;
 	overflow: hidden;
-	background-color: var(--color-card);
+	background-color: var(--card);
 }
 .calls {
-	border: 1px solid var(--color-default);
+	border: 1px solid var(--border);
 	box-shadow: 0 4px 12px rgb(35 48 68 / 8%);
 	background-image:
 		radial-gradient(
@@ -39,12 +39,12 @@
 		);
 }
 .quota {
-	border: 1px solid var(--color-default);
+	border: 1px solid var(--border);
 	box-shadow: 0 3px 10px rgb(32 38 46 / 7%);
 	background-image: linear-gradient(
 		135deg,
 		transparent 20%,
-		color-mix(in srgb, var(--color-muted-foreground) 12%, transparent)
+		color-mix(in srgb, var(--subtle) 12%, transparent)
 	);
 }
 .label {
@@ -74,14 +74,14 @@
 	height: 4px;
 	overflow: hidden;
 	border-radius: 100px;
-	background: color-mix(in srgb, var(--color-muted-foreground) 18%, transparent);
+	background: color-mix(in srgb, var(--subtle) 18%, transparent);
 	margin-bottom: 0.45rem;
 }
 .rail > span {
 	display: block;
 	height: 100%;
 	border-radius: inherit;
-	background: var(--color-muted-foreground);
+	background: var(--subtle);
 }
 @container (max-width: 470px) {
 	.summary {

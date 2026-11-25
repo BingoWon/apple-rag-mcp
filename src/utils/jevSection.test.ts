@@ -42,7 +42,7 @@ test("Jev section uses logo-prefixed branding and centered natural scrolling wit
 			assert.ok(!html.includes("180svh"));
 			assert.ok(!html.includes("160svh"));
 			assert.ok(!html.includes("400vh"));
-			assert.ok(html.includes("text-3xl font-bold text-light sm:text-4xl"));
+			assert.ok(html.includes("text-3xl font-bold text-foreground sm:text-4xl"));
 			assert.ok(html.includes('viewBox="0 300 1440 430"'));
 			assert.ok(html.includes('<feGaussianBlur in="SourceGraphic" stdDeviation="5"'));
 			assert.ok(html.includes('href="https://typesafe.ai/"'));
@@ -66,7 +66,7 @@ test("Jev section uses logo-prefixed branding and centered natural scrolling wit
 			assert.ok(!html.includes("语义与关键词"));
 			assert.ok(!html.includes("leading-none"));
 			assert.ok(!html.includes("text-typesafe"));
-			assert.ok(html.includes("align-baseline whitespace-nowrap text-light"));
+			assert.ok(html.includes("align-baseline whitespace-nowrap text-foreground"));
 			assert.equal(html.split('stroke-dasharray="0 1"').length - 1, 10);
 		}
 	} finally {

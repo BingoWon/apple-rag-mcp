@@ -147,7 +147,7 @@ test("sidebar promotion sits below logout and collapses to its logo in both lang
 					assert.ok(html.includes(language === "en" ? "Powered by " : "驱动"));
 					assert.ok(!i18n.t("dashboard.jev_heading").includes("RAG"));
 					assert.ok(!i18n.t("dashboard.jev_integration").includes("RAG"));
-					assert.ok(html.includes("border-t border-default/60"));
+					assert.ok(html.includes("border-t border-border/60"));
 					assert.ok(!html.includes("border-l-typesafe"));
 					assert.ok(!html.includes("bg-typesafe/10"));
 					assert.ok(html.includes("jev-brand-name font-bold"));

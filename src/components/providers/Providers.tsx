@@ -8,8 +8,8 @@ interface ProvidersProps {
 export function Providers({ children }: ProvidersProps) {
 	// 公共样式配置
 	const baseStyle = {
-		background: "var(--color-secondary)",
-		color: "var(--color-light)",
+		background: "var(--surface)",
+		color: "var(--foreground)",
 		borderRadius: "8px",
 		fontSize: "14px",
 		maxWidth: "480px", // 增加宽度以更好地显示较长的反馈消息
@@ -28,7 +28,7 @@ export function Providers({ children }: ProvidersProps) {
 	};
 
 	const createToastConfig = (color: string, shadowType: keyof typeof shadows) => ({
-		iconTheme: { primary: color, secondary: "var(--color-background)" },
+		iconTheme: { primary: color, secondary: "var(--background)" },
 		style: {
 			...baseStyle,
 			border: `2px solid ${color}`,
@@ -45,12 +45,12 @@ export function Providers({ children }: ProvidersProps) {
 					duration: 5000,
 					style: {
 						...baseStyle,
-						border: "1px solid var(--color-default)",
+						border: "1px solid var(--border)",
 						boxShadow: shadows.default,
 					},
-					success: createToastConfig("var(--color-success)", "success"),
-					error: createToastConfig("var(--color-error)", "error"),
-					loading: createToastConfig("var(--color-info)", "info"),
+					success: createToastConfig("var(--success)", "success"),
+					error: createToastConfig("var(--destructive)", "error"),
+					loading: createToastConfig("var(--brand)", "info"),
 				}}
 			/>
 		</ThemeProvider>

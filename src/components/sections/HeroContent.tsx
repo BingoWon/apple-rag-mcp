@@ -1,9 +1,9 @@
 import GitHub from "@thesvg/react/github";
 import type React from "react";
 import { useTranslation } from "react-i18next";
-import { ArrowButton } from "@/components/ui/arrow-button";
-import ColourfulText from "@/components/ui/colourful-text";
-import { JevText } from "@/components/ui/jev-brand";
+import { ArrowButton } from "@/components/effects/arrow-button";
+import ColourfulText from "@/components/effects/colourful-text";
+import { JevText } from "@/components/effects/jev-brand";
 import { cn } from "@/lib/utils";
 
 export const HeroContent: React.FC = () => {
@@ -17,7 +17,7 @@ export const HeroContent: React.FC = () => {
 		"will-change-transform [transform:translateZ(0)]", // Force hardware acceleration
 
 		// Focus and accessibility
-		"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+		"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2",
 		"disabled:pointer-events-none disabled:opacity-50",
 
 		// Rainbow background
@@ -37,10 +37,13 @@ export const HeroContent: React.FC = () => {
 		"dark:bg-[linear-gradient(#121213,#121213),linear-gradient(#121213_50%,rgba(18,18,19,0.6)_80%,rgba(18,18,19,0)),linear-gradient(90deg,rgb(16,185,129),rgb(132,204,22),rgb(245,158,11),rgb(249,115,22),rgb(239,68,68),rgb(220,38,127),rgb(168,85,247),rgb(147,51,234),rgb(79,70,229),rgb(59,130,246))]",
 	);
 	return (
-		<div className="relative mb-0 text-center text-3xl font-bold text-light md:mb-36" id="hero">
+		<div
+			className="relative mb-0 text-center text-3xl font-bold text-foreground md:mb-36"
+			id="hero"
+		>
 			<div className="text-center md:mb-20">
 				<div className="relative mx-auto w-fit px-4 md:px-0">
-					<h1 className="text-4xl md:text-7xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-light to-muted mb-8 max-w-5xl mx-auto leading-tight">
+					<h1 className="text-4xl md:text-7xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-foreground to-muted mb-8 max-w-5xl mx-auto leading-tight">
 						{t("hero.title_inject")}{" "}
 						<span className="inline-block">
 							<ColourfulText text={t("hero.title_apple")} />
@@ -84,7 +87,7 @@ export const HeroContent: React.FC = () => {
 				<div className="home-content">
 					<p className="text-lg text-muted">
 						{t("hero.subtitle_heres")}{" "}
-						<span className="font-extrabold text-white bg-gradient-to-r from-brand to-brand-secondary px-2 py-1 rounded-lg text-xl tracking-wide transform -rotate-2 inline-block hover:rotate-0 transition-transform duration-300">
+						<span className="font-extrabold text-white bg-gradient-to-r from-brand to-brand-strong px-2 py-1 rounded-lg text-xl tracking-wide transform -rotate-2 inline-block hover:rotate-0 transition-transform duration-300">
 							{t("hero.subtitle_vibecoders")}
 						</span>
 						<JevText i18nKey="hero.subtitle_desc" />

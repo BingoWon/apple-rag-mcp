@@ -68,19 +68,17 @@ export function DeleteAccount() {
 	};
 
 	return (
-		<Card className="border-red-200 dark:border-red-800">
+		<Card className="border-destructive/30">
 			<CardHeader>
-				<CardTitle className="text-red-600 dark:text-red-400">
-					{t("settings.delete_title")}
-				</CardTitle>
+				<CardTitle className="text-destructive">{t("settings.delete_title")}</CardTitle>
 				<CardDescription>{t("settings.delete_desc")}</CardDescription>
 			</CardHeader>
 			<CardContent>
 				<div className="space-y-4">
-					<div className="inline-flex items-center justify-center p-2.5 bg-red-100 dark:bg-red-950/70 border border-red-400 dark:border-red-600 rounded-lg">
+					<div className="inline-flex items-center justify-center p-2.5 bg-destructive/10 border border-destructive/30 rounded-lg">
 						<div className="flex items-center gap-2">
 							<span className="text-sm">⚠️</span>
-							<p className="text-sm text-red-900 dark:text-red-100 font-semibold">
+							<p className="text-sm text-destructive font-semibold">
 								{t("settings.delete_warning")}
 							</p>
 						</div>
@@ -99,7 +97,7 @@ export function DeleteAccount() {
 							</DialogTrigger>
 							<DialogContent className="sm:max-w-md">
 								<DialogHeader>
-									<DialogTitle className="text-red-600 dark:text-red-400">
+									<DialogTitle className="text-destructive">
 										{t("settings.delete_title")}
 									</DialogTitle>
 									<DialogDescription>{t("settings.delete_desc")}</DialogDescription>
@@ -110,7 +108,7 @@ export function DeleteAccount() {
 									className="space-y-4"
 								>
 									<div>
-										<p className="text-sm text-muted-foreground mb-3">
+										<p className="text-sm text-subtle mb-3">
 											{t("settings.delete_confirm_label")}:
 										</p>
 										<Input

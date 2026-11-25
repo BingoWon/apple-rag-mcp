@@ -16,8 +16,8 @@ import toast from "react-hot-toast";
 import { Trans, useTranslation } from "react-i18next";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Brand } from "@/components/layout/Brand";
+import { Avatar } from "@/components/ui/Avatar";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
-import { Avatar } from "@/components/ui/OptimizedImage";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
@@ -85,7 +85,7 @@ function SidebarHeader() {
 						"hidden md:inline-flex p-1.5 rounded-md transition-all duration-200",
 						pinned
 							? "text-brand hover:text-brand/80 bg-brand/10"
-							: "text-muted hover:text-light hover:bg-secondary",
+							: "text-muted hover:text-foreground hover:bg-surface",
 					)}
 					title={pinned ? t("nav.sidebar_unpin") : t("nav.sidebar_pin")}
 					aria-label={pinned ? t("nav.sidebar_unpin") : t("nav.sidebar_pin")}
@@ -130,7 +130,7 @@ function SidebarFooter({
 			</Link>
 			<Link
 				to="/settings"
-				className="text-sm font-medium text-light/90 hover:text-light truncate flex-1 min-w-0 transition-colors duration-200"
+				className="text-sm font-medium text-foreground/90 hover:text-foreground truncate flex-1 min-w-0 transition-colors duration-200"
 			>
 				{displayName}
 			</Link>
@@ -151,7 +151,7 @@ function SidebarJevPromotion() {
 		<div
 			className={cn(
 				"sidebar-jev shrink-0",
-				open ? "border-t border-default/60 px-1 pt-4" : "flex justify-center",
+				open ? "border-t border-border/60 px-1 pt-4" : "flex justify-center",
 			)}
 		>
 			<div
@@ -171,7 +171,7 @@ function SidebarJevPromotion() {
 						<Trans
 							i18nKey="dashboard.jev_heading"
 							components={{
-								jev: <span className="jev-brand-name font-bold text-xl text-light">Jev</span>,
+								jev: <span className="jev-brand-name font-bold text-xl text-foreground">Jev</span>,
 							}}
 						/>
 					</h2>
@@ -244,7 +244,7 @@ const AppleSidebarComponent = ({ children }: { children: React.ReactNode }) => {
 	return (
 		<div
 			className={cn(
-				"mx-auto flex w-full max-w-full flex-1 flex-col overflow-hidden rounded-md border border-default bg-secondary md:flex-row",
+				"mx-auto flex w-full max-w-full flex-1 flex-col overflow-hidden rounded-md border border-border bg-surface md:flex-row",
 				"h-screen",
 			)}
 		>
@@ -276,7 +276,7 @@ export const Logo = () => {
 	return (
 		<Link
 			to="/"
-			className="relative z-20 flex items-center space-x-2 py-1 text-sm font-normal text-light"
+			className="relative z-20 flex items-center space-x-2 py-1 text-sm font-normal text-foreground"
 		>
 			<Brand />
 		</Link>
@@ -287,7 +287,7 @@ export const LogoIcon = () => {
 	return (
 		<Link
 			to="/"
-			className="relative z-20 flex items-center space-x-2 py-1 text-sm font-normal text-light"
+			className="relative z-20 flex items-center space-x-2 py-1 text-sm font-normal text-foreground"
 		>
 			<img src="/logo.svg" alt="Apple RAG" width={32} height={32} className="h-8 shrink-0" />
 		</Link>
@@ -297,7 +297,7 @@ export const LogoIcon = () => {
 const Dashboard = React.memo(({ children }: { children: React.ReactNode }) => {
 	return (
 		<div className="flex flex-1 overflow-hidden">
-			<div className="flex h-full w-full flex-1 flex-col gap-2 rounded-tl-2xl border border-default bg-background overflow-y-auto">
+			<div className="flex h-full w-full flex-1 flex-col gap-2 rounded-tl-2xl border border-border bg-background overflow-y-auto">
 				<div className="mx-auto w-full max-w-7xl p-4 md:p-10">{children}</div>
 			</div>
 		</div>

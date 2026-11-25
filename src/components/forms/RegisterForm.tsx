@@ -128,9 +128,7 @@ export function RegisterForm() {
 						<div className="w-full border-t border-border" />
 					</div>
 					<div className="relative flex justify-center text-xs uppercase">
-						<span className="bg-card px-3 text-muted-foreground font-medium">
-							{t("auth.or_email")}
-						</span>
+						<span className="bg-card px-3 text-subtle font-medium">{t("auth.or_email")}</span>
 					</div>
 				</div>
 
@@ -191,7 +189,7 @@ export function RegisterForm() {
 
 					{passwordError && <div className="mb-4 text-sm text-destructive">{passwordError}</div>}
 
-					<p className="mb-4 text-xs text-muted-foreground leading-relaxed">
+					<p className="mb-4 text-xs text-subtle leading-relaxed">
 						<Trans
 							i18nKey="auth.terms_notice"
 							components={{
@@ -216,7 +214,7 @@ export function RegisterForm() {
 
 				{/* Sign in link */}
 				<div className="text-center pt-4 border-t border-border">
-					<span className="text-sm text-muted-foreground">
+					<span className="text-sm text-subtle">
 						{t("auth.has_account")}{" "}
 						<Link
 							to="/login"

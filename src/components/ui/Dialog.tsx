@@ -19,7 +19,7 @@ export function DialogContent({
 			<DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" />
 			<DialogPrimitive.Content
 				className={cn(
-					"fixed left-1/2 top-1/2 z-50 max-h-[90dvh] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-xl border border-default bg-card p-6 text-foreground shadow-xl focus:outline-none",
+					"fixed left-1/2 top-1/2 z-50 max-h-[90dvh] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-xl border border-border bg-card p-6 text-foreground shadow-xl focus:outline-none",
 					className,
 				)}
 				{...props}
@@ -27,7 +27,7 @@ export function DialogContent({
 				{children}
 				<DialogPrimitive.Close
 					aria-label={t("common.close")}
-					className="absolute right-4 top-4 rounded-md p-1 text-muted-foreground hover:bg-secondary focus-visible:outline-2 focus-visible:outline-brand"
+					className="absolute right-4 top-4 rounded-md p-1 text-subtle hover:bg-surface focus-visible:outline-2 focus-visible:outline-brand"
 				>
 					<IconX className="h-4 w-4" />
 				</DialogPrimitive.Close>
@@ -51,10 +51,7 @@ export function DialogDescription({
 	...props
 }: ComponentProps<typeof DialogPrimitive.Description>) {
 	return (
-		<DialogPrimitive.Description
-			className={cn("text-sm text-muted-foreground", className)}
-			{...props}
-		/>
+		<DialogPrimitive.Description className={cn("text-sm text-subtle", className)} {...props} />
 	);
 }
 export function DialogFooter({ className, ...props }: ComponentProps<"div">) {

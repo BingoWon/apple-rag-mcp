@@ -2,8 +2,8 @@ import { IconCircleCheck, IconReceipt } from "@tabler/icons-react";
 import { Suspense } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
+import { JevText } from "@/components/effects/jev-brand";
 import { Button } from "@/components/ui/Button";
-import { JevText } from "@/components/ui/jev-brand";
 
 function SuccessContent() {
 	const { t } = useTranslation();
@@ -14,14 +14,14 @@ function SuccessContent() {
 				<div className="mb-8">
 					<IconReceipt className="w-16 h-16 text-brand mx-auto mb-4" />
 					<h1 className="text-3xl font-bold text-foreground mb-2">{t("success.title")}</h1>
-					<p className="text-muted-foreground">{t("success.subtitle")}</p>
+					<p className="text-subtle">{t("success.subtitle")}</p>
 				</div>
 
 				<div className="bg-card border border-border rounded-lg p-6 mb-8">
 					<h2 className="text-lg font-semibold text-foreground mb-3">
 						{t("success.pro_features")}
 					</h2>
-					<ul className="text-left space-y-2 text-muted-foreground">
+					<ul className="text-left space-y-2 text-subtle">
 						<li className="flex items-center">
 							<IconCircleCheck className="w-4 h-4 text-success mr-2 flex-shrink-0" />
 							{t("success.feature_queries")}

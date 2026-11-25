@@ -130,7 +130,7 @@ export default function AuthorizedIPsPage() {
 		<div className="space-y-6">
 			{/* Header */}
 			<div>
-				<h1 className="text-2xl font-bold text-light">{t("ips.title")}</h1>
+				<h1 className="text-2xl font-bold text-foreground">{t("ips.title")}</h1>
 				<p className="mt-1 text-sm text-muted">{t("ips.subtitle")}</p>
 			</div>
 
@@ -139,10 +139,10 @@ export default function AuthorizedIPsPage() {
 				<CardContent className="p-4">
 					<div className="flex">
 						<div className="flex-shrink-0">
-							<IconInfoCircle className="h-5 w-5 text-info" />
+							<IconInfoCircle className="h-5 w-5 text-brand" />
 						</div>
 						<div className="ml-3">
-							<h3 className="text-sm font-medium text-light">
+							<h3 className="text-sm font-medium text-foreground">
 								{t("ips.current_ip")}{" "}
 								<span className="font-mono text-brand">{currentIP || t("ips.detect_failed")}</span>
 							</h3>
@@ -191,8 +191,8 @@ export default function AuthorizedIPsPage() {
 			{ips.length >= 10 && (
 				<Card>
 					<CardContent className="p-4">
-						<div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-							<p className="text-sm text-yellow-700 dark:text-yellow-300">{t("ips.max_reached")}</p>
+						<div className="p-3 bg-warning/10 border border-warning/30 rounded-lg">
+							<p className="text-sm text-warning">{t("ips.max_reached")}</p>
 						</div>
 					</CardContent>
 				</Card>
@@ -201,7 +201,7 @@ export default function AuthorizedIPsPage() {
 			{/* Usage Instructions */}
 			<Card>
 				<CardContent className="p-4">
-					<h3 className="text-sm font-medium text-light mb-2">{t("ips.how_title")}</h3>
+					<h3 className="text-sm font-medium text-foreground mb-2">{t("ips.how_title")}</h3>
 					<ul className="text-sm text-muted space-y-1">
 						<li>• {t("ips.how_1")}</li>
 						<li>• {t("ips.how_2")}</li>
@@ -238,7 +238,7 @@ function AddIPModal({ currentIP, form, isCreating, onSubmit, fillCurrentIP }: Ad
 				{/* Header */}
 				<div className="text-center">
 					<h2 className="text-xl font-semibold text-foreground">{t("ips.add_title")}</h2>
-					<p className="text-sm text-muted-foreground mt-2">{t("ips.add_subtitle")}</p>
+					<p className="text-sm text-subtle mt-2">{t("ips.add_subtitle")}</p>
 				</div>
 
 				<form

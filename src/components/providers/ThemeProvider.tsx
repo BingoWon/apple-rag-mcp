@@ -62,9 +62,8 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
 		requestAnimationFrame(() => {
 			const root = document.documentElement;
 
-			// Batch DOM operations
+			// Batch DOM operations (:root is light; .dark enables dark override)
 			root.classList.toggle("dark", newTheme === "dark");
-			root.classList.toggle("light", newTheme === "light");
 
 			// Update meta theme-color efficiently
 			const metaThemeColor = document.querySelector('meta[name="theme-color"]');

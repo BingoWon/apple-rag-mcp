@@ -1,4 +1,6 @@
 import { Profiler, type ProfilerOnRenderCallback, type ReactNode } from "react";
+import { HeroSection } from "@/components/effects/hero-section";
+import { TracingBeam } from "@/components/effects/tracing-beam";
 import { Footer } from "@/components/layout/Footer";
 import { CTASection } from "@/components/sections/CTASection";
 import { DataSourcesShowcase } from "@/components/sections/DataSourcesSection";
@@ -7,9 +9,7 @@ import { JevSection } from "@/components/sections/JevSection";
 import { PricingSection } from "@/components/sections/PricingSection";
 import { QuickStartSection } from "@/components/sections/QuickStartSection";
 import { TestimonialsSection } from "@/components/sections/TestimonialsSection";
-import { HeroSection } from "@/components/ui/hero-section";
 import { AppNavbar } from "@/components/ui/resizable-navbar";
-import { TracingBeam } from "@/components/ui/tracing-beam";
 import { usePageScroll } from "@/hooks/usePageScroll";
 
 const reportSectionRender: ProfilerOnRenderCallback = (id, phase, actualDuration, baseDuration) => {

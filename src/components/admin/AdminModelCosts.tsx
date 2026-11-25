@@ -54,19 +54,19 @@ export function AdminModelCosts({
 	);
 	return (
 		<section className="space-y-3">
-			<h2 className="text-lg font-semibold text-light">{t("admin.model_cost_title")}</h2>
+			<h2 className="text-lg font-semibold text-foreground">{t("admin.model_cost_title")}</h2>
 			<Card className="min-w-0 p-4 md:p-5">
 				<div className="flex flex-wrap items-start justify-between gap-3">
 					<div>
 						<h3 className="text-sm text-muted">{t("admin.model_cost_total")}</h3>
 						{usdEquivalent !== null && (
-							<p className="mt-1 text-2xl font-semibold tabular-nums text-light">
+							<p className="mt-1 text-2xl font-semibold tabular-nums text-foreground">
 								≈ {formatMoney(usdEquivalent, "USD")}{" "}
 								<span className="text-xs text-muted">USD</span>
 							</p>
 						)}
 						<div
-							className={`mt-1 flex flex-wrap gap-x-4 gap-y-1 tabular-nums ${usdEquivalent === null ? "text-2xl font-semibold text-light" : "text-sm text-muted"}`}
+							className={`mt-1 flex flex-wrap gap-x-4 gap-y-1 tabular-nums ${usdEquivalent === null ? "text-2xl font-semibold text-foreground" : "text-sm text-muted"}`}
 						>
 							{currencies.map(({ code, values }) => (
 								<span key={code}>
@@ -83,7 +83,7 @@ export function AdminModelCosts({
 							<select
 								value={trend?.code}
 								onChange={(event) => setSelected(event.target.value as ModelCostCurrency)}
-								className="h-9 rounded-md border border-default bg-card px-3 text-sm text-light focus-visible:outline-2 focus-visible:outline-brand"
+								className="h-9 rounded-md border border-border bg-card px-3 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-brand"
 							>
 								{currencies.map(({ code }) => (
 									<option key={code}>{code}</option>
@@ -92,7 +92,7 @@ export function AdminModelCosts({
 						</label>
 					)}
 				</div>
-				<dl className="mt-4 grid gap-3 border-t border-default pt-4 grid-cols-2 lg:grid-cols-4">
+				<dl className="mt-4 grid gap-3 border-t border-border pt-4 grid-cols-2 lg:grid-cols-4">
 					{CATEGORIES.map(({ key, color }) => {
 						const attempts = costs?.categories[key].attempts;
 						const amounts = currencies.flatMap(({ code, values }) => {
@@ -107,7 +107,7 @@ export function AdminModelCosts({
 									<span className="size-2 rounded-full" style={{ backgroundColor: color }} />
 									{t(`admin.model_cost_${key}`)}
 								</dt>
-								<dd className="mt-1 text-base font-semibold tabular-nums text-light">
+								<dd className="mt-1 text-base font-semibold tabular-nums text-foreground">
 									{amounts.length ? amounts.join(" · ") : "—"}
 									{attempts !== undefined && recordingAvailable && (
 										<span className="block text-xs font-normal text-muted">

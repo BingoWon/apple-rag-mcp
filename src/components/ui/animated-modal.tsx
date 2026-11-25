@@ -136,7 +136,7 @@ export const ModalBody = ({ children, className }: { children: ReactNode; classN
 					<motion.div
 						ref={modalRef}
 						className={cn(
-							"max-h-[90%] w-full max-w-2xl bg-card/95 backdrop-blur-xl border border-border md:rounded-3xl relative z-[9999] flex flex-col overflow-hidden shadow-[var(--shadow-complex)] ring-1 ring-border/20",
+							"max-h-[90%] w-full max-w-2xl bg-card/95 backdrop-blur-xl border border-border md:rounded-3xl relative z-[9999] flex flex-col overflow-hidden shadow-complex ring-1 ring-border/20",
 							className,
 						)}
 						initial={{
@@ -193,7 +193,7 @@ export const ModalFooter = ({
 	className?: string;
 }) => {
 	return (
-		<div className={cn("flex justify-end p-4 bg-accent border-t border-border", className)}>
+		<div className={cn("flex justify-end p-4 bg-surface-subtle border-t border-border", className)}>
 			{children}
 		</div>
 	);
@@ -234,7 +234,7 @@ const CloseIcon = () => {
 		<button
 			type="button"
 			onClick={handleClick}
-			className="absolute top-6 right-6 group p-2.5 rounded-full bg-card/90 backdrop-blur-md hover:bg-card transition-all duration-300 shadow-[var(--shadow-button)] hover:shadow-[var(--shadow-complex)] ring-1 ring-border hover:ring-border/60 hover:scale-105"
+			className="absolute top-6 right-6 group p-2.5 rounded-full bg-card/90 backdrop-blur-md hover:bg-card transition-all duration-300 shadow-button hover:shadow-complex ring-1 ring-border hover:ring-border/60 hover:scale-105"
 			aria-label="Close modal"
 		>
 			{/* biome-ignore lint/a11y/noSvgWithoutTitle: decorative icon, button has aria-label */}
@@ -248,7 +248,7 @@ const CloseIcon = () => {
 				strokeWidth="2"
 				strokeLinecap="round"
 				strokeLinejoin="round"
-				className="text-muted-foreground h-5 w-5 group-hover:scale-110 group-hover:rotate-90 transition-all duration-300 group-hover:text-foreground"
+				className="text-subtle h-5 w-5 group-hover:scale-110 group-hover:rotate-90 transition-all duration-300 group-hover:text-foreground"
 			>
 				<path stroke="none" d="M0 0h24v24H0z" fill="none" />
 				<path d="M18 6l-12 12" />

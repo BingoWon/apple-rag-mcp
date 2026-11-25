@@ -16,7 +16,7 @@ export default function DashboardOverviewPage() {
 		<div className="space-y-6">
 			{/* Header */}
 			<div>
-				<h1 className="text-2xl font-bold text-light">{t("dashboard.title")}</h1>
+				<h1 className="text-2xl font-bold text-foreground">{t("dashboard.title")}</h1>
 				<p className="mt-1 text-sm text-muted">{t("dashboard.subtitle")}</p>
 			</div>
 

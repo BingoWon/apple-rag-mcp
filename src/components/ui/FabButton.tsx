@@ -19,10 +19,10 @@ const CONFIG = {
 } as const;
 
 const STYLES = {
-	SHADOW_COMPLEX: "shadow-[var(--shadow-complex)]",
+	SHADOW_COMPLEX: "shadow-complex",
 	DIVIDER: "h-px w-full bg-gradient-to-r from-transparent via-border to-transparent",
 	INPUT_BASE:
-		"bg-transparent border-0 outline-0 text-sm font-normal text-foreground placeholder:text-muted-foreground placeholder:italic caret-brand",
+		"bg-transparent border-0 outline-0 text-sm font-normal text-foreground placeholder:text-subtle placeholder:italic caret-brand",
 } as const;
 
 interface Position {
@@ -327,8 +327,8 @@ export function FabButton({ className }: FabButtonProps) {
 				className={cn(
 					"w-[42px] h-[42px] rounded-full fixed bottom-6 right-6 md:bottom-16 md:right-16",
 					"grid place-items-center p-0 cursor-pointer pointer-events-auto z-50",
-					"bg-black dark:bg-white text-white dark:text-black",
-					"border border-black/15 dark:border-white/15",
+					"bg-foreground text-background",
+					"border border-border",
 					STYLES.SHADOW_COMPLEX,
 					className,
 				)}
@@ -359,7 +359,7 @@ export function FabButton({ className }: FabButtonProps) {
 				<span
 					ref={placeholderRef}
 					aria-hidden="true"
-					className="w-[42px] h-[42px] absolute -bottom-px -left-px grid place-items-center text-muted-foreground"
+					className="w-[42px] h-[42px] absolute -bottom-px -left-px grid place-items-center text-subtle"
 				>
 					<IconMessageCircle className="w-6 h-6" />
 				</span>
@@ -408,7 +408,7 @@ export function FabButton({ className }: FabButtonProps) {
 									onClick={() => {
 										animateClose(() => setIsOpen(false));
 									}}
-									className="w-8 h-8 rounded-md grid place-items-center p-0 border-0 bg-transparent text-muted-foreground hover:text-foreground cursor-pointer relative pointer-events-auto"
+									className="w-8 h-8 rounded-md grid place-items-center p-0 border-0 bg-transparent text-subtle hover:text-foreground cursor-pointer relative pointer-events-auto"
 								>
 									<IconArrowsMinimize className="w-5 h-5" />
 								</button>
@@ -419,7 +419,7 @@ export function FabButton({ className }: FabButtonProps) {
 									className={cn(
 										"w-7 h-7 rounded-md grid place-items-center p-0 border-0 cursor-pointer relative pointer-events-auto transition-colors",
 										isSubmitting || !message.trim()
-											? "bg-muted text-muted-foreground cursor-not-allowed opacity-60"
+											? "bg-surface-subtle text-subtle cursor-not-allowed opacity-60"
 											: "bg-foreground text-background hover:opacity-90",
 									)}
 								>

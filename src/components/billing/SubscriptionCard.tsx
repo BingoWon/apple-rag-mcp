@@ -133,7 +133,7 @@ export function SubscriptionCard({ subscription, usage }: SubscriptionCardProps)
 								: t("common.free")}
 						</div>
 						{subscription.price > 0 && !isOneTime && (
-							<div className="text-sm text-faint">{t(`pricing.${interval.perKey}`)}</div>
+							<div className="text-sm text-subtle">{t(`pricing.${interval.perKey}`)}</div>
 						)}
 					</div>
 				</div>
@@ -144,11 +144,11 @@ export function SubscriptionCard({ subscription, usage }: SubscriptionCardProps)
 				{/* Plan Details */}
 				<div className="grid grid-cols-2 gap-4 text-sm">
 					<div>
-						<span className="text-faint">{t("billing.status")}</span>
+						<span className="text-subtle">{t("billing.status")}</span>
 						<div className="mt-1 font-medium">{statusLabel}</div>
 					</div>
 					<div>
-						<span className="text-faint">{t("billing.weekly_quota")}</span>
+						<span className="text-subtle">{t("billing.weekly_quota")}</span>
 						<div className="mt-1 font-medium">
 							{subscription.weekly_quota === -1
 								? t("common.unlimited")
@@ -159,14 +159,14 @@ export function SubscriptionCard({ subscription, usage }: SubscriptionCardProps)
 					{subscription.plan_id !== "hobby" && subscription.current_period_start && (
 						<>
 							<div>
-								<span className="text-faint">{t("billing.current_period")}</span>
+								<span className="text-subtle">{t("billing.current_period")}</span>
 								<div className="mt-1 font-medium">
 									{formatDate(subscription.current_period_start)} –{" "}
 									{formatDate(subscription.current_period_end)}
 								</div>
 							</div>
 							<div>
-								<span className="text-faint">
+								<span className="text-subtle">
 									{isOneTime
 										? t("billing.expires_on", {
 												date: formatDate(subscription.current_period_end),
@@ -200,7 +200,7 @@ export function SubscriptionCard({ subscription, usage }: SubscriptionCardProps)
 								</Button>
 							</PricingModal>
 						) : (
-							<p className="text-xs text-faint text-center">{t("billing.upgrade_after_expiry")}</p>
+							<p className="text-xs text-subtle text-center">{t("billing.upgrade_after_expiry")}</p>
 						)}
 					</div>
 				) : (
@@ -214,7 +214,7 @@ export function SubscriptionCard({ subscription, usage }: SubscriptionCardProps)
 							>
 								{isManagingSubscription ? t("billing.manage_opening") : t("billing.manage")}
 							</Button>
-							<p className="text-xs text-faint mt-2 text-center">{t("billing.manage_desc")}</p>
+							<p className="text-xs text-subtle mt-2 text-center">{t("billing.manage_desc")}</p>
 						</div>
 					)
 				)}
@@ -225,10 +225,10 @@ export function SubscriptionCard({ subscription, usage }: SubscriptionCardProps)
 
 function UsageProgress({ usage, t }: { usage: CurrentUsage; t: TFunction }) {
 	const percent = usage.limit === -1 ? 0 : Math.min((usage.current_usage / usage.limit) * 100, 100);
-	const color = percent >= 80 ? "bg-error" : percent >= 50 ? "bg-warning" : "bg-brand";
+	const color = percent >= 80 ? "bg-destructive" : percent >= 50 ? "bg-warning" : "bg-brand";
 
 	return (
-		<div className="rounded-lg bg-secondary/50 p-4 space-y-2.5">
+		<div className="rounded-lg bg-surface/50 p-4 space-y-2.5">
 			<div className="flex items-center justify-between text-sm">
 				<span className="font-medium">{t("billing.queries_used")}</span>
 				<span className="font-medium tabular-nums">
@@ -242,7 +242,7 @@ function UsageProgress({ usage, t }: { usage: CurrentUsage; t: TFunction }) {
 					style={{ width: `${percent}%` }}
 				/>
 			</div>
-			<div className="flex items-center justify-between text-xs text-faint">
+			<div className="flex items-center justify-between text-xs text-subtle">
 				<span>
 					{usage.limit === -1
 						? t("common.unlimited")

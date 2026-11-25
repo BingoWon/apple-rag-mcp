@@ -37,9 +37,9 @@ export function MCPUsageGuide() {
 	const dropdownRef = useRef<HTMLDivElement>(null);
 
 	// 样式常量
-	const sectionTitleClass = "flex items-center gap-2 text-sm font-semibold text-light mb-3";
-	const copyButtonClass = "text-muted hover:text-light h-6 w-6 p-0";
-	const configRowClass = "flex items-center justify-between py-2.5 mb-0 border-b border-default/50";
+	const sectionTitleClass = "flex items-center gap-2 text-sm font-semibold text-foreground mb-3";
+	const copyButtonClass = "text-muted hover:text-foreground h-6 w-6 p-0";
+	const configRowClass = "flex items-center justify-between py-2.5 mb-0 border-b border-border/50";
 
 	// 获取 tokens 数据
 	useEffect(() => {
@@ -140,9 +140,9 @@ export function MCPUsageGuide() {
 			key={param.label}
 			className={isLast ? "flex items-center justify-between py-2.5" : configRowClass}
 		>
-			<span className="font-medium text-light">{param.label}</span>
+			<span className="font-medium text-foreground">{param.label}</span>
 			<div className="flex items-center gap-2">
-				<code className="text-xs font-mono bg-secondary px-2 py-1 rounded border max-w-[200px] truncate">
+				<code className="text-xs font-mono bg-surface px-2 py-1 rounded border max-w-[200px] truncate">
 					{param.value}
 				</code>
 				{param.copyable !== false && (
@@ -171,7 +171,7 @@ export function MCPUsageGuide() {
 				{/* MCP Configuration - 放在最前面 */}
 				<div>
 					<h3 className={sectionTitleClass}>
-						<IconSettings className="h-4 w-4 text-info" />
+						<IconSettings className="h-4 w-4 text-brand" />
 						{isLoadingTokens
 							? t("guide.loading_config")
 							: mcpTokens.length === 0
@@ -181,7 +181,7 @@ export function MCPUsageGuide() {
 
 					{isLoadingTokens ? (
 						// 加载状态显示 LoaderFive
-						<div className="text-center py-8 bg-tertiary rounded-lg border border-default">
+						<div className="text-center py-8 bg-surface-subtle rounded-lg border border-border">
 							<div className="flex justify-center mb-4">
 								<LoaderFive text={t("guide.loading_tokens")} />
 							</div>
@@ -189,9 +189,9 @@ export function MCPUsageGuide() {
 						</div>
 					) : mcpTokens.length === 0 ? (
 						// 没有 token 时显示创建按钮
-						<div className="text-center py-8 bg-tertiary rounded-lg border border-default">
+						<div className="text-center py-8 bg-surface-subtle rounded-lg border border-border">
 							<IconKey className="h-12 w-12 text-muted mx-auto mb-4" />
-							<h4 className="text-sm font-medium text-light mb-2">
+							<h4 className="text-sm font-medium text-foreground mb-2">
 								{t("guide.create_first_subtitle")}
 							</h4>
 							<p className="text-sm text-muted mb-6 max-w-sm mx-auto">
@@ -222,9 +222,9 @@ export function MCPUsageGuide() {
 									id="token-selector"
 									type="button"
 									onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-									className="w-full flex items-center justify-between px-3 py-2 text-sm bg-tertiary border border-default rounded-md hover:bg-secondary hover:border-light transition-colors"
+									className="w-full flex items-center justify-between px-3 py-2 text-sm bg-surface-subtle border border-border rounded-md hover:bg-surface hover:border-foreground transition-colors"
 								>
-									<span className="text-light">
+									<span className="text-foreground">
 										{selectedToken ? selectedToken.name : t("guide.select_placeholder")}
 									</span>
 									<IconChevronDown
@@ -233,7 +233,7 @@ export function MCPUsageGuide() {
 								</button>
 
 								{isDropdownOpen && (
-									<div className="absolute top-full left-0 right-0 mt-1 bg-tertiary border border-default rounded-md shadow-lg z-10 max-h-48 overflow-y-auto">
+									<div className="absolute top-full left-0 right-0 mt-1 bg-surface-subtle border border-border rounded-md shadow-lg z-10 max-h-48 overflow-y-auto">
 										{mcpTokens.map((token) => (
 											<button
 												key={token.id}
@@ -243,8 +243,8 @@ export function MCPUsageGuide() {
 													setIsDropdownOpen(false);
 													toast.success(t("guide.config_updated"));
 												}}
-												className={`w-full text-left px-3 py-2 text-sm hover:bg-secondary transition-colors ${
-													selectedTokenId === token.id ? "bg-secondary text-light" : "text-muted"
+												className={`w-full text-left px-3 py-2 text-sm hover:bg-surface transition-colors ${
+													selectedTokenId === token.id ? "bg-surface text-foreground" : "text-muted"
 												}`}
 											>
 												{token.name}
@@ -272,8 +272,8 @@ export function MCPUsageGuide() {
 								})}
 							/>
 
-							<details className="group/manual border-t border-default/50 pt-3">
-								<summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-medium text-muted hover:text-light [&::-webkit-details-marker]:hidden">
+							<details className="group/manual border-t border-border/50 pt-3">
+								<summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-medium text-muted hover:text-foreground [&::-webkit-details-marker]:hidden">
 									<IconSettings className="h-4 w-4 shrink-0" />
 									{t("guide.manual_config")}
 									<IconChevronDown className="ml-auto h-4 w-4 shrink-0 group-open/manual:rotate-180" />
@@ -281,16 +281,16 @@ export function MCPUsageGuide() {
 								<div className="space-y-3 pt-3">
 									{/* Codex CLI Configuration */}
 									{selectedToken && (
-										<div className="border border-info/30 rounded-lg overflow-hidden">
+										<div className="border border-brand/30 rounded-lg overflow-hidden">
 											<button
 												type="button"
 												onClick={() => setShowCodexGuide(!showCodexGuide)}
-												className="w-full flex items-center justify-between p-4 bg-info/5 hover:bg-info/10 transition-colors"
+												className="w-full flex items-center justify-between p-4 bg-brand/5 hover:bg-brand/10 transition-colors"
 											>
 												<div className="flex items-center gap-3">
 													<div className="flex items-center gap-1.5">
-														<ChatGPT aria-hidden="true" className="size-5 text-light" />
-														<span className="text-sm font-semibold text-light">Codex CLI</span>
+														<ChatGPT aria-hidden="true" className="size-5 text-foreground" />
+														<span className="text-sm font-semibold text-foreground">Codex CLI</span>
 													</div>
 													<span className="text-sm text-muted">{t("guide.codex_config")}</span>
 												</div>
@@ -308,7 +308,7 @@ export function MCPUsageGuide() {
 																href="https://developers.openai.com/codex/mcp"
 																target="_blank"
 																rel="noopener noreferrer"
-																className="text-brand hover:text-brand-secondary underline"
+																className="text-brand hover:text-brand-strong underline"
 															>
 																{t("guide.official_docs")}
 															</a>
@@ -327,16 +327,18 @@ export function MCPUsageGuide() {
 
 									{/* Claude Code Configuration */}
 									{selectedToken && (
-										<div className="border border-info/30 rounded-lg overflow-hidden mt-3">
+										<div className="border border-brand/30 rounded-lg overflow-hidden mt-3">
 											<button
 												type="button"
 												onClick={() => setShowClaudeGuide(!showClaudeGuide)}
-												className="w-full flex items-center justify-between p-4 bg-info/5 hover:bg-info/10 transition-colors"
+												className="w-full flex items-center justify-between p-4 bg-brand/5 hover:bg-brand/10 transition-colors"
 											>
 												<div className="flex items-center gap-3">
 													<div className="flex items-center gap-1.5">
 														<ClaudeCode aria-hidden="true" variant="color" className="size-5" />
-														<span className="text-sm font-semibold text-light">Claude Code</span>
+														<span className="text-sm font-semibold text-foreground">
+															Claude Code
+														</span>
 													</div>
 													<span className="text-sm text-muted">{t("guide.claude_command")}</span>
 												</div>
@@ -354,7 +356,7 @@ export function MCPUsageGuide() {
 																href="https://code.claude.com/docs/en/mcp"
 																target="_blank"
 																rel="noopener noreferrer"
-																className="text-brand hover:text-brand-secondary underline"
+																className="text-brand hover:text-brand-strong underline"
 															>
 																{t("guide.official_docs")}
 															</a>
@@ -376,7 +378,7 @@ export function MCPUsageGuide() {
 									{/* 参数配置指南 */}
 									{selectedToken && (
 										<div className="mt-6">
-											<h4 className="text-sm font-medium text-light mb-4 flex items-center gap-2">
+											<h4 className="text-sm font-medium text-foreground mb-4 flex items-center gap-2">
 												<IconSettings className="h-4 w-4 text-warning" />
 												{t("guide.manual_title")}
 											</h4>
@@ -405,8 +407,8 @@ export function MCPUsageGuide() {
 							</h3>
 							<div className="space-y-3 text-sm text-muted">
 								<p>{t("guide.about_desc")}</p>
-								<div className="bg-tertiary rounded-lg p-4 border border-default">
-									<h4 className="font-medium text-light mb-2">{t("guide.about_features")}</h4>
+								<div className="bg-surface-subtle rounded-lg p-4 border border-border">
+									<h4 className="font-medium text-foreground mb-2">{t("guide.about_features")}</h4>
 									<ul className="space-y-1 text-xs">
 										<li>• {t("guide.about_search")}</li>
 										<li>• {t("guide.about_browse")}</li>
@@ -427,16 +429,13 @@ export function MCPUsageGuide() {
 							<div className="space-y-2 text-sm text-muted">
 								<p>
 									• {t("guide.token_higher_limits")}{" "}
-									<Link
-										to="/mcp-tokens"
-										className="text-brand hover:text-brand-secondary underline"
-									>
+									<Link to="/mcp-tokens" className="text-brand hover:text-brand-strong underline">
 										{t("guide.token_link")}
 									</Link>
 								</p>
 								<p>
 									• {t("guide.usage_monitor")}{" "}
-									<Link to="/usage" className="text-brand hover:text-brand-secondary underline">
+									<Link to="/usage" className="text-brand hover:text-brand-strong underline">
 										{t("guide.usage_dashboard")}
 									</Link>
 								</p>
@@ -454,10 +453,7 @@ export function MCPUsageGuide() {
 						<div className="space-y-2 text-sm text-muted">
 							<p>
 								•{" "}
-								<Link
-									to="/authorized-ips"
-									className="text-brand hover:text-brand-secondary underline"
-								>
+								<Link to="/authorized-ips" className="text-brand hover:text-brand-strong underline">
 									{t("guide.ip_auth_link")}
 								</Link>{" "}
 								{t("guide.ip_auto_auth")}
