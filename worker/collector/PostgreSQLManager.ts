@@ -145,7 +145,7 @@ class PostgreSQLManager {
 			return this.sql<DatabaseRecord[]>`
             WITH targets AS (SELECT id FROM pages WHERE id=ANY(${ids}::uuid[]) AND url LIKE 'https://developer.apple.com/%' ORDER BY id FOR UPDATE)
             UPDATE pages SET collect_count=collect_count+1 WHERE id IN (SELECT id FROM targets)
-            RETURNING id,url,title,content,raw_json,http_etag,collect_count,created_at,updated_at`;
+            RETURNING id,url,title,content,http_etag,collect_count,created_at,updated_at`;
 		// Atomic operation: SELECT records with minimum collect_count and UPDATE them
 		// This ensures different workers get different records by always taking the minimum collect_count
 		return this.sql<DatabaseRecord[]>`
@@ -167,7 +167,7 @@ class PostgreSQLManager {
       UPDATE pages
       SET collect_count = collect_count + 1
       WHERE id IN (SELECT id FROM min_count_records)
-      RETURNING id, url, title, content, raw_json, http_etag, collect_count, created_at, updated_at
+      RETURNING id, url, title, content, http_etag, collect_count, created_at, updated_at
     `;
 	}
 
@@ -192,9 +192,21 @@ class PostgreSQLManager {
         SET collect_count = collect_count + 1,
             radar_checked_at = now()
         WHERE id IN (SELECT id FROM radar_targets)
-        RETURNING id, url, title, content, raw_json, http_etag, collect_count, created_at, updated_at
+        RETURNING id, url, title, content, http_etag, collect_count, created_at, updated_at
       `,
 		);
+	}
+
+	async getRawDocuments(ids: string[]): Promise<Map<string, unknown>> {
+		if (!ids.length) return new Map();
+		const rows = await this.withRetry(
+			"read previous raw JSON",
+			(sql) =>
+				sql<{ id: string; raw_json: unknown }[]>`
+				SELECT id, raw_json FROM pages WHERE id = ANY(${ids}::uuid[])
+			`,
+		);
+		return new Map(rows.map((r) => [r.id, r.raw_json]));
 	}
 
 	async updateHttpMetadata(

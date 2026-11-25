@@ -23,6 +23,7 @@ export interface DetectedDocChange {
 }
 
 interface ParsedDocMetadata {
+	title: string | null;
 	moduleName: string | null;
 	symbolKind: string | null;
 	platforms: Map<string, { introducedAt: string; deprecatedAt: string; beta: boolean }>;
@@ -30,6 +31,26 @@ interface ParsedDocMetadata {
 	isBeta: boolean;
 	declarations: string;
 	topicCount: number;
+}
+
+function cleanSingleLineTitle(
+	metaTitle: string | null,
+	rawTitle: string | null,
+	fallback: string,
+): string {
+	if (metaTitle && metaTitle.trim().length > 0) {
+		return metaTitle.trim().slice(0, 180);
+	}
+	const firstLine = (rawTitle ?? "")
+		.split(/\r?\n/)
+		.map((l) => l.trim())
+		.find(Boolean);
+	if (!firstLine) return fallback;
+	const stripped = firstLine.replace(
+		/^(Structure|Class|Protocol|Enumeration|Global Variable|Type Alias|Function|Operator|Macro|Article|Framework|Collection|API Collection|Instance Property|Instance Method|Type Property|Type Method|Initializer|Case):\s+/i,
+		"",
+	);
+	return (stripped || firstLine).slice(0, 180);
 }
 
 const MAX_DIFF_LINES = 40;
@@ -72,6 +93,7 @@ function collectDeclarationTokens(value: unknown, out: string[]): void {
 
 function extractDocMetadata(raw: unknown): ParsedDocMetadata {
 	const empty: ParsedDocMetadata = {
+		title: null,
 		moduleName: null,
 		symbolKind: null,
 		platforms: new Map(),
@@ -87,6 +109,9 @@ function extractDocMetadata(raw: unknown): ParsedDocMetadata {
 		typeof doc.metadata === "object" && doc.metadata !== null
 			? (doc.metadata as Record<string, unknown>)
 			: {};
+
+	const title =
+		typeof metadata.title === "string" && metadata.title.trim() ? metadata.title.trim() : null;
 
 	let moduleName: string | null = null;
 	if (Array.isArray(metadata.modules) && metadata.modules.length > 0) {
@@ -148,6 +173,7 @@ function extractDocMetadata(raw: unknown): ParsedDocMetadata {
 	}
 
 	return {
+		title,
 		moduleName,
 		symbolKind,
 		platforms,
@@ -332,7 +358,11 @@ export function detectDocumentChange(input: {
 	const oldMeta = extractDocMetadata(input.oldRawJson);
 	const newMeta = extractDocMetadata(input.newRawJson);
 	const framework = extractFrameworkFromUrl(input.url, newMeta.moduleName ?? oldMeta.moduleName);
-	const title = (input.newTitle || input.oldTitle || framework).trim();
+	const title = cleanSingleLineTitle(
+		newMeta.title ?? oldMeta.title,
+		input.newTitle || input.oldTitle,
+		framework,
+	);
 	const isRoot = isFrameworkRootUrl(input.url);
 	const isReleaseNote = isReleaseNotesUrl(input.url);
 	const wasEmpty = input.oldContent.trim().length === 0;
@@ -505,7 +535,7 @@ export function createRemovedDocChange(input: {
 }): DetectedDocChange {
 	const meta = extractDocMetadata(input.rawJson);
 	const framework = extractFrameworkFromUrl(input.url, meta.moduleName);
-	const title = (input.title || framework).trim();
+	const title = cleanSingleLineTitle(meta.title, input.title, framework);
 	return {
 		url: input.url,
 		framework,

@@ -156,12 +156,13 @@ test("buildCompactUnifiedDiff produces crisp added/removed lines and createRemov
 
 	const removed = createRemovedDocChange({
 		url: "https://developer.apple.com/documentation/coreml/legacyapi",
-		title: "LegacyAPI",
+		title: "Global Variable: LegacyAPI\nAn old variable.\nPlatforms: macOS 10.13+",
 		sweepSource: "sweep",
 	});
 	assert.equal(removed.change_kind, "removed");
 	assert.equal(removed.significance, "high");
 	assert.equal(removed.framework, "Core ML");
+	assert.equal(removed.title, "LegacyAPI");
 });
 
 test("AppleAPIClient sends If-None-Match and treats HTTP 304 as notModified", async (t) => {

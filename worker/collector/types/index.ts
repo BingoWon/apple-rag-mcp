@@ -17,7 +17,6 @@ interface DatabaseRecord {
 	readonly url: string;
 	readonly title: string | null;
 	readonly content: string;
-	readonly raw_json?: unknown;
 	readonly http_etag?: string | null;
 	readonly collect_count: number;
 	readonly created_at: Date;

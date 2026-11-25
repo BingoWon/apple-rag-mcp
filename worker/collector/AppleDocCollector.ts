@@ -206,6 +206,16 @@ class AppleDocCollector {
 		);
 
 		const changed = pages.filter((p) => !unchanged.has(p));
+		const previousRawDocs =
+			changed.length &&
+			!this.config.forceUpdateAll &&
+			typeof this.dbManager.getRawDocuments === "function"
+				? await this.dbManager
+						.getRawDocuments(
+							changed.filter((p) => p.record.content?.trim()).map((p) => p.record.id),
+						)
+						.catch(() => new Map<string, unknown>())
+				: new Map<string, unknown>();
 		const chunks = changed.flatMap((p) =>
 			p.chunks.map((chunk) => ({ ...chunk, url: p.record.url })),
 		);
@@ -275,7 +285,7 @@ class AppleDocCollector {
 					url: p.record.url,
 					oldTitle: p.record.title,
 					oldContent: p.record.content,
-					oldRawJson: p.record.raw_json,
+					oldRawJson: previousRawDocs.get(p.record.id),
 					newTitle: p.title,
 					newContent: p.content,
 					newRawJson: p.raw_json,
@@ -291,7 +301,6 @@ class AppleDocCollector {
 						createRemovedDocChange({
 							url: item.record.url,
 							title: item.record.title,
-							rawJson: item.record.raw_json,
 							sweepSource,
 						}),
 					);
