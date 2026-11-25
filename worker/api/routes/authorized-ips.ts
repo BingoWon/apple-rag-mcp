@@ -4,6 +4,7 @@
  */
 import { Hono } from "hono";
 import { canonicalIP } from "../../../shared/ip";
+import { extractClientInfo } from "../../services/request-info";
 import { ApiErrorCode } from "../constants/error-codes";
 import { authMiddleware } from "../middleware/auth";
 import type { User } from "../types";
@@ -29,9 +30,11 @@ app.get("/", async (c) => {
 			.bind(user.id)
 			.all();
 
+		const detectedIp = canonicalIP(extractClientInfo(c.req.raw).ip);
 		return c.json({
 			success: true,
 			data: ips.results || [],
+			client_ip: detectedIp,
 		});
 	} catch (error) {
 		await logger.error(

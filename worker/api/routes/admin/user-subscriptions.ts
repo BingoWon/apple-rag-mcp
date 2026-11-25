@@ -6,6 +6,7 @@ import { createRoute, z } from "@hono/zod-openapi";
 import { logger } from "../../utils/logger";
 import { createOpenAPIApp } from "../../utils/openapi";
 import { parsePagination } from "../../utils/pagination";
+import { resolveSubscriptionState } from "../../utils/subscription";
 import { adminUserSchema, withAdminUsers } from "./user-identity";
 
 const app = createOpenAPIApp();
@@ -15,6 +16,8 @@ const AdminUserSubscriptionSchema = z.object({
 	user: adminUserSchema,
 	plan_type: z.string(),
 	status: z.string(),
+	entitlement_source: z.enum(["free", "stripe_subscription", "one_time_pass", "complimentary"]),
+	is_stripe_managed: z.boolean(),
 	current_period_start: z.string().nullable(),
 	current_period_end: z.string().nullable(),
 	cancel_at_period_end: z.boolean(),
@@ -84,7 +87,7 @@ app.openapi(getUserSubscriptionsRoute, async (c) => {
 
 		const total = Number(countResult?.total) || 0;
 
-		// Get paginated user subscriptions with joined user data
+		// Get paginated user subscriptions (internal Stripe IDs used only for state derivation, never returned)
 		const subscriptionsResult = await c.env.DB.prepare(`
       SELECT
         us.user_id,
@@ -93,31 +96,39 @@ app.openapi(getUserSubscriptionsRoute, async (c) => {
         us.current_period_start,
         us.current_period_end,
         us.cancel_at_period_end,
-        us.price,us.currency,
+        us.price,
+        us.currency,
         us.billing_interval,
         us.payment_type,
+        us.stripe_customer_id,
+        us.stripe_subscription_id,
         us.updated_at
       FROM user_subscriptions us
-      ORDER BY us.updated_at DESC
+      ORDER BY julianday(us.updated_at) DESC, us.user_id DESC
       LIMIT ? OFFSET ?
     `)
 			.bind(limit, offset)
 			.all();
 
 		const subscriptions = (subscriptionsResult.results || []).map(
-			(row: Record<string, unknown>) => ({
-				user_id: String(row.user_id),
-				plan_type: String(row.plan_type || "hobby"),
-				status: String(row.status || "active"),
-				current_period_start: row.current_period_start ? String(row.current_period_start) : null,
-				current_period_end: row.current_period_end ? String(row.current_period_end) : null,
-				cancel_at_period_end: Boolean(row.cancel_at_period_end),
-				price: Number(row.price) || 0,
-				currency: row.currency ? String(row.currency) : null,
-				billing_interval: String(row.billing_interval || "month"),
-				payment_type: String(row.payment_type || "subscription"),
-				updated_at: String(row.updated_at),
-			}),
+			(row: Record<string, unknown>) => {
+				const state = resolveSubscriptionState(row);
+				return {
+					user_id: String(row.user_id),
+					plan_type: state.subscribedPlan,
+					status: state.effectiveStatus,
+					entitlement_source: state.entitlementSource,
+					is_stripe_managed: state.isStripeManaged,
+					current_period_start: state.currentPeriodStart ?? null,
+					current_period_end: state.currentPeriodEnd ?? null,
+					cancel_at_period_end: state.cancelAtPeriodEnd,
+					price: state.price,
+					currency: state.currency,
+					billing_interval: state.billingInterval,
+					payment_type: state.paymentType,
+					updated_at: String(row.updated_at),
+				};
+			},
 		);
 
 		return c.json(

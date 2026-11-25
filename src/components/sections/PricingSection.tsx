@@ -11,7 +11,7 @@ import { useDashboardStore } from "@/stores/dashboard";
 import { activateFabContact } from "@/utils/contact";
 import { PricingModal } from "./PricingModal";
 
-export function PricingSection() {
+export function PricingSection({ embedded = false }: { embedded?: boolean }) {
 	const { t } = useTranslation();
 	const navigate = useNavigate();
 	const { isAuthenticated } = useAuth();
@@ -32,8 +32,15 @@ export function PricingSection() {
 	}, [isAuthenticated, subscription, fetchSubscription]);
 
 	return (
-		<div className="home-section home-content rounded-xl bg-surface" id="pricing">
-			<div className="home-section-heading text-center">
+		<div
+			className={
+				embedded
+					? "rounded-xl border border-border bg-surface p-6 sm:p-8"
+					: "home-section home-content rounded-xl bg-surface"
+			}
+			id={embedded ? undefined : "pricing"}
+		>
+			<div className={embedded ? "mb-8 text-center" : "home-section-heading text-center"}>
 				<h2 className="text-base font-semibold leading-7 text-brand">{t("pricing.eyebrow")}</h2>
 				<p className="mt-2 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
 					{t("pricing.title")}
@@ -113,13 +120,21 @@ export function PricingSection() {
 										{t("common.contact_us")}
 									</Button>
 								) : tier.action === "register" ? (
-									<Button
-										asChild
-										variant={tier.popular ? "primary" : "outline"}
-										className="mt-6 sm:mt-8 w-full"
-									>
-										<Link to={tier.href}>{t("common.get_started")}</Link>
-									</Button>
+									isAuthenticated ? (
+										<Button variant="outline" disabled className="mt-6 sm:mt-8 w-full">
+											{subscription?.plan_id === "hobby"
+												? t("billing.current_plan")
+												: t("plans.hobby")}
+										</Button>
+									) : (
+										<Button
+											asChild
+											variant={tier.popular ? "primary" : "outline"}
+											className="mt-6 sm:mt-8 w-full"
+										>
+											<Link to={tier.href}>{t("common.get_started")}</Link>
+										</Button>
+									)
 								) : hasActivePaidPlan ? (
 									<Button
 										variant={tier.popular ? "primary" : "outline"}

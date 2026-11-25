@@ -33,17 +33,20 @@ export function AdminModelCosts({
 	const coverage = costs?.first_recorded_at;
 	const recordingAvailable = stats && coverage && coverage < stats.end;
 	const locale = i18n.resolvedLanguage;
-	const formatters = CURRENCIES.map(
-		(code) =>
-			new Intl.NumberFormat(locale, {
-				style: "currency",
-				currency: code,
-				currencyDisplay: "narrowSymbol",
-				maximumFractionDigits: 9,
-			}),
-	);
-	const formatMoney = (amount: number, code: ModelCostCurrency) =>
-		formatters[CURRENCIES.indexOf(code)].format(amount / 1_000_000_000);
+	const formatMoney = (amount: number, code: ModelCostCurrency) => {
+		if (!Number.isFinite(amount)) return "—";
+		const value = amount / 1_000_000_000;
+		const abs = Math.abs(value);
+		const maximumFractionDigits =
+			abs === 0 ? 2 : abs >= 1 ? 2 : abs >= 0.01 ? 4 : abs >= 0.0001 ? 6 : 8;
+		return new Intl.NumberFormat(locale, {
+			style: "currency",
+			currency: code,
+			currencyDisplay: "narrowSymbol",
+			minimumFractionDigits: 2,
+			maximumFractionDigits,
+		}).format(value);
+	};
 	const cny = costs?.currencies.CNY?.total_nanos;
 	const rate = costs?.exchange_rate;
 	const usdEquivalent =

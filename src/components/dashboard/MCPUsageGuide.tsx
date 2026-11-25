@@ -19,6 +19,7 @@ import { CodeBlock } from "@/components/ui/code-block";
 import { LoaderFive } from "@/components/ui/loader";
 import { MCPInstallButtons } from "@/components/ui/MCPInstallButtons";
 import { MCP_SERVER_NAME, MCP_SERVER_URL } from "@/constants/mcp";
+import { formatDateOnly } from "@/lib/datetime";
 import { useDashboardStore } from "@/stores/dashboard";
 import { copyText } from "@/utils/clipboard";
 import {
@@ -26,11 +27,14 @@ import {
 	generateCodexTomlString,
 	generateJsonString,
 } from "@/utils/mcpConfigService";
+import { parseUTCDate } from "../../../shared/datetime";
 
 export function MCPUsageGuide() {
-	const { t } = useTranslation();
-	const { mcpTokens, fetchMCPTokens, createMCPToken, isLoadingTokens } = useDashboardStore();
+	const { t, i18n } = useTranslation();
+	const { mcpTokens, fetchMCPTokens, createMCPToken, isLoadingTokens, errors } =
+		useDashboardStore();
 	const [selectedTokenId, setSelectedTokenId] = useState<string>("");
+	const [isCreating, setIsCreating] = useState(false);
 	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 	const [showCodexGuide, setShowCodexGuide] = useState(false);
 	const [showClaudeGuide, setShowClaudeGuide] = useState(false);
@@ -46,12 +50,18 @@ export function MCPUsageGuide() {
 		fetchMCPTokens();
 	}, [fetchMCPTokens]);
 
-	// 当 tokens 加载完成后，自动选择最新的 token
+	// 当 tokens 加载完成后或选中项被删除时，自动选择最新的有效 token
 	useEffect(() => {
-		if (mcpTokens.length > 0 && !selectedTokenId) {
-			// 按创建时间排序，选择最新的
+		if (mcpTokens.length === 0) {
+			if (selectedTokenId) setSelectedTokenId("");
+			return;
+		}
+		const stillExists = mcpTokens.some((token) => token.id === selectedTokenId);
+		if (!stillExists) {
 			const sortedTokens = [...mcpTokens].sort(
-				(a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+				(a, b) =>
+					(parseUTCDate(b.created_at)?.getTime() ?? 0) -
+					(parseUTCDate(a.created_at)?.getTime() ?? 0),
 			);
 			setSelectedTokenId(sortedTokens[0].id);
 		}
@@ -75,8 +85,12 @@ export function MCPUsageGuide() {
 	}, [isDropdownOpen]);
 
 	const handleCreateToken = async () => {
+		if (isCreating) return;
+		setIsCreating(true);
 		try {
-			const tokenName = t("tokens.default_name", { date: new Date().toLocaleDateString() });
+			const tokenName = t("tokens.default_name", {
+				date: formatDateOnly(new Date(), i18n.resolvedLanguage),
+			});
 			const newToken = await createMCPToken({
 				name: tokenName,
 				permissions: ["rag.read"],
@@ -88,6 +102,8 @@ export function MCPUsageGuide() {
 			}
 		} catch (error) {
 			toast.error(error instanceof Error ? error.message : t("tokens.create_error"));
+		} finally {
+			setIsCreating(false);
 		}
 	};
 
@@ -142,7 +158,7 @@ export function MCPUsageGuide() {
 		>
 			<span className="font-medium text-foreground">{param.label}</span>
 			<div className="flex items-center gap-2">
-				<code className="text-xs font-mono bg-surface px-2 py-1 rounded border max-w-[200px] truncate">
+				<code className="text-xs font-mono bg-surface px-2 py-1 rounded border border-border max-w-[200px] truncate">
 					{param.value}
 				</code>
 				{param.copyable !== false && (
@@ -187,6 +203,16 @@ export function MCPUsageGuide() {
 							</div>
 							<p className="text-sm text-muted">{t("guide.loading_tokens_desc")}</p>
 						</div>
+					) : errors.tokens && mcpTokens.length === 0 ? (
+						<div
+							role="alert"
+							className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm"
+						>
+							<span className="text-destructive">{errors.tokens}</span>
+							<Button variant="outline" size="sm" onClick={() => void fetchMCPTokens()}>
+								{t("common.retry")}
+							</Button>
+						</div>
 					) : mcpTokens.length === 0 ? (
 						// 没有 token 时显示创建按钮
 						<div className="text-center py-8 bg-surface-subtle rounded-lg border border-border">
@@ -200,7 +226,8 @@ export function MCPUsageGuide() {
 							<Button
 								onClick={handleCreateToken}
 								variant="primary"
-								disabled={isLoadingTokens}
+								loading={isCreating}
+								disabled={isLoadingTokens || isCreating}
 								className="px-6"
 							>
 								<IconSquareRoundedPlus className="h-4 w-4 mr-2" />

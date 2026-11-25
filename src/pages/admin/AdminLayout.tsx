@@ -37,6 +37,22 @@ export function AdminLayout() {
 		const adminPassword = localStorage.getItem(ADMIN_SESSION_KEY);
 		setIsAuthenticated(!!adminPassword);
 		setIsLoading(false);
+
+		const handleAuthExpired = () => {
+			setIsAuthenticated(false);
+		};
+		const handleStorage = (event: StorageEvent) => {
+			if (event.key === ADMIN_SESSION_KEY) {
+				setIsAuthenticated(Boolean(event.newValue));
+			}
+		};
+
+		window.addEventListener("admin-auth-expired", handleAuthExpired);
+		window.addEventListener("storage", handleStorage);
+		return () => {
+			window.removeEventListener("admin-auth-expired", handleAuthExpired);
+			window.removeEventListener("storage", handleStorage);
+		};
 	}, []);
 
 	if (isLoading) {

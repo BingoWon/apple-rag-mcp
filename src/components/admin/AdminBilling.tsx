@@ -20,7 +20,12 @@ export function AdminBilling({
 	const money = new Intl.NumberFormat(i18n.resolvedLanguage, { style: "currency", currency });
 	const divisor = 10 ** (money.resolvedOptions().maximumFractionDigits ?? 2);
 	const formatMoney = (value: number) => money.format(value / divisor);
+	const formatCount = (value?: number) =>
+		value !== undefined ? value.toLocaleString(i18n.resolvedLanguage) : "—";
 	const ready = billing?.history_complete;
+	const placeholderText = t(
+		loading ? "admin.stats_loading" : billing ? "admin.billing_pending" : "admin.stats_unavailable",
+	);
 	const empty = { total: 0, points: [] };
 	const revenue = billing?.receipts[currency] ?? empty;
 	return (
@@ -72,7 +77,7 @@ export function AdminBilling({
 							</select>
 						</label>
 					</div>
-					{ready && (
+					{ready ? (
 						<TrendChart
 							metric={revenue}
 							bucket={stats?.bucket ?? "day"}
@@ -81,17 +86,21 @@ export function AdminBilling({
 							formatValue={formatMoney}
 							seriesName={t("admin.billing_receipts")}
 						/>
+					) : (
+						<div className="flex h-[260px] items-center justify-center text-xs text-muted">
+							{placeholderText}
+						</div>
 					)}
 				</Card>
 				<Card className="flex flex-col justify-between gap-6 p-5">
 					<div>
 						<h3 className="text-sm text-muted">{t("admin.stats_paid_users")}</h3>
 						<p className="mt-2 text-3xl font-semibold tabular-nums text-foreground">
-							{stats?.subscriptions.total ?? "—"}
+							{formatCount(stats?.subscriptions.total)}
 						</p>
 						<p className="mt-2 text-xs text-muted">
-							{t("admin.stats_current")} · Pro {stats?.subscriptions.pro ?? "—"} · Enterprise{" "}
-							{stats?.subscriptions.enterprise ?? "—"}
+							{t("admin.stats_current")} · Pro {formatCount(stats?.subscriptions.pro)} · Enterprise{" "}
+							{formatCount(stats?.subscriptions.enterprise)}
 						</p>
 					</div>
 					<dl className="grid grid-cols-2 gap-4 border-t border-border pt-5">
@@ -109,7 +118,7 @@ export function AdminBilling({
 			</div>
 			<Card className="p-5">
 				<h3 className="text-sm font-medium text-foreground">{t("admin.billing_people_trend")}</h3>
-				{ready && (
+				{ready ? (
 					<TrendChart
 						metric={{
 							total: billing.new_subscribers.total + billing.renewing_subscribers.total,
@@ -131,6 +140,10 @@ export function AdminBilling({
 							},
 						]}
 					/>
+				) : (
+					<div className="flex h-[200px] items-center justify-center text-xs text-muted">
+						{placeholderText}
+					</div>
 				)}
 			</Card>
 		</section>

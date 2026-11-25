@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/Input";
 import { api } from "@/lib/api";
 import { formatDateCompact } from "@/lib/datetime";
 import { cn } from "@/lib/utils";
+import { useDashboardStore } from "@/stores/dashboard";
 import { activateFabContact } from "@/utils/contact";
 
 interface Message {
@@ -27,6 +28,7 @@ export default function MessagesPage() {
 	const [total, setTotal] = useState(0);
 	const [unreadCount, setUnreadCount] = useState(0);
 	const [isLoading, setIsLoading] = useState(true);
+	const [loadError, setLoadError] = useState<string | null>(null);
 	const [filter, setFilter] = useState<FilterType>("all");
 	const [search, setSearch] = useState("");
 	const [searchInput, setSearchInput] = useState("");
@@ -35,6 +37,7 @@ export default function MessagesPage() {
 
 	const fetchMessages = useCallback(async () => {
 		setIsLoading(true);
+		setLoadError(null);
 		try {
 			const offset = (page - 1) * limit;
 			const response = await api.getMessageHistory({
@@ -53,9 +56,12 @@ export default function MessagesPage() {
 				setMessages(data.messages || []);
 				setTotal(data.total || 0);
 				setUnreadCount(data.unreadCount || 0);
+			} else {
+				throw new Error(response.error?.message || t("messages.load_error"));
 			}
 		} catch (error) {
 			console.error("Failed to fetch messages:", error);
+			setLoadError(error instanceof Error ? error.message : t("messages.load_error"));
 			toast.error(t("messages.load_error"));
 		} finally {
 			setIsLoading(false);
@@ -73,10 +79,12 @@ export default function MessagesPage() {
 
 	const handleMarkAsRead = async (messageId: string) => {
 		try {
-			const response = await api.markMessageAsRead(messageId);
-			if (response.success) {
+			const marked = await useDashboardStore.getState().markReplyRead(messageId);
+			if (marked) {
 				toast.success(t("messages.marked_success"));
 				fetchMessages();
+			} else {
+				toast.error(t("messages.mark_error"));
 			}
 		} catch (error) {
 			console.error("Failed to mark message as read:", error);
@@ -192,6 +200,16 @@ export default function MessagesPage() {
 				<CardContent className="p-0">
 					{isLoading ? (
 						<div className="p-8 text-center text-muted">{t("messages.loading")}</div>
+					) : loadError ? (
+						<div
+							role="alert"
+							className="flex flex-wrap items-center justify-between gap-3 p-6 text-sm"
+						>
+							<span className="text-destructive">{loadError}</span>
+							<Button variant="outline" size="sm" onClick={() => void fetchMessages()}>
+								{t("common.retry")}
+							</Button>
+						</div>
 					) : messages.length === 0 ? (
 						<div className="p-8 text-center text-muted">
 							<IconMessageCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
@@ -199,81 +217,91 @@ export default function MessagesPage() {
 						</div>
 					) : (
 						<div className="divide-y divide-border">
-							{messages.map((message) => (
-								<div
-									key={message.id}
-									className={cn("p-6 transition-colors", !message.user_read_at && "bg-brand/5")}
-								>
-									{/* Message Header */}
-									<div className="flex items-start justify-between mb-4">
-										<div className="flex items-center gap-2">
-											{message.user_read_at ? (
-												<IconCheck className="w-5 h-5 text-subtle" />
-											) : (
-												<IconClock className="w-5 h-5 text-brand" />
-											)}
-											<span
-												className={cn(
-													"text-sm font-medium",
-													message.user_read_at ? "text-subtle" : "text-brand",
+							{messages.map((message) => {
+								const isPendingReply = !message.admin_reply;
+								const isUnreadReply = Boolean(message.admin_reply) && !message.user_read_at;
+								return (
+									<div
+										key={message.id}
+										className={cn("p-6 transition-colors", isUnreadReply && "bg-brand/5")}
+									>
+										{/* Message Header */}
+										<div className="flex items-start justify-between mb-4">
+											<div className="flex items-center gap-2">
+												{isPendingReply ? (
+													<IconClock className="w-5 h-5 text-subtle" />
+												) : isUnreadReply ? (
+													<IconClock className="w-5 h-5 text-brand" />
+												) : (
+													<IconCheck className="w-5 h-5 text-subtle" />
 												)}
-											>
-												{message.user_read_at ? t("messages.read") : t("messages.unread")}
+												<span
+													className={cn(
+														"text-sm font-medium",
+														isUnreadReply ? "text-brand" : "text-subtle",
+													)}
+												>
+													{isPendingReply
+														? t("messages.pending_reply")
+														: isUnreadReply
+															? t("messages.unread")
+															: t("messages.read")}
+												</span>
+											</div>
+											<span className="text-xs text-muted">
+												{formatDateCompact(message.created_at)}
 											</span>
 										</div>
-										<span className="text-xs text-muted">
-											{formatDateCompact(message.created_at)}
-										</span>
-									</div>
 
-									{/* Your Message */}
-									<div className="mb-4">
-										<h4 className="text-sm font-medium text-muted mb-2">
-											{t("messages.your_message")}
-										</h4>
-										<div className="bg-surface rounded-lg p-4 border border-border">
-											<p className="text-foreground text-sm whitespace-pre-wrap">
-												{message.message}
-											</p>
-										</div>
-									</div>
-
-									{/* Admin Reply */}
-									{message.admin_reply && (
+										{/* Your Message */}
 										<div className="mb-4">
 											<h4 className="text-sm font-medium text-muted mb-2">
-												{t("messages.our_response")}
+												{t("messages.your_message")}
 											</h4>
-											<div className="bg-brand/10 rounded-lg p-4 border border-brand/30">
+											<div className="bg-surface rounded-lg p-4 border border-border">
 												<p className="text-foreground text-sm whitespace-pre-wrap">
-													{message.admin_reply}
+													{message.message}
 												</p>
-												{message.replied_at && (
-													<p className="text-xs text-brand mt-2">
-														{t("messages.replied_on", {
-															date: formatDateCompact(message.replied_at),
-														})}
-													</p>
-												)}
 											</div>
 										</div>
-									)}
 
-									{/* Mark as Read Button */}
-									{!message.user_read_at && (
-										<div className="flex justify-end">
-											<Button
-												variant="secondary"
-												size="sm"
-												onClick={() => handleMarkAsRead(message.id)}
-											>
-												<IconCheck className="w-4 h-4 mr-2" />
-												{t("messages.mark_read")}
-											</Button>
-										</div>
-									)}
-								</div>
-							))}
+										{/* Admin Reply */}
+										{message.admin_reply && (
+											<div className="mb-4">
+												<h4 className="text-sm font-medium text-muted mb-2">
+													{t("messages.our_response")}
+												</h4>
+												<div className="bg-brand/10 rounded-lg p-4 border border-brand/30">
+													<p className="text-foreground text-sm whitespace-pre-wrap">
+														{message.admin_reply}
+													</p>
+													{message.replied_at && (
+														<p className="text-xs text-brand mt-2">
+															{t("messages.replied_on", {
+																date: formatDateCompact(message.replied_at),
+															})}
+														</p>
+													)}
+												</div>
+											</div>
+										)}
+
+										{/* Mark as Read Button */}
+										{isUnreadReply && (
+											<div className="flex justify-end">
+												<Button
+													variant="secondary"
+													size="sm"
+													onClick={() => handleMarkAsRead(message.id)}
+												>
+													<IconCheck className="w-4 h-4 mr-2" />
+													{t("messages.mark_read")}
+												</Button>
+											</div>
+										)}
+									</div>
+								);
+							})}
 						</div>
 					)}
 				</CardContent>

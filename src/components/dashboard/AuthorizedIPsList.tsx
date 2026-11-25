@@ -33,7 +33,7 @@ export function AuthorizedIPsList({
 	isLoading = false,
 }: AuthorizedIPsListProps) {
 	const { t } = useTranslation();
-	const { handleDeleteClick, isDeleting, DeleteModal } = useDeleteConfirm({
+	const { handleDeleteClick, isDeleting, deleteModal } = useDeleteConfirm({
 		onDelete: useCallback(onDelete, [onDelete]),
 		onRefresh: useCallback(onRefresh, [onRefresh]),
 		itemType: t("ips.ip_label"),
@@ -136,9 +136,7 @@ export function AuthorizedIPsList({
 	return (
 		<>
 			<DataTable columns={columns} data={ips} />
-
-			{/* Delete Confirmation Modal */}
-			<DeleteModal />
+			{deleteModal}
 		</>
 	);
 }

@@ -7,15 +7,16 @@ import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { AuthorizedIPsList } from "@/components/dashboard/AuthorizedIPsList";
-import {
-	Modal,
-	ModalBody,
-	ModalContent,
-	ModalTrigger,
-	useModal,
-} from "@/components/ui/animated-modal";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
+} from "@/components/ui/Dialog";
 import { Input } from "@/components/ui/Input";
 import { api } from "@/lib/api";
 import { canonicalIP } from "../../../shared/ip";
@@ -33,14 +34,16 @@ export default function AuthorizedIPsPage() {
 	const { t } = useTranslation();
 	const authorizedIPSchema = z.object({
 		ip_address: z.string().refine((value) => !!canonicalIP(value), t("ips.invalid_ip")),
-		name: z.string().min(1, t("ips.name_required")).max(50, t("ips.name_too_long")),
+		name: z.string().trim().min(1, t("ips.name_required")).max(100, t("ips.name_too_long")),
 	});
 	type AuthorizedIPFormData = z.infer<typeof authorizedIPSchema>;
 
 	const [ips, setIPs] = useState<AuthorizedIP[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
+	const [loadError, setLoadError] = useState<string | null>(null);
 	const [isCreating, setIsCreating] = useState(false);
-	const [currentIP, setCurrentIP] = useState<string>("");
+	const [isAddOpen, setIsAddOpen] = useState(false);
+	const [currentIP, setCurrentIP] = useState<string | null>(null);
 
 	const form = useForm<AuthorizedIPFormData>({
 		resolver: zodResolver(authorizedIPSchema),
@@ -50,22 +53,29 @@ export default function AuthorizedIPsPage() {
 		},
 	});
 
-	// Get current user's IP
-	useEffect(() => {
-		fetch("https://api.ipify.org?format=json")
-			.then((res) => res.json())
-			.then((data) => setCurrentIP(data.ip))
-			.catch(() => setCurrentIP(""));
-	}, []);
-
-	// Load authorized IPs
+	// Load authorized IPs + first-party Cloudflare-detected client IP
 	const loadIPs = useCallback(async () => {
+		setIsLoading(true);
+		setLoadError(null);
 		try {
-			const response = await api.getAuthorizedIPs();
+			const response = (await api.getAuthorizedIPs()) as {
+				success: boolean;
+				data?: AuthorizedIP[];
+				client_ip?: string | null;
+				error?: { message?: string };
+			};
 			if (response.success && response.data) {
 				setIPs(Array.isArray(response.data) ? response.data : []);
+				setCurrentIP(response.client_ip ?? "");
+			} else {
+				const msg = response.error?.message || t("ips.load_error");
+				setLoadError(msg);
+				setCurrentIP("");
 			}
-		} catch (_error) {
+		} catch (error) {
+			const msg = error instanceof Error ? error.message : t("ips.load_error");
+			setLoadError(msg);
+			setCurrentIP("");
 			toast.error(t("ips.load_error"));
 		} finally {
 			setIsLoading(false);
@@ -77,14 +87,14 @@ export default function AuthorizedIPsPage() {
 	}, [loadIPs]);
 
 	// Create new authorized IP
-	const onSubmit = async (data: AuthorizedIPFormData, closeModal?: () => void) => {
+	const onSubmit = async (data: AuthorizedIPFormData) => {
 		setIsCreating(true);
 		try {
 			const response = await api.createAuthorizedIP(data);
 			if (response.success) {
 				toast.success(t("ips.added_success", { name: data.name }));
 				form.reset();
-				closeModal?.(); // Close modal on success
+				setIsAddOpen(false);
 				loadIPs();
 			} else {
 				const errorMessage = response.error?.message || t("ips.create_error");
@@ -110,10 +120,8 @@ export default function AuthorizedIPsPage() {
 	const handleDelete = async (id: string) => {
 		const response = await api.deleteAuthorizedIP(id);
 		if (!response.success) {
-			// If the error is "not found", it might already be deleted, so don't throw
-			if (response.error?.message?.includes("not found")) {
-				console.warn("IP already deleted or not found:", id);
-				return; // Silently succeed
+			if (response.error?.code === "RESOURCE_NOT_FOUND") {
+				return;
 			}
 			throw new Error(response.error?.message || t("ips.delete_error"));
 		}
@@ -122,8 +130,14 @@ export default function AuthorizedIPsPage() {
 	// Auto-fill current IP
 	const fillCurrentIP = () => {
 		if (currentIP) {
-			form.setValue("ip_address", currentIP);
+			form.setValue("ip_address", currentIP, { shouldValidate: true });
 		}
+	};
+
+	const handleAddOpenChange = (open: boolean) => {
+		if (!open && isCreating) return;
+		setIsAddOpen(open);
+		if (!open) form.reset();
 	};
 
 	return (
@@ -141,10 +155,12 @@ export default function AuthorizedIPsPage() {
 						<div className="flex-shrink-0">
 							<IconInfoCircle className="h-5 w-5 text-brand" />
 						</div>
-						<div className="ml-3">
-							<h3 className="text-sm font-medium text-foreground">
+						<div className="ml-3 min-w-0">
+							<h3 className="text-sm font-medium text-foreground break-all">
 								{t("ips.current_ip")}{" "}
-								<span className="font-mono text-brand">{currentIP || t("ips.detect_failed")}</span>
+								<span className="font-mono text-brand">
+									{currentIP === null ? t("common.loading") : currentIP || t("ips.detect_failed")}
+								</span>
 							</h3>
 							<div className="mt-2 text-sm text-muted">
 								<p>{t("ips.current_ip_desc")}</p>
@@ -157,33 +173,46 @@ export default function AuthorizedIPsPage() {
 			{/* Authorized IPs List */}
 			<Card>
 				<CardHeader>
-					<div className="flex items-center justify-between">
+					<div className="flex flex-wrap items-center justify-between gap-3">
 						<CardTitle>{t("ips.your_ips", { count: ips.length })}</CardTitle>
-						<Modal>
-							<ModalTrigger>
+						<Dialog open={isAddOpen} onOpenChange={handleAddOpenChange}>
+							<DialogTrigger asChild>
 								<Button variant="primary" disabled={ips.length >= 10}>
 									<IconSquareRoundedPlus className="h-4 w-4 mr-2" />
 									{t("ips.add")}
 								</Button>
-							</ModalTrigger>
-							<AddIPModal
-								currentIP={currentIP}
+							</DialogTrigger>
+							<AddIPDialogContent
+								currentIP={currentIP || ""}
 								form={form}
 								isCreating={isCreating}
 								onSubmit={onSubmit}
+								onCancel={() => handleAddOpenChange(false)}
 								fillCurrentIP={fillCurrentIP}
 							/>
-						</Modal>
+						</Dialog>
 					</div>
 				</CardHeader>
 				<CardContent className="p-0">
-					<AuthorizedIPsList
-						ips={ips}
-						onRefresh={loadIPs}
-						onUpdate={handleUpdate}
-						onDelete={handleDelete}
-						isLoading={isLoading}
-					/>
+					{loadError ? (
+						<div
+							role="alert"
+							className="flex flex-wrap items-center justify-between gap-3 p-6 text-sm"
+						>
+							<span className="text-destructive">{loadError}</span>
+							<Button variant="outline" size="sm" onClick={() => void loadIPs()}>
+								{t("common.retry")}
+							</Button>
+						</div>
+					) : (
+						<AuthorizedIPsList
+							ips={ips}
+							onRefresh={loadIPs}
+							onUpdate={handleUpdate}
+							onDelete={handleDelete}
+							isLoading={isLoading}
+						/>
+					)}
 				</CardContent>
 			</Card>
 
@@ -215,96 +244,93 @@ export default function AuthorizedIPsPage() {
 	);
 }
 
-interface AddIPModalProps {
+interface AddIPDialogContentProps {
 	currentIP: string;
 	form: UseFormReturn<{ ip_address: string; name: string }>;
 	isCreating: boolean;
-	onSubmit: (data: { ip_address: string; name: string }, closeModal?: () => void) => void;
+	onSubmit: (data: { ip_address: string; name: string }) => void;
+	onCancel: () => void;
 	fillCurrentIP: () => void;
 }
 
-function AddIPModal({ currentIP, form, isCreating, onSubmit, fillCurrentIP }: AddIPModalProps) {
+function AddIPDialogContent({
+	currentIP,
+	form,
+	isCreating,
+	onSubmit,
+	onCancel,
+	fillCurrentIP,
+}: AddIPDialogContentProps) {
 	const { t } = useTranslation();
-	const { setOpen } = useModal();
-
-	const handleClose = () => {
-		setOpen(false);
-		form.reset();
-	};
 
 	return (
-		<ModalBody className="max-w-lg">
-			<ModalContent className="space-y-6">
-				{/* Header */}
-				<div className="text-center">
-					<h2 className="text-xl font-semibold text-foreground">{t("ips.add_title")}</h2>
-					<p className="text-sm text-subtle mt-2">{t("ips.add_subtitle")}</p>
-				</div>
+		<DialogContent className="max-w-lg">
+			<DialogHeader className="text-center">
+				<DialogTitle className="text-xl font-semibold text-foreground">
+					{t("ips.add_title")}
+				</DialogTitle>
+				<DialogDescription className="text-sm text-subtle">
+					{t("ips.add_subtitle")}
+				</DialogDescription>
+			</DialogHeader>
 
-				<form
-					onSubmit={form.handleSubmit((data) => onSubmit(data, () => setOpen(false)))}
-					className="space-y-6"
-				>
-					<div className="space-y-4">
-						<div>
-							<label
-								htmlFor="ip_address"
-								className="block text-sm font-medium text-foreground mb-2"
-							>
+			<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+				<div className="space-y-4">
+					<div className="space-y-1.5">
+						<div className="flex flex-wrap items-center justify-between gap-2">
+							<label htmlFor="ip_address" className="text-sm font-medium text-foreground">
 								{t("ips.ip_label")}
 							</label>
-							<div className="inline-flex items-center gap-2">
-								<Input
-									id="ip_address"
-									placeholder={t("ips.ip_placeholder")}
-									{...form.register("ip_address")}
-									error={form.formState.errors.ip_address?.message}
-									className="w-auto min-w-[200px]"
-								/>
-								<Button
-									type="button"
-									variant="link"
-									onClick={fillCurrentIP}
-									disabled={!currentIP}
-									className="text-sm p-0 h-auto"
-								>
-									{currentIP
-										? t("ips.use_current", { ip: currentIP })
-										: t("ips.use_current_fallback")}
-								</Button>
-							</div>
+							<Button
+								type="button"
+								variant="link"
+								onClick={fillCurrentIP}
+								disabled={!currentIP}
+								className="h-auto max-w-full p-0 text-xs font-mono truncate"
+							>
+								{currentIP
+									? t("ips.use_current", { ip: currentIP })
+									: t("ips.use_current_fallback")}
+							</Button>
 						</div>
-
 						<Input
-							label={t("ips.name_label")}
-							placeholder={t("ips.name_placeholder")}
-							{...form.register("name")}
-							error={form.formState.errors.name?.message}
+							id="ip_address"
+							placeholder={t("ips.ip_placeholder")}
+							{...form.register("ip_address")}
+							error={form.formState.errors.ip_address?.message}
+							className="font-mono"
 						/>
 					</div>
 
-					<div className="flex gap-3">
-						<Button
-							type="button"
-							variant="outline"
-							onClick={handleClose}
-							disabled={isCreating}
-							className="flex-1"
-						>
-							{t("common.cancel")}
-						</Button>
-						<Button
-							type="submit"
-							variant="primary"
-							loading={isCreating}
-							disabled={isCreating}
-							className="flex-1"
-						>
-							{t("ips.add_btn")}
-						</Button>
-					</div>
-				</form>
-			</ModalContent>
-		</ModalBody>
+					<Input
+						label={t("ips.name_label")}
+						placeholder={t("ips.name_placeholder")}
+						{...form.register("name")}
+						error={form.formState.errors.name?.message}
+					/>
+				</div>
+
+				<div className="flex gap-3">
+					<Button
+						type="button"
+						variant="outline"
+						onClick={onCancel}
+						disabled={isCreating}
+						className="flex-1"
+					>
+						{t("common.cancel")}
+					</Button>
+					<Button
+						type="submit"
+						variant="primary"
+						loading={isCreating}
+						disabled={isCreating}
+						className="flex-1"
+					>
+						{t("ips.add_btn")}
+					</Button>
+				</div>
+			</form>
+		</DialogContent>
 	);
 }

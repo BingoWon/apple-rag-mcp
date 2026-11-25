@@ -580,14 +580,15 @@ app.openapi(getMessageHistoryRoute, async (c) => {
 
 		const { limit, offset } = parsePagination(limitStr, offsetStr, 20, 100);
 
-		// Build WHERE clause based on filter
-		let whereClause = "user_id = ? AND admin_reply IS NOT NULL";
+		// Build WHERE clause based on filter:
+		// "all" includes newly submitted unreplied messages so users see immediate confirmation.
+		let whereClause = "user_id = ?";
 		const bindings: unknown[] = [userId];
 
 		if (filter === "unread") {
-			whereClause += " AND user_read_at IS NULL";
+			whereClause += " AND admin_reply IS NOT NULL AND user_read_at IS NULL";
 		} else if (filter === "read") {
-			whereClause += " AND user_read_at IS NOT NULL";
+			whereClause += " AND admin_reply IS NOT NULL AND user_read_at IS NOT NULL";
 		}
 
 		// Add search filter if provided (INSTR avoids D1's 50-byte LIKE limit and treats %/_ literally)
@@ -622,7 +623,7 @@ app.openapi(getMessageHistoryRoute, async (c) => {
 			`SELECT id, message, admin_reply, replied_at, created_at, user_read_at
        FROM contact_messages
        WHERE ${whereClause}
-       ORDER BY replied_at DESC
+       ORDER BY julianday(COALESCE(replied_at, created_at)) DESC, id DESC
        LIMIT ? OFFSET ?`,
 		)
 			.bind(...bindings, limit, offset)

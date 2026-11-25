@@ -21,6 +21,7 @@ import { DigestPanel } from "@/components/updates/DigestPanel";
 import { usePageScroll } from "@/hooks/usePageScroll";
 import { api } from "@/lib/api";
 import type { CorpusStats } from "@/types";
+import { parseUTCDate } from "../../shared/datetime";
 import {
 	type DigestPeriodType,
 	DOC_CHANGE_KINDS,
@@ -29,9 +30,19 @@ import {
 	type UpdatesSummaryResponse,
 } from "../../shared/doc-updates";
 
+function parseDigestParam(raw: string | null): { period: DigestPeriodType; key: string } | null {
+	if (!raw) return null;
+	const [period, key] = raw.split(":");
+	if ((period === "daily" || period === "weekly") && key) {
+		return { period, key };
+	}
+	return null;
+}
+
 function formatRelativeMinutes(iso: string | null, locale: string): string {
-	if (!iso) return "—";
-	const diffSec = Math.max(0, Math.round((Date.now() - Date.parse(iso)) / 1000));
+	const parsed = iso ? parseUTCDate(iso) : null;
+	if (!parsed) return "—";
+	const diffSec = Math.max(0, Math.round((Date.now() - parsed.getTime()) / 1000));
 	const rtf = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
 	if (diffSec < 60) return rtf.format(-diffSec, "second");
 	const diffMin = Math.round(diffSec / 60);
@@ -47,19 +58,30 @@ export default function UpdatesPage() {
 	const [searchParams, setSearchParams] = useSearchParams();
 	const locale = i18n.resolvedLanguage ?? "en";
 
+	const initialDigest = parseDigestParam(searchParams.get("digest"));
 	const [summary, setSummary] = useState<UpdatesSummaryResponse | null>(null);
 	const [corpus, setCorpus] = useState<CorpusStats | null>(null);
-	const [digestPeriod, setDigestPeriod] = useState<DigestPeriodType>("daily");
+	const [digestPeriod, setDigestPeriod] = useState<DigestPeriodType>(
+		initialDigest?.period ?? "daily",
+	);
 	const [digestsByPeriod, setDigestsByPeriod] = useState<
 		Record<DigestPeriodType, DocChangeDigest[]>
 	>({ daily: [], weekly: [] });
 	const [selectedKeyByPeriod, setSelectedKeyByPeriod] = useState<
 		Record<DigestPeriodType, string | null>
-	>({ daily: null, weekly: null });
+	>({
+		daily: initialDigest?.period === "daily" ? initialDigest.key : null,
+		weekly: initialDigest?.period === "weekly" ? initialDigest.key : null,
+	});
 	const [loadedPeriods, setLoadedPeriods] = useState<Record<DigestPeriodType, boolean>>({
 		daily: false,
 		weekly: false,
 	});
+	const [digestError, setDigestError] = useState<Record<DigestPeriodType, boolean>>({
+		daily: false,
+		weekly: false,
+	});
+	const [summaryAttempt, setSummaryAttempt] = useState(0);
 
 	const [radarRange, setRadarRange] = useState<"7d" | "30d">("7d");
 	const [framework, setFramework] = useState<string>(searchParams.get("framework") ?? "");
@@ -73,11 +95,14 @@ export default function UpdatesPage() {
 	const [totalEvents, setTotalEvents] = useState(0);
 	const [hasMore, setHasMore] = useState(false);
 	const [feedLoading, setFeedLoading] = useState(true);
+	const [feedError, setFeedError] = useState(false);
+	const [feedAttempt, setFeedAttempt] = useState(0);
 	const [loadingMore, setLoadingMore] = useState(false);
 
 	// Load summary, corpus stats, and both daily & weekly digest histories in parallel
 	// so switching between daily/weekly tabs is instantaneous with zero layout jump.
 	useEffect(() => {
+		void summaryAttempt;
 		const controller = new AbortController();
 
 		api
@@ -105,18 +130,27 @@ export default function UpdatesPage() {
 			.catch(() => {});
 
 		for (const period of ["daily", "weekly"] as const) {
+			setDigestError((prev) => ({ ...prev, [period]: false }));
 			api
 				.getUpdatesDigests(period, 14, controller.signal)
 				.then((res) => {
 					if (controller.signal.aborted) return;
-					const list = res.success && res.data ? res.data.digests : [];
+					if (!res.success || !res.data) {
+						setDigestError((prev) => ({ ...prev, [period]: true }));
+						return;
+					}
+					const list = res.data.digests;
 					setDigestsByPeriod((prev) => ({ ...prev, [period]: list }));
 					setSelectedKeyByPeriod((prev) => ({
 						...prev,
 						[period]: prev[period] ?? list[0]?.period_key ?? null,
 					}));
 				})
-				.catch(() => {})
+				.catch(() => {
+					if (!controller.signal.aborted) {
+						setDigestError((prev) => ({ ...prev, [period]: true }));
+					}
+				})
 				.finally(() => {
 					if (!controller.signal.aborted) {
 						setLoadedPeriods((prev) => ({ ...prev, [period]: true }));
@@ -125,7 +159,7 @@ export default function UpdatesPage() {
 		}
 
 		return () => controller.abort();
-	}, []);
+	}, [summaryAttempt]);
 
 	// Debounce search input
 	useEffect(() => {
@@ -136,22 +170,34 @@ export default function UpdatesPage() {
 	// Sync URL query params for shareable filters
 	const applyFrameworkFilter = useCallback(
 		(nextFramework: string) => {
-			setFramework((prev) => {
-				const resolved = prev === nextFramework ? "" : nextFramework;
-				const next = new URLSearchParams(searchParams);
-				if (resolved) next.set("framework", resolved);
-				else next.delete("framework");
-				setSearchParams(next, { replace: true });
-				return resolved;
-			});
+			const resolved = framework === nextFramework ? "" : nextFramework;
+			setFramework(resolved);
+			const next = new URLSearchParams(searchParams);
+			if (resolved) next.set("framework", resolved);
+			else next.delete("framework");
+			setSearchParams(next, { replace: true });
 		},
-		[searchParams, setSearchParams],
+		[framework, searchParams, setSearchParams],
+	);
+
+	const applyKindFilter = useCallback(
+		(nextKind: string) => {
+			const resolved = kind === nextKind ? "" : nextKind;
+			setKind(resolved);
+			const next = new URLSearchParams(searchParams);
+			if (resolved) next.set("kind", resolved);
+			else next.delete("kind");
+			setSearchParams(next, { replace: true });
+		},
+		[kind, searchParams, setSearchParams],
 	);
 
 	// Load event feed
 	useEffect(() => {
+		void feedAttempt;
 		const controller = new AbortController();
 		setFeedLoading(true);
+		setFeedError(false);
 		api
 			.getUpdatesFeed(
 				{
@@ -171,10 +217,13 @@ export default function UpdatesPage() {
 					setEvents(res.data.events);
 					setTotalEvents(res.data.total);
 					setHasMore(res.data.has_more);
+				} else {
+					setFeedError(true);
 				}
 			})
 			.catch(() => {
 				if (!controller.signal.aborted) {
+					setFeedError(true);
 					setEvents([]);
 					setTotalEvents(0);
 					setHasMore(false);
@@ -184,7 +233,7 @@ export default function UpdatesPage() {
 				if (!controller.signal.aborted) setFeedLoading(false);
 			});
 		return () => controller.abort();
-	}, [framework, kind, significance, days, query]);
+	}, [framework, kind, significance, days, query, feedAttempt]);
 
 	const handleLoadMore = async () => {
 		if (loadingMore || !hasMore) return;
@@ -200,10 +249,16 @@ export default function UpdatesPage() {
 				offset: events.length,
 			});
 			if (res.success && res.data) {
-				setEvents((prev) => [...prev, ...res.data!.events]);
+				const incoming = res.data.events;
+				setEvents((prev) => {
+					const seen = new Set(prev.map((item) => item.id));
+					return [...prev, ...incoming.filter((item) => !seen.has(item.id))];
+				});
 				setTotalEvents(res.data.total);
 				setHasMore(res.data.has_more);
 			}
+		} catch {
+			// Keep existing loaded events intact on transient pagination error
 		} finally {
 			setLoadingMore(false);
 		}
@@ -295,7 +350,7 @@ export default function UpdatesPage() {
 						<p className="mt-2 text-lg font-bold tabular-nums text-foreground">
 							{summary ? fmtNum(summary.heartbeat.changed_24h) : "—"}
 							<span className="ml-1.5 text-xs font-normal text-subtle">
-								/ 7d: {summary ? fmtNum(summary.heartbeat.changed_7d) : "—"}
+								/ {t("updates.range_7d")}: {summary ? fmtNum(summary.heartbeat.changed_7d) : "—"}
 							</span>
 						</p>
 						<p className="mt-0.5 text-[11px] text-subtle">{t("updates.metric_changes_hint")}</p>
@@ -328,6 +383,8 @@ export default function UpdatesPage() {
 							setSelectedKeyByPeriod((prev) => ({ ...prev, [digestPeriod]: key }))
 						}
 						loading={!loadedPeriods[digestPeriod] && digestsByPeriod[digestPeriod].length === 0}
+						error={digestError[digestPeriod]}
+						onRetry={() => setSummaryAttempt((v) => v + 1)}
 						onFilterFramework={applyFrameworkFilter}
 					/>
 				</section>
@@ -355,7 +412,7 @@ export default function UpdatesPage() {
 													: "rounded-md px-2.5 py-0.5 text-xs text-subtle hover:text-foreground"
 											}
 										>
-											{r}
+											{t(r === "7d" ? "updates.range_7d" : "updates.range_30d")}
 										</button>
 									))}
 								</div>
@@ -412,7 +469,7 @@ export default function UpdatesPage() {
 										<button
 											key={k}
 											type="button"
-											onClick={() => setKind((prev) => (prev === k ? "" : k))}
+											onClick={() => applyKindFilter(k)}
 											className={`flex items-center justify-between rounded-lg border px-3 py-2 text-xs transition-colors ${
 												active
 													? "border-brand bg-brand/10 font-semibold text-brand"
@@ -503,7 +560,7 @@ export default function UpdatesPage() {
 							{kind && (
 								<button
 									type="button"
-									onClick={() => setKind("")}
+									onClick={() => applyKindFilter(kind)}
 									className="inline-flex items-center gap-1 rounded-full border border-brand/40 bg-brand/10 px-2.5 py-1 text-xs font-semibold text-brand"
 								>
 									<span>{t(`updates.kind_${kind}`)}</span>
@@ -537,6 +594,16 @@ export default function UpdatesPage() {
 								role="status"
 							>
 								{t("common.loading")}
+							</div>
+						) : feedError && events.length === 0 ? (
+							<div
+								role="alert"
+								className="flex flex-col items-center justify-center gap-3 rounded-xl border border-destructive/30 bg-destructive/5 py-12 text-center"
+							>
+								<p className="text-sm text-destructive">{t("updates.load_error")}</p>
+								<Button variant="outline" size="sm" onClick={() => setFeedAttempt((v) => v + 1)}>
+									{t("common.retry")}
+								</Button>
 							</div>
 						) : events.length === 0 ? (
 							<div className="rounded-xl border border-border bg-card py-12 text-center">

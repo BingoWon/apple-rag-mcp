@@ -1,6 +1,5 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import toast from "react-hot-toast";
-import { Modal } from "@/components/ui/animated-modal";
 import { DeleteConfirmModal } from "@/components/ui/DeleteConfirmModal";
 
 interface DeleteItem {
@@ -28,11 +27,20 @@ export function useDeleteConfirm({
 	const [deleteItem, setDeleteItem] = useState<DeleteItem | null>(null);
 	const [isDeleting, setIsDeleting] = useState(false);
 
-	const handleDeleteClick = (id: string, name: string) => {
+	const handleDeleteClick = useCallback((id: string, name: string) => {
 		setDeleteItem({ id, name });
-	};
+	}, []);
 
-	const handleDeleteConfirm = async () => {
+	const handleOpenChange = useCallback(
+		(open: boolean) => {
+			if (!open && !isDeleting) {
+				setDeleteItem(null);
+			}
+		},
+		[isDeleting],
+	);
+
+	const handleDeleteConfirm = useCallback(async () => {
 		if (!deleteItem) return;
 
 		const { id, name } = deleteItem;
@@ -54,23 +62,22 @@ export function useDeleteConfirm({
 		} finally {
 			setIsDeleting(false);
 		}
-	};
+	}, [deleteItem, onDelete, onRefresh, itemType, successMessage, errorMessage]);
 
-	const DeleteModal = () =>
-		deleteItem ? (
-			<Modal key={`delete-${deleteItem.id}`}>
-				<DeleteConfirmModal
-					title={title}
-					itemName={deleteItem.name}
-					isDeleting={isDeleting}
-					onConfirm={handleDeleteConfirm}
-				/>
-			</Modal>
-		) : null;
+	const deleteModal = (
+		<DeleteConfirmModal
+			open={Boolean(deleteItem)}
+			onOpenChange={handleOpenChange}
+			title={title}
+			itemName={deleteItem?.name ?? ""}
+			isDeleting={isDeleting}
+			onConfirm={handleDeleteConfirm}
+		/>
+	);
 
 	return {
 		handleDeleteClick,
 		isDeleting: isDeleting && deleteItem ? deleteItem.id : null,
-		DeleteModal,
+		deleteModal,
 	};
 }

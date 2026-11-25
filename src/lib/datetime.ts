@@ -95,11 +95,15 @@ export function createTimeKey(date: Date | string | number, options: TimeKeyOpti
 
 const toDate = parseUTCDate;
 
-export function formatDate(input: string | Date | number): string {
+function activeLocale(locale?: string): string {
+	return locale || i18n.resolvedLanguage || i18n.language || "en";
+}
+
+export function formatDate(input: string | Date | number, locale?: string): string {
 	const date = toDate(input);
 	if (!date) return "—";
 
-	const lang = i18n.language || "en";
+	const lang = activeLocale(locale);
 
 	if (lang.startsWith("zh")) {
 		const y = date.getFullYear();
@@ -129,12 +133,37 @@ export function formatDate(input: string | Date | number): string {
 	return `${datePart} at ${timePart}`;
 }
 
-export function formatDateCompact(input: string | Date | number): string {
+export function formatDateOnly(input: string | Date | number, locale?: string): string {
+	const date = toDate(input);
+	if (!date) return "—";
+	const lang = activeLocale(locale);
+	return new Intl.DateTimeFormat(lang, {
+		year: "numeric",
+		month: "short",
+		day: "numeric",
+	}).format(date);
+}
+
+export function formatDateTimeWithZone(input: string | Date | number, locale?: string): string {
+	const date = toDate(input);
+	if (!date) return "—";
+	const lang = activeLocale(locale);
+	return new Intl.DateTimeFormat(lang, {
+		month: "short",
+		day: "numeric",
+		hour: "2-digit",
+		minute: "2-digit",
+		hourCycle: "h23",
+		timeZoneName: "short",
+	}).format(date);
+}
+
+export function formatDateCompact(input: string | Date | number, locale?: string): string {
 	const date = toDate(input);
 	if (!date) return "—";
 
-	const locale = (i18n.language || "en").startsWith("zh") ? "zh-CN" : "en-US";
-	return date.toLocaleString(locale, {
+	const resolved = activeLocale(locale).startsWith("zh") ? "zh-CN" : "en-US";
+	return date.toLocaleString(resolved, {
 		year: "numeric",
 		month: "2-digit",
 		day: "2-digit",
@@ -144,23 +173,23 @@ export function formatDateCompact(input: string | Date | number): string {
 	});
 }
 
-export function formatRelativeTime(input: string | Date | number): string {
+export function formatRelativeTime(input: string | Date | number, locale?: string): string {
 	const date = toDate(input);
 	if (!date) return "—";
 
-	const diffMs = Date.now() - date.getTime();
+	const diffMs = Math.max(0, Date.now() - date.getTime());
 	const diffSec = Math.floor(diffMs / 1000);
 	const diffMin = Math.floor(diffSec / 60);
 	const diffHour = Math.floor(diffMin / 60);
 	const diffDay = Math.floor(diffHour / 24);
-	const isZh = (i18n.language || "en").startsWith("zh");
+	const isZh = activeLocale(locale).startsWith("zh");
 
 	if (diffSec < 60) return isZh ? "刚刚" : "just now";
 	if (diffMin < 60)
 		return isZh ? `${diffMin} 分钟前` : `${diffMin} minute${diffMin > 1 ? "s" : ""} ago`;
 	if (diffHour < 24)
 		return isZh ? `${diffHour} 小时前` : `${diffHour} hour${diffHour > 1 ? "s" : ""} ago`;
-	if (diffDay < 7) return isZh ? `${diffDay} 天前` : `${diffDay} day${diffDay > 1 ? "s" : ""} ago`;
+	if (diffDay < 30) return isZh ? `${diffDay} 天前` : `${diffDay} day${diffDay > 1 ? "s" : ""} ago`;
 
-	return formatDateCompact(input);
+	return formatDateCompact(input, locale);
 }

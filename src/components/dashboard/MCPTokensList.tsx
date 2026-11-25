@@ -35,7 +35,7 @@ export function MCPTokensList({ tokens, onRefresh, isLoading = false }: MCPToken
 	const { updateMCPToken, deleteMCPToken } = useDashboardStore();
 	const [visibleTokens, setVisibleTokens] = useState<Set<string>>(new Set());
 
-	const { handleDeleteClick, isDeleting, DeleteModal } = useDeleteConfirm({
+	const { handleDeleteClick, isDeleting, deleteModal } = useDeleteConfirm({
 		onDelete: deleteMCPToken,
 		onRefresh,
 		itemType: t("tokens.token"),
@@ -237,7 +237,7 @@ export function MCPTokensList({ tokens, onRefresh, isLoading = false }: MCPToken
 	return (
 		<>
 			<DataTable columns={columns} data={tokens} />
-			<DeleteModal />
+			{deleteModal}
 		</>
 	);
 }

@@ -13,7 +13,7 @@ export interface User {
 	email: string;
 	name?: string;
 	avatar?: string;
-	tier: "free" | "pro" | "enterprise";
+	tier: "hobby" | "free" | "pro" | "enterprise";
 	created_at: string;
 	updated_at?: string;
 	permissions?: string[];
@@ -92,16 +92,21 @@ export interface UsageLogItem {
 
 export interface Subscription {
 	id: string;
-	plan_id: string;
+	plan_id: "hobby" | "pro" | "enterprise";
 	plan_name: string;
-	status: "active" | "canceled" | "past_due" | "trialing" | "incomplete" | "inactive";
-	current_period_start: string;
-	current_period_end: string;
+	subscribed_plan_id?: "hobby" | "pro" | "enterprise";
+	entitlement_source?: "free" | "stripe_subscription" | "one_time_pass" | "complimentary";
+	has_active_stripe_subscription?: boolean;
+	can_manage_billing?: boolean;
+	status: "active" | "canceled" | "past_due" | "trialing" | "incomplete" | "inactive" | "expired";
+	current_period_start?: string;
+	current_period_end?: string;
 	cancel_at_period_end: boolean;
 	weekly_quota: number;
+	minute_quota?: number;
 	currency: string | null;
 	price: number;
 	billing_interval: string;
-	payment_type?: "subscription" | "one_time";
+	payment_type: "subscription" | "one_time";
 	stripe_customer_id?: string;
 }

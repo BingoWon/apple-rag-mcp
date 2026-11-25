@@ -1,3 +1,4 @@
+import { IconAlertTriangle } from "@tabler/icons-react";
 import type { TFunction } from "i18next";
 import { useState } from "react";
 import toast from "react-hot-toast";
@@ -7,12 +8,15 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
 import { api } from "@/lib/api";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatCurrency, formatDateOnly, formatDateTimeWithZone } from "@/lib/utils";
 import type { CurrentUsage, Subscription } from "@/types";
+import { parseUTCDate } from "../../../shared/datetime";
 
 interface SubscriptionCardProps {
 	subscription: Subscription;
 	usage?: CurrentUsage | null;
+	quotaError?: string | null;
+	onRetryQuota?: () => void;
 }
 
 const INTERVAL_MAP: Record<string, { perKey: string; passKey: string }> = {
@@ -33,17 +37,59 @@ const STATUS_I18N_KEY: Record<string, string> = {
 	past_due: "billing.past_due",
 	incomplete: "billing.incomplete",
 	inactive: "billing.inactive",
+	expired: "billing.expired",
 };
 
-export function SubscriptionCard({ subscription, usage }: SubscriptionCardProps) {
-	const { t } = useTranslation();
+const PLAN_LABELS: Record<string, string> = {
+	hobby: "plans.hobby",
+	pro: "plans.pro",
+	enterprise: "plans.enterprise",
+};
+
+export function SubscriptionCard({
+	subscription,
+	usage,
+	quotaError,
+	onRetryQuota,
+}: SubscriptionCardProps) {
+	const { t, i18n } = useTranslation();
+	const locale = i18n.resolvedLanguage ?? "en";
 	const [isManagingSubscription, setIsManagingSubscription] = useState(false);
 
 	const isOneTime = subscription.payment_type === "one_time";
+	const periodEndDate = subscription.current_period_end
+		? parseUTCDate(subscription.current_period_end)
+		: null;
 	const isExpired =
-		isOneTime &&
-		subscription.current_period_end &&
-		new Date(subscription.current_period_end) < new Date();
+		subscription.status === "expired" ||
+		(isOneTime && periodEndDate !== null && periodEndDate.getTime() < Date.now());
+	const isPastDueOrIncomplete =
+		!isOneTime &&
+		(subscription.status === "past_due" || subscription.status === "incomplete") &&
+		Boolean(subscription.has_active_stripe_subscription ?? subscription.stripe_customer_id);
+	const isComplimentary =
+		subscription.entitlement_source === "complimentary" ||
+		(subscription.plan_id !== "hobby" &&
+			subscription.status === "active" &&
+			!isOneTime &&
+			subscription.price <= 0 &&
+			!subscription.stripe_customer_id);
+	const isEnterprise = subscription.plan_id === "enterprise";
+	const canManageBilling = Boolean(
+		subscription.can_manage_billing ??
+			(!isOneTime && subscription.stripe_customer_id && subscription.plan_id !== "hobby"),
+	);
+
+	const displayPlanId =
+		(isExpired || isPastDueOrIncomplete) &&
+		subscription.subscribed_plan_id &&
+		subscription.subscribed_plan_id !== "hobby"
+			? subscription.subscribed_plan_id
+			: subscription.plan_id;
+
+	const displayPlanName = t(PLAN_LABELS[displayPlanId] ?? "plans.hobby", {
+		defaultValue: subscription.plan_name,
+	});
 
 	const getPlanDescription = (planId: string) => {
 		switch (planId) {
@@ -67,6 +113,9 @@ export function SubscriptionCard({ subscription, usage }: SubscriptionCardProps)
 	const getStatusBadge = () => {
 		if (isExpired) {
 			return <Badge variant="secondary">{t("billing.expired")}</Badge>;
+		}
+		if (isComplimentary) {
+			return <Badge variant="success">{t("billing.active")}</Badge>;
 		}
 		switch (subscription.status) {
 			case "active":
@@ -107,79 +156,175 @@ export function SubscriptionCard({ subscription, usage }: SubscriptionCardProps)
 
 	const getPlanTitle = () => {
 		if (isOneTime) {
-			return `${subscription.plan_name} ${t(`pricing.${interval.passKey}`)}`;
+			return `${displayPlanName} ${t(`pricing.${interval.passKey}`)}`;
 		}
-		if (subscription.plan_id === "hobby") {
-			return subscription.plan_name;
+		if (displayPlanId === "hobby") {
+			return displayPlanName;
 		}
-		return `${subscription.plan_name} ${t("billing.plan_suffix")}`;
+		return `${displayPlanName} ${t("billing.plan_suffix")}`;
 	};
+
+	const renderPriceHeader = () => {
+		if (isEnterprise && subscription.price <= 0) {
+			return (
+				<>
+					<div className="text-2xl font-bold text-foreground">{t("plans.price_custom")}</div>
+					<div className="text-xs text-subtle mt-0.5">{t("billing.custom_billing")}</div>
+				</>
+			);
+		}
+		if (isComplimentary) {
+			return (
+				<>
+					<div className="inline-flex items-center rounded-full border border-brand/30 bg-brand/10 px-3 py-1 text-sm font-semibold text-brand">
+						{t("billing.complimentary")}
+					</div>
+					<div className="text-xs text-subtle mt-1">{t("billing.complimentary_desc")}</div>
+				</>
+			);
+		}
+		if (subscription.price > 0) {
+			return (
+				<>
+					<div className="text-2xl font-bold tabular-nums text-foreground">
+						{formatCurrency(subscription.price, subscription.currency, locale)}
+					</div>
+					{!isOneTime && (
+						<div className="text-sm text-subtle">{t(`pricing.${interval.perKey}`)}</div>
+					)}
+				</>
+			);
+		}
+		return <div className="text-2xl font-bold text-foreground">{t("common.free")}</div>;
+	};
+
+	const hasPeriodInfo = Boolean(
+		(subscription.plan_id !== "hobby" || isExpired || isPastDueOrIncomplete) &&
+			(subscription.current_period_start || subscription.current_period_end),
+	);
+	const numberFormat = new Intl.NumberFormat(locale);
 
 	return (
 		<Card>
 			<CardHeader>
-				<div className="flex items-center justify-between">
-					<div>
-						<CardTitle className="flex items-center gap-2">
-							{getPlanTitle()}
+				<div className="flex flex-wrap items-start justify-between gap-4">
+					<div className="min-w-0">
+						<CardTitle className="flex flex-wrap items-center gap-2">
+							<span>{getPlanTitle()}</span>
 							{getStatusBadge()}
 						</CardTitle>
-						<CardDescription>{getPlanDescription(subscription.plan_id)}</CardDescription>
+						<CardDescription className="mt-1">{getPlanDescription(displayPlanId)}</CardDescription>
 					</div>
-					<div className="text-right">
-						<div className="text-2xl font-bold">
-							{subscription.price > 0
-								? formatCurrency(subscription.price, subscription.currency)
-								: t("common.free")}
-						</div>
-						{subscription.price > 0 && !isOneTime && (
-							<div className="text-sm text-subtle">{t(`pricing.${interval.perKey}`)}</div>
-						)}
-					</div>
+					<div className="text-left sm:text-right shrink-0">{renderPriceHeader()}</div>
 				</div>
 			</CardHeader>
 			<CardContent className="space-y-5">
-				{usage && <UsageProgress usage={usage} t={t} />}
+				{isPastDueOrIncomplete && (
+					<div
+						role="alert"
+						className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg border border-warning/40 bg-warning/10 p-4"
+					>
+						<div className="flex items-start gap-2.5 text-sm">
+							<IconAlertTriangle
+								aria-hidden="true"
+								className="mt-0.5 h-4 w-4 shrink-0 text-warning"
+							/>
+							<div>
+								<p className="font-semibold text-foreground">{t("billing.past_due_title")}</p>
+								<p className="mt-0.5 text-xs text-muted">{t("billing.past_due_desc")}</p>
+							</div>
+						</div>
+						{canManageBilling && (
+							<Button
+								size="sm"
+								variant="primary"
+								loading={isManagingSubscription}
+								onClick={handleManageSubscription}
+								className="shrink-0"
+							>
+								{t("billing.update_payment")}
+							</Button>
+						)}
+					</div>
+				)}
+
+				{usage ? (
+					<UsageProgress usage={usage} locale={locale} t={t} />
+				) : quotaError ? (
+					<div
+						role="alert"
+						className="flex items-center justify-between gap-3 rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm"
+					>
+						<span className="text-destructive">{t("billing.quota_load_error")}</span>
+						{onRetryQuota && (
+							<Button size="sm" variant="outline" onClick={onRetryQuota}>
+								{t("common.retry")}
+							</Button>
+						)}
+					</div>
+				) : null}
 
 				{/* Plan Details */}
-				<div className="grid grid-cols-2 gap-4 text-sm">
+				<div className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:grid-cols-3">
 					<div>
 						<span className="text-subtle">{t("billing.status")}</span>
-						<div className="mt-1 font-medium">{statusLabel}</div>
+						<div className="mt-1 font-medium text-foreground">
+							{isComplimentary ? `${statusLabel} · ${t("billing.complimentary")}` : statusLabel}
+						</div>
 					</div>
 					<div>
 						<span className="text-subtle">{t("billing.weekly_quota")}</span>
-						<div className="mt-1 font-medium">
+						<div className="mt-1 font-medium tabular-nums text-foreground">
 							{subscription.weekly_quota === -1
 								? t("common.unlimited")
-								: subscription.weekly_quota.toLocaleString()}{" "}
-							{t("billing.queries")}
+								: `${numberFormat.format(subscription.weekly_quota)} ${t("billing.queries")}`}
 						</div>
 					</div>
-					{subscription.plan_id !== "hobby" && subscription.current_period_start && (
+					{subscription.minute_quota !== undefined && (
+						<div>
+							<span className="text-subtle">{t("billing.minute_quota")}</span>
+							<div className="mt-1 font-medium tabular-nums text-foreground">
+								{subscription.minute_quota === -1
+									? t("common.unlimited")
+									: t("plans.requests_per_minute", {
+											count: subscription.minute_quota,
+										})}
+							</div>
+						</div>
+					)}
+					{hasPeriodInfo && (
 						<>
 							<div>
 								<span className="text-subtle">{t("billing.current_period")}</span>
-								<div className="mt-1 font-medium">
-									{formatDate(subscription.current_period_start)} –{" "}
-									{formatDate(subscription.current_period_end)}
+								<div className="mt-1 font-medium text-foreground">
+									{subscription.current_period_start
+										? formatDateOnly(subscription.current_period_start, locale)
+										: "—"}{" "}
+									–{" "}
+									{subscription.current_period_end
+										? formatDateOnly(subscription.current_period_end, locale)
+										: "—"}
 								</div>
 							</div>
 							<div>
 								<span className="text-subtle">
 									{isOneTime
-										? t("billing.expires_on", {
-												date: formatDate(subscription.current_period_end),
-											})
+										? isExpired
+											? t("billing.expired_on_label")
+											: t("billing.expires_on_label")
 										: t("billing.next_billing")}
 								</span>
-								{!isOneTime && (
-									<div className="mt-1 font-medium">
-										{subscription.cancel_at_period_end
+								<div className="mt-1 font-medium text-foreground">
+									{isOneTime
+										? subscription.current_period_end
+											? formatDateOnly(subscription.current_period_end, locale)
+											: "—"
+										: subscription.cancel_at_period_end
 											? t("billing.cancelled_at_end")
-											: formatDate(subscription.current_period_end)}
-									</div>
-								)}
+											: subscription.current_period_end
+												? formatDateOnly(subscription.current_period_end, locale)
+												: "—"}
+								</div>
 							</div>
 						</>
 					)}
@@ -194,7 +339,7 @@ export function SubscriptionCard({ subscription, usage }: SubscriptionCardProps)
 							</Button>
 						</PricingModal>
 						{isExpired ? (
-							<PricingModal>
+							<PricingModal defaultTab="subscription">
 								<Button className="w-full" variant="primary">
 									{t("billing.upgrade_to_subscription")}
 								</Button>
@@ -204,11 +349,12 @@ export function SubscriptionCard({ subscription, usage }: SubscriptionCardProps)
 						)}
 					</div>
 				) : (
-					subscription.stripe_customer_id && (
+					canManageBilling && (
 						<div className="pt-1">
 							<Button
 								onClick={handleManageSubscription}
 								disabled={isManagingSubscription}
+								loading={isManagingSubscription}
 								className="w-full"
 								variant="outline"
 							>
@@ -223,32 +369,47 @@ export function SubscriptionCard({ subscription, usage }: SubscriptionCardProps)
 	);
 }
 
-function UsageProgress({ usage, t }: { usage: CurrentUsage; t: TFunction }) {
-	const percent = usage.limit === -1 ? 0 : Math.min((usage.current_usage / usage.limit) * 100, 100);
+function UsageProgress({
+	usage,
+	locale,
+	t,
+}: {
+	usage: CurrentUsage;
+	locale: string;
+	t: TFunction;
+}) {
+	const isUnlimited = usage.limit === -1;
+	const percent =
+		isUnlimited || usage.limit <= 0 ? 0 : Math.min((usage.current_usage / usage.limit) * 100, 100);
 	const color = percent >= 80 ? "bg-destructive" : percent >= 50 ? "bg-warning" : "bg-brand";
+	const numberFormat = new Intl.NumberFormat(locale);
 
 	return (
-		<div className="rounded-lg bg-surface/50 p-4 space-y-2.5">
+		<div className="rounded-lg border border-border/60 bg-surface/60 p-4 space-y-2.5">
 			<div className="flex items-center justify-between text-sm">
-				<span className="font-medium">{t("billing.queries_used")}</span>
-				<span className="font-medium tabular-nums">
-					{usage.current_usage.toLocaleString()} /{" "}
-					{usage.limit === -1 ? t("common.unlimited") : usage.limit.toLocaleString()}
+				<span className="font-medium text-foreground">{t("billing.queries_used")}</span>
+				<span className="font-medium tabular-nums text-foreground">
+					{numberFormat.format(usage.current_usage)} /{" "}
+					{isUnlimited ? t("common.unlimited") : numberFormat.format(usage.limit)}
 				</span>
 			</div>
-			<div className="w-full bg-background rounded-full h-2">
-				<div
-					className={`${color} h-2 rounded-full transition-all duration-500`}
-					style={{ width: `${percent}%` }}
-				/>
-			</div>
-			<div className="flex items-center justify-between text-xs text-subtle">
+			{!isUnlimited && (
+				<div className="w-full bg-background rounded-full h-2 overflow-hidden">
+					<div
+						className={`${color} h-2 rounded-full transition-all duration-500`}
+						style={{ width: `${percent}%` }}
+					/>
+				</div>
+			)}
+			<div className="flex flex-wrap items-center justify-between gap-2 text-xs text-subtle">
 				<span>
-					{usage.limit === -1
+					{isUnlimited
 						? t("common.unlimited")
-						: t("billing.remaining", { count: usage.remaining.toLocaleString() })}
+						: t("billing.remaining", { count: numberFormat.format(usage.remaining) })}
 				</span>
-				<span>{t("billing.resets_on", { date: formatDate(usage.reset_at) })}</span>
+				<span>
+					{t("billing.resets_on", { date: formatDateTimeWithZone(usage.reset_at, locale) })}
+				</span>
 			</div>
 		</div>
 	);

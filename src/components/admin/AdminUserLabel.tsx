@@ -9,7 +9,8 @@ export function AdminPlanBadge({ subscription }: { subscription: AdminSubscripti
 	const period = subscription.billing_interval;
 	const interval =
 		period && formatAdminInterval(period, subscription.payment_type === "one_time", t);
-	const plan = subscription.plan === "enterprise" ? "Enterprise" : paid ? "Pro" : "Free";
+	const plan =
+		subscription.plan === "enterprise" ? "Enterprise" : paid ? "Pro" : t("admin.plan_free");
 	return (
 		<Badge
 			variant={paid ? "secondary" : "outline"}

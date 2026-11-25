@@ -48,7 +48,7 @@ class ApiClient {
 				}
 			} catch {}
 
-			if (config.url?.includes("/admin/")) {
+			if (config.url?.includes("/admin")) {
 				const pw = localStorage.getItem(ADMIN_SESSION_KEY);
 				if (pw) config.headers[ADMIN_PASSWORD_HEADER] = pw;
 			}
@@ -61,15 +61,18 @@ class ApiClient {
 				observeServerVersion(r.headers?.["x-app-version"]);
 				return r;
 			},
-			(error: AxiosError) => {
+			(error: AxiosError<ApiResponse>) => {
 				observeServerVersion(error.response?.headers?.["x-app-version"]);
 				const url = error.config?.url ?? "";
 				const status = error.response?.status;
 				const isAuthEndpoint = url.includes("/auth/login") || url.includes("/auth/register");
 
 				if ((status === 401 || status === 403) && !isAuthEndpoint) {
-					if (url.includes("/admin/")) {
+					if (url.includes("/admin")) {
 						localStorage.removeItem(ADMIN_SESSION_KEY);
+						if (typeof window !== "undefined") {
+							window.dispatchEvent(new CustomEvent("admin-auth-expired"));
+						}
 					} else if (status === 401 && error.config?.headers.Authorization) {
 						const rejected = error.config.headers.Authorization;
 						void importWithRecovery(() => import("@/stores/auth")).then(({ useAuthStore }) => {
@@ -77,6 +80,11 @@ class ApiClient {
 							if (rejected === "Bearer " + state.token) state.clearSession();
 						});
 					}
+				}
+				const backendMessage =
+					error.response?.data?.error?.message || extractErrorMessage(error.response?.data);
+				if (backendMessage) {
+					error.message = backendMessage;
 				}
 				return Promise.reject(error);
 			},
@@ -199,10 +207,6 @@ class ApiClient {
 		return this.get("/auth/auth-status");
 	}
 
-	async refreshToken() {
-		return this.post("/auth/refresh");
-	}
-
 	async getGoogleAuthUrl() {
 		return this.post("/oauth/google", {});
 	}
@@ -272,23 +276,39 @@ class ApiClient {
 		kind: "all" | "search" | "fetch" | "browse" = "all",
 		from?: string,
 		to?: string,
+		status?: "all" | "success" | "error",
+		search?: string,
 	) {
-		return this.get("/usage-logs/history", { params: { limit, page, log_type: kind, from, to } });
+		return this.get("/usage-logs/history", {
+			params: {
+				limit,
+				page,
+				log_type: kind,
+				from,
+				to,
+				status: status && status !== "all" ? status : undefined,
+				search: search?.trim() || undefined,
+			},
+		});
 	}
 
 	// Admin API methods with pagination support
+	async verifyAdminSession() {
+		return this.get("/admin");
+	}
+
 	async getAdminStats(query: AdminStatsQuery, signal?: AbortSignal) {
 		return this.get<AdminDashboardStats>("/admin/stats", { params: query, signal });
 	}
 
-	async getAdminUsers(page: number = 1, limit: number = 50) {
+	async getAdminUsers(page: number = 1, limit: number = 50, signal?: AbortSignal) {
 		const offset = (page - 1) * limit;
-		return this.get(`/admin/users?limit=${limit}&offset=${offset}`);
+		return this.get(`/admin/users?limit=${limit}&offset=${offset}`, { signal });
 	}
 
-	async getAdminMCPTokens(page: number = 1, limit: number = 50) {
+	async getAdminMCPTokens(page: number = 1, limit: number = 50, signal?: AbortSignal) {
 		const offset = (page - 1) * limit;
-		return this.get(`/admin/mcp-tokens?limit=${limit}&offset=${offset}`);
+		return this.get(`/admin/mcp-tokens?limit=${limit}&offset=${offset}`, { signal });
 	}
 
 	async getAdminLogs(
@@ -304,22 +324,18 @@ class ApiClient {
 		});
 	}
 
-	async getAdminUserSubscriptions(page: number = 1, limit: number = 50) {
+	async getAdminUserSubscriptions(page: number = 1, limit: number = 50, signal?: AbortSignal) {
 		const offset = (page - 1) * limit;
-		return this.get(`/admin/user-subscriptions?limit=${limit}&offset=${offset}`);
+		return this.get(`/admin/user-subscriptions?limit=${limit}&offset=${offset}`, { signal });
 	}
 
-	async getAdminContactMessages(page: number = 1, limit: number = 50) {
+	async getAdminContactMessages(page: number = 1, limit: number = 50, signal?: AbortSignal) {
 		const offset = (page - 1) * limit;
-		return this.get(`/admin/contact-messages?limit=${limit}&offset=${offset}`);
+		return this.get(`/admin/contact-messages?limit=${limit}&offset=${offset}`, { signal });
 	}
 
 	async replyToContactMessage(id: string, data: { message: string; sendEmail: boolean }) {
 		return this.post(`/admin/contact-messages/${id}/reply`, data);
-	}
-
-	async updateContactMessageStatus(id: string, data: { status: "pending" | "replied" | "closed" }) {
-		return this.patch(`/admin/contact-messages/${id}/status`, data);
 	}
 
 	// User-facing contact message methods
@@ -347,9 +363,9 @@ class ApiClient {
 		return this.get(`/contact-messages/history${query ? `?${query}` : ""}`);
 	}
 
-	async getAdminAuthorizedIPs(page: number = 1, limit: number = 50) {
+	async getAdminAuthorizedIPs(page: number = 1, limit: number = 50, signal?: AbortSignal) {
 		const offset = (page - 1) * limit;
-		return this.get(`/admin/authorized-ips?limit=${limit}&offset=${offset}`);
+		return this.get(`/admin/authorized-ips?limit=${limit}&offset=${offset}`, { signal });
 	}
 
 	// Contact message submission

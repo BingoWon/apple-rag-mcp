@@ -25,9 +25,8 @@ export function AdminAuth({ onAuthenticated }: AdminAuthProps) {
 	const verifyStoredPassword = useCallback(
 		async (_storedPassword: string) => {
 			try {
-				// Test the stored password by making an admin API call
-				// Password is already in localStorage, so API call will include it
-				await api.getAdminUsers();
+				// Test the stored password using the zero-DB admin health endpoint
+				await api.verifyAdminSession();
 				onAuthenticated();
 			} catch (_error) {
 				// Invalid stored password, clear it
@@ -58,8 +57,8 @@ export function AdminAuth({ onAuthenticated }: AdminAuthProps) {
 			// Store password permanently for API call
 			localStorage.setItem(ADMIN_SESSION_KEY, password);
 
-			// Verify password by making an admin API call
-			await api.getAdminUsers();
+			// Verify password against the zero-DB admin endpoint
+			await api.verifyAdminSession();
 
 			// If successful, authenticate
 			onAuthenticated();

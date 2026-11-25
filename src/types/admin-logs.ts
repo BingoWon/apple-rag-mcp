@@ -14,6 +14,7 @@ export interface AdminLog {
 	client_version: string | null;
 	requested_url?: string;
 	actual_url?: string;
+	page_id?: string | null;
 	requested_query?: string;
 	actual_query?: string;
 	result_count?: number;

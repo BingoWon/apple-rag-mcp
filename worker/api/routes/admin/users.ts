@@ -6,6 +6,7 @@ import { createRoute, z } from "@hono/zod-openapi";
 import { logger } from "../../utils/logger";
 import { createOpenAPIApp } from "../../utils/openapi";
 import { parsePagination } from "../../utils/pagination";
+import { resolveSubscriptionState } from "../../utils/subscription";
 
 import { adminSubscription, adminSubscriptionSchema } from "./user-identity";
 
@@ -19,7 +20,7 @@ const AdminUserSchema = z.object({
 	provider: z.string().optional(),
 	avatar: z.string().optional(),
 	plan_type: z.string(),
-	subscription_status: z.string(),
+	subscription_status: z.string().nullable(),
 	subscription: adminSubscriptionSchema,
 	last_login: z.string().optional(),
 	created_at: z.string(),
@@ -95,33 +96,51 @@ app.openapi(getUsersRoute, async (c) => {
         u.last_login,
         u.created_at,
         u.updated_at,
-        COALESCE(us.plan_type, 'hobby') as plan_type,
-        COALESCE(us.status, 'active') as subscription_status,
+        us.user_id as has_subscription,
+        us.plan_type as raw_plan_type,
         us.status,
         us.payment_type,
         us.billing_interval,
-        us.current_period_end
+        us.current_period_end,
+        us.price,
+        us.stripe_customer_id,
+        us.stripe_subscription_id
       FROM users u
       LEFT JOIN user_subscriptions us ON u.id = us.user_id
-      ORDER BY u.created_at DESC
+      ORDER BY julianday(u.created_at) DESC, u.id DESC
       LIMIT ? OFFSET ?
     `)
 			.bind(limit, offset)
 			.all();
 
-		const users = (usersResult.results || []).map((row: Record<string, unknown>) => ({
-			subscription: adminSubscription(row),
-			id: String(row.id),
-			email: String(row.email),
-			name: String(row.name || "N/A"),
-			provider: String(row.provider || "email"),
-			avatar: row.avatar ? String(row.avatar) : undefined,
-			plan_type: String(row.plan_type || "hobby"),
-			subscription_status: String(row.subscription_status || "active"),
-			last_login: row.last_login ? String(row.last_login) : undefined,
-			created_at: String(row.created_at),
-			updated_at: String(row.updated_at),
-		}));
+		const users = (usersResult.results || []).map((row: Record<string, unknown>) => {
+			const subRow = row.has_subscription
+				? {
+						plan_type: row.raw_plan_type,
+						status: row.status,
+						payment_type: row.payment_type,
+						billing_interval: row.billing_interval,
+						current_period_end: row.current_period_end,
+						price: row.price,
+						stripe_customer_id: row.stripe_customer_id,
+						stripe_subscription_id: row.stripe_subscription_id,
+					}
+				: null;
+			const state = resolveSubscriptionState(subRow);
+			return {
+				subscription: adminSubscription(subRow),
+				id: String(row.id),
+				email: String(row.email),
+				name: row.name ? String(row.name) : "",
+				provider: String(row.provider || "email"),
+				avatar: row.avatar ? String(row.avatar) : undefined,
+				plan_type: state.effectivePlan,
+				subscription_status: subRow ? state.effectiveStatus : null,
+				last_login: row.last_login ? String(row.last_login) : undefined,
+				created_at: String(row.created_at),
+				updated_at: String(row.updated_at),
+			};
+		});
 
 		return c.json(
 			{

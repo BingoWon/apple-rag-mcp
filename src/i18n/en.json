@@ -42,6 +42,7 @@
 		"copy_failed": "Failed to copy",
 		"copy_url": "Copy URL",
 		"continue": "Continue",
+		"clear": "Clear",
 		"yes": "Yes",
 		"no": "No"
 	},
@@ -168,7 +169,8 @@
 		"tab_disabled_has_subscription": "Cancel your subscription first",
 		"tab_disabled_has_onetime": "Available after your pass expires",
 		"manage_subscription": "Manage Subscription",
-		"view_plan": "View My Plan"
+		"view_plan": "View My Plan",
+		"alipay_cny_note": "Alipay checkout converts the USD amount to CNY at the live exchange rate."
 	},
 	"plans": {
 		"hobby": "Hobby",
@@ -396,7 +398,7 @@
 		"how_2": "When using MCP from these IPs, authentication is automatic",
 		"how_3": "No need to configure or remember MCP tokens",
 		"how_4": "You still get the same features and rate limits as your subscription plan",
-		"how_5": "IP and token authentication work independently - you can use either method",
+		"how_5": "IP and token authentication work independently. If multiple accounts share the same public IP, automatic IP attribution is skipped for security.",
 		"delete_title": "Delete Authorized IP",
 		"delete_error_full": "Failed to delete authorized IP",
 		"detect_failed": "Unable to detect",
@@ -440,7 +442,16 @@
 		"result_count": "Result Count",
 		"url": "URL",
 		"time": "Time",
-		"no_url": "No URL"
+		"no_url": "No URL",
+		"latency": "Latency",
+		"topic_path": "Topic",
+		"no_topic": "No topic",
+		"items_returned": "Items",
+		"filter_status_all": "All statuses",
+		"filter_status_success": "Success",
+		"filter_status_error": "Errors",
+		"search_placeholder": "Filter logs by query or URL...",
+		"invalid_date_range": "Invalid date range in URL. Clear the filter to view all logs."
 	},
 	"billing": {
 		"title": "Billing & Subscription",
@@ -477,7 +488,18 @@
 		"loading": "Loading billing information...",
 		"incomplete_expired": "Activation expired",
 		"unpaid": "Unpaid",
-		"paused": "Paused"
+		"paused": "Paused",
+		"complimentary": "Complimentary",
+		"complimentary_desc": "Granted by team",
+		"custom_billing": "Custom arrangement",
+		"past_due_title": "Payment past due",
+		"past_due_desc": "Your last payment failed, so your account is temporarily on Hobby limits. Update your payment method to restore Pro access immediately.",
+		"update_payment": "Update Payment Method",
+		"quota_load_error": "Unable to load weekly usage right now.",
+		"minute_quota": "Rate Limit:",
+		"expires_on_label": "Expires On:",
+		"expired_on_label": "Expired On:",
+		"current_plan": "Current Plan"
 	},
 	"messages": {
 		"title": "Messages",
@@ -499,7 +521,8 @@
 		"mark_read": "Mark as Read",
 		"marked_success": "Message marked as read",
 		"mark_error": "Failed to mark message as read",
-		"load_error": "Failed to load messages"
+		"load_error": "Failed to load messages",
+		"pending_reply": "Pending reply"
 	},
 	"settings": {
 		"title": "Account Settings",
@@ -535,7 +558,7 @@
 		"auth_load_retry": "Please refresh the page to try again.",
 		"delete_title": "Delete Account",
 		"delete_desc": "Permanently delete your account and all data. This cannot be undone.",
-		"delete_warning": "This will permanently delete your account, tokens, and all data.",
+		"delete_warning": "This will permanently delete your account, MCP tokens, CLI devices, and data. Cancel any active subscription first if you have one.",
 		"delete_btn": "Delete My Account",
 		"delete_confirm_label": "Type DELETE to confirm",
 		"delete_confirm_placeholder": "Type DELETE to confirm",
@@ -543,6 +566,10 @@
 		"delete_success": "Account deleted successfully.\nYou will be redirected to the homepage.",
 		"delete_error": "Failed to delete account",
 		"name_min": "Name must be at least 2 characters",
+		"name_max": "Name must be 100 characters or fewer",
+		"auth_method_email": "Email",
+		"auth_method_google": "Google",
+		"auth_method_github": "GitHub",
 		"delete_type_confirm": "Please type DELETE to confirm",
 		"password_changed": "Password changed successfully!\nYour password has been updated.",
 		"password_change_error": "Failed to update password. Please try again."
@@ -644,7 +671,7 @@
 		"mcp_tokens_desc": "Monitor API tokens and usage",
 		"authorized_ips_desc": "Manage IP address access control",
 		"search_logs_desc": "Track search operations and query activities",
-		"browse_logs": "Catalog browsing",
+		"browse_logs": "Browse Logs",
 		"fetch_logs_desc": "Track page fetch operations and content retrieval",
 		"subscriptions_desc": "Manage subscription plans and billing",
 		"contact_messages_desc": "View user inquiries and feedback",
@@ -766,7 +793,29 @@
 		"identity_deleted": "Deleted user",
 		"current_user_plan": "Current access plan, including on historical logs",
 		"period_end_action": "At period end",
-		"renews": "Renews"
+		"renews": "Renews",
+		"anonymous_count": "Anonymous",
+		"anonymous_read_only_notice": "Anonymous messages have no linked account and cannot receive replies.",
+		"authorized_ips_desc_short": "All authorized IP addresses across users",
+		"col_page_id": "Page ID",
+		"load_failed": "Failed to load data. Please try again.",
+		"manual_grant": "Manual grant",
+		"message_details": "Message Details",
+		"plan_free": "Free",
+		"provider_index": "Search index",
+		"provider_apple_json": "Apple JSON",
+		"provider_apple_http": "Apple Web",
+		"provider_firecrawl": "Firecrawl",
+		"auth_method_token": "MCP token",
+		"auth_method_ip": "Authorized IP",
+		"auth_method_anonymous": "Anonymous",
+		"auth_method_cli": "CLI session",
+		"auth_method_api_key": "CLI automation key",
+		"auth_method_oauth": "OAuth",
+		"reason_placeholder_fetch": "e.g. PAGE_NOT_FOUND",
+		"reason_placeholder_default": "e.g. RATE_LIMITED",
+		"reply_saved_email_failed": "Reply saved in-app, but the email notification could not be sent.",
+		"view": "View"
 	},
 	"notfound": {
 		"title": "Page Not Found",
@@ -962,7 +1011,9 @@
 		"no_sessions_title": "No connected devices yet",
 		"revoke_named": "Revoke access for {{name}}",
 		"automation_title": "Automation access",
-		"automation_description": "For agents running unattended in GitHub Actions, servers, or scheduled jobs. Regular device login does not need a key."
+		"automation_description": "For agents running unattended in GitHub Actions, servers, or scheduled jobs. Regular device login does not need a key.",
+		"session_limit_reached": "You've reached the maximum of 20 connected CLI devices and keys. Revoke an unused entry to add another.",
+		"try_another_code": "Try another code"
 	},
 	"connect": {
 		"title": "Connect your agent to Apple RAG",
@@ -1118,6 +1169,8 @@
 		"load_more": "Load more",
 		"cta_title": "Want your AI coding agent to search these freshly updated Apple docs?",
 		"cta_subtitle": "Connect Apple RAG via MCP or CLI in Cursor, Claude Code, or Codex so your agent always reads the latest official docs.",
-		"cta_button": "Connect in 1 minute"
+		"cta_button": "Connect in 1 minute",
+		"digest_rules_engine": "Rule Summary",
+		"load_error": "Unable to load updates right now. Please try again."
 	}
 }

@@ -37,6 +37,7 @@ export interface UsePaginationOptions {
 export interface UsePaginationReturn<T> extends PaginationState {
 	data: T[];
 	pageSizeOptions: number[];
+	lastUpdatedAt: Date | null;
 	goToPage: (page: number) => void;
 	changePageSize: (size: number) => void;
 	refresh: () => void;
@@ -59,6 +60,7 @@ export function usePagination<T>(
 	const [hasPrev, setHasPrev] = useState(false);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
+	const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null);
 
 	const generation = useRef(0);
 	const fetchData = useCallback(
@@ -79,6 +81,7 @@ export function usePagination<T>(
 					setHasPrev(response.data.pagination.has_prev);
 					setCurrentPage(response.data.pagination.page);
 					setPageSize(response.data.pagination.limit);
+					setLastUpdatedAt(new Date());
 				} else {
 					throw new Error(response.error?.message || "Failed to fetch data");
 				}
@@ -152,6 +155,7 @@ export function usePagination<T>(
 		isLoading,
 		error,
 		pageSizeOptions,
+		lastUpdatedAt,
 		goToPage,
 		changePageSize,
 		refresh,

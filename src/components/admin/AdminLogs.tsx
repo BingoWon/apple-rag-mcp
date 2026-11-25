@@ -1,5 +1,5 @@
 import { IconAdjustmentsHorizontal, IconRefresh, IconSearch } from "@tabler/icons-react";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -20,6 +20,20 @@ export function AdminLogs({ kind }: { kind: AdminLogKind }) {
 	const logs = useAdminLogs(kind);
 	const [selected, setSelected] = useState<AdminLog | null>(null);
 	const [rangeError, setRangeError] = useState(false);
+	const filters = logs.query.filters;
+	const hasSecondaryFilters = Boolean(
+		filters.start ||
+			filters.end ||
+			filters.channel ||
+			filters.reason ||
+			filters.source ||
+			filters.provider ||
+			filters.cache,
+	);
+	const [moreOpen, setMoreOpen] = useState(hasSecondaryFilters);
+	useEffect(() => {
+		if (hasSecondaryFilters) setMoreOpen(true);
+	}, [hasSecondaryFilters]);
 	const detailTrigger = useRef<HTMLButtonElement | null>(null);
 	const columns = useMemo<DataTableColumn<AdminLog>[]>(
 		() => [
@@ -87,7 +101,11 @@ export function AdminLogs({ kind }: { kind: AdminLogKind }) {
 							render: (_: unknown, row: AdminLog) => (
 								<div>
 									<span>{row.content_source ? t(`admin.source_${row.content_source}`) : "—"}</span>
-									<span className="mt-1 block text-xs text-subtle">{row.provider || "—"}</span>
+									<span className="mt-1 block text-xs text-subtle">
+										{row.provider
+											? t(`admin.provider_${row.provider}`, { defaultValue: row.provider })
+											: "—"}
+									</span>
 								</div>
 							),
 						},
@@ -116,7 +134,6 @@ export function AdminLogs({ kind }: { kind: AdminLogKind }) {
 		],
 		[kind, t],
 	);
-	const filters = logs.query.filters;
 	const select = (name: string, label: string, options: { value: string; label: string }[]) => (
 		<label
 			className={
@@ -242,17 +259,8 @@ export function AdminLogs({ kind }: { kind: AdminLogKind }) {
 						</Button>
 						<details
 							className="min-w-0 open:order-last open:basis-full"
-							open={
-								!!(
-									filters.start ||
-									filters.end ||
-									filters.channel ||
-									filters.reason ||
-									filters.source ||
-									filters.provider ||
-									filters.cache
-								)
-							}
+							open={moreOpen}
+							onToggle={(event) => setMoreOpen(event.currentTarget.open)}
 						>
 							<summary className="w-fit cursor-pointer rounded py-2 text-xs text-subtle focus-visible:outline-2 focus-visible:outline-brand">
 								<IconAdjustmentsHorizontal className="mr-1 inline h-3.5 w-3.5" />
@@ -273,7 +281,11 @@ export function AdminLogs({ kind }: { kind: AdminLogKind }) {
 										name="reason"
 										defaultValue={filters.reason || ""}
 										maxLength={100}
-										placeholder="PAGE_NOT_FOUND"
+										placeholder={t(
+											kind === "fetch"
+												? "admin.reason_placeholder_fetch"
+												: "admin.reason_placeholder_default",
+										)}
 										className={`${fieldClass} w-full`}
 									/>
 								</label>
@@ -292,7 +304,7 @@ export function AdminLogs({ kind }: { kind: AdminLogKind }) {
 											t("admin.col_provider"),
 											["index", "apple_json", "apple_http", "firecrawl"].map((value) => ({
 												value,
-												label: value,
+												label: t(`admin.provider_${value}`, { defaultValue: value }),
 											})),
 										)}
 										{select(
@@ -353,6 +365,9 @@ export function AdminLogs({ kind }: { kind: AdminLogKind }) {
 									<span className="block truncate text-sm text-brand">
 										{row.requested_url || row.requested_query || "—"}
 									</span>
+									<div className="text-xs text-subtle">
+										<AdminUserLabel user={row.user} />
+									</div>
 									<span className="flex items-center justify-between gap-2 text-xs text-subtle">
 										<span className="truncate">
 											{kind === "fetch"

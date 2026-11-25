@@ -1,4 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { IconAlertTriangle } from "@tabler/icons-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
@@ -62,9 +63,14 @@ export function DeleteAccount() {
 		}
 	};
 
+	const handleDialogOpenChange = (open: boolean) => {
+		if (!open && isLoading) return;
+		setIsDialogOpen(open);
+		if (!open) confirmForm.reset();
+	};
+
 	const handleDialogClose = () => {
-		setIsDialogOpen(false);
-		confirmForm.reset();
+		handleDialogOpenChange(false);
 	};
 
 	return (
@@ -77,7 +83,7 @@ export function DeleteAccount() {
 				<div className="space-y-4">
 					<div className="inline-flex items-center justify-center p-2.5 bg-destructive/10 border border-destructive/30 rounded-lg">
 						<div className="flex items-center gap-2">
-							<span className="text-sm">⚠️</span>
+							<IconAlertTriangle className="h-4 w-4 shrink-0 text-destructive" aria-hidden="true" />
 							<p className="text-sm text-destructive font-semibold">
 								{t("settings.delete_warning")}
 							</p>
@@ -85,7 +91,7 @@ export function DeleteAccount() {
 					</div>
 
 					<div>
-						<Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+						<Dialog open={isDialogOpen} onOpenChange={handleDialogOpenChange}>
 							<DialogTrigger asChild>
 								<Button
 									variant="destructive"

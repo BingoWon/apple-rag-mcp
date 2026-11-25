@@ -1,8 +1,9 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
+import { useLocation } from "react-router-dom";
 import { z } from "zod";
 import { CLIAccess } from "@/components/settings/CLIAccess";
 import { DeleteAccount } from "@/components/settings/DeleteAccount";
@@ -15,13 +16,25 @@ import { api } from "@/lib/api";
 
 export default function SettingsPage() {
 	const { t } = useTranslation();
+	const { hash } = useLocation();
 	const profileSchema = z.object({
-		name: z.string().min(2, t("settings.name_min")),
+		name: z.string().trim().min(2, t("settings.name_min")).max(100, t("settings.name_max")),
 	});
 	type ProfileFormData = z.infer<typeof profileSchema>;
 
 	const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
 	const { user, updateUser } = useAuth();
+
+	useEffect(() => {
+		if (!hash) return;
+		const id = hash.slice(1);
+		const el = document.getElementById(id);
+		if (el) {
+			requestAnimationFrame(() => {
+				el.scrollIntoView({ behavior: "smooth", block: "start" });
+			});
+		}
+	}, [hash]);
 
 	const profileForm = useForm<ProfileFormData>({
 		resolver: zodResolver(profileSchema),

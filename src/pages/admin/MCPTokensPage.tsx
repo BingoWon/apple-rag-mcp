@@ -2,7 +2,7 @@
  * Admin MCP Tokens Page
  * Display and manage mcp_tokens table
  */
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { AdminUserLabel } from "@/components/admin/AdminUserLabel";
@@ -10,6 +10,7 @@ import { api } from "@/lib/api";
 import type { AdminUserIdentity } from "../../../shared/admin-user";
 
 interface AdminMCPToken {
+	id: string;
 	user: AdminUserIdentity;
 	name: string;
 	mcp_token: string;
@@ -30,10 +31,10 @@ export default function AdminMCPTokensPage() {
 				render: (_value: unknown, row: AdminMCPToken) => <AdminUserLabel user={row.user} />,
 			},
 			{ key: "name", label: t("admin.col_name"), width: 192 },
-			{ key: "mcp_token", label: t("admin.col_token"), width: 160 },
-			{ key: "last_used_at", label: t("admin.col_last_used"), width: 160 },
-			{ key: "created_at", label: t("admin.col_created"), width: 160 },
-			{ key: "updated_at", label: t("admin.col_updated"), width: 160 },
+			{ key: "mcp_token", label: t("admin.col_token"), width: 176 },
+			{ key: "last_used_at", label: `${t("admin.col_last_used")} · UTC+8`, width: 176 },
+			{ key: "created_at", label: `${t("admin.col_created")} · UTC+8`, width: 176 },
+			{ key: "updated_at", label: `${t("admin.col_updated")} · UTC+8`, width: 176 },
 		],
 		[t],
 	);
@@ -43,14 +44,20 @@ export default function AdminMCPTokensPage() {
 	const [currentPage, setCurrentPage] = useState(1);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
+	const abortRef = useRef<AbortController | null>(null);
 
 	const fetchTokens = useCallback(
-		async (page: number = 1) => {
+		async (page: number = 1, pageLimit: number = limit) => {
+			abortRef.current?.abort();
+			const controller = new AbortController();
+			abortRef.current = controller;
+
 			try {
 				setIsLoading(true);
 				setError(null);
 
-				const response = await api.getAdminMCPTokens(page, limit);
+				const response = await api.getAdminMCPTokens(page, pageLimit, controller.signal);
+				if (controller.signal.aborted) return;
 
 				if (response.success && response.data) {
 					const data = response.data as {
@@ -60,32 +67,50 @@ export default function AdminMCPTokensPage() {
 						offset: number;
 						hasMore: boolean;
 					};
+					const resolvedLimit = data.limit || pageLimit;
+					const resolvedTotal = data.total || 0;
+					const lastPage = Math.max(1, Math.ceil(resolvedTotal / resolvedLimit));
+					if (page > lastPage) {
+						void fetchTokens(lastPage, resolvedLimit);
+						return;
+					}
 					setTokens(data.tokens || []);
-					setTotal(data.total || 0);
-					setLimit(data.limit || 50);
+					setTotal(resolvedTotal);
+					setLimit(resolvedLimit);
 					setCurrentPage(page);
 				} else {
-					throw new Error("Failed to fetch MCP tokens data");
+					throw new Error(t("admin.load_failed"));
 				}
 			} catch (err) {
+				if (controller.signal.aborted) return;
 				console.error("Error fetching admin MCP tokens:", err);
-				setError(err instanceof Error ? err.message : "Failed to load MCP tokens");
+				setError(err instanceof Error ? err.message : t("admin.load_failed"));
 				setTokens([]);
 				setTotal(0);
 			} finally {
-				setIsLoading(false);
+				if (!controller.signal.aborted) {
+					setIsLoading(false);
+				}
 			}
 		},
-		[limit],
+		[limit, t],
 	);
 
 	const handlePageChange = (page: number) => {
-		fetchTokens(page);
+		void fetchTokens(page, limit);
+	};
+
+	const handlePageSizeChange = (nextLimit: number) => {
+		setCurrentPage(1);
+		setLimit(nextLimit);
 	};
 
 	useEffect(() => {
-		fetchTokens(1);
-	}, [fetchTokens]);
+		void fetchTokens(1, limit);
+		return () => {
+			abortRef.current?.abort();
+		};
+	}, [fetchTokens, limit]);
 
 	return (
 		<div className="flex h-full flex-col">
@@ -99,8 +124,9 @@ export default function AdminMCPTokensPage() {
 				currentPage={currentPage}
 				isLoading={isLoading}
 				error={error}
-				onRefresh={() => fetchTokens(currentPage)}
+				onRefresh={() => void fetchTokens(currentPage, limit)}
 				onPageChange={handlePageChange}
+				onPageSizeChange={handlePageSizeChange}
 			/>
 		</div>
 	);

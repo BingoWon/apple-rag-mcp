@@ -142,7 +142,7 @@ export const NavItems = ({ items, className, onItemClick }: NavItemsProps) => {
 			)}
 		>
 			{items.map((item, idx) =>
-				item.link.startsWith("/") && !item.link.includes("#") ? (
+				item.link.startsWith("/") ? (
 					<Link
 						onMouseEnter={() => setHovered(idx)}
 						onClick={onItemClick}
@@ -369,7 +369,7 @@ export function AppNavbar() {
 
 				<MobileNavMenu isOpen={isMobileMenuOpen}>
 					{navItems.map((item, idx) =>
-						item.link.startsWith("/") && !item.link.includes("#") ? (
+						item.link.startsWith("/") ? (
 							<Link
 								key={`mobile-nav-${idx}`}
 								to={item.link}
@@ -391,9 +391,6 @@ export function AppNavbar() {
 					)}
 
 					<div className="flex w-full flex-col items-center gap-4 pt-4 border-t border-border">
-						<div className="w-full flex justify-center">
-							<ThemeToggle variant="dropdown" className="w-full max-w-xs" />
-						</div>
 						{isAuthenticated ? (
 							<>
 								<div className="text-center">

@@ -17,7 +17,8 @@ export async function endSubscription(
 		db.prepare("INSERT OR IGNORE INTO ended_subscriptions(subscription_id) VALUES(?)").bind(id),
 		db
 			.prepare(`UPDATE user_subscriptions SET plan_type='hobby', status='active',stripe_subscription_id=NULL,
- cancel_at_period_end=0,price=0,stripe_price_id=NULL,currency=NULL,billing_revision=billing_revision+1,
+ cancel_at_period_end=0,price=0,stripe_price_id=NULL,currency=NULL,billing_interval='month',
+ current_period_start=NULL,current_period_end=NULL,billing_revision=billing_revision+1,
  stripe_event_created=?,updated_at=? WHERE stripe_subscription_id=?`)
 			.bind(created, new Date().toISOString(), id),
 		db.prepare("DELETE FROM checkout_attempts WHERE attempt_id=?").bind(attempt ?? ""),

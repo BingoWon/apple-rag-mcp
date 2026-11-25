@@ -1,6 +1,9 @@
 import { IconMenu2, IconX } from "@tabler/icons-react";
 import { AnimatePresence, motion } from "motion/react";
 import React, { createContext, useCallback, useContext, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Link, useInRouterContext } from "react-router-dom";
+import { Brand } from "@/components/layout/Brand";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { cn } from "@/lib/utils";
@@ -19,6 +22,7 @@ interface SidebarContextProps {
 	animate: boolean;
 	pinned: boolean;
 	togglePin: () => void;
+	closeMobile?: () => void;
 }
 
 const STORAGE_KEY = "sidebar-pinned";
@@ -27,6 +31,7 @@ export const SIDEBAR_CONTROL_CLASS_NAME =
 	"size-9 rounded-md border-border/60 bg-transparent text-foreground/90 shadow-none backdrop-blur-none transition-all duration-200 hover:border-border hover:bg-surface-subtle hover:text-foreground hover:shadow-none [&_svg]:size-4.5";
 
 const SidebarContext = createContext<SidebarContextProps | undefined>(undefined);
+const MobileCloseContext = createContext<(() => void) | undefined>(undefined);
 
 export const useSidebar = () => {
 	const context = useContext(SidebarContext);
@@ -134,27 +139,47 @@ export const DesktopSidebar = ({
 };
 
 export const MobileSidebar = ({ className, children, ...props }: React.ComponentProps<"div">) => {
+	const { t } = useTranslation();
 	const { setOpen } = useSidebar();
+	const inRouter = useInRouterContext();
 	const [mobileOpen, setMobileOpen] = useState(false);
-	const setMenuOpen = (next: boolean) => {
-		setMobileOpen(next);
-		setOpen(next);
-	};
+	const setMenuOpen = useCallback(
+		(next: boolean) => {
+			setMobileOpen(next);
+			setOpen(next);
+		},
+		[setOpen],
+	);
+	const closeMobile = useCallback(() => setMenuOpen(false), [setMenuOpen]);
+
 	return (
 		<div
 			className={cn(
-				"h-10 px-4 py-4 flex flex-row md:hidden  items-center justify-end bg-surface w-full",
+				"flex h-14 w-full shrink-0 flex-row items-center justify-between border-b border-border bg-surface px-4 md:hidden",
 			)}
 			{...props}
 		>
-			{/* Right side controls */}
+			{inRouter ? (
+				<Link to="/" className="flex items-center text-foreground">
+					<Brand />
+				</Link>
+			) : (
+				<a href="/" className="flex items-center text-foreground">
+					<Brand />
+				</a>
+			)}
 			<div className="flex items-center gap-2 z-20">
 				<LanguageSwitcher className={SIDEBAR_CONTROL_CLASS_NAME} />
 				<ThemeToggle variant="icon" className={SIDEBAR_CONTROL_CLASS_NAME} />
-				<IconMenu2
-					className="text-foreground cursor-pointer hover:text-muted transition-colors p-1"
+				<button
+					type="button"
+					aria-label={mobileOpen ? t("common.close") : t("nav.menu")}
+					aria-expanded={mobileOpen}
+					className="inline-flex size-9 items-center justify-center rounded-md text-foreground transition-colors hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
 					onClick={() => setMenuOpen(!mobileOpen)}
-				/>
+				>
+					<IconMenu2 aria-hidden="true" className="h-5 w-5" />
+				</button>
 			</div>
 			<AnimatePresence>
 				{mobileOpen && (
@@ -165,10 +190,13 @@ export const MobileSidebar = ({ className, children, ...props }: React.Component
 							exit={{ opacity: 0 }}
 							transition={{ duration: 0.3 }}
 							className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[90]"
-							onClick={() => setMenuOpen(false)}
+							onClick={closeMobile}
 						/>
 
 						<motion.div
+							role="dialog"
+							aria-modal="true"
+							aria-label={t("nav.menu")}
 							initial={{ x: "-100%", opacity: 0 }}
 							animate={{ x: 0, opacity: 1 }}
 							exit={{ x: "-100%", opacity: 0 }}
@@ -177,18 +205,21 @@ export const MobileSidebar = ({ className, children, ...props }: React.Component
 								ease: "easeInOut",
 							}}
 							className={cn(
-								"fixed h-full w-[80%] inset-y-0 left-0 bg-background/95 backdrop-blur-md border-r border-border p-6 z-[100] flex flex-col justify-between shadow-2xl",
+								"fixed h-full w-[80%] max-w-xs inset-y-0 left-0 bg-background/95 backdrop-blur-md border-r border-border p-6 z-[100] flex flex-col justify-between shadow-2xl",
 								className,
 							)}
 						>
 							<button
 								type="button"
-								className="absolute right-6 top-6 z-50 text-foreground cursor-pointer hover:text-muted transition-colors"
-								onClick={() => setMenuOpen(false)}
+								aria-label={t("common.close")}
+								className="absolute right-5 top-5 z-50 rounded-md p-1.5 text-foreground transition-colors hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+								onClick={closeMobile}
 							>
-								<IconX />
+								<IconX aria-hidden="true" className="h-5 w-5" />
 							</button>
-							{children}
+							<MobileCloseContext.Provider value={closeMobile}>
+								{children}
+							</MobileCloseContext.Provider>
 						</motion.div>
 					</>
 				)}
@@ -208,35 +239,35 @@ export const SidebarLink = ({
 	isActive?: boolean;
 }) => {
 	const { open, animate } = useSidebar();
+	const closeMobile = useContext(MobileCloseContext);
+	const inRouter = useInRouterContext();
 
 	const handleClick = (e: React.MouseEvent) => {
 		if (link.onClick) {
 			e.preventDefault();
+			closeMobile?.();
 			link.onClick();
+			return;
 		}
+		closeMobile?.();
 	};
 
-	return (
-		<a
-			href={link.href}
-			aria-label={link.label}
-			aria-current={isActive ? "page" : undefined}
-			className={cn(
-				"flex items-center group/sidebar py-2 rounded-lg transition-colors duration-200 relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand",
-				isActive
-					? "bg-brand text-white font-semibold"
-					: "font-medium text-foreground/90 hover:text-foreground hover:bg-surface-subtle",
-				className,
-			)}
-			style={{
-				justifyContent: open ? "flex-start" : "center",
-				gap: open ? "8px" : "0",
-				paddingLeft: open ? "8px" : "4px",
-				paddingRight: open ? "8px" : "4px",
-			}}
-			onClick={handleClick}
-			{...props}
-		>
+	const linkClassName = cn(
+		"flex items-center group/sidebar py-2 rounded-lg transition-colors duration-200 relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand",
+		isActive
+			? "bg-brand text-white font-semibold"
+			: "font-medium text-foreground/90 hover:text-foreground hover:bg-surface-subtle",
+		className,
+	);
+	const linkStyle: React.CSSProperties = {
+		justifyContent: open ? "flex-start" : "center",
+		gap: open ? "8px" : "0",
+		paddingLeft: open ? "8px" : "4px",
+		paddingRight: open ? "8px" : "4px",
+	};
+
+	const content = (
+		<>
 			<div className="flex-shrink-0 relative text-inherit">
 				{link.icon}
 
@@ -277,6 +308,37 @@ export const SidebarLink = ({
 					{link.badge}
 				</motion.span>
 			)}
+		</>
+	);
+
+	const useSpaLink = inRouter && !link.onClick && link.href.startsWith("/");
+	if (useSpaLink) {
+		return (
+			<Link
+				to={link.href}
+				aria-label={link.label}
+				aria-current={isActive ? "page" : undefined}
+				className={linkClassName}
+				style={linkStyle}
+				onClick={handleClick}
+				{...props}
+			>
+				{content}
+			</Link>
+		);
+	}
+
+	return (
+		<a
+			href={link.href}
+			aria-label={link.label}
+			aria-current={isActive ? "page" : undefined}
+			className={linkClassName}
+			style={linkStyle}
+			onClick={handleClick}
+			{...props}
+		>
+			{content}
 		</a>
 	);
 };

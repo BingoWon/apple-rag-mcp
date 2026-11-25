@@ -42,6 +42,7 @@
 		"copy_failed": "复制失败",
 		"copy_url": "复制链接",
 		"continue": "继续",
+		"clear": "清除",
 		"yes": "是",
 		"no": "否"
 	},
@@ -168,7 +169,8 @@
 		"tab_disabled_has_subscription": "请先取消订阅",
 		"tab_disabled_has_onetime": "到期后可用",
 		"manage_subscription": "管理订阅",
-		"view_plan": "查看我的方案"
+		"view_plan": "查看我的方案",
+		"alipay_cny_note": "使用支付宝支付时，Stripe 会按实时汇率将美元折算为人民币结算。"
 	},
 	"plans": {
 		"hobby": "Hobby",
@@ -429,7 +431,16 @@
 		"result_count": "结果数",
 		"url": "URL",
 		"time": "时间",
-		"no_url": "无 URL"
+		"no_url": "无 URL",
+		"latency": "耗时",
+		"topic_path": "主题路径",
+		"no_topic": "无主题",
+		"items_returned": "返回条目",
+		"filter_status_all": "全部状态",
+		"filter_status_success": "成功",
+		"filter_status_error": "异常",
+		"search_placeholder": "按查询词或 URL 筛选...",
+		"invalid_date_range": "链接中的日期范围无效，请清除筛选查看全部记录。"
 	},
 	"billing": {
 		"title": "账单与订阅",
@@ -466,7 +477,18 @@
 		"loading": "正在加载账单信息...",
 		"incomplete_expired": "支付已过期",
 		"unpaid": "未支付",
-		"paused": "已暂停"
+		"paused": "已暂停",
+		"complimentary": "赠送权益",
+		"complimentary_desc": "由团队授予",
+		"custom_billing": "定制计费方案",
+		"past_due_title": "付款未完成",
+		"past_due_desc": "最近一次扣款未成功，当前账号已临时回退至 Hobby 额度。请更新支付方式以立即恢复 Pro 权益。",
+		"update_payment": "更新支付方式",
+		"quota_load_error": "暂时无法加载本周用量。",
+		"minute_quota": "每分钟限额：",
+		"expires_on_label": "到期时间：",
+		"expired_on_label": "已于此时到期：",
+		"current_plan": "当前套餐"
 	},
 	"messages": {
 		"title": "消息",
@@ -488,7 +510,8 @@
 		"mark_read": "标为已读",
 		"marked_success": "已标为已读",
 		"mark_error": "标记失败",
-		"load_error": "加载消息失败"
+		"load_error": "加载消息失败",
+		"pending_reply": "待回复"
 	},
 	"settings": {
 		"title": "账号设置",
@@ -524,7 +547,7 @@
 		"auth_load_retry": "刷新页面后再试一下。",
 		"delete_title": "注销账号",
 		"delete_desc": "永久删除账号及所有令牌、授权 IP 和记录，删除后无法恢复。",
-		"delete_warning": "账号、MCP 令牌、CLI 授权及相关数据都会被永久清除。",
+		"delete_warning": "账号、MCP 令牌、已连接的 CLI 设备及相关数据都会被永久清除。如仍有生效中的订阅，请先取消后再注销。",
 		"delete_btn": "确认注销账号",
 		"delete_confirm_label": "请输入 DELETE 确认",
 		"delete_confirm_placeholder": "输入 DELETE",
@@ -532,6 +555,10 @@
 		"delete_success": "账号已注销，即将返回首页",
 		"delete_error": "注销账号失败，请稍后重试",
 		"name_min": "名称至少 2 个字符",
+		"name_max": "名称不能超过 100 个字符",
+		"auth_method_email": "邮箱",
+		"auth_method_google": "Google",
+		"auth_method_github": "GitHub",
 		"delete_type_confirm": "请输入 DELETE 确认操作",
 		"password_changed": "密码已修改，请用新密码重新登录",
 		"password_change_error": "修改密码失败，请重试"
@@ -753,7 +780,29 @@
 		"identity_deleted": "已删除用户",
 		"current_user_plan": "当前实际套餐（历史日志也显示当前套餐）",
 		"period_end_action": "到期安排",
-		"renews": "继续订阅"
+		"renews": "继续订阅",
+		"anonymous_count": "匿名反馈",
+		"anonymous_read_only_notice": "匿名反馈未关联平台账号，仅支持查看，无法回复。",
+		"authorized_ips_desc_short": "所有用户的授权 IP 地址",
+		"col_page_id": "页面 ID",
+		"load_failed": "加载数据失败，请稍后重试。",
+		"manual_grant": "管理员授予",
+		"message_details": "消息详情",
+		"plan_free": "免费",
+		"provider_index": "站内索引",
+		"provider_apple_json": "Apple 官方 JSON",
+		"provider_apple_http": "Apple 网页",
+		"provider_firecrawl": "Firecrawl",
+		"auth_method_token": "MCP 令牌",
+		"auth_method_ip": "授权 IP",
+		"auth_method_anonymous": "匿名访问",
+		"auth_method_cli": "CLI 会话",
+		"auth_method_api_key": "CLI 自动化密钥",
+		"auth_method_oauth": "OAuth",
+		"reason_placeholder_fetch": "例如 PAGE_NOT_FOUND",
+		"reason_placeholder_default": "例如 RATE_LIMITED",
+		"reply_saved_email_failed": "回复已保存（用户登录后可见），但邮件通知发送失败。",
+		"view": "查看"
 	},
 	"notfound": {
 		"title": "页面不存在",
@@ -960,7 +1009,9 @@
 		"no_sessions_title": "还没有已连接的设备",
 		"revoke_named": "撤销「{{name}}」的访问权限",
 		"automation_title": "自动化密钥",
-		"automation_description": "用于 GitHub Actions、服务器或定时任务等无人值守场景；本机日常登录用上面的设备授权即可，不用建密钥。"
+		"automation_description": "用于 GitHub Actions、服务器或定时任务等无人值守场景；本机日常登录用上面的设备授权即可，不用建密钥。",
+		"session_limit_reached": "已达到 20 个 CLI 设备与自动化密钥上限，请先撤销不再使用的项后再添加。",
+		"try_another_code": "输入其他验证码"
 	},
 	"connect": {
 		"title": "为你的智能体接入 Apple RAG",
@@ -1116,6 +1167,8 @@
 		"load_more": "加载更多记录",
 		"cta_title": "想让你的 AI 编程工具实时查到这些最新 Apple 文档？",
 		"cta_subtitle": "将 Apple RAG 通过 MCP 或 CLI 接入 Cursor、Claude Code、Codex 等智能体，检索结果与官方同步更新。",
-		"cta_button": "1 分钟接入智能体"
+		"cta_button": "1 分钟接入智能体",
+		"digest_rules_engine": "规则归纳",
+		"load_error": "暂时无法加载更新记录，请重试。"
 	}
 }

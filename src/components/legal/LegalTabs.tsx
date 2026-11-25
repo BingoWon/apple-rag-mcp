@@ -1,28 +1,31 @@
 import { motion } from "motion/react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 import PrivacyPolicyContent from "./PrivacyPolicyContent";
 import TermsOfServiceContent from "./TermsOfServiceContent";
 
 export default function LegalTabs() {
+	const { t } = useTranslation();
 	const navigate = useNavigate();
 	const { pathname } = useLocation();
 	const [hovering, setHovering] = useState(false);
 
 	const tabs = [
 		{
-			title: "Privacy Policy",
+			title: t("footer.privacy"),
 			value: "privacy-policy",
 			content: <PrivacyPolicyContent />,
 		},
 		{
-			title: "Terms of Service",
+			title: t("footer.terms"),
 			value: "terms-of-service",
 			content: <TermsOfServiceContent />,
 		},
 	];
 
-	const activeIndex = tabs.findIndex((tab) => pathname.includes(tab.value)) || 0;
+	const foundIndex = tabs.findIndex((tab) => pathname.includes(tab.value));
+	const activeIndex = foundIndex >= 0 ? foundIndex : 0;
 
 	const getDisplayOrder = () => {
 		const ordered = [...tabs];

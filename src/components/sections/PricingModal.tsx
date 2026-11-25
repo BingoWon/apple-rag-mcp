@@ -2,10 +2,10 @@ import "./PricingModal.css";
 import { IconCreditCard, IconLock } from "@tabler/icons-react";
 import Alipay from "@thesvg/react/alipay";
 import { spring } from "motion";
-import { type CSSProperties, type ReactElement, useState } from "react";
+import { type CSSProperties, type ReactElement, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
 import {
 	Dialog,
@@ -18,10 +18,12 @@ import {
 } from "@/components/ui/Dialog";
 import { PRO_ONETIME_OPTIONS, PRO_PRICING_OPTIONS } from "@/constants/pricing";
 import { useAuth } from "@/hooks/useAuth";
+import { rememberAuthReturn } from "@/lib/auth-return";
 import { importWithRecovery } from "@/lib/deployment-recovery";
 import { cn } from "@/lib/utils";
 import { useDashboardStore } from "@/stores/dashboard";
 import type { PaymentType, PricingOption } from "@/types/pricing";
+import { parseUTCDate } from "../../../shared/datetime";
 
 interface PricingModalProps {
 	children: ReactElement;
@@ -48,28 +50,54 @@ export function PricingModal({ children, defaultTab = "subscription" }: PricingM
 
 	const { isAuthenticated } = useAuth();
 	const navigate = useNavigate();
+	const location = useLocation();
 	const subscription = useDashboardStore((s) => s.subscription);
 
+	const hasActiveSubscription = Boolean(
+		subscription?.has_active_stripe_subscription ??
+			(subscription?.payment_type === "subscription" &&
+				subscription?.status === "active" &&
+				subscription?.plan_id !== "hobby" &&
+				subscription?.entitlement_source !== "complimentary"),
+	);
+	const oneTimeEnd = subscription?.current_period_end
+		? parseUTCDate(subscription.current_period_end)
+		: null;
+	const hasActiveOneTime = Boolean(
+		subscription?.payment_type === "one_time" &&
+			oneTimeEnd !== null &&
+			oneTimeEnd.getTime() > Date.now(),
+	);
+
+	const subscriptionTabDisabled = hasActiveOneTime;
+	const onetimeTabDisabled = hasActiveSubscription;
+
+	const initialTab: PaymentType =
+		defaultTab === "one_time"
+			? onetimeTabDisabled
+				? "subscription"
+				: "one_time"
+			: subscriptionTabDisabled
+				? "one_time"
+				: "subscription";
+
 	const [selectedOption, setSelectedOption] = useState<PricingOption["id"]>(
-		defaultTab === "one_time" ? "onetime_monthly" : "weekly",
+		initialTab === "one_time" ? "onetime_monthly" : "weekly",
 	);
 	const [isLoading, setIsLoading] = useState(false);
+
+	useEffect(() => {
+		if (selectedOption.startsWith("onetime_") && onetimeTabDisabled) {
+			setSelectedOption("weekly");
+		} else if (!selectedOption.startsWith("onetime_") && subscriptionTabDisabled) {
+			setSelectedOption("onetime_monthly");
+		}
+	}, [selectedOption, onetimeTabDisabled, subscriptionTabDisabled]);
 
 	const isOneTime = selectedOption.startsWith("onetime_");
 	const paymentType = isOneTime ? "one_time" : "subscription";
 	const options = isOneTime ? PRO_ONETIME_OPTIONS : PRO_PRICING_OPTIONS;
-
-	const hasActiveSubscription =
-		subscription?.payment_type === "subscription" &&
-		subscription?.status === "active" &&
-		subscription?.plan_id !== "hobby";
-	const hasActiveOneTime =
-		subscription?.payment_type === "one_time" &&
-		subscription?.current_period_end &&
-		new Date(subscription.current_period_end) > new Date();
-
-	const subscriptionTabDisabled = !!hasActiveOneTime;
-	const onetimeTabDisabled = !!hasActiveSubscription;
+	const activeTabLocked = isOneTime ? onetimeTabDisabled : subscriptionTabDisabled;
 
 	const handleTabChange = (type: PaymentType) => {
 		if (type === "subscription" && subscriptionTabDisabled) return;
@@ -79,9 +107,10 @@ export function PricingModal({ children, defaultTab = "subscription" }: PricingM
 	};
 
 	const handleCheckout = async (paymentMethod?: "card" | "alipay") => {
-		if (isLoading || (isOneTime ? onetimeTabDisabled : subscriptionTabDisabled)) return;
+		if (isLoading || activeTabLocked) return;
 
 		if (!isAuthenticated) {
+			rememberAuthReturn(`${location.pathname}${location.search}${location.hash}`);
 			toast.error(t("pricing.login_required"));
 
 			navigate("/login");
@@ -210,7 +239,12 @@ export function PricingModal({ children, defaultTab = "subscription" }: PricingM
 						</label>
 					))}
 				</fieldset>
-				{isOneTime && <p className="text-sm text-muted">{t("pricing.onetime_note")}</p>}
+				{isOneTime && (
+					<div className="space-y-1 text-sm text-muted">
+						<p>{t("pricing.onetime_note")}</p>
+						<p className="text-xs text-subtle">{t("pricing.alipay_cny_note")}</p>
+					</div>
+				)}
 				<div className="flex flex-wrap justify-end gap-2 border-t border-border pt-4">
 					<DialogClose asChild>
 						<Button variant="outline" className="flex-1">
@@ -221,7 +255,7 @@ export function PricingModal({ children, defaultTab = "subscription" }: PricingM
 						<Button
 							variant="primary"
 							className="flex-1 bg-[#146bdc] text-white"
-							disabled={isLoading}
+							disabled={isLoading || activeTabLocked}
 							onClick={() => handleCheckout("alipay")}
 						>
 							<Alipay aria-hidden="true" variant="mono" className="size-4" />
@@ -231,7 +265,7 @@ export function PricingModal({ children, defaultTab = "subscription" }: PricingM
 					<Button
 						variant="primary"
 						className="flex-1 bg-[#635BFF] text-white"
-						disabled={isLoading}
+						disabled={isLoading || activeTabLocked}
 						onClick={() => handleCheckout(isOneTime ? "card" : undefined)}
 					>
 						<IconCreditCard aria-hidden="true" className="size-4" />

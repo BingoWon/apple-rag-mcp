@@ -29,12 +29,13 @@ app.get("/", async (c) => {
 
 		const total = Number(countResult?.total) || 0;
 
-		// Get statistics by reply status
+		// Get statistics by reply status (only logged-in user messages are replyable/pending)
 		const statsResult = await c.env.DB.prepare(
 			`SELECT
-        COUNT(CASE WHEN admin_reply IS NULL THEN 1 END) as pending,
+        COUNT(CASE WHEN admin_reply IS NULL AND user_id IS NOT NULL THEN 1 END) as pending,
         COUNT(CASE WHEN admin_reply IS NOT NULL THEN 1 END) as replied,
-        COUNT(CASE WHEN admin_reply IS NOT NULL AND user_read_at IS NOT NULL THEN 1 END) as read_by_user
+        COUNT(CASE WHEN admin_reply IS NOT NULL AND user_read_at IS NOT NULL THEN 1 END) as read_by_user,
+        COUNT(CASE WHEN user_id IS NULL THEN 1 END) as anonymous
        FROM contact_messages`,
 		).first();
 
@@ -42,13 +43,14 @@ app.get("/", async (c) => {
 			pending: Number(statsResult?.pending) || 0,
 			replied: Number(statsResult?.replied) || 0,
 			readByUser: Number(statsResult?.read_by_user) || 0,
+			anonymous: Number(statsResult?.anonymous) || 0,
 		};
 
 		// Get paginated messages
 		const messages = await c.env.DB.prepare(
 			`SELECT id, user_id, email, message, ip_address, admin_reply, replied_at, user_read_at, created_at
        FROM contact_messages
-       ORDER BY created_at DESC
+       ORDER BY julianday(created_at) DESC, id DESC
        LIMIT ? OFFSET ?`,
 		)
 			.bind(limit, offset)

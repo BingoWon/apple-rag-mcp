@@ -1,5 +1,6 @@
 import { IconCheck, IconMessageCircle, IconX } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { CardSpotlight } from "@/components/effects/card-spotlight";
@@ -34,6 +35,15 @@ export function UnreadReplyNotification() {
 		};
 	}, [user, fetchUnreadReplies]);
 
+	useEffect(() => {
+		if (!isVisible) return;
+		const onKeyDown = (event: KeyboardEvent) => {
+			if (event.key === "Escape" && !isMarking) setIsVisible(false);
+		};
+		window.addEventListener("keydown", onKeyDown);
+		return () => window.removeEventListener("keydown", onKeyDown);
+	}, [isVisible, isMarking]);
+
 	const handleMarkAsRead = async () => {
 		if (unreadMessages.length === 0) return;
 
@@ -50,17 +60,18 @@ export function UnreadReplyNotification() {
 				} else {
 					setIsVisible(false);
 				}
+			} else {
+				toast.error(t("messages.mark_error"));
 			}
 		} catch (error) {
 			console.error("Failed to mark message as read:", error);
+			toast.error(t("messages.mark_error"));
 		} finally {
 			setIsMarking(false);
 		}
 	};
 
 	const handleClose = () => {
-		// Just close the modal, don't mark as read
-		// User will see it again on next page load
 		setIsVisible(false);
 	};
 
@@ -72,7 +83,12 @@ export function UnreadReplyNotification() {
 	const remainingCount = unreadMessages.length;
 
 	return (
-		<div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay backdrop-blur-sm animate-in fade-in duration-300">
+		<div
+			role="dialog"
+			aria-modal="true"
+			aria-label={t("notification.got_reply")}
+			className="fixed inset-0 z-50 flex items-center justify-center bg-overlay backdrop-blur-sm animate-in fade-in duration-300"
+		>
 			<CardSpotlight className="max-w-2xl w-full mx-4 max-h-[85vh] border border-border flex flex-col">
 				{/* Scrollable Content Area */}
 				<div className="relative z-20 p-8 pb-6 overflow-y-auto flex-1">
@@ -84,12 +100,7 @@ export function UnreadReplyNotification() {
 							</p>
 							{remainingCount > 1 && (
 								<p className="text-muted text-sm mt-1">
-									{t(
-										remainingCount === 1
-											? "notification.unread_count"
-											: "notification.unread_count_plural",
-										{ count: remainingCount },
-									)}
+									{t("notification.unread_count_plural", { count: remainingCount })}
 								</p>
 							)}
 						</div>

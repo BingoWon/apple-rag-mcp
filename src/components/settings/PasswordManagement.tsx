@@ -1,5 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useState } from "react";
+import { IconLock } from "@tabler/icons-react";
+import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
@@ -16,6 +17,12 @@ interface AuthStatus {
 	canChangePassword: boolean;
 	authenticationMethod: string;
 }
+
+const PROVIDER_METHOD_KEYS: Record<string, string> = {
+	email: "settings.auth_method_email",
+	google: "settings.auth_method_google",
+	github: "settings.auth_method_github",
+};
 
 export function PasswordManagement() {
 	const { t } = useTranslation();
@@ -39,23 +46,24 @@ export function PasswordManagement() {
 		resolver: zodResolver(passwordChangeSchema),
 	});
 
+	const fetchAuthStatus = useCallback(async () => {
+		setIsLoadingStatus(true);
+		try {
+			const response = await api.getAuthStatus();
+			if (response.success && response.data) {
+				setAuthStatus(response.data as AuthStatus);
+			}
+		} catch (error) {
+			console.error("Failed to fetch auth status:", error);
+		} finally {
+			setIsLoadingStatus(false);
+		}
+	}, []);
+
 	// Fetch authentication status on component mount
 	useEffect(() => {
-		const fetchAuthStatus = async () => {
-			try {
-				const response = await api.getAuthStatus();
-				if (response.success && response.data) {
-					setAuthStatus(response.data as AuthStatus);
-				}
-			} catch (error) {
-				console.error("Failed to fetch auth status:", error);
-			} finally {
-				setIsLoadingStatus(false);
-			}
-		};
-
 		fetchAuthStatus();
-	}, []);
+	}, [fetchAuthStatus]);
 
 	const handlePasswordChange = async (data: PasswordChangeData) => {
 		setIsLoading(true);
@@ -102,12 +110,19 @@ export function PasswordManagement() {
 					<CardTitle>{t("settings.password_title")}</CardTitle>
 					<CardDescription>{t("settings.auth_load_error")}</CardDescription>
 				</CardHeader>
-				<CardContent>
+				<CardContent className="flex flex-wrap items-center justify-between gap-3">
 					<p className="text-sm text-subtle">{t("settings.auth_load_retry")}</p>
+					<Button variant="outline" size="sm" onClick={() => void fetchAuthStatus()}>
+						{t("common.retry")}
+					</Button>
 				</CardContent>
 			</Card>
 		);
 	}
+
+	const localizedMethod = t(PROVIDER_METHOD_KEYS[authStatus.provider] ?? "", {
+		defaultValue: authStatus.authenticationMethod,
+	});
 
 	// Email users can change password - OAuth users cannot
 	if (authStatus.canChangePassword) {
@@ -116,7 +131,7 @@ export function PasswordManagement() {
 				<CardHeader>
 					<CardTitle>{t("settings.change_password")}</CardTitle>
 					<CardDescription>
-						{t("settings.change_password_desc", { method: authStatus.authenticationMethod })}
+						{t("settings.change_password_desc", { method: localizedMethod })}
 					</CardDescription>
 				</CardHeader>
 				<CardContent>
@@ -191,13 +206,14 @@ export function PasswordManagement() {
 			<CardHeader>
 				<CardTitle>{t("settings.auth_method_title")}</CardTitle>
 				<CardDescription>
-					{t("settings.auth_method_desc", { method: authStatus.authenticationMethod })}
+					{t("settings.auth_method_desc", { method: localizedMethod })}
 				</CardDescription>
 			</CardHeader>
 			<CardContent>
-				<div className="p-4 bg-brand/10 rounded-lg">
-					<p className="text-sm text-brand">
-						🔐 {t("settings.auth_managed", { method: authStatus.authenticationMethod })}
+				<div className="p-4 bg-brand/10 rounded-lg border border-brand/25">
+					<p className="text-sm text-brand flex items-center gap-2 font-medium">
+						<IconLock className="h-4 w-4 shrink-0" aria-hidden="true" />
+						<span>{t("settings.auth_managed", { method: localizedMethod })}</span>
 					</p>
 					{authStatus.provider === "google" && (
 						<p className="text-sm text-brand/80 mt-2">{t("settings.google_manage")}</p>

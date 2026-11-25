@@ -32,7 +32,7 @@ app.get("/", async (c) => {
         ai.updated_at,
         ai.last_used_at as last_used
       FROM user_authorized_ips ai
-      ORDER BY ai.created_at DESC
+      ORDER BY julianday(ai.created_at) DESC, ai.id DESC
       LIMIT ? OFFSET ?
     `;
 
@@ -49,7 +49,9 @@ app.get("/", async (c) => {
 			},
 		});
 	} catch (error) {
-		console.error("Error fetching admin authorized IPs:", error);
+		await logger.error(
+			`Error fetching admin authorized IPs: ${error instanceof Error ? error.message : String(error)}`,
+		);
 		return c.json(
 			{
 				success: false,
@@ -111,7 +113,9 @@ app.delete("/:id", async (c) => {
 			},
 		});
 	} catch (error) {
-		console.error("Error deleting authorized IP:", error);
+		await logger.error(
+			`Error deleting authorized IP: ${error instanceof Error ? error.message : String(error)}`,
+		);
 		return c.json(
 			{
 				success: false,

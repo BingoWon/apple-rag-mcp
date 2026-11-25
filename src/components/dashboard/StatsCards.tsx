@@ -13,6 +13,7 @@ import { Card, CardContent } from "@/components/ui/Card";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import type { CorpusStats } from "@/types";
+import { parseUTCDate } from "../../../shared/datetime";
 import type { UpdatesSummaryResponse } from "../../../shared/doc-updates";
 
 const metrics = [
@@ -91,15 +92,18 @@ export default function StatsCards() {
 		: null;
 	const lastRunLabel = (() => {
 		const iso = pulse?.heartbeat.last_run_at;
-		if (!iso) return null;
-		const diffMin = Math.max(1, Math.round((Date.now() - Date.parse(iso)) / 60_000));
+		const parsed = iso ? parseUTCDate(iso) : null;
+		if (!parsed) return null;
+		const diffMin = Math.max(1, Math.round((Date.now() - parsed.getTime()) / 60_000));
 		const rtf = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
-		return diffMin < 60
-			? rtf.format(-diffMin, "minute")
-			: rtf.format(-Math.round(diffMin / 60), "hour");
+		if (diffMin < 60) return rtf.format(-diffMin, "minute");
+		const diffHours = Math.round(diffMin / 60);
+		if (diffHours < 24) return rtf.format(-diffHours, "hour");
+		return rtf.format(-Math.round(diffHours / 24), "day");
 	})();
+	const numberFormat = new Intl.NumberFormat(locale);
 	return (
-		<Card className="mb-6 @container">
+		<Card className="@container">
 			<CardContent className="p-6">
 				{data && (
 					<div className="flex justify-center mb-5">
@@ -139,9 +143,9 @@ export default function StatsCards() {
 									title={
 										field === "embedded_percentage"
 											? t("dashboard.stats_coverage_detail", {
-													indexed: data.indexed_pages,
-													readable: data.readable_pages,
-													navigation: data.navigation_only_pages,
+													indexed: numberFormat.format(data.indexed_pages),
+													readable: numberFormat.format(data.readable_pages),
+													navigation: numberFormat.format(data.navigation_only_pages),
 												})
 											: undefined
 									}

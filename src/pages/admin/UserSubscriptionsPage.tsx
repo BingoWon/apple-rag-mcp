@@ -2,10 +2,11 @@
  * Admin User Subscriptions Page
  * Display and manage user_subscriptions table
  */
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { AdminUserLabel } from "@/components/admin/AdminUserLabel";
+import { Badge } from "@/components/ui/Badge";
 import { formatAdminInterval } from "@/lib/admin-user";
 import { api } from "@/lib/api";
 import { formatCurrency } from "@/lib/utils";
@@ -15,6 +16,8 @@ interface AdminUserSubscription {
 	user: AdminUserIdentity;
 	plan_type: string;
 	status: string;
+	entitlement_source?: "free" | "stripe_subscription" | "one_time_pass" | "complimentary";
+	is_stripe_managed?: boolean;
 	current_period_start: string | null;
 	current_period_end: string | null;
 	cancel_at_period_end: boolean;
@@ -23,6 +26,19 @@ interface AdminUserSubscription {
 	billing_interval: string;
 	payment_type: string;
 	updated_at: string;
+}
+
+function subscriptionStatusVariant(status: string) {
+	switch (status) {
+		case "active":
+		case "trialing":
+			return "success" as const;
+		case "past_due":
+		case "incomplete":
+			return "warning" as const;
+		default:
+			return "secondary" as const;
+	}
 }
 
 export default function AdminUserSubscriptionsPage() {
@@ -46,36 +62,63 @@ export default function AdminUserSubscriptionsPage() {
 			{
 				key: "status",
 				label: t("admin.col_status"),
-				width: 112,
-				render: (_: unknown, row: AdminUserSubscription) =>
-					t(
-						`billing.${row.status === "canceled" ? "cancelled" : row.status === "trialing" ? "trial" : row.status}`,
-						{ defaultValue: row.status },
-					),
+				width: 120,
+				render: (_: unknown, row: AdminUserSubscription) => (
+					<Badge variant={subscriptionStatusVariant(row.status)}>
+						{t(
+							`billing.${row.status === "canceled" ? "cancelled" : row.status === "trialing" ? "trial" : row.status}`,
+							{ defaultValue: row.status },
+						)}
+					</Badge>
+				),
 			},
 			{
 				key: "price",
 				label: t("admin.col_price"),
-				width: 96,
-				render: (_value: unknown, row: AdminUserSubscription) =>
-					formatCurrency(row.price, row.currency),
+				width: 128,
+				render: (_value: unknown, row: AdminUserSubscription) => {
+					const isComplimentary =
+						row.entitlement_source === "complimentary" ||
+						(row.plan_type !== "hobby" &&
+							row.status === "active" &&
+							row.price <= 0 &&
+							!row.is_stripe_managed &&
+							row.payment_type !== "one_time");
+					if (isComplimentary) {
+						return (
+							<Badge variant="secondary" className="bg-brand/10 text-brand">
+								{t("billing.complimentary")}
+							</Badge>
+						);
+					}
+					if (row.plan_type === "enterprise" && row.price <= 0) {
+						return <span className="text-sm text-foreground">{t("plans.price_custom")}</span>;
+					}
+					if (row.plan_type === "hobby" && row.price <= 0) {
+						return <span className="text-subtle italic">—</span>;
+					}
+					return formatCurrency(row.price, row.currency);
+				},
 			},
 			{
 				key: "billing_interval",
 				label: t("admin.col_billing"),
-				width: 116,
+				width: 120,
 				render: (_: unknown, row: AdminUserSubscription) =>
-					row.plan_type === "hobby"
+					row.plan_type === "hobby" || row.entitlement_source === "complimentary"
 						? "—"
 						: formatAdminInterval(row.billing_interval, row.payment_type === "one_time", t),
 			},
-			{ key: "current_period_start", label: t("admin.col_period_start"), width: 144 },
-			{ key: "current_period_end", label: t("admin.col_period_end"), width: 144 },
+			{ key: "current_period_start", label: `${t("admin.col_period_start")} · UTC+8`, width: 176 },
+			{ key: "current_period_end", label: `${t("admin.col_period_end")} · UTC+8`, width: 176 },
 			{
 				key: "cancel_at_period_end",
 				label: t("admin.period_end_action"),
-				width: 128,
+				width: 136,
 				render: (_: unknown, row: AdminUserSubscription) => {
+					if (row.entitlement_source === "complimentary") {
+						return t("admin.manual_grant");
+					}
 					if (
 						row.plan_type === "hobby" ||
 						row.payment_type !== "subscription" ||
@@ -86,7 +129,7 @@ export default function AdminUserSubscriptionsPage() {
 					return row.status === "past_due" ? t("billing.past_due") : t("admin.renews");
 				},
 			},
-			{ key: "updated_at", label: t("admin.col_updated"), width: 160 },
+			{ key: "updated_at", label: `${t("admin.col_updated")} · UTC+8`, width: 176 },
 		],
 		[t],
 	);
@@ -96,14 +139,20 @@ export default function AdminUserSubscriptionsPage() {
 	const [currentPage, setCurrentPage] = useState(1);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
+	const abortRef = useRef<AbortController | null>(null);
 
 	const fetchSubscriptions = useCallback(
-		async (page: number = 1) => {
+		async (page: number = 1, pageLimit: number = limit) => {
+			abortRef.current?.abort();
+			const controller = new AbortController();
+			abortRef.current = controller;
+
 			try {
 				setIsLoading(true);
 				setError(null);
 
-				const response = await api.getAdminUserSubscriptions(page, limit);
+				const response = await api.getAdminUserSubscriptions(page, pageLimit, controller.signal);
+				if (controller.signal.aborted) return;
 
 				if (response.success && response.data) {
 					const data = response.data as {
@@ -113,32 +162,50 @@ export default function AdminUserSubscriptionsPage() {
 						offset: number;
 						hasMore: boolean;
 					};
+					const resolvedLimit = data.limit || pageLimit;
+					const resolvedTotal = data.total || 0;
+					const lastPage = Math.max(1, Math.ceil(resolvedTotal / resolvedLimit));
+					if (page > lastPage) {
+						void fetchSubscriptions(lastPage, resolvedLimit);
+						return;
+					}
 					setSubscriptions(data.subscriptions || []);
-					setTotal(data.total || 0);
-					setLimit(data.limit || 50);
+					setTotal(resolvedTotal);
+					setLimit(resolvedLimit);
 					setCurrentPage(page);
 				} else {
-					throw new Error("Failed to fetch user subscriptions data");
+					throw new Error(t("admin.load_failed"));
 				}
 			} catch (err) {
+				if (controller.signal.aborted) return;
 				console.error("Error fetching admin user subscriptions:", err);
-				setError(err instanceof Error ? err.message : "Failed to load user subscriptions");
+				setError(err instanceof Error ? err.message : t("admin.load_failed"));
 				setSubscriptions([]);
 				setTotal(0);
 			} finally {
-				setIsLoading(false);
+				if (!controller.signal.aborted) {
+					setIsLoading(false);
+				}
 			}
 		},
-		[limit],
+		[limit, t],
 	);
 
 	const handlePageChange = (page: number) => {
-		fetchSubscriptions(page);
+		void fetchSubscriptions(page, limit);
+	};
+
+	const handlePageSizeChange = (nextLimit: number) => {
+		setCurrentPage(1);
+		setLimit(nextLimit);
 	};
 
 	useEffect(() => {
-		fetchSubscriptions(1);
-	}, [fetchSubscriptions]);
+		void fetchSubscriptions(1, limit);
+		return () => {
+			abortRef.current?.abort();
+		};
+	}, [fetchSubscriptions, limit]);
 
 	return (
 		<div className="flex h-full flex-col">
@@ -152,8 +219,9 @@ export default function AdminUserSubscriptionsPage() {
 				currentPage={currentPage}
 				isLoading={isLoading}
 				error={error}
-				onRefresh={() => fetchSubscriptions(currentPage)}
+				onRefresh={() => void fetchSubscriptions(currentPage, limit)}
 				onPageChange={handlePageChange}
+				onPageSizeChange={handlePageSizeChange}
 			/>
 		</div>
 	);

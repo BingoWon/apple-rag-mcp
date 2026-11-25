@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { api } from "@/lib/api";
 import type { AdminLogFilters, AdminLogKind, AdminLogsResponse } from "@/types/admin-logs";
@@ -26,11 +26,19 @@ export function useAdminLogs(kind: AdminLogKind) {
 			),
 		[searchParams],
 	);
+	const filtersKey = JSON.stringify(filters);
+	const prevFiltersKey = useRef(filtersKey);
 	const [query, setQuery] = useState({
 		page: 1,
 		limit: 50,
 		revision: 0,
 	});
+	useEffect(() => {
+		if (prevFiltersKey.current !== filtersKey) {
+			prevFiltersKey.current = filtersKey;
+			setQuery((q) => (q.page === 1 ? q : { ...q, page: 1 }));
+		}
+	}, [filtersKey]);
 	const [data, setData] = useState<AdminLogsResponse | null>(null);
 	const [loading, setLoading] = useState(true),
 		[error, setError] = useState(false);

@@ -1,28 +1,35 @@
 import { IconInfoCircle, IconSquareRoundedPlus } from "@tabler/icons-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { MCPTokensList } from "@/components/dashboard/MCPTokensList";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { formatDateOnly } from "@/lib/datetime";
 import { useDashboardStore } from "@/stores/dashboard";
 
 export default function MCPTokensPage() {
-	const { t } = useTranslation();
-	const { mcpTokens, fetchMCPTokens, createMCPToken, isLoadingTokens } = useDashboardStore();
+	const { t, i18n } = useTranslation();
+	const { mcpTokens, fetchMCPTokens, createMCPToken, isLoadingTokens, errors } =
+		useDashboardStore();
+	const [isCreating, setIsCreating] = useState(false);
 
 	useEffect(() => {
 		fetchMCPTokens();
 	}, [fetchMCPTokens]);
 
 	const handleCreateToken = async () => {
+		if (isCreating) return;
 		if (mcpTokens.length >= 10) {
 			toast.error(t("tokens.max_reached"));
 			return;
 		}
 
+		setIsCreating(true);
 		try {
-			const tokenName = t("tokens.default_name", { date: new Date().toLocaleDateString() });
+			const tokenName = t("tokens.default_name", {
+				date: formatDateOnly(new Date(), i18n.resolvedLanguage),
+			});
 			const result = await createMCPToken({
 				name: tokenName,
 				permissions: ["rag.read"], // Fixed permission, user doesn't need to know
@@ -33,6 +40,8 @@ export default function MCPTokensPage() {
 			}
 		} catch (error) {
 			toast.error(error instanceof Error ? error.message : t("tokens.create_error"));
+		} finally {
+			setIsCreating(false);
 		}
 	};
 
@@ -64,20 +73,37 @@ export default function MCPTokensPage() {
 			{/* MCP Tokens List */}
 			<Card>
 				<CardHeader>
-					<div className="flex items-center justify-between">
+					<div className="flex items-center justify-between gap-3">
 						<CardTitle>{t("tokens.your_tokens", { count: mcpTokens.length })}</CardTitle>
-						<Button onClick={handleCreateToken} variant="primary" disabled={mcpTokens.length >= 10}>
+						<Button
+							onClick={handleCreateToken}
+							variant="primary"
+							loading={isCreating}
+							disabled={isCreating || mcpTokens.length >= 10}
+						>
 							<IconSquareRoundedPlus className="h-4 w-4 mr-2" />
 							{t("tokens.create")}
 						</Button>
 					</div>
 				</CardHeader>
 				<CardContent className="p-0">
-					<MCPTokensList
-						tokens={mcpTokens}
-						onRefresh={fetchMCPTokens}
-						isLoading={isLoadingTokens}
-					/>
+					{errors.tokens && mcpTokens.length === 0 ? (
+						<div
+							role="alert"
+							className="flex flex-wrap items-center justify-between gap-3 p-6 text-sm"
+						>
+							<span className="text-destructive">{errors.tokens}</span>
+							<Button variant="outline" size="sm" onClick={() => void fetchMCPTokens()}>
+								{t("common.retry")}
+							</Button>
+						</div>
+					) : (
+						<MCPTokensList
+							tokens={mcpTokens}
+							onRefresh={fetchMCPTokens}
+							isLoading={isLoadingTokens}
+						/>
+					)}
 				</CardContent>
 			</Card>
 		</div>

@@ -7,6 +7,7 @@ import {
 	IconLayoutSidebarLeftCollapse,
 	IconLayoutSidebarLeftExpand,
 	IconMessageCircle,
+	IconPlugConnected,
 	IconRadar2,
 	IconSettings,
 	IconWorld,
@@ -31,7 +32,11 @@ import {
 } from "../ui/sidebar";
 
 const SIDEBAR_LINK_KEYS = [
-	{ labelKey: "nav.connect", href: "/connect", icon: <IconWorld className="h-5 w-5 shrink-0" /> },
+	{
+		labelKey: "nav.connect",
+		href: "/connect",
+		icon: <IconPlugConnected className="h-5 w-5 shrink-0" />,
+	},
 	{ labelKey: "nav.updates", href: "/updates", icon: <IconRadar2 className="h-5 w-5 shrink-0" /> },
 	{
 		labelKey: "nav.overview",
@@ -245,7 +250,7 @@ const AppleSidebarComponent = ({ children }: { children: React.ReactNode }) => {
 		<div
 			className={cn(
 				"mx-auto flex w-full max-w-full flex-1 flex-col overflow-hidden rounded-md border border-border bg-surface md:flex-row",
-				"h-screen",
+				"h-dvh",
 			)}
 		>
 			<Sidebar open={open} setOpen={setOpen}>
@@ -297,7 +302,10 @@ export const LogoIcon = () => {
 const Dashboard = React.memo(({ children }: { children: React.ReactNode }) => {
 	return (
 		<div className="flex flex-1 overflow-hidden">
-			<div className="flex h-full w-full flex-1 flex-col gap-2 rounded-tl-2xl border border-border bg-background overflow-y-auto">
+			<div
+				data-dashboard-scroll="true"
+				className="flex h-full w-full flex-1 flex-col gap-2 rounded-tl-2xl border border-border bg-background overflow-y-auto"
+			>
 				<div className="mx-auto w-full max-w-7xl p-4 md:p-10">{children}</div>
 			</div>
 		</div>

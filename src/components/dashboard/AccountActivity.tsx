@@ -6,6 +6,7 @@ import { useTheme } from "@/components/providers/ThemeProvider";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { api } from "@/lib/api";
+import { formatDateTimeWithZone } from "@/lib/datetime";
 import type { CurrentUsage } from "@/types";
 import { TOOL_KINDS, type ToolActivity, type UsagePeriod } from "../../../shared/tool-activity";
 import TimeRangeSelector from "../charts/TimeRangeSelector";
@@ -63,14 +64,7 @@ function WeeklyQuota() {
 						)}
 						<span className="text-muted">
 							{t("activity.resets", {
-								date: new Intl.DateTimeFormat(i18n.resolvedLanguage, {
-									month: "short",
-									day: "numeric",
-									hour: "2-digit",
-									minute: "2-digit",
-									hourCycle: "h23",
-									timeZone: "Asia/Singapore",
-								}).format(Date.parse(data.reset_at)),
+								date: formatDateTimeWithZone(data.reset_at, i18n.resolvedLanguage),
 							})}
 						</span>
 					</>

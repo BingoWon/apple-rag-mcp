@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, Outlet } from "react-router-dom";
 import { ShootingStars } from "@/components/effects/shooting-stars";
 import { StarsBackground } from "@/components/effects/stars-background";
 import { Brand } from "@/components/layout/Brand";
 import LegalTabs from "@/components/legal/LegalTabs";
+import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 export function LegalLayout() {
+	const { t } = useTranslation();
 	const [mounted, setMounted] = useState(false);
 
 	useEffect(() => {
@@ -15,7 +18,7 @@ export function LegalLayout() {
 
 	if (!mounted) {
 		return (
-			<div className="min-h-screen bg-background relative">
+			<div className="min-h-dvh bg-background relative">
 				<div className="fixed inset-0 z-0">
 					<ShootingStars />
 					<StarsBackground />
@@ -34,7 +37,7 @@ export function LegalLayout() {
 					<div className="container mx-auto px-4 py-8">
 						<div className="max-w-5xl mx-auto">
 							<div className="flex justify-center">
-								<div className="animate-pulse text-muted">Loading...</div>
+								<div className="animate-pulse text-muted">{t("common.loading")}</div>
 							</div>
 						</div>
 					</div>
@@ -44,7 +47,7 @@ export function LegalLayout() {
 	}
 
 	return (
-		<div className="min-h-screen bg-background relative">
+		<div className="min-h-dvh bg-background relative">
 			<div className="fixed inset-0 z-0">
 				<ShootingStars />
 				<StarsBackground />
@@ -56,7 +59,10 @@ export function LegalLayout() {
 							<Link to="/" className="flex items-center hover:opacity-80 transition-opacity">
 								<Brand />
 							</Link>
-							<ThemeToggle variant="icon" />
+							<div className="flex items-center gap-2">
+								<LanguageSwitcher />
+								<ThemeToggle variant="icon" />
+							</div>
 						</div>
 					</div>
 				</nav>

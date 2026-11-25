@@ -22,6 +22,7 @@ interface AdminTableProps<T extends object> {
 	error?: string | null;
 	onRefresh?: () => void;
 	onPageChange: (page: number) => void;
+	onPageSizeChange?: (pageSize: number) => void;
 }
 
 export function AdminTable<T extends object>({
@@ -36,6 +37,7 @@ export function AdminTable<T extends object>({
 	error = null,
 	onRefresh,
 	onPageChange,
+	onPageSizeChange,
 }: AdminTableProps<T>) {
 	const { t } = useTranslation();
 	// Convert AdminTable columns to DataTable columns
@@ -49,7 +51,7 @@ export function AdminTable<T extends object>({
 				return col.render(value, row);
 			}
 
-			if (value === null || value === undefined) {
+			if (value === null || value === undefined || value === "") {
 				return <span className="text-subtle italic">—</span>;
 			}
 
@@ -62,7 +64,9 @@ export function AdminTable<T extends object>({
 			}
 
 			if (col.key === "response_time_ms") {
-				return <span className="font-mono">{formatAdminResponseTime(value as number)}</span>;
+				return (
+					<span className="font-mono text-xs">{formatAdminResponseTime(value as number)}</span>
+				);
 			}
 
 			if (
@@ -74,20 +78,25 @@ export function AdminTable<T extends object>({
 				col.key.endsWith("_at") ||
 				col.key.endsWith("_time")
 			) {
-				return <span className="font-mono text-sm">{formatAdminDateTime(value as string)}</span>;
+				return (
+					<span className="whitespace-nowrap font-mono text-xs">
+						{formatAdminDateTime(value as string)}
+					</span>
+				);
 			}
 
-			// Special formatting for ID fields - truncate with ellipsis and tooltip
+			// Special formatting for ID / token fields without over-clipping
 			if (col.key === "id" || col.key.endsWith("_id") || col.key === "mcp_token") {
 				const stringValue = String(value);
-				if (stringValue.length > 12) {
-					return (
-						<span title={stringValue} className="truncate block max-w-20 font-mono text-xs">
-							{stringValue.substring(0, 12)}...
-						</span>
-					);
-				}
-				return <span className="font-mono text-xs">{stringValue}</span>;
+				const displayValue =
+					!stringValue.endsWith("...") && stringValue.length > 16
+						? `${stringValue.substring(0, 12)}...`
+						: stringValue;
+				return (
+					<span title={stringValue} className="block truncate font-mono text-xs">
+						{displayValue}
+					</span>
+				);
 			}
 
 			if (typeof value === "boolean") {
@@ -110,6 +119,7 @@ export function AdminTable<T extends object>({
 			pageSize={limit}
 			total={total}
 			onPageChange={onPageChange}
+			onPageSizeChange={onPageSizeChange}
 			isLoading={isLoading}
 			header={
 				<>

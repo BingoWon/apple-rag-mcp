@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/Dialog";
 import { Input } from "@/components/ui/Input";
 import { api } from "@/lib/api";
+import { formatDateOnly } from "@/lib/datetime";
 import { copyText } from "@/utils/clipboard";
 
 interface Session {
@@ -31,7 +32,8 @@ interface Session {
 	created_at: number;
 }
 export function CLIAccess() {
-	const { t } = useTranslation();
+	const { t, i18n } = useTranslation();
+	const locale = i18n.resolvedLanguage ?? "en";
 	const [createOpen, setCreateOpen] = useState(false);
 	const [rows, setRows] = useState<Session[]>([]),
 		[loading, setLoading] = useState(true),
@@ -62,13 +64,13 @@ export function CLIAccess() {
 		setKey(null);
 		try {
 			const r = await api.post<{ token: string }>("/cli/sessions", { name: name.trim(), days });
-			if (!r.success || !r.data) throw Error();
+			if (!r.success || !r.data) throw new Error(r.error?.message || t("cli.access_error"));
 			setKey(r.data.token);
 			setCreateOpen(false);
 			setName("");
 			await load();
-		} catch {
-			toast.error(t("cli.access_error"));
+		} catch (err) {
+			toast.error(err instanceof Error && err.message ? err.message : t("cli.access_error"));
 		} finally {
 			setBusy(false);
 		}
@@ -78,15 +80,18 @@ export function CLIAccess() {
 		setBusy(true);
 		try {
 			const r = await api.delete(`/cli/sessions/${encodeURIComponent(target.id)}`);
-			if (!r.success) throw Error();
+			if (!r.success) throw new Error(r.error?.message || t("cli.access_error"));
 			setTarget(null);
 			await load();
-		} catch {
-			toast.error(t("cli.access_error"));
+		} catch (err) {
+			toast.error(err instanceof Error && err.message ? err.message : t("cli.access_error"));
 		} finally {
 			setBusy(false);
 		}
 	};
+	const deviceRows = rows.filter((row) => row.kind === "device");
+	const apiKeyRows = rows.filter((row) => row.kind === "api_key");
+	const atSessionLimit = rows.length >= 20;
 	const renderSession = (row: Session) => (
 		<li key={row.id} className="flex items-center justify-between gap-3 px-6 py-4">
 			<div className="flex min-w-0 items-center gap-3">
@@ -100,7 +105,7 @@ export function CLIAccess() {
 					<div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-subtle">
 						<span>{t(row.kind === "device" ? "cli.device" : "cli.api_key")}</span>
 						<span aria-hidden="true">·</span>
-						<span>{t("cli.expires", { date: new Date(row.expires_at).toLocaleDateString() })}</span>
+						<span>{t("cli.expires", { date: formatDateOnly(row.expires_at, locale) })}</span>
 					</div>
 				</div>
 			</div>
@@ -148,37 +153,42 @@ export function CLIAccess() {
 					<div role="status" className="px-6 py-8 text-center text-sm text-subtle">
 						{t("common.loading")}
 					</div>
-				) : rows.filter((row) => row.kind === "device").length === 0 ? (
+				) : deviceRows.length === 0 ? (
 					<div className="px-6 py-8 text-center">
 						<IconDeviceLaptop size={24} className="mx-auto mb-3 text-subtle" />
 						<p className="text-sm font-medium">{t("cli.no_sessions_title")}</p>
 						<p className="mt-1 text-xs text-subtle">{t("cli.no_sessions")}</p>
 					</div>
 				) : (
-					<ul className="divide-y divide-border">
-						{rows.filter((row) => row.kind === "device").map(renderSession)}
-					</ul>
+					<ul className="divide-y divide-border">{deviceRows.map(renderSession)}</ul>
 				)}
-				<details className="border-t border-border">
-					<summary className="cursor-pointer px-6 py-5 text-sm font-medium">
-						{t("cli.automation_title")}
+				<details className="border-t border-border" open={apiKeyRows.length > 0}>
+					<summary className="flex cursor-pointer items-center justify-between px-6 py-5 text-sm font-medium">
+						<span>{t("cli.automation_title")}</span>
+						<span className="text-xs font-normal tabular-nums text-subtle">
+							{apiKeyRows.length > 0 ? `${apiKeyRows.length} · ` : ""}
+							{rows.length}/20
+						</span>
 					</summary>
 					<div className="space-y-4 px-6 pb-5">
 						<p className="text-xs leading-6 text-muted">{t("cli.automation_description")}</p>
-						<Button
-							variant="outline"
-							size="sm"
-							onClick={() => setCreateOpen(true)}
-							disabled={busy || rows.length >= 20}
-						>
-							<IconPlus size={14} />
-							{t("cli.create_key")}
-						</Button>
+						<div className="flex flex-wrap items-center gap-3">
+							<Button
+								variant="outline"
+								size="sm"
+								onClick={() => setCreateOpen(true)}
+								disabled={busy || atSessionLimit}
+							>
+								<IconPlus size={14} />
+								{t("cli.create_key")}
+							</Button>
+							{atSessionLimit && (
+								<span className="text-xs text-warning">{t("cli.session_limit_reached")}</span>
+							)}
+						</div>
 					</div>
-					{!loading && !error && (
-						<ul className="divide-y divide-border">
-							{rows.filter((row) => row.kind === "api_key").map(renderSession)}
-						</ul>
+					{!loading && !error && apiKeyRows.length > 0 && (
+						<ul className="divide-y divide-border">{apiKeyRows.map(renderSession)}</ul>
 					)}
 				</details>
 			</CardContent>

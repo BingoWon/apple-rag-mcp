@@ -89,7 +89,7 @@ app.openapi(getMCPTokensRoute, async (c) => {
         created_at,
         updated_at
       FROM mcp_tokens
-      ORDER BY created_at DESC
+      ORDER BY julianday(created_at) DESC, id DESC
       LIMIT ? OFFSET ?
     `)
 			.bind(limit, offset)
@@ -99,7 +99,7 @@ app.openapi(getMCPTokensRoute, async (c) => {
 			id: String(row.id),
 			user_id: String(row.user_id),
 			name: String(row.name),
-			mcp_token: row.mcp_token ? `${String(row.mcp_token).substring(0, 12)}...` : "N/A",
+			mcp_token: row.mcp_token ? `${String(row.mcp_token).substring(0, 12)}...` : "",
 			last_used_at: row.last_used_at ? String(row.last_used_at) : null,
 			created_at: String(row.created_at),
 			updated_at: String(row.updated_at),

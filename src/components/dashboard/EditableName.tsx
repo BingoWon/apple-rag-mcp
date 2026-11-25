@@ -1,5 +1,5 @@
 import { IconCheck, IconPencil, IconX } from "@tabler/icons-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/Button";
@@ -32,6 +32,12 @@ export function EditableName({ id, initialName, onUpdate, onRefresh, type }: Edi
 	const [isEditing, setIsEditing] = useState(false);
 	const [name, setName] = useState(initialName);
 	const [isLoading, setIsLoading] = useState(false);
+
+	useEffect(() => {
+		if (!isEditing) {
+			setName(initialName);
+		}
+	}, [initialName, isEditing]);
 
 	const config = EDITABLE_CONFIGS[type];
 
@@ -79,6 +85,7 @@ export function EditableName({ id, initialName, onUpdate, onRefresh, type }: Edi
 				<input
 					type="text"
 					value={name}
+					maxLength={100}
 					onChange={(e) => setName(e.target.value)}
 					onKeyDown={handleKeyDown}
 					className="text-sm font-medium text-foreground bg-surface-subtle border border-border rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent"
@@ -117,7 +124,7 @@ export function EditableName({ id, initialName, onUpdate, onRefresh, type }: Edi
 				variant="ghost"
 				size="icon"
 				onClick={() => setIsEditing(true)}
-				className="h-8 w-8 text-subtle hover:text-foreground opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity"
+				className="h-8 w-8 text-subtle hover:text-foreground opacity-60 sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100 transition-opacity"
 				title={t("common.edit_name")}
 				aria-label={t("common.edit_name")}
 			>

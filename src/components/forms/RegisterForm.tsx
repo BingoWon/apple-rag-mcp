@@ -36,7 +36,12 @@ export function RegisterForm() {
 		const password = formData.get("password") as string;
 		const confirmPassword = formData.get("confirmPassword") as string;
 
-		// Password matching validation
+		// Password length and matching validation
+		if (password.length < 8) {
+			setPasswordError(t("settings.password_min"));
+			setIsLoading(false);
+			return;
+		}
 		if (password !== confirmPassword) {
 			setPasswordError(t("auth.passwords_mismatch"));
 			setIsLoading(false);
@@ -194,12 +199,12 @@ export function RegisterForm() {
 							i18nKey="auth.terms_notice"
 							components={{
 								terms: (
-									<Link to="/terms" className="text-brand hover:underline">
+									<Link to="/terms-of-service" className="text-brand hover:underline">
 										{t("footer.terms")}
 									</Link>
 								),
 								privacy: (
-									<Link to="/privacy" className="text-brand hover:underline">
+									<Link to="/privacy-policy" className="text-brand hover:underline">
 										{t("footer.privacy")}
 									</Link>
 								),

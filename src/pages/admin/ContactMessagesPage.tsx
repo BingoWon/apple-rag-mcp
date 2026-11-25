@@ -2,31 +2,33 @@
  * Admin Contact Messages Page
  * Display and manage contact messages with reply functionality
  */
-import { IconEye, IconEyeCheck, IconLock, IconMessageCircle } from "@tabler/icons-react";
+import { IconEye, IconEyeCheck, IconMessageCircle } from "@tabler/icons-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AdminPagedList } from "@/components/admin/AdminPagedList";
 import { AdminUserLabel } from "@/components/admin/AdminUserLabel";
 import { MessageReplyDialog } from "@/components/admin/MessageReplyDialog";
 import { Button } from "@/components/ui/Button";
+import { formatAdminDateTime } from "@/lib/admin-utils";
 import { api } from "@/lib/api";
-import { formatDateCompact } from "@/lib/datetime";
 import type { AdminContactMessage } from "@/types/admin-contact";
 
 interface MessageStats {
 	pending: number;
 	replied: number;
 	readByUser: number;
+	anonymous: number;
 }
 
 export default function AdminContactMessagesPage() {
-	const { t } = useTranslation();
+	const { t, i18n } = useTranslation();
 	const [messages, setMessages] = useState<AdminContactMessage[]>([]);
 	const [total, setTotal] = useState(0);
 	const [stats, setStats] = useState<MessageStats>({
 		pending: 0,
 		replied: 0,
 		readByUser: 0,
+		anonymous: 0,
 	});
 	const [limit, setLimit] = useState(50);
 	const [currentPage, setCurrentPage] = useState(1);
@@ -34,65 +36,89 @@ export default function AdminContactMessagesPage() {
 	const [error, setError] = useState<string | null>(null);
 	const replyTrigger = useRef<HTMLButtonElement | null>(null);
 	const refreshButton = useRef<HTMLButtonElement | null>(null);
+	const abortRef = useRef<AbortController | null>(null);
 	const [selectedMessage, setSelectedMessage] = useState<AdminContactMessage | null>(null);
 
 	const fetchMessages = useCallback(
-		async (page: number = 1) => {
+		async (page: number = 1, pageLimit: number = limit) => {
+			abortRef.current?.abort();
+			const controller = new AbortController();
+			abortRef.current = controller;
+
 			try {
 				setIsLoading(true);
 				setError(null);
 
-				const response = await api.getAdminContactMessages(page, limit);
+				const response = await api.getAdminContactMessages(page, pageLimit, controller.signal);
+				if (controller.signal.aborted) return;
 
 				if (response.success && response.data) {
 					const data = response.data as {
 						messages: AdminContactMessage[];
 						total: number;
-						stats: MessageStats;
+						stats: Partial<MessageStats>;
 						limit: number;
 					};
+					const resolvedLimit = data.limit || pageLimit;
+					const resolvedTotal = data.total || 0;
+					const lastPage = Math.max(1, Math.ceil(resolvedTotal / resolvedLimit));
+					if (page > lastPage) {
+						void fetchMessages(lastPage, resolvedLimit);
+						return;
+					}
 					setMessages(data.messages || []);
-					setTotal(data.total || 0);
-					setStats(
-						data.stats || {
-							pending: 0,
-							replied: 0,
-							closed: 0,
-						},
-					);
-					setLimit(data.limit || 50);
+					setTotal(resolvedTotal);
+					setStats({
+						pending: data.stats?.pending ?? 0,
+						replied: data.stats?.replied ?? 0,
+						readByUser: data.stats?.readByUser ?? 0,
+						anonymous: data.stats?.anonymous ?? 0,
+					});
+					setLimit(resolvedLimit);
 					setCurrentPage(page);
 				} else {
-					throw new Error("Failed to fetch contact messages data");
+					throw new Error(t("admin.load_failed"));
 				}
 			} catch (err) {
+				if (controller.signal.aborted) return;
 				console.error("Error fetching admin contact messages:", err);
-				setError(err instanceof Error ? err.message : "Failed to load contact messages");
+				setError(err instanceof Error ? err.message : t("admin.load_failed"));
 				setMessages([]);
 				setTotal(0);
 			} finally {
-				setIsLoading(false);
+				if (!controller.signal.aborted) {
+					setIsLoading(false);
+				}
 			}
 		},
-		[limit],
+		[limit, t],
 	);
 
 	const handleReplySuccess = () => {
-		fetchMessages(currentPage);
+		void fetchMessages(currentPage, limit);
+	};
+
+	const handlePageSizeChange = (nextLimit: number) => {
+		setCurrentPage(1);
+		setLimit(nextLimit);
 	};
 
 	// Pure button design - button as status
 	const getActionButton = (message: AdminContactMessage) => {
-		// Anonymous message
+		// Anonymous message - allow viewing full content in read-only dialog
 		if (!message.can_reply) {
 			return (
 				<Button
-					disabled
+					onClick={(event) => {
+						replyTrigger.current = event.currentTarget;
+						setSelectedMessage(message);
+					}}
 					size="sm"
-					className="bg-surface-subtle text-subtle cursor-not-allowed hover:bg-surface-subtle"
+					variant="secondary"
+					className="whitespace-nowrap"
 				>
-					<IconLock className="w-4 h-4 mr-1.5" />
-					{t("admin.read_only")}
+					<IconEye className="w-4 h-4 mr-1.5" />
+					{t("admin.view")}
 				</Button>
 			);
 		}
@@ -129,8 +155,8 @@ export default function AdminContactMessagesPage() {
 						<IconEyeCheck className="w-4 h-4 mr-1.5" />
 						{t("admin.read")}
 					</Button>
-					<span className="text-xs text-subtle whitespace-nowrap">
-						{formatDateCompact(message.replied_at!)}
+					<span className="font-mono text-xs text-subtle whitespace-nowrap">
+						{formatAdminDateTime(message.replied_at!)}
 					</span>
 				</div>
 			);
@@ -150,16 +176,19 @@ export default function AdminContactMessagesPage() {
 					<IconEye className="w-4 h-4 mr-1.5" />
 					{t("admin.unread")}
 				</Button>
-				<span className="text-xs text-subtle whitespace-nowrap">
-					{formatDateCompact(message.replied_at!)}
+				<span className="font-mono text-xs text-subtle whitespace-nowrap">
+					{formatAdminDateTime(message.replied_at!)}
 				</span>
 			</div>
 		);
 	};
 
 	useEffect(() => {
-		fetchMessages(1);
-	}, [fetchMessages]);
+		void fetchMessages(1, limit);
+		return () => {
+			abortRef.current?.abort();
+		};
+	}, [fetchMessages, limit]);
 
 	return (
 		<div className="flex h-full flex-col gap-6">
@@ -171,7 +200,7 @@ export default function AdminContactMessagesPage() {
 				</div>
 				<Button
 					ref={refreshButton}
-					onClick={() => fetchMessages(currentPage)}
+					onClick={() => void fetchMessages(currentPage, limit)}
 					disabled={isLoading}
 					loading={isLoading}
 					variant="primary"
@@ -192,7 +221,8 @@ export default function AdminContactMessagesPage() {
 				currentPage={currentPage}
 				pageSize={limit}
 				total={total}
-				onPageChange={fetchMessages}
+				onPageChange={(page) => void fetchMessages(page, limit)}
+				onPageSizeChange={handlePageSizeChange}
 				isLoading={isLoading}
 				header={
 					<dl className="flex flex-wrap items-center gap-x-5 gap-y-1 text-sm">
@@ -202,11 +232,14 @@ export default function AdminContactMessagesPage() {
 								["pending", stats.pending],
 								["replied", stats.replied],
 								["read", stats.readByUser],
+								["anonymous_count", stats.anonymous],
 							] as const
 						).map(([key, value]) => (
 							<div key={key} className="flex items-baseline gap-1.5">
 								<dt className="text-subtle">{t(`admin.${key}`)}</dt>
-								<dd className="font-semibold tabular-nums">{value}</dd>
+								<dd className="font-semibold tabular-nums">
+									{value.toLocaleString(i18n.resolvedLanguage)}
+								</dd>
 							</div>
 						))}
 					</dl>
@@ -215,16 +248,16 @@ export default function AdminContactMessagesPage() {
 				<table className="w-full min-w-2xl table-fixed">
 					<thead className="sticky top-0 z-10 bg-surface border-b border-border">
 						<tr>
-							<th className="w-1/5 px-6 py-3 text-left text-xs font-medium text-subtle uppercase tracking-wider">
+							<th className="w-[22%] px-6 py-3 text-left text-xs font-medium text-subtle uppercase tracking-wider">
 								{t("admin.col_user_name")}
 							</th>
-							<th className="w-2/5 px-6 py-3 text-left text-xs font-medium text-subtle uppercase tracking-wider">
+							<th className="w-[42%] px-6 py-3 text-left text-xs font-medium text-subtle uppercase tracking-wider">
 								{t("admin.col_message")}
 							</th>
-							<th className="w-1/6 px-6 py-3 text-left text-xs font-medium text-subtle uppercase tracking-wider">
-								{t("admin.date")}
+							<th className="w-[20%] px-6 py-3 text-left text-xs font-medium text-subtle uppercase tracking-wider">
+								{t("admin.date")} · UTC+8
 							</th>
-							<th className="w-1/6 px-6 py-3 text-left text-xs font-medium text-subtle uppercase tracking-wider">
+							<th className="w-[16%] px-6 py-3 text-left text-xs font-medium text-subtle uppercase tracking-wider">
 								{t("admin.action")}
 							</th>
 						</tr>
@@ -269,8 +302,8 @@ export default function AdminContactMessagesPage() {
 											)}
 										</div>
 									</td>
-									<td className="px-6 py-4 whitespace-nowrap text-sm text-subtle">
-										{formatDateCompact(message.created_at)}
+									<td className="px-6 py-4 whitespace-nowrap font-mono text-xs text-subtle">
+										{formatAdminDateTime(message.created_at)}
 									</td>
 									<td className="px-6 py-4">{getActionButton(message)}</td>
 								</tr>

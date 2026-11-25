@@ -50,19 +50,39 @@ export function LogDetails({
 				["admin.col_time_s", formatAdminResponseTime(log.response_time_ms)],
 				["admin.col_status", log.status_code],
 				["admin.col_reason", log.reason],
-				["admin.col_source", log.content_source ? t(`admin.source_${log.content_source}`) : null],
-				["admin.col_provider", log.provider],
-				["admin.col_upstream", log.upstream_status],
+				[
+					"admin.col_source",
+					kind === "fetch"
+						? log.content_source
+							? t(`admin.source_${log.content_source}`)
+							: null
+						: undefined,
+				],
+				[
+					"admin.col_provider",
+					kind === "fetch"
+						? log.provider
+							? t(`admin.provider_${log.provider}`, { defaultValue: log.provider })
+							: null
+						: undefined,
+				],
+				["admin.col_upstream", kind === "fetch" ? (log.upstream_status ?? null) : undefined],
 				[
 					"admin.col_cache",
-					kind === "fetch" ? t(log.cache_hit ? "admin.cache_hit" : "admin.cache_miss") : null,
+					kind === "fetch" ? t(log.cache_hit ? "admin.cache_hit" : "admin.cache_miss") : undefined,
 				],
-				["admin.col_results", log.result_count],
+				["admin.col_page_id", kind === "fetch" ? (log.page_id ?? null) : undefined],
+				["admin.col_results", kind !== "fetch" ? (log.result_count ?? 0) : undefined],
 				["admin.col_user_name", <AdminUserLabel key="user" user={log.user} />],
 				["admin.col_channel", t(`admin.channel_${log.channel}`)],
 				["admin.col_credential", log.credential_id],
 				["admin.col_session", log.session_id],
-				["admin.col_auth_method", log.auth_method],
+				[
+					"admin.col_auth_method",
+					log.auth_method
+						? t(`admin.auth_method_${log.auth_method}`, { defaultValue: log.auth_method })
+						: null,
+				],
 				["admin.col_request_id", log.request_id],
 				["admin.reported_client", reported ? MCP_CLIENT_NAMES[reported] : null],
 				["admin.col_client", log.client_name],
@@ -97,7 +117,7 @@ export function LogDetails({
 						<LogOutcome outcome={log.outcome} />
 						{[
 							[t(kind !== "search" ? "admin.requested_url" : "admin.requested_query"), requested],
-							...(requested !== actual
+							...(actual && requested !== actual
 								? [[t(kind !== "search" ? "admin.actual_url" : "admin.actual_query"), actual]]
 								: []),
 						].map(([label, value]) => (

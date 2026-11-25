@@ -114,7 +114,7 @@ function AuthorizationForm() {
 						className="auth-status-icon"
 						data-tone={error ? "error" : done === true ? "success" : "neutral"}
 					>
-						{error || done === false ? (
+						{error || done === false || data?.status === "denied" ? (
 							<IconX aria-hidden="true" />
 						) : (
 							<IconCheck aria-hidden="true" />
@@ -143,7 +143,23 @@ function AuthorizationForm() {
 						)}
 					</p>
 					{error ? (
-						<div className="auth-command">apple-rag auth login</div>
+						<div className="space-y-3">
+							<div className="auth-command">apple-rag auth login</div>
+							<div className="auth-actions">
+								<Button
+									variant="outline"
+									className="auth-secondary"
+									onClick={() => {
+										setError(false);
+										setData(null);
+										setCode("");
+										setParams({}, { replace: true });
+									}}
+								>
+									{t("cli.try_another_code")}
+								</Button>
+							</div>
+						</div>
 					) : (
 						<div className="auth-actions">
 							<Button asChild variant="outline" className="auth-secondary">
@@ -211,7 +227,7 @@ function AuthorizationForm() {
 					</dl>
 					{userCode && (
 						<div className="auth-code">
-							<strong>{userCode}</strong>
+							<strong>{userCode.toUpperCase()}</strong>
 							<p>{t("cli.match_code")}</p>
 						</div>
 					)}

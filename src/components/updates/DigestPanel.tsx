@@ -4,8 +4,10 @@ import {
 	IconSparkles,
 	IconTrendingUp,
 } from "@tabler/icons-react";
+import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/Card";
+import { parseUTCDate } from "../../../shared/datetime";
 import type { DigestPeriodType, DocChangeDigest } from "../../../shared/doc-updates";
 
 interface DigestPanelProps {
@@ -15,6 +17,8 @@ interface DigestPanelProps {
 	selectedKey: string | null;
 	onSelectKey: (key: string) => void;
 	loading: boolean;
+	error?: boolean;
+	onRetry?: () => void;
 	onFilterFramework: (framework: string) => void;
 }
 
@@ -25,8 +29,8 @@ const ALERT_STYLE: Record<string, string> = {
 	beta: "border-warning/30 bg-warning/10 text-warning",
 };
 
-function shortModelLabel(provider: string, model: string): string {
-	if (provider === "rules") return "Rule Summary";
+function shortModelLabel(provider: string, model: string, t: TFunction): string {
+	if (provider === "rules") return t("updates.digest_rules_engine");
 	const tail = model.split("/").pop() || model;
 	if (provider === "cloudflare-workers-ai") return `Cloudflare Workers AI · ${tail}`;
 	if (provider === "zenmux") return `ZenMux · ${tail}`;
@@ -40,6 +44,8 @@ export function DigestPanel({
 	selectedKey,
 	onSelectKey,
 	loading,
+	error = false,
+	onRetry,
 	onFilterFramework,
 }: DigestPanelProps) {
 	const { t, i18n } = useTranslation();
@@ -113,6 +119,22 @@ export function DigestPanel({
 						role="status"
 					>
 						{t("common.loading")}
+					</div>
+				) : error && !active ? (
+					<div
+						role="alert"
+						className="flex min-h-[240px] flex-col items-center justify-center gap-3 text-center"
+					>
+						<p className="text-sm text-destructive">{t("updates.load_error")}</p>
+						{onRetry && (
+							<button
+								type="button"
+								onClick={onRetry}
+								className="rounded-lg border border-border bg-surface px-3 py-1.5 text-xs font-medium text-foreground hover:bg-surface-subtle"
+							>
+								{t("common.retry")}
+							</button>
+						)}
 					</div>
 				) : !active || !copy ? (
 					<div className="flex min-h-[240px] items-center justify-center text-center">
@@ -246,15 +268,20 @@ export function DigestPanel({
 						<div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3 text-[11px] text-subtle">
 							<span>
 								{t("updates.digest_engine", {
-									engine: shortModelLabel(active.provider, active.model),
+									engine: shortModelLabel(active.provider, active.model, t),
 								})}
 							</span>
 							<span>
 								{t("updates.digest_generated_at", {
-									time: new Intl.DateTimeFormat(i18n.resolvedLanguage, {
-										dateStyle: "medium",
-										timeStyle: "short",
-									}).format(Date.parse(active.generated_at)),
+									time: (() => {
+										const d = parseUTCDate(active.generated_at);
+										return d
+											? new Intl.DateTimeFormat(i18n.resolvedLanguage, {
+													dateStyle: "medium",
+													timeStyle: "short",
+												}).format(d)
+											: "—";
+									})(),
 								})}
 							</span>
 						</div>

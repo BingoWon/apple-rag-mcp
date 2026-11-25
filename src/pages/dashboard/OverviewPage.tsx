@@ -27,7 +27,7 @@ export default function DashboardOverviewPage() {
 					</Suspense>
 				</div>
 				<div className="contents lg:col-span-5 lg:block lg:min-w-0">
-					<div className="order-3 lg:mb-5">
+					<div className="order-3 lg:mb-6">
 						<StatsCards />
 					</div>
 					<div className="order-1 min-w-0">

@@ -5,13 +5,18 @@ import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { LoaderFive } from "@/components/ui/loader";
 import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/lib/api";
-import { authReturnPath, clearAuthReturn, oauthReturnState } from "@/lib/auth-return";
+import {
+	authReturnPath,
+	clearAuthReturn,
+	oauthReturnState,
+	rememberAuthReturn,
+} from "@/lib/auth-return";
 import { useAuthStore } from "@/stores/auth";
 
 function AuthLoading() {
 	const { t } = useTranslation();
 	return (
-		<div className="min-h-screen flex items-center justify-center">
+		<div className="min-h-dvh flex items-center justify-center bg-background">
 			<LoaderFive text={t("common.loading")} />
 		</div>
 	);
@@ -50,8 +55,15 @@ function OAuthReturn({ state }: { state: string }) {
 export function AuthGuard({ children }: { children: React.ReactNode }) {
 	const { isHydrated, user, isAuthenticated } = useAuth();
 	const location = useLocation();
-	if (!isHydrated) return <AuthLoading />;
 	const state = oauthReturnState(location);
+
+	useEffect(() => {
+		if (isHydrated && !state && (!isAuthenticated || !user)) {
+			rememberAuthReturn(`${location.pathname}${location.search}${location.hash}`);
+		}
+	}, [isHydrated, state, isAuthenticated, user, location.pathname, location.search, location.hash]);
+
+	if (!isHydrated) return <AuthLoading />;
 	if (state) return <OAuthReturn key={state} state={state} />;
 	if (!isAuthenticated || !user) return <Navigate to="/login" replace />;
 	return <Fragment key={user.id}>{children}</Fragment>;

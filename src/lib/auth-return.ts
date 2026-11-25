@@ -3,7 +3,9 @@ export function safeAuthReturn(value: string | null | undefined): string {
 	if (!value?.startsWith("/")) return "/overview";
 	try {
 		const url = new URL(value, "https://apple-rag.com");
-		return url.origin === "https://apple-rag.com" ? url.pathname + url.search : "/overview";
+		return url.origin === "https://apple-rag.com"
+			? url.pathname + url.search + url.hash
+			: "/overview";
 	} catch {
 		return "/overview";
 	}

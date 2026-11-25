@@ -14,6 +14,7 @@ export function Providers({ children }: ProvidersProps) {
 		fontSize: "14px",
 		maxWidth: "480px", // 增加宽度以更好地显示较长的反馈消息
 		padding: "12px 16px",
+		whiteSpace: "pre-line" as const,
 	};
 
 	// 单层精致阴影 - 保证整体效果

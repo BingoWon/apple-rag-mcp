@@ -14,7 +14,11 @@ import { OAUTH_SUBSCRIPTION_QUOTAS } from "../types/permissions";
 import { logger } from "../utils/logger.js";
 import { createOpenAPIApp } from "../utils/openapi";
 import { createStripeClient } from "../utils/stripe-client";
-import { effectivePlanType } from "../utils/subscription";
+import {
+	effectivePlanType,
+	isTimestampExpired,
+	resolveSubscriptionState,
+} from "../utils/subscription";
 import { recordSubscriptionReceipt } from "../utils/subscription-receipts";
 
 const stripe = createOpenAPIApp();
@@ -168,8 +172,8 @@ stripe.openapi(
 					existing.payment_type === "subscription" && !!existing.stripe_subscription_id;
 				const hasActiveOneTime =
 					existing.payment_type === "one_time" &&
-					existing.current_period_end &&
-					new Date(existing.current_period_end as string) > new Date();
+					!!existing.current_period_end &&
+					!isTimestampExpired(existing.current_period_end);
 
 				if (hasActiveSubscription && !isOneTime && existing.stripe_customer_id) {
 					const portal = await createStripeClient(
@@ -423,7 +427,17 @@ stripe.openapi(
 									"trialing",
 									"incomplete",
 									"inactive",
+									"expired",
 								]),
+								subscribed_plan_id: z.enum(["hobby", "pro", "enterprise"]).optional(),
+								entitlement_source: z.enum([
+									"free",
+									"stripe_subscription",
+									"one_time_pass",
+									"complimentary",
+								]),
+								has_active_stripe_subscription: z.boolean(),
+								can_manage_billing: z.boolean(),
 								current_period_start: z.string().optional(),
 								current_period_end: z.string().optional(),
 								cancel_at_period_end: z.boolean(),
@@ -453,53 +467,31 @@ stripe.openapi(
 			enterprise: "Enterprise",
 		};
 
-		const paymentType = (result?.payment_type as string) || "subscription";
-		let status = (result?.status as string) || "active";
-
-		if (
-			paymentType === "one_time" &&
-			result?.current_period_end &&
-			new Date(result.current_period_end as string) < new Date()
-		) {
-			status = "inactive";
-		}
-
+		const state = resolveSubscriptionState(result);
 		const planType = effectivePlanType(result);
 		const quota = OAUTH_SUBSCRIPTION_QUOTAS[planType] || OAUTH_SUBSCRIPTION_QUOTAS.hobby;
-		const price = result?.price ?? 0;
-		const billingInterval = result?.billing_interval ?? "month";
 
 		return c.json({
 			success: true,
 			data: {
-				id: result?.stripe_subscription_id
-					? String(result.stripe_subscription_id)
-					: `mock_${user.id}`,
+				id: state.stripeSubscriptionId ?? `mock_${user.id}`,
 				plan_id: planType,
 				plan_name: PLAN_NAMES[planType] || "Hobby",
-				status: status as
-					| "active"
-					| "canceled"
-					| "past_due"
-					| "trialing"
-					| "incomplete"
-					| "inactive",
-				current_period_start: result?.current_period_start
-					? String(result.current_period_start)
-					: undefined,
-				current_period_end: result?.current_period_end
-					? String(result.current_period_end)
-					: undefined,
-				cancel_at_period_end: Boolean(result?.cancel_at_period_end),
+				subscribed_plan_id: state.subscribedPlan,
+				entitlement_source: state.entitlementSource,
+				has_active_stripe_subscription: state.hasActiveStripeSubscription,
+				can_manage_billing: state.canManageBilling,
+				status: state.effectiveStatus,
+				current_period_start: state.currentPeriodStart,
+				current_period_end: state.currentPeriodEnd,
+				cancel_at_period_end: state.cancelAtPeriodEnd,
 				weekly_quota: quota.week,
 				minute_quota: quota.minute,
-				price: Number(price),
-				currency: result?.currency ? String(result.currency) : null,
-				billing_interval: String(billingInterval),
-				payment_type: paymentType as "subscription" | "one_time",
-				stripe_customer_id: result?.stripe_customer_id
-					? String(result.stripe_customer_id)
-					: undefined,
+				price: state.price,
+				currency: state.currency,
+				billing_interval: state.billingInterval,
+				payment_type: state.paymentType,
+				stripe_customer_id: state.stripeCustomerId,
 			},
 		});
 	},

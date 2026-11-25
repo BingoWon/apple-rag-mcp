@@ -144,6 +144,7 @@ app.get("/", (c) => {
 				"/admin/user-subscriptions",
 				"/admin/contact-messages",
 				"/admin/collector/trigger",
+				"/admin/updates/generate-digest",
 			],
 			info: "Access protected by admin password authentication",
 		},

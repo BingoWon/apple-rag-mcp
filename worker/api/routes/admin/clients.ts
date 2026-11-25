@@ -98,7 +98,7 @@ const detailQuery = z.object({
 	period: clientPeriod,
 	end: z.iso
 		.datetime()
-		.refine((v) => Date.parse(v) <= Date.now(), "Window end must not be in the future"),
+		.refine((v) => Date.parse(v) <= Date.now() + 60_000, "Window end must not be in the future"),
 	channel: z.enum(TOOL_CHANNELS),
 	family: clientFamily,
 	dimension: clientDimension.default("environment"),

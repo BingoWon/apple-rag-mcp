@@ -1,6 +1,7 @@
 import {
 	IconActivity,
 	IconArrowUpRight,
+	IconCreditCard,
 	IconKey,
 	IconMessageCircle,
 	IconTrendingUp,
@@ -264,7 +265,7 @@ function AudienceCard({
 					{t(loading ? "admin.stats_loading" : "admin.stats_unavailable")}
 				</div>
 			)}
-			{isNew && metric?.breakdown && (
+			{metric?.breakdown && (
 				<table className="mt-2 w-full text-xs">
 					<thead>
 						<tr className="text-left text-muted">
@@ -313,7 +314,9 @@ export function AdminStatsCards({
 	query: AdminStatsQuery;
 	onChannelChange: (channel?: ToolChannel) => void;
 }) {
-	const { t } = useTranslation();
+	const { t, i18n } = useTranslation();
+	const formatCount = (value?: number) =>
+		value !== undefined ? value.toLocaleString(i18n.resolvedLanguage) : "—";
 	const detailQuery = new URLSearchParams({
 		...(stats ? { from: stats.start, to: stats.end } : {}),
 		...(query.channel ? { channel: query.channel } : {}),
@@ -360,34 +363,50 @@ export function AdminStatsCards({
 				<h2 className="mb-4 text-lg font-semibold text-foreground">
 					{t("admin.operations_title")}
 				</h2>
-				<Card className="grid divide-y divide-border sm:grid-cols-2 lg:grid-cols-5 lg:divide-x lg:divide-y-0">
+				<div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
 					{[
 						...METRICS,
 						{
-							key: "subscriptions",
-							title: "admin.subscriptions",
+							key: "subscriptions" as const,
+							title: "admin.subscriptions" as const,
 							href: "/admin/user-subscriptions",
+							icon: IconCreditCard,
+							color: "#f59e0b",
 						},
-					].map((item) => (
-						<Link
-							key={item.key}
-							to={item.href}
-							className="p-5 transition-colors hover:bg-surface/60"
-						>
-							<span className="text-xs text-muted">{t(item.title)}</span>
-							<p className="mt-2 text-2xl font-semibold tabular-nums text-foreground">
-								{item.key === "subscriptions"
-									? (stats?.subscriptions.total ?? "—")
-									: (stats?.metrics[item.key as keyof AdminDashboardStats["metrics"]].total ?? "—")}
-							</p>
-							<p className="mt-1 text-xs text-muted">
-								{t(
-									item.key === "subscriptions" ? "admin.stats_current" : "admin.stats_new_records",
-								)}
-							</p>
-						</Link>
-					))}
-				</Card>
+					].map((item) => {
+						const Icon = item.icon;
+						const count =
+							item.key === "subscriptions"
+								? stats?.subscriptions.total
+								: stats?.metrics[item.key as keyof AdminDashboardStats["metrics"]].total;
+						return (
+							<Card
+								key={item.key}
+								className="transition-colors hover:border-border-strong hover:bg-surface/60"
+							>
+								<Link to={item.href} className="block p-5">
+									<div className="flex items-center justify-between gap-2">
+										<span className="flex items-center gap-1.5 text-xs text-muted">
+											<Icon className="h-3.5 w-3.5 shrink-0" style={{ color: item.color }} />
+											{t(item.title)}
+										</span>
+										<IconArrowUpRight className="h-3.5 w-3.5 text-muted" />
+									</div>
+									<p className="mt-2 text-2xl font-semibold tabular-nums text-foreground">
+										{formatCount(count)}
+									</p>
+									<p className="mt-1 text-xs text-muted">
+										{t(
+											item.key === "subscriptions"
+												? "admin.stats_current"
+												: "admin.stats_new_records",
+										)}
+									</p>
+								</Link>
+							</Card>
+						);
+					})}
+				</div>
 			</section>
 		</div>
 	);

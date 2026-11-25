@@ -6,6 +6,7 @@ import {
 } from "@tabler/icons-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { parseUTCDate } from "../../../shared/datetime";
 import type { DocChangeEventItem, DocChangeKind } from "../../../shared/doc-updates";
 
 const KIND_BADGE_CLASSES: Record<DocChangeKind, string> = {
@@ -27,18 +28,23 @@ export function ChangeEventCard({ event, onFilterFramework }: ChangeEventCardPro
 	const { t, i18n } = useTranslation();
 	const [expanded, setExpanded] = useState(false);
 
-	const formattedDetected = new Intl.DateTimeFormat(i18n.resolvedLanguage, {
-		month: "short",
-		day: "numeric",
-		hour: "2-digit",
-		minute: "2-digit",
-	}).format(Date.parse(event.detected_at));
-
-	const formattedSource = event.source_modified_at
+	const detectedDate = parseUTCDate(event.detected_at);
+	const formattedDetected = detectedDate
 		? new Intl.DateTimeFormat(i18n.resolvedLanguage, {
 				month: "short",
 				day: "numeric",
-			}).format(Date.parse(event.source_modified_at))
+				hour: "2-digit",
+				minute: "2-digit",
+				hourCycle: "h23",
+			}).format(detectedDate)
+		: "—";
+
+	const sourceDate = event.source_modified_at ? parseUTCDate(event.source_modified_at) : null;
+	const formattedSource = sourceDate
+		? new Intl.DateTimeFormat(i18n.resolvedLanguage, {
+				month: "short",
+				day: "numeric",
+			}).format(sourceDate)
 		: null;
 
 	return (

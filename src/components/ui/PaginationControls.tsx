@@ -36,12 +36,13 @@ export function PaginationControls({
 	showNavigation = true,
 }: PaginationControlsProps) {
 	const { t } = useTranslation();
-	const startIndex = total > 0 ? (currentPage - 1) * pageSize + 1 : 0;
-	const endIndex = Math.min(currentPage * pageSize, total);
+	const safePage = totalPages > 0 ? Math.min(Math.max(1, currentPage), totalPages) : 1;
+	const endIndex = Math.min(safePage * pageSize, total);
+	const startIndex = total > 0 ? Math.min((safePage - 1) * pageSize + 1, endIndex) : 0;
 
 	const directionLabel = children ? "sr-only @5xl:not-sr-only" : "sr-only @sm:not-sr-only";
 	const otherPage = children ? "hidden @3xl:inline-flex" : "hidden @min-[16rem]:inline-flex";
-	const firstPage = Math.max(1, Math.min(currentPage - 2, totalPages - 4));
+	const firstPage = Math.max(1, Math.min(safePage - 2, totalPages - 4));
 	const pages = Array.from(
 		{ length: Math.max(1, Math.min(5, totalPages)) },
 		(_, index) => firstPage + index,

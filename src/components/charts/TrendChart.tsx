@@ -25,8 +25,11 @@ export function fittedCountAxis(values: number[]) {
 	const lowest = Math.min(...finite);
 	const highest = Math.max(...finite);
 	const span = highest - lowest;
-	const pad = span === 0 ? Math.max(1, Math.abs(highest) * 0.05) : span * 0.2;
-	return { min: Math.max(0, lowest - pad), max: highest + pad };
+	const pad =
+		span === 0
+			? Math.max(1, Math.ceil(Math.abs(highest) * 0.05))
+			: Math.max(1, Math.ceil(span * 0.2));
+	return { min: Math.max(0, Math.floor(lowest - pad)), max: Math.ceil(highest + pad) };
 }
 
 export const TrendChart = memo(function TrendChart({
@@ -132,14 +135,28 @@ export const TrendChart = memo(function TrendChart({
 				max: fitted?.max,
 				forceNiceScale: !fitScale,
 				decimalsInFloat: 0,
-				labels: { formatter: formatValue ?? ((value) => Math.round(value).toLocaleString(locale)) },
+				labels: {
+					formatter: (value) =>
+						typeof value !== "number" || !Number.isFinite(value)
+							? "—"
+							: formatValue
+								? formatValue(value)
+								: Math.round(value).toLocaleString(locale),
+				},
 			},
 			tooltip: {
 				shared: true,
 				intersect: false,
 				theme: resolvedTheme,
 				x: { formatter: (value) => formatter.format(Number(value)) },
-				y: { formatter: formatValue ?? ((value) => value.toLocaleString(locale)) },
+				y: {
+					formatter: (value) =>
+						typeof value !== "number" || !Number.isFinite(value)
+							? "—"
+							: formatValue
+								? formatValue(value)
+								: value.toLocaleString(locale),
+				},
 			},
 		};
 	}, [

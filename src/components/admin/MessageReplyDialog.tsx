@@ -1,12 +1,12 @@
-import { IconCopy, IconMail, IconMailOff, IconSend } from "@tabler/icons-react";
+import { IconCopy, IconLock, IconMail, IconMailOff, IconSend } from "@tabler/icons-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/Button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/Dialog";
 import { adminUserName } from "@/lib/admin-user";
+import { formatAdminDateTime } from "@/lib/admin-utils";
 import { api } from "@/lib/api";
-import { formatDateCompact } from "@/lib/datetime";
 import type { AdminContactMessage } from "@/types/admin-contact";
 import { copyText } from "@/utils/clipboard";
 import { AdminUserLabel } from "./AdminUserLabel";
@@ -29,8 +29,9 @@ export function MessageReplyDialog({
 	const [sendEmail, setSendEmail] = useState(message.has_email); // Default to true if email available
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
-	// Check if message has already been replied to
+	// Check if message is read-only (anonymous or already replied)
 	const isAlreadyReplied = !!message.admin_reply;
+	const isReadOnly = !message.can_reply || isAlreadyReplied;
 
 	const handleCopyMessage = async () => {
 		try {
@@ -43,6 +44,7 @@ export function MessageReplyDialog({
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
+		if (!message.can_reply) return;
 
 		if (!reply.trim()) {
 			toast.error(t("admin.reply_empty"));
@@ -63,7 +65,12 @@ export function MessageReplyDialog({
 			});
 
 			if (response.success) {
-				toast.success(sendEmail ? t("admin.reply_sent_email") : t("admin.reply_saved"));
+				const emailSent = (response.data as { emailSent?: boolean } | undefined)?.emailSent;
+				if (sendEmail && emailSent === false) {
+					toast(t("admin.reply_saved_email_failed"));
+				} else {
+					toast.success(sendEmail ? t("admin.reply_sent_email") : t("admin.reply_saved"));
+				}
 				onSuccess();
 				onClose();
 			} else {
@@ -100,7 +107,11 @@ export function MessageReplyDialog({
 				{/* Header */}
 				<div className="flex items-center justify-between p-6 border-b border-border">
 					<DialogTitle className="text-xl font-bold text-foreground">
-						{isAlreadyReplied ? t("admin.reply_title") : t("admin.reply_to")}
+						{!message.can_reply
+							? t("admin.message_details")
+							: isAlreadyReplied
+								? t("admin.reply_title")
+								: t("admin.reply_to")}
 					</DialogTitle>
 				</div>
 
@@ -109,7 +120,7 @@ export function MessageReplyDialog({
 				<div className="flex-1 overflow-y-auto p-6 space-y-6 bg-background">
 					{/* User Info */}
 					<div className="bg-surface rounded-lg p-4 space-y-2 border border-border">
-						<div className="flex items-center justify-between">
+						<div className="flex items-center justify-between gap-4">
 							<div>
 								<p className="text-sm text-muted">{t("admin.from")}</p>
 								<div className="font-medium text-foreground">
@@ -118,8 +129,8 @@ export function MessageReplyDialog({
 							</div>
 							<div className="text-right">
 								<p className="text-sm text-muted">{t("admin.date")}</p>
-								<p className="font-medium text-foreground">
-									{formatDateCompact(message.created_at)}
+								<p className="font-mono text-sm font-medium text-foreground">
+									{formatAdminDateTime(message.created_at)} UTC+8
 								</p>
 							</div>
 						</div>
@@ -141,26 +152,41 @@ export function MessageReplyDialog({
 							</Button>
 						</div>
 						<div className="bg-surface rounded-lg p-4 border-l-4 border-border">
-							<p className="text-foreground whitespace-pre-wrap">{message.message}</p>
+							<p className="text-foreground whitespace-pre-wrap break-words">{message.message}</p>
 						</div>
 					</div>
 
 					{/* Reply Section */}
-					{isAlreadyReplied ? (
+					{!message.can_reply ? (
+						<div className="flex items-center gap-3 p-4 bg-surface-subtle rounded-lg border border-border">
+							<IconLock className="w-5 h-5 shrink-0 text-muted" />
+							<div>
+								<p className="text-sm font-semibold text-foreground">{t("admin.read_only")}</p>
+								<p className="text-xs text-subtle">{t("admin.anonymous_read_only_notice")}</p>
+							</div>
+						</div>
+					) : isAlreadyReplied ? (
 						/* View Mode - Already Replied */
 						<div>
 							<div className="flex items-center justify-between mb-2">
 								<p className="text-sm font-semibold text-muted">
-									{t("admin.admin_reply_label", { date: formatDateCompact(message.replied_at!) })}
+									{t("admin.admin_reply_label", {
+										date: `${formatAdminDateTime(message.replied_at!)} UTC+8`,
+									})}
 								</p>
 								{message.user_read_at && (
 									<span className="text-xs text-success flex items-center gap-1">
-										✓ {t("admin.read_by_user", { date: formatDateCompact(message.user_read_at) })}
+										✓{" "}
+										{t("admin.read_by_user", {
+											date: `${formatAdminDateTime(message.user_read_at)} UTC+8`,
+										})}
 									</span>
 								)}
 							</div>
 							<div className="bg-brand/10 rounded-lg p-4 border-l-4 border-brand">
-								<p className="text-foreground whitespace-pre-wrap">{message.admin_reply}</p>
+								<p className="text-foreground whitespace-pre-wrap break-words">
+									{message.admin_reply}
+								</p>
 							</div>
 						</div>
 					) : (
@@ -232,7 +258,7 @@ export function MessageReplyDialog({
 
 				{/* Footer */}
 				<div className="flex items-center justify-end gap-3 p-6 border-t border-border bg-surface">
-					{isAlreadyReplied ? (
+					{isReadOnly ? (
 						/* View Mode - Only Close Button */
 						<Button variant="primary" onClick={onClose}>
 							{t("common.close")}
