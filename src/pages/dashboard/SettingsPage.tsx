@@ -1,6 +1,4 @@
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { type FormEvent, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
@@ -13,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/Input";
 import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/lib/api";
+import { validateWithSchema } from "@/lib/form";
 
 export default function SettingsPage() {
 	const { t } = useTranslation();
@@ -20,10 +19,16 @@ export default function SettingsPage() {
 	const profileSchema = z.object({
 		name: z.string().trim().min(2, t("settings.name_min")).max(100, t("settings.name_max")),
 	});
-	type ProfileFormData = z.infer<typeof profileSchema>;
 
-	const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
 	const { user, updateUser } = useAuth();
+	const savedName = user?.name || "";
+	const [name, setName] = useState(savedName);
+	const [nameError, setNameError] = useState<string>();
+	const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+
+	useEffect(() => {
+		setName(savedName);
+	}, [savedName]);
 
 	useEffect(() => {
 		if (!hash) return;
@@ -36,21 +41,23 @@ export default function SettingsPage() {
 		}
 	}, [hash]);
 
-	const profileForm = useForm<ProfileFormData>({
-		resolver: zodResolver(profileSchema),
-		defaultValues: {
-			name: user?.name || "",
-		},
-	});
+	const isDirty = name !== savedName;
 
-	const onProfileSubmit = async (data: ProfileFormData) => {
+	const onProfileSubmit = async (event: FormEvent<HTMLFormElement>) => {
+		event.preventDefault();
+		const result = validateWithSchema(profileSchema, { name });
+		if (!result.ok) {
+			setNameError(result.errors.name);
+			return;
+		}
+		setNameError(undefined);
 		setIsUpdatingProfile(true);
 		try {
-			const response = await api.updateUserProfile(data);
+			const response = await api.updateUserProfile(result.data);
 
 			if (response.success && response.data) {
 				updateUser(response.data);
-				profileForm.reset({ name: response.data.name || data.name });
+				setName(response.data.name || result.data.name);
 				toast.success(t("settings.profile_updated"));
 			} else {
 				throw new Error(response.error?.message || t("settings.profile_error"));
@@ -65,27 +72,28 @@ export default function SettingsPage() {
 
 	return (
 		<div className="space-y-6">
-			{/* Header */}
 			<div>
 				<h1 className="text-2xl font-bold text-foreground">{t("settings.title")}</h1>
 				<p className="mt-1 text-sm text-muted">{t("settings.subtitle")}</p>
 			</div>
 
-			{/* Profile Settings */}
 			<Card>
 				<CardHeader>
 					<CardTitle>{t("settings.profile_title")}</CardTitle>
 					<CardDescription>{t("settings.profile_desc")}</CardDescription>
 				</CardHeader>
 				<CardContent>
-					<form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-4">
+					<form onSubmit={onProfileSubmit} className="space-y-4">
 						<Input
 							label={t("settings.full_name")}
-							{...profileForm.register("name")}
-							error={profileForm.formState.errors.name?.message}
+							value={name}
+							onChange={(event) => {
+								setName(event.target.value);
+								if (nameError) setNameError(undefined);
+							}}
+							error={nameError}
 						/>
 
-						{/* Email display (disabled input style) */}
 						<div>
 							<label htmlFor="email" className="block text-sm font-medium text-foreground mb-1">
 								{t("settings.email_label")}
@@ -103,7 +111,7 @@ export default function SettingsPage() {
 						<Button
 							type="submit"
 							loading={isUpdatingProfile}
-							disabled={!profileForm.formState.isDirty}
+							disabled={!isDirty}
 							className="w-auto"
 						>
 							{t("settings.update_profile")}
@@ -113,11 +121,7 @@ export default function SettingsPage() {
 			</Card>
 
 			<CLIAccess />
-
-			{/* Password Management */}
 			<PasswordManagement />
-
-			{/* Delete Account */}
 			<DeleteAccount />
 		</div>
 	);

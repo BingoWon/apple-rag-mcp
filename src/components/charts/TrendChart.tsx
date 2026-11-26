@@ -1,12 +1,9 @@
-import type { ApexOptions } from "apexcharts";
-import { memo, Suspense, useMemo } from "react";
+import { memo, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useTheme } from "@/components/providers/ThemeProvider";
-import { lazyWithRecovery } from "@/lib/deployment-recovery";
 import type { AdminMetricStats } from "@/types";
 import { TOOL_OUTCOMES } from "../../../shared/tool-outcomes";
+import { type ChartSeries, SvgChart } from "./SvgChart";
 
-const ApexChart = lazyWithRecovery(() => import("@/components/charts/SafeApexChart"));
 export const OUTCOME_COLORS = {
 	success: "#22c55e",
 	degraded: "#06b6d4",
@@ -42,8 +39,7 @@ export function shouldShowTrendTick(index: number, total: number): boolean {
 
 /**
  * Format UTC+8 daily/hourly timeline points into explicit category buckets so
- * X-axis ticks sit directly under their data points without ApexCharts' default
- * UTC-midnight (`datetimeUTC: true`) 8-hour shift or missing right-edge date.
+ * X-axis ticks sit directly under their data points with zero timezone offset.
  */
 export function buildTrendBuckets(
 	points: readonly { date: string }[],
@@ -116,7 +112,6 @@ export const TrendChart = memo(function TrendChart({
 	stackComparison?: boolean;
 }) {
 	const { t, i18n } = useTranslation();
-	const { resolvedTheme } = useTheme();
 	const locale = i18n.resolvedLanguage?.startsWith("zh") ? "zh-CN" : "en";
 	const isRequest = !!metric.outcomes;
 	const hasBreakdown = metric.points.some(
@@ -135,153 +130,70 @@ export const TrendChart = memo(function TrendChart({
 		() => buildTrendBuckets(timeline, bucket, locale),
 		[timeline, bucket, locale],
 	);
-	const sampleAxisLabel = buckets[0]?.axisLabel || (bucket === "hour" ? "00:00" : "00/00");
-	const fitted = fitScale ? fittedCountAxis(metric.points.map((point) => point.count)) : undefined;
-	const formatSignature = formatValue ? formatValue(123456789) : "";
-	const options = useMemo<ApexOptions>(() => {
-		return {
-			theme: { mode: resolvedTheme },
-			chart: {
-				background: "transparent",
-				type: chartType,
-				stacked: isRequest || hasBreakdown || stackComparison,
-				animations: { enabled: false },
-				sparkline: { enabled: false },
-				toolbar: {
-					show: isRequest || hasBreakdown,
-					tools: {
-						download: true,
-						selection: false,
-						zoom: false,
-						zoomin: false,
-						zoomout: false,
-						pan: false,
-						reset: false,
-					},
-				},
-				zoom: { enabled: false },
-				foreColor: resolvedTheme === "dark" ? "#94a3b8" : "#64748b",
-			},
-			plotOptions: { bar: { columnWidth: "65%", borderRadius: 2 } },
-			stroke: { width: chartType === "bar" ? 0 : fitScale ? 3 : 2, curve: "straight" },
-			fill: { opacity: comparison || isRequest ? 1 : 0.2, type: "solid" },
-			colors: comparison
-				? comparison.map((item) => item.color)
-				: isRequest
-					? TOOL_OUTCOMES.filter(
-							(outcome) => outcome === "success" || metric.outcomes?.[outcome],
-						).map((outcome) => OUTCOME_COLORS[outcome])
-					: hasBreakdown
-						? [color, "#f59e0b"]
-						: [color],
-			dataLabels: { enabled: false },
-			legend: { show: (!!comparison && !stackComparison) || hasBreakdown, position: "bottom" },
-			grid: {
-				borderColor: resolvedTheme === "dark" ? "#334155" : "#e2e8f0",
-				strokeDashArray: 3,
-				padding: { left: 8, right: 12 },
-			},
-			xaxis: {
-				type: "category",
-				categories: buckets.map((item) => item.tooltipLabel),
-				axisBorder: { show: false },
-				axisTicks: { show: false },
-				labels: {
-					rotate: 0,
-					trim: false,
-					hideOverlappingLabels: false,
-					formatter: (value, _timestamp, opts) => {
-						const idx = (opts as { i?: number } | undefined)?.i;
-						if (typeof idx === "number" && buckets[idx]) {
-							return buckets[idx].axisLabel;
-						}
-						return sampleAxisLabel || String(value ?? "");
-					},
-				},
-			},
-			yaxis: {
-				min: fitted?.min ?? 0,
-				max: fitted?.max,
-				forceNiceScale: !fitScale,
-				decimalsInFloat: 0,
-				labels: {
-					formatter: (value) =>
-						typeof value !== "number" || !Number.isFinite(value)
-							? "—"
-							: formatValue
-								? formatValue(value)
-								: Math.round(value).toLocaleString(locale),
-				},
-			},
-			tooltip: {
-				shared: true,
-				intersect: false,
-				theme: resolvedTheme,
-				x: {
-					formatter: (value, opts) => {
-						const idx = opts?.dataPointIndex;
-						if (typeof idx === "number" && buckets[idx]) {
-							return buckets[idx].tooltipLabel;
-						}
-						return String(value ?? "");
-					},
-				},
-				y: {
-					formatter: (value) =>
-						typeof value !== "number" || !Number.isFinite(value)
-							? "—"
-							: formatValue
-								? formatValue(value)
-								: value.toLocaleString(locale),
-				},
-			},
-		};
-	}, [
-		isRequest,
-		metric.outcomes,
-		hasBreakdown,
-		resolvedTheme,
-		buckets,
-		sampleAxisLabel,
-		color,
-		locale,
-		fitScale,
-		fitted?.min,
-		fitted?.max,
-		comparison,
-		chartType,
-		stackComparison,
-		formatValue,
-	]);
-	const series = comparison
-		? comparison.map((item) => ({
+	const fitted = useMemo(
+		() => (fitScale ? fittedCountAxis(metric.points.map((point) => point.count)) : undefined),
+		[fitScale, metric.points],
+	);
+
+	const series: ChartSeries[] = useMemo(() => {
+		if (comparison) {
+			return comparison.map((item) => ({
 				name: item.name,
+				color: item.color,
 				data: alignSeriesPoints(timeline, item.metric.points, (point) => point?.count ?? null),
-			}))
-		: hasBreakdown
-			? [
-					{
-						name: t("admin.stats_registered"),
-						data: metric.points.map((point) => point.registered ?? 0),
-					},
-					{
-						name: t("admin.stats_anonymous"),
-						data: metric.points.map((point) => point.anonymous ?? 0),
-					},
-				]
-			: isRequest
-				? TOOL_OUTCOMES.filter(
-						(outcome) => outcome === "success" || metric.outcomes?.[outcome],
-					).map((outcome) => ({
-						name: t(`admin.stats_${outcome}`),
-						data: metric.points.map((point) => point[outcome] ?? 0),
-					}))
-				: [
-						{
-							name: seriesName ?? t("admin.stats_new_records"),
-							data: metric.points.map((point) => point.count),
-						},
-					];
+			}));
+		}
+		if (hasBreakdown) {
+			return [
+				{
+					name: t("admin.stats_registered"),
+					color,
+					data: metric.points.map((point) => point.registered ?? 0),
+				},
+				{
+					name: t("admin.stats_anonymous"),
+					color: "#f59e0b",
+					data: metric.points.map((point) => point.anonymous ?? 0),
+				},
+			];
+		}
+		if (isRequest) {
+			return TOOL_OUTCOMES.filter(
+				(outcome) => outcome === "success" || metric.outcomes?.[outcome],
+			).map((outcome) => ({
+				name: t(`admin.stats_${outcome}`),
+				color: OUTCOME_COLORS[outcome],
+				data: metric.points.map((point) => point[outcome] ?? 0),
+			}));
+		}
+		return [
+			{
+				name: seriesName ?? t("admin.stats_new_records"),
+				color,
+				data: metric.points.map((point) => point.count),
+			},
+		];
+	}, [comparison, timeline, hasBreakdown, isRequest, metric, color, seriesName, t]);
+
+	const formatAxisValue = useCallback(
+		(value: number) =>
+			!Number.isFinite(value)
+				? "—"
+				: formatValue
+					? formatValue(value)
+					: Math.round(value).toLocaleString(locale),
+		[formatValue, locale],
+	);
+
+	const formatTooltipValue = useCallback(
+		(value: number | null) =>
+			value === null || !Number.isFinite(value)
+				? "—"
+				: formatValue
+					? formatValue(value)
+					: value.toLocaleString(locale),
+		[formatValue, locale],
+	);
 
 	if (metric.total === 0 && !stackComparison) {
 		return (
@@ -290,23 +202,24 @@ export const TrendChart = memo(function TrendChart({
 			</div>
 		);
 	}
+
 	return (
 		<div className="min-w-0" style={{ height }}>
-			<Suspense
-				fallback={
-					<div className="flex h-full items-center justify-center text-xs text-muted">
-						{t("admin.stats_loading")}
-					</div>
-				}
-			>
-				<ApexChart
-					options={options}
-					series={series}
-					type={chartType}
-					height={height}
-					signature={`${locale}|${bucket}|${resolvedTheme}|${formatSignature}`}
-				/>
-			</Suspense>
+			<SvgChart
+				type={chartType}
+				buckets={buckets}
+				series={series}
+				height={height}
+				stacked={isRequest || hasBreakdown || stackComparison}
+				fitBounds={fitted}
+				strokeWidth={fitScale ? 3 : 2}
+				showLegend={(!!comparison && !stackComparison) || hasBreakdown}
+				showExport={isRequest || hasBreakdown}
+				exportFilename={`${seriesName ?? "trend"}.csv`}
+				ariaLabel={seriesName ?? t("admin.stats_new_records")}
+				formatAxisValue={formatAxisValue}
+				formatTooltipValue={formatTooltipValue}
+			/>
 		</div>
 	);
 });

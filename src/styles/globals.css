@@ -318,3 +318,41 @@ html {
 		transform: perspective(800px) rotateX(10deg) scale(0.8);
 	}
 }
+
+.admin-layout:has(.admin-list-panel) {
+	display: grid;
+	height: 100dvh;
+	grid-template: auto minmax(0, 1fr) / minmax(0, 1fr);
+}
+
+.admin-layout > main:has(.admin-list-panel) {
+	min-height: 0;
+	overflow: auto;
+}
+
+.activity-tile-calls {
+	background-image:
+		radial-gradient(
+			ellipse at 0% 100%,
+			color-mix(in srgb, var(--overview-search) 18%, transparent),
+			transparent 70%
+		),
+		radial-gradient(
+			ellipse at 65% 90%,
+			color-mix(in srgb, var(--overview-fetch) 13%, transparent),
+			transparent 65%
+		),
+		radial-gradient(
+			ellipse at 100% 20%,
+			color-mix(in srgb, var(--overview-browse) 12%, transparent),
+			transparent 65%
+		);
+}
+
+.activity-tile-quota {
+	background-image: linear-gradient(
+		135deg,
+		transparent 20%,
+		color-mix(in srgb, var(--subtle) 12%, transparent)
+	);
+}

@@ -1,4 +1,3 @@
-import axios, { type AxiosError, type AxiosInstance, type AxiosResponse } from "axios";
 import type {
 	AdminDashboardStats,
 	AdminStatsQuery,
@@ -19,6 +18,28 @@ import { getSignupSource } from "./attribution";
 import { ADMIN_PASSWORD_HEADER, ADMIN_SESSION_KEY } from "./constants";
 import { importWithRecovery, observeServerVersion } from "./deployment-recovery";
 
+const REQUEST_TIMEOUT_MS = 30_000;
+
+type QueryParams = Record<string, string | number | boolean | undefined | null>;
+
+interface RequestConfig {
+	params?: QueryParams;
+	headers?: Record<string, string>;
+	signal?: AbortSignal;
+}
+
+export class ApiError extends Error {
+	status: number;
+	data?: unknown;
+
+	constructor(message: string, status: number, data?: unknown) {
+		super(message);
+		this.name = "ApiError";
+		this.status = status;
+		this.data = data;
+	}
+}
+
 function extractErrorMessage(data: unknown): string | null {
 	if (Array.isArray(data) && data.length > 0 && typeof data[0]?.message === "string") {
 		return data[0].message;
@@ -29,148 +50,167 @@ function extractErrorMessage(data: unknown): string | null {
 	return null;
 }
 
+function buildUrl(baseURL: string, path: string, params?: QueryParams): string {
+	const base = `${baseURL}${path}`;
+	if (!params) return base;
+	const search = new URLSearchParams();
+	for (const [key, value] of Object.entries(params)) {
+		if (value !== undefined && value !== null) {
+			search.append(key, String(value));
+		}
+	}
+	const qs = search.toString();
+	if (!qs) return base;
+	return `${base}${base.includes("?") ? "&" : "?"}${qs}`;
+}
+
+function createTimedSignal(signal?: AbortSignal): { signal: AbortSignal; cleanup: () => void } {
+	const controller = new AbortController();
+	const timer = setTimeout(() => {
+		controller.abort(new DOMException("Request timed out", "TimeoutError"));
+	}, REQUEST_TIMEOUT_MS);
+
+	const onAbort = () => controller.abort(signal?.reason);
+	if (signal) {
+		if (signal.aborted) {
+			controller.abort(signal.reason);
+		} else {
+			signal.addEventListener("abort", onAbort, { once: true });
+		}
+	}
+
+	return {
+		signal: controller.signal,
+		cleanup: () => {
+			clearTimeout(timer);
+			signal?.removeEventListener("abort", onAbort);
+		},
+	};
+}
+
 class ApiClient {
-	private client: AxiosInstance;
+	private baseURL: string;
 
 	constructor(baseURL = "/api") {
-		this.client = axios.create({
-			baseURL,
-			timeout: 30000,
-			headers: { "Content-Type": "application/json" },
-		});
+		this.baseURL = baseURL;
+	}
 
-		this.client.interceptors.request.use((config) => {
-			try {
-				const raw = localStorage.getItem("auth-storage");
-				if (raw) {
-					const token = JSON.parse(raw).state?.token;
-					if (token && !config.headers.Authorization && !config.url?.startsWith("/oauth/"))
-						config.headers.Authorization = `Bearer ${token}`;
-				}
-			} catch {}
-
-			if (config.url?.includes("/admin")) {
-				const pw = localStorage.getItem(ADMIN_SESSION_KEY);
-				if (pw) config.headers[ADMIN_PASSWORD_HEADER] = pw;
+	private async request<T>(
+		method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH",
+		path: string,
+		data?: unknown,
+		config?: RequestConfig,
+	): Promise<{ ok: boolean; status: number; body: unknown; data: ApiResponse<T> | null }> {
+		const headers = new Headers({ "Content-Type": "application/json" });
+		if (config?.headers) {
+			for (const [key, value] of Object.entries(config.headers)) {
+				headers.set(key, value);
 			}
+		}
 
-			return config;
-		});
+		try {
+			const raw = localStorage.getItem("auth-storage");
+			if (raw) {
+				const token = JSON.parse(raw).state?.token;
+				if (token && !headers.has("Authorization") && !path.startsWith("/oauth/")) {
+					headers.set("Authorization", `Bearer ${token}`);
+				}
+			}
+		} catch {}
 
-		this.client.interceptors.response.use(
-			(r: AxiosResponse<ApiResponse>) => {
-				observeServerVersion(r.headers?.["x-app-version"]);
-				return r;
-			},
-			(error: AxiosError<ApiResponse>) => {
-				observeServerVersion(error.response?.headers?.["x-app-version"]);
-				const url = error.config?.url ?? "";
-				const status = error.response?.status;
-				const isAuthEndpoint = url.includes("/auth/login") || url.includes("/auth/register");
+		if (path.includes("/admin")) {
+			const pw = localStorage.getItem(ADMIN_SESSION_KEY);
+			if (pw) headers.set(ADMIN_PASSWORD_HEADER, pw);
+		}
 
-				if ((status === 401 || status === 403) && !isAuthEndpoint) {
-					if (url.includes("/admin")) {
-						localStorage.removeItem(ADMIN_SESSION_KEY);
-						if (typeof window !== "undefined") {
-							window.dispatchEvent(new CustomEvent("admin-auth-expired"));
-						}
-					} else if (status === 401 && error.config?.headers.Authorization) {
-						const rejected = error.config.headers.Authorization;
-						void importWithRecovery(() => import("@/stores/auth")).then(({ useAuthStore }) => {
-							const state = useAuthStore.getState();
-							if (rejected === "Bearer " + state.token) state.clearSession();
-						});
+		const { signal, cleanup } = createTimedSignal(config?.signal);
+		let response: Response;
+		try {
+			response = await fetch(buildUrl(this.baseURL, path, config?.params), {
+				method,
+				headers,
+				body: data !== undefined ? JSON.stringify(data) : undefined,
+				signal,
+			});
+		} finally {
+			cleanup();
+		}
+
+		observeServerVersion(response.headers.get("x-app-version"));
+		const body = await response.json().catch(() => null);
+		const parsed =
+			body && typeof body === "object" && !Array.isArray(body) ? (body as ApiResponse<T>) : null;
+
+		if (!response.ok) {
+			const isAuthEndpoint = path.includes("/auth/login") || path.includes("/auth/register");
+			if ((response.status === 401 || response.status === 403) && !isAuthEndpoint) {
+				if (path.includes("/admin")) {
+					localStorage.removeItem(ADMIN_SESSION_KEY);
+					if (typeof window !== "undefined") {
+						window.dispatchEvent(new CustomEvent("admin-auth-expired"));
 					}
-				}
-				const backendMessage =
-					error.response?.data?.error?.message || extractErrorMessage(error.response?.data);
-				if (backendMessage) {
-					error.message = backendMessage;
-				}
-				return Promise.reject(error);
-			},
-		);
-	}
-
-	// HTTP methods
-	async get<T>(url: string, config?: Record<string, unknown>): Promise<ApiResponse<T>> {
-		const response = await this.client.get(url, config);
-		return response.data;
-	}
-
-	async post<T>(
-		url: string,
-		data?: unknown,
-		config?: Record<string, unknown>,
-	): Promise<ApiResponse<T>> {
-		try {
-			const response = await this.client.post(url, data, config);
-			return response.data;
-		} catch (error: unknown) {
-			const axiosError = error as AxiosError<ApiResponse>;
-			const respData = axiosError.response?.data;
-
-			if (respData) {
-				if (respData.success === false && respData.error) {
-					return respData as ApiResponse<T>;
-				}
-
-				// Normalize unexpected formats (e.g. raw Zod validation error arrays)
-				const message = extractErrorMessage(respData);
-				if (message) {
-					return {
-						success: false,
-						error: { code: "VALIDATION_ERROR", message },
-					} as ApiResponse<T>;
+				} else if (response.status === 401 && headers.has("Authorization")) {
+					const rejected = headers.get("Authorization");
+					void importWithRecovery(() => import("@/stores/auth")).then(({ useAuthStore }) => {
+						const state = useAuthStore.getState();
+						if (rejected === `Bearer ${state.token}`) state.clearSession();
+					});
 				}
 			}
-
-			throw error;
 		}
+
+		return { ok: response.ok, status: response.status, body, data: parsed };
 	}
 
-	async put<T>(
-		url: string,
-		data?: unknown,
-		config?: Record<string, unknown>,
-	): Promise<ApiResponse<T>> {
-		try {
-			const response = await this.client.put(url, data, config);
-			return response.data;
-		} catch (error: unknown) {
-			const axiosError = error as AxiosError<ApiResponse>;
-			// If we have a structured error response, return it
-			if (axiosError.response?.data?.success === false) {
-				return axiosError.response.data as ApiResponse<T>;
-			}
-			throw error;
+	private toError(status: number, body: unknown, parsed: ApiResponse<unknown> | null): ApiError {
+		const message =
+			parsed?.error?.message || extractErrorMessage(body) || `Request failed with status ${status}`;
+		return new ApiError(message, status, body);
+	}
+
+	async get<T>(url: string, config?: RequestConfig): Promise<ApiResponse<T>> {
+		const res = await this.request<T>("GET", url, undefined, config);
+		if (!res.ok) throw this.toError(res.status, res.body, res.data);
+		return res.data as ApiResponse<T>;
+	}
+
+	async post<T>(url: string, data?: unknown, config?: RequestConfig): Promise<ApiResponse<T>> {
+		const res = await this.request<T>("POST", url, data, config);
+		if (res.ok) return res.data as ApiResponse<T>;
+		if (res.data?.success === false && res.data.error) {
+			return res.data;
 		}
-	}
-
-	async delete<T>(url: string, config?: Record<string, unknown>): Promise<ApiResponse<T>> {
-		try {
-			const response = await this.client.delete(url, config);
-			return response.data;
-		} catch (error: unknown) {
-			const axiosError = error as AxiosError<ApiResponse>;
-			// If we have a structured error response, return it
-			if (axiosError.response?.data?.success === false) {
-				return axiosError.response.data as ApiResponse<T>;
-			}
-			throw error;
+		const message = extractErrorMessage(res.body);
+		if (message) {
+			return {
+				success: false,
+				error: { code: "VALIDATION_ERROR", message },
+			} as ApiResponse<T>;
 		}
+		throw this.toError(res.status, res.body, res.data);
 	}
 
-	async patch<T>(
-		url: string,
-		data?: unknown,
-		config?: Record<string, unknown>,
-	): Promise<ApiResponse<T>> {
-		const response = await this.client.patch(url, data, config);
-		return response.data;
+	async put<T>(url: string, data?: unknown, config?: RequestConfig): Promise<ApiResponse<T>> {
+		const res = await this.request<T>("PUT", url, data, config);
+		if (res.ok) return res.data as ApiResponse<T>;
+		if (res.data?.success === false) return res.data;
+		throw this.toError(res.status, res.body, res.data);
 	}
 
-	// Auth endpoints with modern email normalization
+	async delete<T>(url: string, config?: RequestConfig): Promise<ApiResponse<T>> {
+		const res = await this.request<T>("DELETE", url, undefined, config);
+		if (res.ok) return res.data as ApiResponse<T>;
+		if (res.data?.success === false) return res.data;
+		throw this.toError(res.status, res.body, res.data);
+	}
+
+	async patch<T>(url: string, data?: unknown, config?: RequestConfig): Promise<ApiResponse<T>> {
+		const res = await this.request<T>("PATCH", url, data, config);
+		if (!res.ok) throw this.toError(res.status, res.body, res.data);
+		return res.data as ApiResponse<T>;
+	}
+
+	// Auth endpoints
 	async login(credentials: { email: string; password: string; remember_me?: boolean }) {
 		return this.post<{ token: string }>("/auth/login", {
 			...credentials,
@@ -297,23 +337,24 @@ class ApiClient {
 		});
 	}
 
-	// Admin API methods with pagination support
+	// Admin endpoints
 	async verifyAdminSession() {
 		return this.get("/admin");
 	}
 
 	async getAdminStats(query: AdminStatsQuery, signal?: AbortSignal) {
-		return this.get<AdminDashboardStats>("/admin/stats", { params: query, signal });
+		return this.get<AdminDashboardStats>("/admin/stats", {
+			params: { ...query },
+			signal,
+		});
 	}
 
-	async getAdminUsers(page: number = 1, limit: number = 50, signal?: AbortSignal) {
-		const offset = (page - 1) * limit;
-		return this.get(`/admin/users?limit=${limit}&offset=${offset}`, { signal });
+	async getAdminUsers(page = 1, limit = 50, signal?: AbortSignal) {
+		return this.get("/admin/users", { params: { limit, offset: (page - 1) * limit }, signal });
 	}
 
-	async getAdminMCPTokens(page: number = 1, limit: number = 50, signal?: AbortSignal) {
-		const offset = (page - 1) * limit;
-		return this.get(`/admin/mcp-tokens?limit=${limit}&offset=${offset}`, { signal });
+	async getAdminMCPTokens(page = 1, limit = 50, signal?: AbortSignal) {
+		return this.get("/admin/mcp-tokens", { params: { limit, offset: (page - 1) * limit }, signal });
 	}
 
 	async getAdminLogs(
@@ -329,21 +370,25 @@ class ApiClient {
 		});
 	}
 
-	async getAdminUserSubscriptions(page: number = 1, limit: number = 50, signal?: AbortSignal) {
-		const offset = (page - 1) * limit;
-		return this.get(`/admin/user-subscriptions?limit=${limit}&offset=${offset}`, { signal });
+	async getAdminUserSubscriptions(page = 1, limit = 50, signal?: AbortSignal) {
+		return this.get("/admin/user-subscriptions", {
+			params: { limit, offset: (page - 1) * limit },
+			signal,
+		});
 	}
 
-	async getAdminContactMessages(page: number = 1, limit: number = 50, signal?: AbortSignal) {
-		const offset = (page - 1) * limit;
-		return this.get(`/admin/contact-messages?limit=${limit}&offset=${offset}`, { signal });
+	async getAdminContactMessages(page = 1, limit = 50, signal?: AbortSignal) {
+		return this.get("/admin/contact-messages", {
+			params: { limit, offset: (page - 1) * limit },
+			signal,
+		});
 	}
 
 	async replyToContactMessage(id: string, data: { message: string; sendEmail: boolean }) {
 		return this.post(`/admin/contact-messages/${id}/reply`, data);
 	}
 
-	// User-facing contact message methods
+	// Contact messages
 	async getUnreadReplies() {
 		return this.get("/contact-messages/my-replies");
 	}
@@ -358,26 +403,21 @@ class ApiClient {
 		filter?: "all" | "unread" | "read";
 		search?: string;
 	}) {
-		const queryParams = new URLSearchParams();
-		if (params?.limit) queryParams.append("limit", params.limit.toString());
-		if (params?.offset) queryParams.append("offset", params.offset.toString());
-		if (params?.filter) queryParams.append("filter", params.filter);
-		if (params?.search) queryParams.append("search", params.search);
-
-		const query = queryParams.toString();
-		return this.get(`/contact-messages/history${query ? `?${query}` : ""}`);
+		return this.get("/contact-messages/history", { params });
 	}
 
-	async getAdminAuthorizedIPs(page: number = 1, limit: number = 50, signal?: AbortSignal) {
-		const offset = (page - 1) * limit;
-		return this.get(`/admin/authorized-ips?limit=${limit}&offset=${offset}`, { signal });
+	async getAdminAuthorizedIPs(page = 1, limit = 50, signal?: AbortSignal) {
+		return this.get("/admin/authorized-ips", {
+			params: { limit, offset: (page - 1) * limit },
+			signal,
+		});
 	}
 
-	// Contact message submission
 	async submitContactMessage(data: { email?: string; message: string }) {
 		return this.post("/contact-messages", data);
 	}
 
+	// Billing
 	async getUserSubscription() {
 		return this.get("/stripe/subscription");
 	}
@@ -397,17 +437,16 @@ class ApiClient {
 		return this.post("/stripe/billing-portal");
 	}
 
-	// User profile
+	// Profile & account
 	async updateUserProfile(updates: { name?: string }): Promise<ApiResponse<User>> {
 		return this.put<User>("/users/profile", updates);
 	}
 
-	// Delete user account (hard delete)
 	async deleteAccount() {
 		return this.delete("/users/account");
 	}
 
-	// Authorized IPs management
+	// Authorized IPs
 	async getAuthorizedIPs() {
 		return this.get("/authorized-ips");
 	}

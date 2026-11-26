@@ -1,7 +1,5 @@
-import { zodResolver } from "@hookform/resolvers/zod";
 import { IconAlertTriangle } from "@tabler/icons-react";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { type FormEvent, useState } from "react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -20,6 +18,7 @@ import {
 import { Input } from "@/components/ui/Input";
 import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/lib/api";
+import { validateWithSchema } from "@/lib/form";
 
 export function DeleteAccount() {
 	const { t } = useTranslation();
@@ -28,28 +27,34 @@ export function DeleteAccount() {
 			message: t("settings.delete_type_confirm"),
 		}),
 	});
-	type DeleteConfirmationData = { confirmation: string };
 
+	const [confirmation, setConfirmation] = useState("");
+	const [confirmationError, setConfirmationError] = useState<string>();
 	const [isLoading, setIsLoading] = useState(false);
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
 	const { clearSession } = useAuth();
 	const navigate = useNavigate();
 
-	const confirmForm = useForm<DeleteConfirmationData>({
-		resolver: zodResolver(deleteConfirmationSchema),
-	});
+	const resetForm = () => {
+		setConfirmation("");
+		setConfirmationError(undefined);
+	};
 
-	const handleDeleteAccount = async (_data: DeleteConfirmationData) => {
+	const handleDeleteAccount = async (event: FormEvent<HTMLFormElement>) => {
+		event.preventDefault();
+		const result = validateWithSchema(deleteConfirmationSchema, { confirmation });
+		if (!result.ok) {
+			setConfirmationError(result.errors.confirmation);
+			return;
+		}
+		setConfirmationError(undefined);
 		setIsLoading(true);
 		try {
 			const response = await api.deleteAccount();
 
 			if (response.success) {
 				toast.success(t("settings.delete_success"));
-
-				// Close dialog
 				setIsDialogOpen(false);
-
 				clearSession();
 				navigate("/", { replace: true });
 			} else {
@@ -66,11 +71,7 @@ export function DeleteAccount() {
 	const handleDialogOpenChange = (open: boolean) => {
 		if (!open && isLoading) return;
 		setIsDialogOpen(open);
-		if (!open) confirmForm.reset();
-	};
-
-	const handleDialogClose = () => {
-		handleDialogOpenChange(false);
+		if (!open) resetForm();
 	};
 
 	return (
@@ -109,18 +110,19 @@ export function DeleteAccount() {
 									<DialogDescription>{t("settings.delete_desc")}</DialogDescription>
 								</DialogHeader>
 
-								<form
-									onSubmit={confirmForm.handleSubmit(handleDeleteAccount)}
-									className="space-y-4"
-								>
+								<form onSubmit={handleDeleteAccount} className="space-y-4">
 									<div>
 										<p className="text-sm text-subtle mb-3">
 											{t("settings.delete_confirm_label")}:
 										</p>
 										<Input
 											placeholder={t("settings.delete_confirm_placeholder")}
-											{...confirmForm.register("confirmation")}
-											error={confirmForm.formState.errors.confirmation?.message}
+											value={confirmation}
+											onChange={(event) => {
+												setConfirmation(event.target.value);
+												if (confirmationError) setConfirmationError(undefined);
+											}}
+											error={confirmationError}
 											className="font-mono"
 										/>
 									</div>
@@ -129,7 +131,7 @@ export function DeleteAccount() {
 										<Button
 											type="button"
 											variant="outline"
-											onClick={handleDialogClose}
+											onClick={() => handleDialogOpenChange(false)}
 											disabled={isLoading}
 										>
 											{t("common.cancel")}
@@ -137,7 +139,7 @@ export function DeleteAccount() {
 										<Button
 											type="submit"
 											variant="destructive"
-											disabled={isLoading || !confirmForm.watch("confirmation")}
+											disabled={isLoading || !confirmation}
 										>
 											{isLoading ? t("settings.deleting") : t("settings.delete_title")}
 										</Button>

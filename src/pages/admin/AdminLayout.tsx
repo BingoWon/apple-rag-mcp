@@ -1,4 +1,3 @@
-import "./admin-layout.css";
 import { IconHome, IconLayoutDashboard } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";

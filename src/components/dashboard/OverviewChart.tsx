@@ -1,11 +1,8 @@
-import type { ApexOptions } from "apexcharts";
-import { Suspense, useId } from "react";
+import { useCallback, useId, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useTheme } from "@/components/providers/ThemeProvider";
-import { lazyWithRecovery } from "@/lib/deployment-recovery";
 import { TOOL_KINDS, type ToolActivity, type ToolKind } from "../../../shared/tool-activity";
+import { SvgChart } from "../charts/SvgChart";
 
-const ApexChart = lazyWithRecovery(() => import("@/components/charts/SafeApexChart"));
 const overviewColors = { search: "#128b84", fetch: "#5868d9", browse: "#bd4393" };
 const nightColors = { search: "#39dfcf", fetch: "#99a7ff", browse: "#f09fdb" };
 export const overviewPalette = (dark: boolean) => (dark ? nightColors : overviewColors);
@@ -48,104 +45,11 @@ export function formatActivityBuckets(
 	return points.map((point, index) => {
 		const ms = Date.parse(point.date);
 		return {
-			key: point.date,
+			date: point.date,
 			axisLabel: shouldShowBucketTick(index, points.length) ? axisFormat.format(ms) : "",
 			tooltipLabel: tooltipFormat.format(ms),
 		};
 	});
-}
-
-export function buildOverviewChartOptions({
-	data,
-	visible,
-	colors,
-	dark,
-	locale,
-}: {
-	data: ToolActivity;
-	visible: readonly ToolKind[];
-	colors: Palette;
-	dark: boolean;
-	locale: string;
-}): ApexOptions {
-	const axis = dark ? "#94a3b8" : "#64748b";
-	const buckets = formatActivityBuckets(data.points, data.bucket, locale);
-	const maxBucketTotal = Math.max(0, ...data.points.map((p) => p.search + p.browse + p.fetch));
-	const columnWidth = data.points.length <= 8 ? "42%" : data.points.length <= 26 ? "62%" : "68%";
-	const borderRadius = data.points.length > 14 ? 2 : 4;
-	const numberFormat = new Intl.NumberFormat(locale);
-
-	return {
-		chart: {
-			type: "bar",
-			stacked: true,
-			background: "transparent",
-			toolbar: { show: false },
-			zoom: { enabled: false },
-			animations: { enabled: false },
-			foreColor: axis,
-		},
-		theme: { mode: dark ? "dark" : "light" },
-		colors: visible.map((k) => colors[k]),
-		plotOptions: {
-			bar: {
-				horizontal: false,
-				columnWidth,
-				borderRadius,
-				borderRadiusApplication: "end",
-				borderRadiusWhenStacked: "last",
-			},
-		},
-		stroke: { width: 0 },
-		fill: { opacity: 0.92 },
-		dataLabels: { enabled: false },
-		legend: { show: false },
-		grid: {
-			borderColor: dark ? "#334155" : "#cbd5e1",
-			strokeDashArray: 3,
-			xaxis: { lines: { show: false } },
-			yaxis: { lines: { show: true } },
-			padding: { left: 4, right: 8 },
-		},
-		xaxis: {
-			type: "category",
-			categories: buckets.map((b) => b.axisLabel),
-			labels: {
-				rotate: 0,
-				trim: false,
-				hideOverlappingLabels: false,
-			},
-			axisTicks: { show: false },
-			axisBorder: { show: false },
-		},
-		yaxis: {
-			min: 0,
-			forceNiceScale: true,
-			tickAmount: maxBucketTotal > 0 && maxBucketTotal < 4 ? maxBucketTotal : 4,
-			labels: { formatter: (v) => numberFormat.format(Math.round(v)) },
-		},
-		tooltip: {
-			shared: true,
-			intersect: false,
-			theme: dark ? "dark" : "light",
-			x: {
-				formatter: (value, opts) => {
-					const idx = opts?.dataPointIndex;
-					if (typeof idx === "number" && buckets[idx]) {
-						return buckets[idx].tooltipLabel;
-					}
-					return String(value);
-				},
-			},
-			y: {
-				formatter: (v) => numberFormat.format(Math.round(v)),
-			},
-		},
-		states: {
-			hover: { filter: { type: "lighten" } },
-			active: { filter: { type: "none" } },
-		},
-	};
 }
 
 export function CallsSparkline({ data }: { data: ToolActivity }) {
@@ -194,33 +98,43 @@ export function CallsSparkline({ data }: { data: ToolActivity }) {
 
 export function OverviewChart({ data, colors }: { data: ToolActivity; colors: Palette }) {
 	const { t, i18n } = useTranslation();
-	const { resolvedTheme } = useTheme();
-	const dark = resolvedTheme === "dark";
 	const locale = i18n.resolvedLanguage ?? "en";
-	const visible = TOOL_KINDS.filter((k) => data.by_tool[k] > 0);
-	const options = buildOverviewChartOptions({ data, visible, colors, dark, locale });
+	const numberFormat = useMemo(() => new Intl.NumberFormat(locale), [locale]);
+	const buckets = useMemo(
+		() => formatActivityBuckets(data.points, data.bucket, locale),
+		[data.points, data.bucket, locale],
+	);
+	const series = useMemo(
+		() =>
+			TOOL_KINDS.filter((k) => data.by_tool[k] > 0).map((k) => ({
+				name: t(`activity.${k}`),
+				color: colors[k],
+				data: data.points.map((p) => p[k]),
+			})),
+		[data.by_tool, data.points, colors, t],
+	);
+	const formatAxis = useCallback(
+		(value: number) => numberFormat.format(Math.round(value)),
+		[numberFormat],
+	);
+	const formatTooltip = useCallback(
+		(value: number | null) =>
+			value === null || !Number.isFinite(value) ? "—" : numberFormat.format(Math.round(value)),
+		[numberFormat],
+	);
 
 	return (
 		<div className="h-64 min-w-0 sm:h-80">
-			<Suspense
-				fallback={
-					<div className="grid h-full place-items-center text-sm text-muted">
-						{t("admin.stats_loading")}
-					</div>
-				}
-			>
-				<ApexChart
-					type="bar"
-					width="100%"
-					height="100%"
-					options={options}
-					series={visible.map((k) => ({
-						name: t(`activity.${k}`),
-						data: data.points.map((p) => p[k]),
-					}))}
-					signature={`${locale}|${dark ? "dark" : "light"}`}
-				/>
-			</Suspense>
+			<SvgChart
+				type="bar"
+				buckets={buckets}
+				series={series}
+				height="100%"
+				stacked
+				ariaLabel={t("chart.usage_trends")}
+				formatAxisValue={formatAxis}
+				formatTooltipValue={formatTooltip}
+			/>
 		</div>
 	);
 }

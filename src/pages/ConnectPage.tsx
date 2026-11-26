@@ -1,24 +1,16 @@
-import { Suspense, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { AgentSetupCard } from "@/components/agent/AgentSetupCard";
 import { Footer } from "@/components/layout/Footer";
 import { AgentFAQ } from "@/components/sections/AgentFAQ";
 import { Button } from "@/components/ui/Button";
+import { CodeBlock } from "@/components/ui/code-block";
 import { AppNavbar } from "@/components/ui/resizable-navbar";
 import { usePageScroll } from "@/hooks/usePageScroll";
-import { lazyWithRecovery } from "@/lib/deployment-recovery";
 
 const commands =
 	'npm install -g apple-rag-cli\napple-rag auth login\napple-rag search "SwiftUI NavigationStack path binding" --limit 3 --json\napple-rag browse --json\napple-rag fetch "https://developer.apple.com/documentation/swiftui" --json';
-
-const plainCommands = (
-	<pre className="overflow-x-auto rounded-lg bg-surface p-4 text-sm">{commands}</pre>
-);
-
-const CodeBlock = lazyWithRecovery(() =>
-	import("@/components/ui/code-block").then(({ CodeBlock }) => ({ default: CodeBlock })),
-);
 
 export default function ConnectPage() {
 	const { t } = useTranslation();
@@ -66,13 +58,9 @@ export default function ConnectPage() {
 										{t("connect.reference")}
 									</summary>
 									<div className="mt-4 min-w-0">
-										<Suspense fallback={plainCommands}>
-											{referenceOpen ? (
-												<CodeBlock language="bash" filename="agent commands" code={commands} />
-											) : (
-												plainCommands
-											)}
-										</Suspense>
+										{referenceOpen && (
+											<CodeBlock language="bash" filename="agent commands" code={commands} />
+										)}
 									</div>
 								</details>
 								<div className="flex flex-wrap gap-5 text-sm text-brand">

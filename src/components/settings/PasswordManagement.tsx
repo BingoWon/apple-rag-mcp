@@ -1,7 +1,5 @@
-import { zodResolver } from "@hookform/resolvers/zod";
 import { IconLock } from "@tabler/icons-react";
-import { useCallback, useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { type FormEvent, useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
@@ -10,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/Input";
 import { LoaderFive } from "@/components/ui/loader";
 import { api } from "@/lib/api";
+import { type FieldErrors, validateWithSchema } from "@/lib/form";
 import { useAuthStore } from "@/stores/auth";
 
 interface AuthStatus {
@@ -17,6 +16,18 @@ interface AuthStatus {
 	canChangePassword: boolean;
 	authenticationMethod: string;
 }
+
+interface PasswordChangeFields extends Record<string, string> {
+	currentPassword: string;
+	newPassword: string;
+	confirmPassword: string;
+}
+
+const INITIAL_FIELDS: PasswordChangeFields = {
+	currentPassword: "",
+	newPassword: "",
+	confirmPassword: "",
+};
 
 const PROVIDER_METHOD_KEYS: Record<string, string> = {
 	email: "settings.auth_method_email",
@@ -36,15 +47,19 @@ export function PasswordManagement() {
 			message: t("settings.passwords_mismatch"),
 			path: ["confirmPassword"],
 		});
-	type PasswordChangeData = z.infer<typeof passwordChangeSchema>;
 
+	const [fields, setFields] = useState<PasswordChangeFields>(INITIAL_FIELDS);
+	const [errors, setErrors] = useState<FieldErrors<PasswordChangeFields>>({});
 	const [isLoading, setIsLoading] = useState(false);
 	const [isLoadingStatus, setIsLoadingStatus] = useState(true);
 	const [authStatus, setAuthStatus] = useState<AuthStatus | null>(null);
 
-	const changeForm = useForm<PasswordChangeData>({
-		resolver: zodResolver(passwordChangeSchema),
-	});
+	const updateField = (key: keyof PasswordChangeFields, value: string) => {
+		setFields((prev) => ({ ...prev, [key]: value }));
+		if (errors[key]) {
+			setErrors((prev) => ({ ...prev, [key]: undefined }));
+		}
+	};
 
 	const fetchAuthStatus = useCallback(async () => {
 		setIsLoadingStatus(true);
@@ -60,20 +75,28 @@ export function PasswordManagement() {
 		}
 	}, []);
 
-	// Fetch authentication status on component mount
 	useEffect(() => {
 		fetchAuthStatus();
 	}, [fetchAuthStatus]);
 
-	const handlePasswordChange = async (data: PasswordChangeData) => {
+	const handlePasswordChange = async (event: FormEvent<HTMLFormElement>) => {
+		event.preventDefault();
+		const result = validateWithSchema(passwordChangeSchema, fields);
+		if (!result.ok) {
+			setErrors(result.errors);
+			return;
+		}
+		setErrors({});
 		setIsLoading(true);
 		try {
-			const response = await api.changePassword(data.currentPassword, data.newPassword);
+			const response = await api.changePassword(
+				result.data.currentPassword,
+				result.data.newPassword,
+			);
 
 			if (response.success) {
 				toast.success(t("settings.password_changed"));
-				changeForm.reset();
-
+				setFields(INITIAL_FIELDS);
 				useAuthStore.getState().clearSession();
 			} else {
 				throw new Error(response.error?.message || t("settings.password_change_error"));
@@ -124,7 +147,6 @@ export function PasswordManagement() {
 		defaultValue: authStatus.authenticationMethod,
 	});
 
-	// Email users can change password - OAuth users cannot
 	if (authStatus.canChangePassword) {
 		return (
 			<Card>
@@ -135,11 +157,7 @@ export function PasswordManagement() {
 					</CardDescription>
 				</CardHeader>
 				<CardContent>
-					<form
-						name="change-password"
-						onSubmit={changeForm.handleSubmit(handlePasswordChange)}
-						className="space-y-4"
-					>
+					<form name="change-password" onSubmit={handlePasswordChange} className="space-y-4">
 						<div>
 							<label
 								htmlFor="currentPassword"
@@ -152,8 +170,9 @@ export function PasswordManagement() {
 								type="password"
 								placeholder={t("settings.current_password_placeholder")}
 								autoComplete="current-password"
-								{...changeForm.register("currentPassword")}
-								error={changeForm.formState.errors.currentPassword?.message}
+								value={fields.currentPassword}
+								onChange={(event) => updateField("currentPassword", event.target.value)}
+								error={errors.currentPassword}
 							/>
 						</div>
 
@@ -169,8 +188,9 @@ export function PasswordManagement() {
 								type="password"
 								placeholder={t("settings.new_password_placeholder")}
 								autoComplete="new-password"
-								{...changeForm.register("newPassword")}
-								error={changeForm.formState.errors.newPassword?.message}
+								value={fields.newPassword}
+								onChange={(event) => updateField("newPassword", event.target.value)}
+								error={errors.newPassword}
 							/>
 						</div>
 
@@ -186,8 +206,9 @@ export function PasswordManagement() {
 								type="password"
 								placeholder={t("settings.confirm_password_placeholder")}
 								autoComplete="new-password"
-								{...changeForm.register("confirmPassword")}
-								error={changeForm.formState.errors.confirmPassword?.message}
+								value={fields.confirmPassword}
+								onChange={(event) => updateField("confirmPassword", event.target.value)}
+								error={errors.confirmPassword}
 							/>
 						</div>
 
@@ -200,7 +221,6 @@ export function PasswordManagement() {
 		);
 	}
 
-	// OAuth users - show information about their authentication method
 	return (
 		<Card>
 			<CardHeader>

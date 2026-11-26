@@ -1,8 +1,5 @@
-import { zodResolver } from "@hookform/resolvers/zod";
 import { IconInfoCircle, IconSquareRoundedPlus } from "@tabler/icons-react";
-import { useCallback, useEffect, useState } from "react";
-import type { UseFormReturn } from "react-hook-form";
-import { useForm } from "react-hook-form";
+import { type FormEvent, useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
@@ -19,6 +16,7 @@ import {
 } from "@/components/ui/Dialog";
 import { Input } from "@/components/ui/Input";
 import { api } from "@/lib/api";
+import { type FieldErrors, validateWithSchema } from "@/lib/form";
 import { canonicalIP } from "../../../shared/ip";
 
 interface AuthorizedIP {
@@ -30,13 +28,19 @@ interface AuthorizedIP {
 	updated_at: string;
 }
 
+interface AuthorizedIPFields extends Record<string, string> {
+	ip_address: string;
+	name: string;
+}
+
+const INITIAL_FIELDS: AuthorizedIPFields = { ip_address: "", name: "" };
+
 export default function AuthorizedIPsPage() {
 	const { t } = useTranslation();
 	const authorizedIPSchema = z.object({
 		ip_address: z.string().refine((value) => !!canonicalIP(value), t("ips.invalid_ip")),
 		name: z.string().trim().min(1, t("ips.name_required")).max(100, t("ips.name_too_long")),
 	});
-	type AuthorizedIPFormData = z.infer<typeof authorizedIPSchema>;
 
 	const [ips, setIPs] = useState<AuthorizedIP[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
@@ -44,16 +48,21 @@ export default function AuthorizedIPsPage() {
 	const [isCreating, setIsCreating] = useState(false);
 	const [isAddOpen, setIsAddOpen] = useState(false);
 	const [currentIP, setCurrentIP] = useState<string | null>(null);
+	const [fields, setFields] = useState<AuthorizedIPFields>(INITIAL_FIELDS);
+	const [errors, setErrors] = useState<FieldErrors<AuthorizedIPFields>>({});
 
-	const form = useForm<AuthorizedIPFormData>({
-		resolver: zodResolver(authorizedIPSchema),
-		defaultValues: {
-			ip_address: "",
-			name: "",
-		},
-	});
+	const resetForm = () => {
+		setFields(INITIAL_FIELDS);
+		setErrors({});
+	};
 
-	// Load authorized IPs + first-party Cloudflare-detected client IP
+	const updateField = (key: keyof AuthorizedIPFields, value: string) => {
+		setFields((prev) => ({ ...prev, [key]: value }));
+		if (errors[key]) {
+			setErrors((prev) => ({ ...prev, [key]: undefined }));
+		}
+	};
+
 	const loadIPs = useCallback(async () => {
 		setIsLoading(true);
 		setLoadError(null);
@@ -86,19 +95,24 @@ export default function AuthorizedIPsPage() {
 		loadIPs();
 	}, [loadIPs]);
 
-	// Create new authorized IP
-	const onSubmit = async (data: AuthorizedIPFormData) => {
+	const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+		event.preventDefault();
+		const result = validateWithSchema(authorizedIPSchema, fields);
+		if (!result.ok) {
+			setErrors(result.errors);
+			return;
+		}
+		setErrors({});
 		setIsCreating(true);
 		try {
-			const response = await api.createAuthorizedIP(data);
+			const response = await api.createAuthorizedIP(result.data);
 			if (response.success) {
-				toast.success(t("ips.added_success", { name: data.name }));
-				form.reset();
+				toast.success(t("ips.added_success", { name: result.data.name }));
+				resetForm();
 				setIsAddOpen(false);
 				loadIPs();
 			} else {
-				const errorMessage = response.error?.message || t("ips.create_error");
-				toast.error(errorMessage);
+				toast.error(response.error?.message || t("ips.create_error"));
 			}
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : t("ips.create_error");
@@ -108,7 +122,6 @@ export default function AuthorizedIPsPage() {
 		}
 	};
 
-	// Update authorized IP name
 	const handleUpdate = async (id: string, name: string) => {
 		const response = await api.updateAuthorizedIP(id, { name });
 		if (!response.success) {
@@ -116,7 +129,6 @@ export default function AuthorizedIPsPage() {
 		}
 	};
 
-	// Delete authorized IP
 	const handleDelete = async (id: string) => {
 		const response = await api.deleteAuthorizedIP(id);
 		if (!response.success) {
@@ -127,28 +139,28 @@ export default function AuthorizedIPsPage() {
 		}
 	};
 
-	// Auto-fill current IP
 	const fillCurrentIP = () => {
-		if (currentIP) {
-			form.setValue("ip_address", currentIP, { shouldValidate: true });
-		}
+		if (!currentIP) return;
+		setFields((prev) => ({ ...prev, ip_address: currentIP }));
+		setErrors((prev) => ({
+			...prev,
+			ip_address: canonicalIP(currentIP) ? undefined : t("ips.invalid_ip"),
+		}));
 	};
 
 	const handleAddOpenChange = (open: boolean) => {
 		if (!open && isCreating) return;
 		setIsAddOpen(open);
-		if (!open) form.reset();
+		if (!open) resetForm();
 	};
 
 	return (
 		<div className="space-y-6">
-			{/* Header */}
 			<div>
 				<h1 className="text-2xl font-bold text-foreground">{t("ips.title")}</h1>
 				<p className="mt-1 text-sm text-muted">{t("ips.subtitle")}</p>
 			</div>
 
-			{/* Current IP Info */}
 			<Card>
 				<CardContent className="p-4">
 					<div className="flex">
@@ -170,7 +182,6 @@ export default function AuthorizedIPsPage() {
 				</CardContent>
 			</Card>
 
-			{/* Authorized IPs List */}
 			<Card>
 				<CardHeader>
 					<div className="flex flex-wrap items-center justify-between gap-3">
@@ -184,9 +195,11 @@ export default function AuthorizedIPsPage() {
 							</DialogTrigger>
 							<AddIPDialogContent
 								currentIP={currentIP || ""}
-								form={form}
+								fields={fields}
+								errors={errors}
 								isCreating={isCreating}
-								onSubmit={onSubmit}
+								onFieldChange={updateField}
+								onSubmit={handleSubmit}
 								onCancel={() => handleAddOpenChange(false)}
 								fillCurrentIP={fillCurrentIP}
 							/>
@@ -216,7 +229,6 @@ export default function AuthorizedIPsPage() {
 				</CardContent>
 			</Card>
 
-			{/* Maximum limit reached */}
 			{ips.length >= 10 && (
 				<Card>
 					<CardContent className="p-4">
@@ -227,7 +239,6 @@ export default function AuthorizedIPsPage() {
 				</Card>
 			)}
 
-			{/* Usage Instructions */}
 			<Card>
 				<CardContent className="p-4">
 					<h3 className="text-sm font-medium text-foreground mb-2">{t("ips.how_title")}</h3>
@@ -246,17 +257,21 @@ export default function AuthorizedIPsPage() {
 
 interface AddIPDialogContentProps {
 	currentIP: string;
-	form: UseFormReturn<{ ip_address: string; name: string }>;
+	fields: AuthorizedIPFields;
+	errors: FieldErrors<AuthorizedIPFields>;
 	isCreating: boolean;
-	onSubmit: (data: { ip_address: string; name: string }) => void;
+	onFieldChange: (key: keyof AuthorizedIPFields, value: string) => void;
+	onSubmit: (event: FormEvent<HTMLFormElement>) => void;
 	onCancel: () => void;
 	fillCurrentIP: () => void;
 }
 
 function AddIPDialogContent({
 	currentIP,
-	form,
+	fields,
+	errors,
 	isCreating,
+	onFieldChange,
 	onSubmit,
 	onCancel,
 	fillCurrentIP,
@@ -274,7 +289,7 @@ function AddIPDialogContent({
 				</DialogDescription>
 			</DialogHeader>
 
-			<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+			<form onSubmit={onSubmit} className="space-y-5">
 				<div className="space-y-4">
 					<div className="space-y-1.5">
 						<div className="flex flex-wrap items-center justify-between gap-2">
@@ -296,8 +311,9 @@ function AddIPDialogContent({
 						<Input
 							id="ip_address"
 							placeholder={t("ips.ip_placeholder")}
-							{...form.register("ip_address")}
-							error={form.formState.errors.ip_address?.message}
+							value={fields.ip_address}
+							onChange={(event) => onFieldChange("ip_address", event.target.value)}
+							error={errors.ip_address}
 							className="font-mono"
 						/>
 					</div>
@@ -305,8 +321,9 @@ function AddIPDialogContent({
 					<Input
 						label={t("ips.name_label")}
 						placeholder={t("ips.name_placeholder")}
-						{...form.register("name")}
-						error={form.formState.errors.name?.message}
+						value={fields.name}
+						onChange={(event) => onFieldChange("name", event.target.value)}
+						error={errors.name}
 					/>
 				</div>
 

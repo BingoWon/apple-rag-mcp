@@ -8,7 +8,7 @@ import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/Button";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
-import { api } from "@/lib/api";
+import { ApiError, api } from "@/lib/api";
 import { ADMIN_SESSION_KEY } from "@/lib/constants";
 
 interface AdminAuthProps {
@@ -67,15 +67,7 @@ export function AdminAuth({ onAuthenticated }: AdminAuthProps) {
 			localStorage.removeItem(ADMIN_SESSION_KEY);
 
 			// Handle authentication error
-			if (
-				error &&
-				typeof error === "object" &&
-				"response" in error &&
-				error.response &&
-				typeof error.response === "object" &&
-				"status" in error.response &&
-				error.response.status === 401
-			) {
+			if (error instanceof ApiError && error.status === 401) {
 				setError(t("admin.auth_invalid"));
 			} else {
 				setError(t("admin.auth_failed"));
