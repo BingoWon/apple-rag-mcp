@@ -9,6 +9,7 @@ import {
 	IconUsers,
 	IconWorld,
 } from "@tabler/icons-react";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/Card";
@@ -163,6 +164,16 @@ function CumulativeUsersCard({
 }) {
 	const { t, i18n } = useTranslation();
 	const format = (value: number) => value.toLocaleString(i18n.resolvedLanguage);
+	const sideSeries = useMemo(
+		() =>
+			metric
+				? {
+						registered: cumulativeSeries(metric, "registered"),
+						anonymous: cumulativeSeries(metric, "anonymous"),
+					}
+				: undefined,
+		[metric],
+	);
 	return (
 		<Card className="p-4 md:col-span-2 xl:col-span-4">
 			<div className="flex items-center gap-2">
@@ -184,7 +195,7 @@ function CumulativeUsersCard({
 			</div>
 			<div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2">
 				{CUMULATIVE_SIDES.map((side) => {
-					const series = metric ? cumulativeSeries(metric, side.key) : undefined;
+					const series = sideSeries?.[side.key];
 					return (
 						<div key={side.key} className="min-w-0">
 							<div className="mb-1 flex items-baseline justify-between gap-2">

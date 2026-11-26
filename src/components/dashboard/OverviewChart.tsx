@@ -5,7 +5,7 @@ import { useTheme } from "@/components/providers/ThemeProvider";
 import { lazyWithRecovery } from "@/lib/deployment-recovery";
 import { TOOL_KINDS, type ToolActivity, type ToolKind } from "../../../shared/tool-activity";
 
-const ApexChart = lazyWithRecovery(() => import("react-apexcharts"));
+const ApexChart = lazyWithRecovery(() => import("@/components/charts/SafeApexChart"));
 const overviewColors = { search: "#128b84", fetch: "#5868d9", browse: "#bd4393" };
 const nightColors = { search: "#39dfcf", fetch: "#99a7ff", browse: "#f09fdb" };
 export const overviewPalette = (dark: boolean) => (dark ? nightColors : overviewColors);
@@ -218,6 +218,7 @@ export function OverviewChart({ data, colors }: { data: ToolActivity; colors: Pa
 						name: t(`activity.${k}`),
 						data: data.points.map((p) => p[k]),
 					}))}
+					signature={`${locale}|${dark ? "dark" : "light"}`}
 				/>
 			</Suspense>
 		</div>
