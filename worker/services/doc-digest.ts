@@ -348,6 +348,11 @@ function createPgClient(env: Env) {
 		max: 1,
 		idle_timeout: 10,
 		connect_timeout: 20,
+		prepare: false,
+		connection: {
+			application_name: "apple-rag-digest",
+			statement_timeout: 20_000,
+		},
 		transform: { undefined: null },
 		onnotice: () => {},
 	});

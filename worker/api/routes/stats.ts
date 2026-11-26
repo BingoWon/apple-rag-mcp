@@ -36,6 +36,11 @@ app.get("/corpus", async (c) => {
 		max: 1,
 		idle_timeout: 10,
 		connect_timeout: 10,
+		prepare: false,
+		connection: {
+			application_name: "apple-rag-stats",
+			statement_timeout: 10_000,
+		},
 		transform: { undefined: null },
 		onnotice: () => {},
 	});

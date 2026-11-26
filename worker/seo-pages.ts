@@ -678,6 +678,11 @@ function createPgClient(env: Env) {
 		max: 1,
 		idle_timeout: 10,
 		connect_timeout: 8,
+		prepare: false,
+		connection: {
+			application_name: "apple-rag-seo",
+			statement_timeout: 8_000,
+		},
 		transform: { undefined: null },
 		onnotice: () => {},
 	});
