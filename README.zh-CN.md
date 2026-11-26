@@ -1,13 +1,7 @@
 <div align="center">
 
 <a href="https://apple-rag.com">
-  <img src="./docs/assets/readme-hero.png" alt="Apple RAG — 通过 MCP / CLI 为 AI 智能体注入 Apple 开发知识" width="820">
-</a>
-
-<br>
-
-<a href="https://apple-rag.com">
-  <img src="./public/logo.svg" alt="Apple RAG" width="56" height="56">
+  <img src="./public/logo.svg" alt="Apple RAG" width="64" height="64">
 </a>
 
 # Apple RAG
@@ -25,13 +19,19 @@
 
 由 [<img src="./public/typesafe-logo.webp" alt="" width="16" height="16"> **Jev**](https://typesafe.ai/) 与 RAG 混合检索驱动
 
-</div>
+<br>
+
+<a href="https://apple-rag.com">
+  <img src="./docs/assets/readme-hero.png" alt="Apple RAG — 通过 MCP / CLI 为 AI 智能体注入 Apple 开发知识" width="100%">
+</a>
 
 <br>
 
 | `376,000+` | `1,880+` | `395,000+` | `每 5 分钟` |
 | :---: | :---: | :---: | :---: |
 | **Apple 官方文档页** | **WWDC 开发者视频** | **已索引向量分块** | **[实时文档动态雷达](https://apple-rag.com/updates)** |
+
+</div>
 
 ---
 

@@ -1,13 +1,7 @@
 <div align="center">
 
 <a href="https://apple-rag.com">
-  <img src="./docs/assets/readme-hero.png" alt="Apple RAG — Inject Apple Expertise into AI Agents via MCP / CLI" width="820">
-</a>
-
-<br>
-
-<a href="https://apple-rag.com">
-  <img src="./public/logo.svg" alt="Apple RAG" width="56" height="56">
+  <img src="./public/logo.svg" alt="Apple RAG" width="64" height="64">
 </a>
 
 # Apple RAG
@@ -25,13 +19,19 @@
 
 Powered by [<img src="./public/typesafe-logo.webp" alt="" width="16" height="16"> **Jev**](https://typesafe.ai/) &amp; RAG hybrid retrieval
 
-</div>
+<br>
+
+<a href="https://apple-rag.com">
+  <img src="./docs/assets/readme-hero.png" alt="Apple RAG — Inject Apple Expertise into AI Agents via MCP / CLI" width="100%">
+</a>
 
 <br>
 
 | `376,000+` | `1,880+` | `395,000+` | `Every 5 min` |
 | :---: | :---: | :---: | :---: |
 | **Apple Doc Pages** | **WWDC Videos** | **Indexed Chunks** | **[Live Docs Radar](https://apple-rag.com/updates)** |
+
+</div>
 
 ---
 
