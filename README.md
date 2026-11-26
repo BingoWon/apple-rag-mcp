@@ -1,79 +1,71 @@
 <div align="center">
 
-<a href="https://apple-rag.com"><img src="./docs/assets/readme-hero.png" alt="Give your AI agent access to Apple developer documentation through MCP or CLI" width="800"></a>
-
-<img src="https://apple-rag.com/logo.svg" alt="Apple RAG" width="64">
+<a href="https://apple-rag.com">
+  <img src="./docs/assets/readme-hero.png" alt="Apple RAG — Inject Apple Expertise into AI Agents via MCP / CLI" width="820">
+</a>
 
 # Apple RAG
 
-### Apple developer knowledge for your AI agent.
+**Apple developer documentation and WWDC transcripts for AI agents — via MCP or CLI.**
 
-*Give your agent Apple documentation and WWDC26 transcripts through MCP or CLI. Hybrid search finds the sources. [Jev](https://typesafe.ai/) or Microsoft Decision ranks them for your question.*
+[Website](https://apple-rag.com) · [Connect Guide](https://apple-rag.com/connect) · [Docs Pulse](https://apple-rag.com/updates) · [CLI on npm](https://www.npmjs.com/package/apple-rag-cli) · **English** | [简体中文](./README.zh-CN.md)
 
-[Website](https://apple-rag.com) · Powered by [<img src="./public/typesafe-logo.webp" alt="" width="18" height="18"> Jev](https://typesafe.ai/)
+[![CI](https://github.com/BingoWon/apple-rag-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/BingoWon/apple-rag-mcp/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/BingoWon/apple-rag-mcp?color=3b82f6)](https://github.com/BingoWon/apple-rag-mcp/releases)
+[![npm CLI](https://img.shields.io/npm/v/apple-rag-cli?label=apple-rag-cli&color=0d9488)](https://www.npmjs.com/package/apple-rag-cli)
+[![MCP 2026-07-28](https://img.shields.io/badge/MCP-2026--07--28-6366f1)](https://mcp.apple-rag.com/.well-known/mcp.json)
+[![License: MIT](https://img.shields.io/badge/License-MIT-22c55e)](./LICENSE)
+[![Listed on mcpservers.org](https://mcpservers.org/badge.svg)](https://mcpservers.org/servers/bingowon/apple-rag-mcp)
 
-[![CI](https://github.com/BingoWon/apple-rag-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/BingoWon/apple-rag-mcp/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![Listed on mcpservers.org](https://mcpservers.org/badge.svg)](https://mcpservers.org/servers/bingowon/apple-rag-mcp) · **English** | [中文](./README.zh-CN.md)
+Powered by [<img src="./public/typesafe-logo.webp" alt="" width="16" height="16"> **Jev**](https://typesafe.ai/) &amp; RAG hybrid retrieval
 
 </div>
 
----
+<br>
 
-## What your agent can do
-
-Choose the tool that fits the question. A single call can be enough. Search returns relevant passages, and the topic catalog is paginated. Your agent can pull a full page into context when it needs the details.
-
-| Tool | When to use it |
-| --- | --- |
-| `search` | Find an API or a WWDC discussion with an English query. Keyword and semantic search find relevant passages. |
-| `browse` | Explore SwiftUI or UIKit without guessing URLs. Follow Apple’s topic groups from a framework to its APIs. |
-| `fetch` | Read the source page for a search result or catalog entry, or open a URL you already have. |
-
-All three tools are available through MCP and the CLI. The [dashboard](https://apple-rag.com/overview) shows calls by tool, links to the corresponding logs, and your remaining weekly allowance.
-
-### Powered by [<img src="./public/typesafe-logo.webp" alt="" width="22" height="22"> Jev](https://typesafe.ai/)
-
-[Jev](https://typesafe.ai/), a decision model, scores candidate Apple documentation
-and video transcripts against each query's API, platform, and version requirements.
-For requests from mainland China, Microsoft Decision 1.1 scores the same candidates through ZenMux. MCP and CLI return sources in order of their relevance scores. Qwen takes over if the decision model cannot score the batch.
+| `376,000+` | `1,880+` | `395,000+` | `Every 5 min` |
+| :---: | :---: | :---: | :---: |
+| **Apple Doc Pages** | **WWDC Videos** | **Indexed Chunks** | **[Live Docs Radar](https://apple-rag.com/updates)** |
 
 ---
 
-## Hosted and Ready to Use
+## Quick Start
 
-The [hosted service](https://apple-rag.com/) connects your agent to an Apple knowledge base that is already collected, cleaned, and indexed.
+> [!TIP]
+> **No account or API key required to try.** Start immediately with anonymous access (30 calls/week). Sign in at [apple-rag.com/overview](https://apple-rag.com/overview) anytime for personalized prompts, MCP tokens, authorized IPs, and higher limits.
 
-- **Ready-to-query sources:** Official developer documentation and video transcripts, available through one connection.
-- **Retrieval model calls included:** Embeddings, decision model scoring, and the backup reranker run on our service.
-- **Ongoing upkeep:** We handle content collection, index updates, database backups, and protocol compatibility.
+### Option 1: MCP (Recommended)
 
-The hosted service operates the database, refreshes the corpus, and manages retrieval model credentials. The CLI is distributed separately; the application source is public.
+Connect any MCP-capable agent directly to `https://mcp.apple-rag.com` (Streamable HTTP), or copy a tailored setup prompt from the [connection guide](https://apple-rag.com/connect).
 
-When reading a page, `fetch` checks the index first, follows Apple redirects, and can fall back to official document JSON or live extraction. Results identify the source and retrieval method. Third-party pages stay outside the Apple search index. See [web retrieval operations](ops/web-retrieval.md) for limits and log details.
+<p>
+  <a href="https://cursor.com/en/install-mcp?name=apple-rag-mcp&config=eyJ1cmwiOiJodHRwczovL21jcC5hcHBsZS1yYWcuY29tIiwiaGVhZGVycyI6eyJYLUFwcGxlLVJBRy1DbGllbnQiOiJjdXJzb3IifX0%3D">
+    <img src="https://img.shields.io/badge/Install_in-Cursor-111111?style=for-the-badge&logo=cursor&logoColor=white" alt="Install in Cursor">
+  </a>
+  &nbsp;
+  <a href="https://apple-rag.com/connect">
+    <img src="https://img.shields.io/badge/All_Client_Guides-MCP_%2F_CLI-3b82f6?style=for-the-badge" alt="All Client Guides">
+  </a>
+</p>
 
-[Start free](https://apple-rag.com/). [Pro](https://apple-rag.com/#pricing) includes 50,000 tool calls/week and 50/minute for $1/week, shared by `search`, `browse`, and `fetch`.
+**Claude Code**
 
----
+```bash
+claude mcp add-json --scope user apple-rag-mcp '{"type":"http","url":"https://mcp.apple-rag.com","headers":{"X-Apple-RAG-Client":"claude"}}'
+```
 
-## Connect your agent
+**Codex (`~/.codex/config.toml`)**
 
-Open the [connection guide](https://apple-rag.com/connect), copy a setup prompt, and paste it into your agent’s conversation.
+```toml
+[mcp_servers.apple-rag-mcp]
+url = "https://mcp.apple-rag.com"
 
-- **MCP** is the recommended choice for agents with native MCP support. To use your account allowance, copy the personalized prompt from your [dashboard](https://apple-rag.com/overview).
-- **CLI** gives shell-based agents the same tools. The [npm package](https://www.npmjs.com/package/apple-rag-cli) includes the CLI and an agent skill. You approve account access in your browser.
+[mcp_servers.apple-rag-mcp.http_headers]
+X-Apple-RAG-Client = "codex"
+```
 
-The English [client guides](https://apple-rag.com/#quickstart) cover Codex, Claude Code, OpenCode, Pi, Antigravity, Cursor, VS Code, and Cline.
-
-### One-click setup for Cursor
-
-[Install in Cursor](https://cursor.com/en/install-mcp?name=apple-rag-mcp&config=eyJ1cmwiOiJodHRwczovL21jcC5hcHBsZS1yYWcuY29tIiwiaGVhZGVycyI6eyJYLUFwcGxlLVJBRy1DbGllbnQiOiJjdXJzb3IifX0%3D)
-
-Open [Cursor](https://cursor.com) and confirm installation.
-
-### Manual setup for other MCP clients
-
-**JSON Configuration (Copy & Paste):**
-This is a configuration example, not a universal client format. The dashboard
-also retains manual configuration examples.
+<details>
+<summary><strong>VS Code, Windsurf, Cline, Antigravity &amp; generic MCP JSON</strong></summary>
 
 ```json
 {
@@ -86,71 +78,117 @@ also retains manual configuration examples.
 }
 ```
 
-**Manual Configuration Parameters:**
-- **MCP Type:** `Streamable HTTP`
-- **URL:** `https://mcp.apple-rag.com`
-- **Protocol:** `2026-07-28`, with legacy `initialize` support for `2025-11-25`, `2025-06-18`, and `2025-03-26`
-- **Authentication:** `Optional` (MCP Token for higher limits)
-- **MCP Token:** Get yours at [apple-rag.com](https://apple-rag.com) for increased quota
+- **Transport:** Streamable HTTP (`https://mcp.apple-rag.com`)
+- **Protocol:** Stateless MCP `2026-07-28`, with legacy `initialize` support (`2025-11-25`, `2025-06-18`, `2025-03-26`)
+- **Auth (optional):** Add `Authorization: Bearer <MCP_TOKEN>` from your [dashboard](https://apple-rag.com/mcp-tokens) or authorize your IP at [apple-rag.com/authorized-ips](https://apple-rag.com/authorized-ips)
 
-Saving a configuration alone does not verify a working connection.
+</details>
 
-> **Note:** No MCP Token required to start! You get free queries without any authentication. Add an MCP Token later for higher usage limits.
+### Option 2: CLI (Shell-based Agents)
 
-## 🌟 Built for AI agents
+For agents with shell access (Node.js 22.20+), [`apple-rag-cli`](https://www.npmjs.com/package/apple-rag-cli) exposes the exact same three tools plus a bundled [`apple-dev-docs` agent skill](./skills/apple-dev-docs/SKILL.md).
 
-<table>
-<tr>
-<td width="50%">
+```bash
+npm install -g apple-rag-cli
 
-### ⚡ **Fast & Reliable**
-Get quick responses with our optimized search infrastructure. No more hunting through docs.
+# Try immediately without signing in
+apple-rag search "SwiftUI NavigationStack path binding" --limit 3 --json
 
-### 🎯 **AI-Powered Hybrid Search**
-Hybrid search combines keyword and semantic retrieval for Apple documentation and video transcripts. A decision model then ranks the combined candidates against your question, giving your agent more relevant context.
+# Link your account via browser OAuth PKCE / Device Grant when needed
+apple-rag auth login
+```
 
-### 🔒 **Account Access**
-Use separate MCP and CLI credentials with shared account quotas and individually revocable access.
-
-</td>
-<td width="50%">
-
-### 📝 **Source References**
-Results include source URLs so agents can verify API details and cite their references.
-
-### 🔄 **Maintained Sources**
-Our collector checks Apple documentation and developer video transcripts on a regular schedule.
-
-### 🆓 **Start Free**
-Try without an account: 30 tool calls/week and 3/minute. Register at [apple-rag.com](https://apple-rag.com/) for 50/week and 5/minute, shared by `search`, `browse`, and `fetch`.
-
-</td>
-</tr>
-</table>
-
-## 🎯 Features
-
-- **🔍 Semantic Search** - Vector similarity with semantic understanding for intelligent retrieval
-- **🔎 Keyword Search** - Precise technical term matching for API names and specific terminology
-- **🎯 Hybrid Search** - Combines keyword and semantic retrieval
-- **📚 Apple Developer Sources** - Search the indexed documentation corpus; coverage depends on collection and indexing.
-- **🎬 Developer Videos** - Search indexed WWDC and Apple developer video transcripts.
-- **⚡ Fast Response** - Optimized for speed across all content types
-- **🔌 MCP / CLI** - Native MCP tools or shell commands for AI agents.
-- **🔄 Scheduled Collection** - Sources are collected and indexed regularly; updates are not guaranteed to appear immediately.
-- **🛡️ Secure & Private** - Your queries stay private
-- **🌐 MCP 2026 Native** - Stateless MCP `2026-07-28`, with legacy Streamable HTTP compatibility
-
-## 📄 License
-
-The CLI client is distributed under the [MIT License](LICENSE). The application source is available in this public repository.
-
-<div align="center">
+See [`packages/cli/README.md`](./packages/cli/README.md) for exit codes, `--output`, unattended automation keys, and agent skill setup.
 
 ---
 
+## Three Tools, One Workflow
+
+Both MCP and CLI expose the same focused surface so agents pull only the official context they need:
+
+| Tool | Purpose | Example |
+| --- | --- | --- |
+| `search` | Hybrid keyword + semantic search across Apple docs & WWDC transcripts (English queries) | `apple-rag search "StoreKit Transaction currentEntitlements" --limit 4` |
+| `browse` | Explore SwiftUI & UIKit topic trees without guessing documentation URLs | `apple-rag browse "https://developer.apple.com/documentation/swiftui/view" --depth 1` |
+| `fetch` | Read full documentation or supported public webpages with source & retrieval provenance | `apple-rag fetch "https://developer.apple.com/documentation/swiftui"` |
+
+```text
+Agent task: "How do I bind NavigationStack path state on iOS 26/27?"
+
+1. search("SwiftUI NavigationStack NavigationPath binding")
+   └─▶ Hybrid recall (exact symbol + pgvector) ─▶ Ranked by Jev ─▶ Top official passages + URLs
+2. browse("https://developer.apple.com/documentation/swiftui/navigation")   [optional]
+   └─▶ Official SwiftUI topic hierarchy & related symbols
+3. fetch("https://developer.apple.com/documentation/swiftui/navigationstack")
+   └─▶ Full page content, availability & code examples with canonical Apple source URL
+```
+
+---
+
+## Why Apple RAG
+
+- **Hybrid Retrieval + Decision Model Ranking** — Combines exact symbol/lexical matching with 2560-dim `pgvector` semantic recall, then ranks candidates with [<img src="./public/typesafe-logo.webp" alt="" width="15" height="15"> **Jev**](https://typesafe.ai/) against your query's API, platform, and OS version constraints. Requests from mainland China route automatically to Microsoft Decision 1.1 via ZenMux, with Qwen fallback if the primary ranker is unavailable.
+- **Apple Docs Pulse (Live Documentation Radar)** — A continuous 5-minute `ETag` collector monitors Apple framework roots and release notes, records structured diffs, deprecations, and beta changes, and publishes automated daily/weekly bilingual AI trend digests plus RSS/JSON feeds at [**apple-rag.com/updates**](https://apple-rag.com/updates).
+- **4-Stage Resilient `fetch`** — Resolves pages in order from the indexed corpus → fresh cache → official Apple DocC JSON → live extraction fallback, returning provenance metadata while keeping third-party pages strictly outside the Apple search index.
+- **Zero-Friction Compatibility & Isolated Credentials** — Supports modern stateless MCP `2026-07-28` alongside legacy `initialize` handshakes so Cursor, Claude Code, Codex, and VS Code connect out of the box. MCP tokens, authorized IPs, CLI device sessions, and automation keys are independently revocable while sharing one account quota.
+
+---
+
+## Plans & Shared Quotas
+
+All tool calls (`search`, `browse`, `fetch`) share a single account allowance across MCP connections, CLI devices, and automation keys. Retrieval model calls are included.
+
+| Plan | Weekly Quota | Rate Limit | Pricing |
+| --- | ---: | ---: | --- |
+| **Anonymous Trial** | 30 calls | 3 / min | Free — no sign-up |
+| **Free Account** | 50 calls | 5 / min | Free ([Sign up](https://apple-rag.com/register)) |
+| **Pro** | 50,000 calls | 50 / min | **$1 / week** (Card &amp; Alipay · subscription or one-time pass) |
+| **Enterprise** | Custom | Custom | [Contact us](https://apple-rag.com/#pricing) |
+
+---
+
+## Architecture & Repository
+
+The hosted service at [apple-rag.com](https://apple-rag.com) manages the corpus, continuous collector, vector database, and retrieval model credentials. The complete application source is open in this repository:
+
+```mermaid
+flowchart LR
+    Agents["AI Agents (MCP / CLI)"] --> Edge["Cloudflare Worker (API · MCP · Cron)"]
+    Edge --> D1["Cloudflare D1 (Accounts · Quotas · Logs)"]
+    Edge --> PG["PostgreSQL + pgvector (Docs · Catalog · Diffs)"]
+    Edge --> Rank["Hybrid Search (Embeddings + Jev / Decision)"]
+    Edge --> Apple["Apple Docs JSON & Web Fetch"]
+```
+
+| Path | Description |
+| --- | --- |
+| `worker/` | Cloudflare Worker runtime — MCP server (`2026-07-28` + legacy), REST & CLI OAuth APIs, hybrid search engine, Docs Pulse collector |
+| `src/` | React 19 + Vite + Tailwind CSS v4 frontend — website, `/connect`, `/updates` radar, user dashboard, admin console |
+| `packages/cli/` | Standalone [`apple-rag-cli`](https://www.npmjs.com/package/apple-rag-cli) npm package |
+| `shared/` | Pure cross-runtime contracts, tool metadata, and datetime helpers |
+| `skills/` | Agent skill definition (`skills/apple-dev-docs/SKILL.md`) |
+| `ops/` | Architecture guide ([`ops/architecture.md`](./ops/architecture.md)), PostgreSQL schemas, and operational playbooks |
+
+### Local Development
+
+```bash
+pnpm install
+pnpm verify   # Parallel lint, typecheck, and core tests
+pnpm dev      # Start local Vite + Worker dev server
+```
+
+---
+
+## License
+
+Licensed under the [MIT License](./LICENSE).
+
+<div align="center">
+
+<br>
+
 **Better docs. Better context. Better code.**
 
-[Get Started →](https://apple-rag.com)
+[Get Started →](https://apple-rag.com) · [Explore Docs Pulse →](https://apple-rag.com/updates)
 
 </div>
