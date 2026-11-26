@@ -18,7 +18,7 @@ else if (await lookup(registry)) {
 	publish = true;
 	message = `Publish ${name}@${version} using the npm Trusted Publisher.`;
 } else
-	message = `${name} is not registered yet. The owner must publish the verified tarball and configure Trusted Publishing; see ops/cli.md. Service release and packaged artifact remain available.`;
+	message = `${name} is not registered yet. Publish the package and configure npm Trusted Publishing first.`;
 console.log(message);
 if (process.env.GITHUB_OUTPUT) await appendFile(process.env.GITHUB_OUTPUT, `publish=${publish}\n`);
 if (process.env.GITHUB_STEP_SUMMARY)

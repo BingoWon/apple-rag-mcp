@@ -22,7 +22,7 @@ Powered by [<img src="./public/typesafe-logo.webp" alt="" width="16" height="16"
 <br>
 
 <a href="https://apple-rag.com">
-  <img src="./docs/assets/readme-hero.png" alt="Apple RAG — Inject Apple Expertise into AI Agents via MCP / CLI" width="100%">
+  <img src="./.github/assets/readme-hero.png" alt="Apple RAG — Inject Apple Expertise into AI Agents via MCP / CLI" width="100%">
 </a>
 
 <br>
@@ -173,13 +173,13 @@ flowchart LR
 | `packages/cli/` | Standalone [`apple-rag-cli`](https://www.npmjs.com/package/apple-rag-cli) npm package |
 | `shared/` | Pure cross-runtime contracts, tool metadata, and datetime helpers |
 | `skills/` | Agent skill definition (`skills/apple-dev-docs/SKILL.md`) |
-| `ops/` | Architecture guide ([`ops/architecture.md`](./ops/architecture.md)), PostgreSQL schemas, and operational playbooks |
 
 ### Local Development
 
 ```bash
 pnpm install
-pnpm verify   # Parallel lint, typecheck, and core tests
+pnpm verify   # Parallel lint and typecheck
+pnpm build    # Production web + Cloudflare Worker bundle
 pnpm dev      # Start local Vite + Worker dev server
 ```
 

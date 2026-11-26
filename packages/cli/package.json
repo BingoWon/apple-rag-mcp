@@ -29,8 +29,7 @@
 	"scripts": {
 		"build": "vite build --config vite.config.ts && node scripts/prepare-package.mjs",
 		"prepack": "pnpm run build",
-		"typecheck": "tsc --noEmit -p tsconfig.json",
-		"test": "tsx --test test/*.test.ts"
+		"typecheck": "tsc --noEmit -p tsconfig.json"
 	},
 	"dependencies": {
 		"@napi-rs/keyring": "2.1.2",

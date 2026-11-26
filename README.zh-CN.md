@@ -22,7 +22,7 @@
 <br>
 
 <a href="https://apple-rag.com">
-  <img src="./docs/assets/readme-hero.png" alt="Apple RAG — 通过 MCP / CLI 为 AI 智能体注入 Apple 开发知识" width="100%">
+  <img src="./.github/assets/readme-hero.png" alt="Apple RAG — 通过 MCP / CLI 为 AI 智能体注入 Apple 开发知识" width="100%">
 </a>
 
 <br>
@@ -173,13 +173,13 @@ flowchart LR
 | `packages/cli/` | 独立发布的 [`apple-rag-cli`](https://www.npmjs.com/package/apple-rag-cli) npm 客户端包 |
 | `shared/` | 跨前后端与 CLI 复用的纯类型契约、工具元数据与时间工具 |
 | `skills/` | 遵循 Agent Skills 规范的智能体集成说明（`skills/apple-dev-docs/SKILL.md`） |
-| `ops/` | 完整架构设计索引（[`ops/architecture.md`](./ops/architecture.md)）、PostgreSQL 表结构与运维手册 |
 
 ### 本地开发与校验
 
 ```bash
 pnpm install
-pnpm verify   # 并发执行 lint、类型检查与核心测试
+pnpm verify   # 并发执行代码规范与类型检查
+pnpm build    # 构建前端与 Cloudflare Worker 生产产物
 pnpm dev      # 启动本地 Vite + Worker 开发服务
 ```
 

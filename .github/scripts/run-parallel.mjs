@@ -5,7 +5,7 @@
  * diagnostics only for failing tasks.
  *
  * Usage:
- *   node ops/scripts/run-parallel.mjs "label::command" ...
+ *   node .github/scripts/run-parallel.mjs "label::command" ...
  */
 import { spawn } from "node:child_process";
 

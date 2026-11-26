@@ -4,17 +4,12 @@ packages/cli/LICENSE
 packages/cli/skills/
 .wrangler/
 .dev.vars
+.dev.vars.example
 .env
-.env.local
+.env.*
 *.log
 .DS_Store
 references/
-ops/server/backup.env
-ops/server/backups/
-ops/server/data/
-ops/server/secrets/
-ops/jev/results/
-ops/ui/results/
 
 # TypeScript
 *.tsbuildinfo
@@ -25,14 +20,20 @@ ops/ui/results/
 *.swp
 *.swo
 
-# Local operations (accounts, listings, runbooks)
+# Local operations, private docs, and local-only tests (never commit to public repo)
 .ops/
-
-# Private strategy and local build values
+/ops/
+/docs/
 gtm/
-.env
-.env.*
-!.env.example
+llms-install.md
+*.test.ts
+*.test.mts
+*.test.tsx
+*.test.js
+*.test.mjs
+*.spec.ts
+*.spec.tsx
+packages/cli/test/
 
 # Local agent instructions: never include in repository snapshots
 [Aa][Gg][Ee][Nn][Tt][Ss].[Mm][Dd]

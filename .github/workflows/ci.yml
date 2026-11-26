@@ -19,7 +19,6 @@ jobs:
     permissions:
       contents: write
     outputs:
-      pg_changed: ${{ steps.scope.outputs.pg_changed }}
       cli_changed: ${{ steps.scope.outputs.cli_changed }}
       publish_cli: ${{ steps.scope.outputs.publish_cli }}
     steps:
@@ -38,70 +37,50 @@ jobs:
         id: scope
         run: |
           set -euo pipefail
-          PG_CHANGED="false"
           CLI_CHANGED="false"
-          OPS_CHANGED="false"
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            PG_CHANGED="true"
             CLI_CHANGED="true"
-            OPS_CHANGED="true"
           else
             BASE="${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}"
             if [ -n "$BASE" ] && [ "$BASE" != "0000000000000000000000000000000000000000" ] && git cat-file -e "$BASE^{commit}" 2>/dev/null; then
               CHANGED_FILES=$(git diff --name-only "$BASE" HEAD)
-              if echo "$CHANGED_FILES" | grep -Eq '^(worker/collector/|worker/services/(database|catalog)|ops/server/|migrations/|patches/|pnpm-lock\.yaml)'; then
-                PG_CHANGED="true"
-              fi
-              if echo "$CHANGED_FILES" | grep -Eq '^(packages/cli/|worker/cli/|shared/|skills/|ops/cli/|pnpm-lock\.yaml)'; then
+              if echo "$CHANGED_FILES" | grep -Eq '^(packages/cli/|worker/cli/|shared/|skills/|\.github/scripts/|pnpm-lock\.yaml)'; then
                 CLI_CHANGED="true"
               fi
-              if echo "$CHANGED_FILES" | grep -Eq '^(ops/(collector|jev)/|patches/|pnpm-lock\.yaml)'; then
-                OPS_CHANGED="true"
-              fi
             else
-              PG_CHANGED="true"
               CLI_CHANGED="true"
-              OPS_CHANGED="true"
             fi
           fi
           PUBLISH_CLI="false"
           if [ "${{ github.event_name }}" = "push" ] && [ "${{ github.ref }}" = "refs/heads/main" ]; then
             OUT=$(mktemp)
-            GITHUB_OUTPUT="$OUT" node ops/cli/npm-release.mjs
+            GITHUB_OUTPUT="$OUT" node .github/scripts/npm-release.mjs
             if grep -qx "publish=true" "$OUT"; then
               PUBLISH_CLI="true"
               CLI_CHANGED="true"
             fi
             rm -f "$OUT"
           fi
-          echo "pg_changed=$PG_CHANGED" >> "$GITHUB_OUTPUT"
           echo "cli_changed=$CLI_CHANGED" >> "$GITHUB_OUTPUT"
-          echo "ops_changed=$OPS_CHANGED" >> "$GITHUB_OUTPUT"
           echo "publish_cli=$PUBLISH_CLI" >> "$GITHUB_OUTPUT"
 
       - run: pnpm install --frozen-lockfile
 
       - name: Verify and build (concurrent)
         run: >-
-          node ops/scripts/run-parallel.mjs
+          node .github/scripts/run-parallel.mjs
           "lint::pnpm lint"
           "tsc:web::npx tsc --noEmit -p tsconfig.json"
           "tsc:worker::npx tsc --noEmit -p worker/tsconfig.json"
-          "test::pnpm test"
           "build::pnpm build"
 
-      - name: Run ops utility tests
-        if: steps.scope.outputs.ops_changed == 'true'
-        run: pnpm test:ops
-
-      - name: Verify CLI package and tests
+      - name: Verify CLI package
         if: steps.scope.outputs.cli_changed == 'true'
         run: >-
-          node ops/scripts/run-parallel.mjs
+          node .github/scripts/run-parallel.mjs
           "tsc:cli::pnpm typecheck:cli"
           "build:cli::pnpm build:cli"
-          "test:cli::pnpm test:cli"
-          && node --import tsx ops/cli/verify-package.mjs
+          && node .github/scripts/verify-cli-package.mjs
         env:
           APPLE_RAG_RELEASE_DIR: ${{ runner.temp }}/apple-rag-cli-release
 
@@ -114,50 +93,10 @@ jobs:
           if-no-files-found: error
 
       - name: Create GitHub release for new version
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.scope.outputs.pg_changed != 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: node ops/scripts/create-release.mjs
-
-  pg-integration:
-    needs: [check]
-    if: needs.check.outputs.pg_changed == 'true'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: collector_test
-          POSTGRES_DB: apple_rag_test
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U postgres -d apple_rag_test"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
-    env:
-      TEST_DATABASE_URL: postgres://postgres:collector_test@127.0.0.1:5432/apple_rag_test
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-      - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v7
-        with:
-          node-version-file: .node-version
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - name: Run PostgreSQL collector & catalog integration tests
-        run: pnpm test:pg && python3 ops/server/test_publish_catalog.py
-      - name: Create GitHub release for new version
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: node ops/scripts/create-release.mjs
+        run: node .github/scripts/create-release.mjs
 
   cli-portability:
     needs: [check]
@@ -179,7 +118,7 @@ jobs:
           node-version: ${{ matrix.node }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm build:cli && pnpm --filter apple-rag-cli test
+      - run: pnpm build:cli && node packages/cli/dist/cli.js --version && node packages/cli/dist/cli.js --help
 
   publish-cli:
     needs: [check, cli-portability]
@@ -200,6 +139,6 @@ jobs:
           name: apple-rag-cli
           path: cli-release
       - name: Verify deployed service before publishing a new CLI
-        run: node ops/cli/wait-for-service.mjs
+        run: node .github/scripts/wait-for-service.mjs
       - name: Publish verified artifact with OIDC
         run: npm publish ./cli-release/*.tgz --access public --provenance
