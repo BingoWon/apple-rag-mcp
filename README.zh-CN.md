@@ -4,6 +4,12 @@
   <img src="./docs/assets/readme-hero.png" alt="Apple RAG — 通过 MCP / CLI 为 AI 智能体注入 Apple 开发知识" width="820">
 </a>
 
+<br>
+
+<a href="https://apple-rag.com">
+  <img src="./public/logo.svg" alt="Apple RAG" width="56" height="56">
+</a>
+
 # Apple RAG
 
 **面向 AI 智能体的 Apple 官方开发文档与 WWDC 字幕知识库，支持 MCP 与 CLI 接入。**

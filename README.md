@@ -4,6 +4,12 @@
   <img src="./docs/assets/readme-hero.png" alt="Apple RAG — Inject Apple Expertise into AI Agents via MCP / CLI" width="820">
 </a>
 
+<br>
+
+<a href="https://apple-rag.com">
+  <img src="./public/logo.svg" alt="Apple RAG" width="56" height="56">
+</a>
+
 # Apple RAG
 
 **Apple developer documentation and WWDC transcripts for AI agents — via MCP or CLI.**
