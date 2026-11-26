@@ -7,6 +7,9 @@ import type {
 	DocChangeDigest,
 	DocChangeEventItem,
 } from "../../shared/doc-updates.js";
+import { SITE_ORIGIN } from "../../shared/site.js";
+import { submitIndexNow } from "../indexnow.js";
+import { frameworkSlug } from "../seo-pages.js";
 import { logger } from "../shared/logger.js";
 import type { Env } from "../shared/types.js";
 
@@ -696,14 +699,26 @@ export async function runScheduledDigests(env: Env, scheduledTime: number): Prom
 		await sql.end().catch(() => {});
 	}
 
+	const newlyPublishedUrls: string[] = [];
+
 	if (!hasDaily) {
 		try {
-			await generateDocDigest(env, {
+			const digest = await generateDocDigest(env, {
 				periodType: "daily",
 				periodKey: dailyKey,
 				windowStart: yesterdayStart,
 				windowEnd: todayStart,
 			});
+			newlyPublishedUrls.push(
+				`${SITE_ORIGIN}/updates`,
+				`${SITE_ORIGIN}/updates/digest/daily/${encodeURIComponent(dailyKey)}`,
+				...digest.stats.top_frameworks
+					.slice(0, 5)
+					.map(
+						(f) =>
+							`${SITE_ORIGIN}/updates/framework/${encodeURIComponent(frameworkSlug(f.framework))}`,
+					),
+			);
 		} catch (error) {
 			await logger.error(
 				`Scheduled daily doc digest (${dailyKey}) failed: ${error instanceof Error ? error.message : String(error)}`,
@@ -713,16 +728,30 @@ export async function runScheduledDigests(env: Env, scheduledTime: number): Prom
 
 	if (!hasWeekly) {
 		try {
-			await generateDocDigest(env, {
+			const digest = await generateDocDigest(env, {
 				periodType: "weekly",
 				periodKey: weeklyKey,
 				windowStart: weekStart,
 				windowEnd: todayStart,
 			});
+			newlyPublishedUrls.push(
+				`${SITE_ORIGIN}/updates`,
+				`${SITE_ORIGIN}/updates/digest/weekly/${encodeURIComponent(weeklyKey)}`,
+				...digest.stats.top_frameworks
+					.slice(0, 5)
+					.map(
+						(f) =>
+							`${SITE_ORIGIN}/updates/framework/${encodeURIComponent(frameworkSlug(f.framework))}`,
+					),
+			);
 		} catch (error) {
 			await logger.error(
 				`Scheduled weekly doc digest (${weeklyKey}) failed: ${error instanceof Error ? error.message : String(error)}`,
 			);
 		}
+	}
+
+	if (newlyPublishedUrls.length > 0) {
+		await submitIndexNow(newlyPublishedUrls);
 	}
 }

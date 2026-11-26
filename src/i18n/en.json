@@ -706,6 +706,7 @@
 		"col_email": "Email",
 		"col_name": "Name",
 		"col_auth_provider": "Auth Provider",
+		"col_signup_source": "Source",
 		"col_plan": "Plan",
 		"col_status": "Status",
 		"col_last_login": "Last Login",

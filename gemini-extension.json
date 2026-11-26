@@ -1,0 +1,14 @@
+{
+	"name": "apple-rag",
+	"version": "5.18.0",
+	"description": "Search official Apple Developer documentation and WWDC transcripts, browse SwiftUI and UIKit topics, and fetch source pages via remote MCP.",
+	"mcpServers": {
+		"apple-rag-mcp": {
+			"httpUrl": "https://mcp.apple-rag.com",
+			"headers": {
+				"X-Apple-RAG-Client": "antigravity"
+			}
+		}
+	},
+	"contextFileName": "skills/apple-dev-docs/SKILL.md"
+}

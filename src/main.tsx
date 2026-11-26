@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { BrowserRouter, useLocation } from "react-router-dom";
 import { RouteErrorBoundary } from "@/components/ErrorBoundary";
 import { Providers } from "@/components/providers/Providers";
+import { captureSignupAttribution } from "@/lib/attribution";
 import {
 	hasDeploymentUpdate,
 	lazyWithRecovery,
@@ -33,8 +34,11 @@ function DeploymentSync() {
 }
 
 function SiteMetadata() {
-	const { pathname } = useLocation();
+	const { pathname, search } = useLocation();
 	const { i18n } = useTranslation();
+	useEffect(() => {
+		captureSignupAttribution(search);
+	}, [search]);
 	useEffect(() => {
 		const page = getSiteMetadata(pathname, i18n.resolvedLanguage);
 		document.title = page.title;

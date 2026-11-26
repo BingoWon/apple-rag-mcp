@@ -77,11 +77,12 @@ export class OAuthService {
 	async handleCallback(
 		provider: "google" | "github",
 		code: string,
+		signupSource?: string | null,
 	): Promise<{ success: true; token: string } | { success: false; error: string }> {
 		try {
 			const tokens = await this.exchangeCodeForTokens(provider, code);
 			const profile = await this.getUserInfo(provider, tokens.access_token);
-			return { success: true, token: await this.signIn(profile) };
+			return { success: true, token: await this.signIn(profile, signupSource ?? null) };
 		} catch (error) {
 			console.error(`OAuth ${provider} callback error:`, error);
 			return {
@@ -257,7 +258,7 @@ export class OAuthService {
 		throw new Error(`Unsupported provider: ${provider}`);
 	}
 
-	private async signIn(profile: UserProfile) {
+	private async signIn(profile: UserProfile, signupSource: string | null = null) {
 		const email = profile.email.toLowerCase().trim();
 		const existing = await this.env.DB.prepare(
 			"SELECT id,created_at FROM users WHERE provider=? AND provider_id=?",
@@ -283,7 +284,7 @@ export class OAuthService {
 					"UPDATE users SET email=?,name=?,avatar=?,last_login=?,updated_at=? WHERE id=?",
 				).bind(email, user.name, user.avatar ?? null, now, now, user.id)
 			: this.env.DB.prepare(
-					"INSERT INTO users(id,email,name,avatar,provider,provider_id,last_login,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?)",
+					"INSERT INTO users(id,email,name,avatar,provider,provider_id,signup_source,last_login,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?)",
 				).bind(
 					user.id,
 					email,
@@ -291,6 +292,7 @@ export class OAuthService {
 					user.avatar ?? null,
 					profile.provider,
 					profile.provider_id,
+					signupSource,
 					now,
 					now,
 					now,
@@ -307,7 +309,7 @@ export class OAuthService {
 			);
 			if (!existing)
 				await notifyTelegram(
-					`👤 New OAuth Registration\nProvider: ${profile.provider}\nEmail: ${email}`,
+					`👤 New OAuth Registration\nProvider: ${profile.provider}\nEmail: ${email}${signupSource ? `\nSource: ${signupSource}` : ""}`,
 				);
 			return token;
 		} catch (error) {

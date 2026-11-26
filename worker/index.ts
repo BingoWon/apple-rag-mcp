@@ -2,7 +2,6 @@ import { originValidationResponse } from "@modelcontextprotocol/server";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { MCP_CLIENT_HEADER } from "../shared/mcp-clients.js";
-import { siteSitemap } from "../shared/site.js";
 import { apiApp } from "./api/app.js";
 import { reconcileBilling } from "./api/services/billing-reconciliation.js";
 import { reconcileCheckouts } from "./api/services/stripe-checkout";
@@ -10,10 +9,18 @@ import { configureTelegram } from "./api/utils/telegram-notifier";
 import { CLIAuthorization } from "./cli/authorization.js";
 import { authorizationMetadata, cliOAuthRoutes } from "./cli/routes.js";
 import { handleScheduled } from "./collector/handler.js";
+import { INDEXNOW_KEY, INDEXNOW_KEY_PATH } from "./indexnow.js";
 import { handleAccountRequest } from "./mcp/account.js";
 import { HEALTH_STATUS, SERVER_MANIFEST } from "./mcp/manifest.js";
 import { MCPProtocolHandler } from "./mcp/protocol-handler.js";
 import { AuthMiddleware } from "./mcp-auth/auth-middleware.js";
+import {
+	renderClientGuidePage,
+	renderComparisonPage,
+	renderDigestPage,
+	renderDynamicSitemap,
+	renderFrameworkPage,
+} from "./seo-pages.js";
 import type { WaitUntilContext } from "./services/d1-utils.js";
 import { runScheduledDigests } from "./services/doc-digest.js";
 import { createServices } from "./services/index.js";
@@ -101,13 +108,41 @@ app.get("/robots.txt", (c) => {
 	});
 });
 
-app.get("/sitemap.xml", (c) => {
-	const xml = siteSitemap();
-	return c.text(xml, 200, {
-		"Content-Type": "application/xml",
+app.get("/sitemap.xml", (c) =>
+	renderDynamicSitemap(c.env, c.req.url, (p) => c.executionCtx.waitUntil(p)),
+);
+
+app.get(INDEXNOW_KEY_PATH, (c) =>
+	c.text(INDEXNOW_KEY, 200, {
+		"Content-Type": "text/plain; charset=utf-8",
 		"Cache-Control": "public, max-age=86400",
-	});
+	}),
+);
+
+// ─── Programmatic SEO / GEO SSR Pages ─────────────────────────
+app.get("/connect/:client", (c) => {
+	const page = renderClientGuidePage(c.req.param("client").toLowerCase());
+	return page ?? c.notFound();
 });
+
+app.get("/vs/:slug", (c) => {
+	const page = renderComparisonPage(c.req.param("slug").toLowerCase());
+	return page ?? c.notFound();
+});
+
+app.get("/updates/digest/:period/:key", (c) =>
+	renderDigestPage(
+		c.env,
+		c.req.url,
+		(p) => c.executionCtx.waitUntil(p),
+		c.req.param("period"),
+		c.req.param("key"),
+	),
+);
+
+app.get("/updates/framework/:slug", (c) =>
+	renderFrameworkPage(c.env, c.req.url, (p) => c.executionCtx.waitUntil(p), c.req.param("slug")),
+);
 
 app.route("/api", apiApp);
 app.route("/oauth/cli", cliOAuthRoutes);

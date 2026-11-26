@@ -1,7 +1,26 @@
 {
 	"name": "apple-rag-cli",
-	"version": "2.1.4",
+	"version": "2.1.5",
 	"description": "Give shell-based agents tools to search Apple docs and WWDC transcripts, browse SwiftUI and UIKit topics, and read source pages.",
+	"keywords": [
+		"apple",
+		"apple-docs",
+		"apple-developer",
+		"swift",
+		"swiftui",
+		"uikit",
+		"ios",
+		"macos",
+		"xcode",
+		"wwdc",
+		"mcp",
+		"cli",
+		"ai-agent",
+		"claude-code",
+		"cursor",
+		"codex",
+		"rag"
+	],
 	"type": "module",
 	"license": "MIT",
 	"bin": {

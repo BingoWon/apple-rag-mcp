@@ -15,6 +15,7 @@ interface AdminUser {
 	email: string;
 	name: string;
 	provider?: string;
+	signup_source?: string | null;
 	avatar?: string;
 	plan_type: string;
 	subscription_status: string | null;
@@ -67,6 +68,17 @@ export default function AdminUsersPage() {
 						</Badge>
 					);
 				},
+			},
+			{
+				key: "signup_source",
+				label: t("admin.col_signup_source", { defaultValue: "Source" }),
+				width: 140,
+				render: (value: unknown) =>
+					value ? (
+						<Badge variant="secondary">{String(value)}</Badge>
+					) : (
+						<span className="text-subtle italic">—</span>
+					),
 			},
 			{
 				key: "subscription_status",

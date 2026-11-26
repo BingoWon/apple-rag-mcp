@@ -2,6 +2,7 @@
  * Authentication routes
  */
 import { createRoute, z } from "@hono/zod-openapi";
+import { getCookie } from "hono/cookie";
 import { extractClientInfo } from "../../services/request-info";
 import { authMiddleware } from "../middleware/auth";
 import { AuthService } from "../services/auth-service";
@@ -12,6 +13,7 @@ import { notifyTelegram } from "../utils/telegram-notifier";
 import {
 	forgotPasswordSchema,
 	loginSchema,
+	normalizeSignupSource,
 	registerSchema,
 	resetPasswordSchema,
 } from "../utils/validation";
@@ -115,13 +117,18 @@ app.openapi(registerRoute, async (c) => {
 	}
 
 	const request = c.req.valid("json");
+	const signupSource = normalizeSignupSource(
+		request.signup_source ?? getCookie(c, "apple_rag_ref"),
+	);
 	const authService = new AuthService(c.env.DB, c.env);
 
-	const result = await authService.registerUser(request);
+	const result = await authService.registerUser({ ...request, signup_source: signupSource });
 
 	if (result.success) {
 		// Send Telegram notification for successful registration
-		await notifyTelegram(`👤 New User Registration\nEmail: ${request.email}`);
+		await notifyTelegram(
+			`👤 New User Registration\nEmail: ${request.email}${signupSource ? `\nSource: ${signupSource}` : ""}`,
+		);
 
 		return c.json({ success: true, data: result.data }, 201);
 	} else {

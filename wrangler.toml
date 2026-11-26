@@ -19,7 +19,7 @@ mode = "smart"
 directory = "./dist"
 binding = "ASSETS"
 not_found_handling = "none"
-run_worker_first = ["/", "/connect", "/connect/", "/updates", "/updates/", "/api/*", "/mcp*", "/oauth/cli/*", "/.well-known/*"]
+run_worker_first = ["/", "/connect", "/connect/*", "/updates", "/updates/*", "/vs/*", "/sitemap.xml", "/robots.txt", "/a7e9f1b4c2d84e6091f3b5c7d9e1a305.txt", "/api/*", "/mcp*", "/oauth/cli/*", "/.well-known/*"]
 
 [ai]
 binding = "AI"

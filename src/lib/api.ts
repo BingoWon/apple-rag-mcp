@@ -15,6 +15,7 @@ import type {
 	UpdatesSummaryResponse,
 } from "../../shared/doc-updates";
 import type { ToolActivity, UsagePeriod } from "../../shared/tool-activity";
+import { getSignupSource } from "./attribution";
 import { ADMIN_PASSWORD_HEADER, ADMIN_SESSION_KEY } from "./constants";
 import { importWithRecovery, observeServerVersion } from "./deployment-recovery";
 
@@ -182,10 +183,12 @@ class ApiClient {
 		email: string;
 		password: string;
 		terms_accepted: boolean;
+		signup_source?: string;
 	}) {
 		return this.post<{ token: string }>("/auth/register", {
 			...userData,
 			email: normalizeEmail(userData.email),
+			signup_source: userData.signup_source ?? getSignupSource(),
 		});
 	}
 
@@ -208,11 +211,13 @@ class ApiClient {
 	}
 
 	async getGoogleAuthUrl() {
-		return this.post("/oauth/google", {});
+		const signup_source = getSignupSource();
+		return this.post("/oauth/google", signup_source ? { signup_source } : {});
 	}
 
 	async getGitHubAuthUrl() {
-		return this.post("/oauth/github", {});
+		const signup_source = getSignupSource();
+		return this.post("/oauth/github", signup_source ? { signup_source } : {});
 	}
 
 	// MCP Tokens

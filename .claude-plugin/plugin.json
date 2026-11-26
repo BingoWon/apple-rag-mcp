@@ -1,0 +1,15 @@
+{
+	"name": "apple-rag",
+	"description": "Search official Apple Developer documentation and WWDC video transcripts, browse SwiftUI and UIKit topics, and fetch source pages via remote MCP.",
+	"version": "5.18.0",
+	"author": {
+		"name": "BingoWon",
+		"url": "https://apple-rag.com"
+	},
+	"homepage": "https://apple-rag.com",
+	"repository": "https://github.com/BingoWon/apple-rag-mcp",
+	"license": "MIT",
+	"keywords": ["apple", "swift", "swiftui", "uikit", "ios", "macos", "xcode", "wwdc", "mcp"],
+	"mcpServers": "./.mcp.json",
+	"skills": "./skills/"
+}

@@ -10,6 +10,9 @@ The hosted service handles retrieval models and index maintenance.
 ## Connect an agent
 
 - [Connection guide](https://apple-rag.com/connect): MCP and CLI setup prompts, account access, and common questions.
+- [Client setup pages](https://apple-rag.com/connect/cursor): Dedicated MCP/CLI guides for [Cursor](https://apple-rag.com/connect/cursor), [Claude Code](https://apple-rag.com/connect/claude-code), [Codex](https://apple-rag.com/connect/codex), [VS Code](https://apple-rag.com/connect/vscode), [Windsurf](https://apple-rag.com/connect/windsurf), [Cline](https://apple-rag.com/connect/cline), [TRAE](https://apple-rag.com/connect/trae), and [OpenCode](https://apple-rag.com/connect/opencode).
+- [Live Docs Pulse](https://apple-rag.com/updates): Continuous 5-minute Apple Developer documentation change radar, framework changelogs (e.g. [SwiftUI](https://apple-rag.com/updates/framework/swiftui), [UIKit](https://apple-rag.com/updates/framework/uikit), [StoreKit](https://apple-rag.com/updates/framework/storekit)), and [RSS feed](https://apple-rag.com/api/updates/rss.xml).
+- [Comparisons](https://apple-rag.com/vs/apple-docs-mcp): Objective comparisons against [apple-docs-mcp](https://apple-rag.com/vs/apple-docs-mcp), [Cupertino](https://apple-rag.com/vs/cupertino), [sosumi.ai](https://apple-rag.com/vs/sosumi), and pairing with [Xcode xcrun mcpbridge](https://apple-rag.com/vs/xcode-mcpbridge).
 - [Account setup](https://apple-rag.com/overview): Personalized MCP setup prompts and CLI setup prompts.
 - [Plans](https://apple-rag.com/#pricing): One account and plan for both connections.
 - [CLI package](https://www.npmjs.com/package/apple-rag-cli): Includes skills/apple-dev-docs/SKILL.md for agents.

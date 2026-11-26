@@ -3,12 +3,24 @@
  */
 import { z } from "zod";
 
+export function normalizeSignupSource(raw: string | null | undefined): string | null {
+	if (!raw) return null;
+	const cleaned = raw
+		.trim()
+		.toLowerCase()
+		.replace(/[^a-z0-9._:/-]+/g, "_")
+		.replace(/^_+|_+$/g, "")
+		.slice(0, 64);
+	return cleaned || null;
+}
+
 // User registration validation
 export const registerSchema = z.object({
 	email: z.string().email("Invalid email address"),
 	password: z.string().min(8, "Password must be at least 8 characters"),
 	name: z.string().optional(),
 	terms_accepted: z.boolean().refine((val) => val === true, "Terms must be accepted"),
+	signup_source: z.string().max(120).optional(),
 });
 
 // User login validation

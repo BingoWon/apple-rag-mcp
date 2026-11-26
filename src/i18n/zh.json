@@ -695,6 +695,7 @@
 		"col_email": "邮箱",
 		"col_name": "名称",
 		"col_auth_provider": "认证方式",
+		"col_signup_source": "注册来源",
 		"col_plan": "方案",
 		"col_status": "状态",
 		"col_last_login": "最近登录",

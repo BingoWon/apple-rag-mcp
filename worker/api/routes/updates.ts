@@ -74,7 +74,7 @@ export function renderUpdatesRssXml(
 
 	for (const digest of digests) {
 		const title = `[${digest.period_type === "weekly" ? "Weekly" : "Daily"} Digest] ${digest.content_en.headline}`;
-		const link = `${SITE_ORIGIN}/updates?digest=${encodeURIComponent(digest.period_type)}:${encodeURIComponent(digest.period_key)}`;
+		const link = `${SITE_ORIGIN}/updates/digest/${encodeURIComponent(digest.period_type)}/${encodeURIComponent(digest.period_key)}`;
 		const desc = [digest.content_en.overview, ...digest.content_en.strategy_notes].join("\n\n");
 		items.push(
 			[
@@ -506,7 +506,7 @@ app.get("/feed.json", async (c) => {
 					items: [
 						...digests.map((d) => ({
 							id: `apple-rag-digest:${d.period_type}:${d.period_key}`,
-							url: `${SITE_ORIGIN}/updates?digest=${encodeURIComponent(d.period_type)}:${encodeURIComponent(d.period_key)}`,
+							url: `${SITE_ORIGIN}/updates/digest/${encodeURIComponent(d.period_type)}/${encodeURIComponent(d.period_key)}`,
 							title: `[${d.period_type === "weekly" ? "Weekly" : "Daily"} Digest] ${d.content_en.headline}`,
 							content_text: [d.content_en.overview, ...d.content_en.strategy_notes].join("\n\n"),
 							date_published: new Date(d.generated_at).toISOString(),

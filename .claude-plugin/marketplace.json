@@ -1,0 +1,21 @@
+{
+	"name": "apple-rag",
+	"owner": {
+		"name": "BingoWon",
+		"url": "https://github.com/BingoWon"
+	},
+	"metadata": {
+		"description": "Official Apple Developer documentation and WWDC transcripts for Claude Code via remote MCP and Agent Skills.",
+		"version": "5.18.0"
+	},
+	"plugins": [
+		{
+			"name": "apple-rag",
+			"source": "./",
+			"description": "Search 376,000+ Apple Developer doc pages and 1,880+ WWDC video transcripts, browse SwiftUI and UIKit topics, and fetch canonical source pages.",
+			"version": "5.18.0",
+			"category": "development",
+			"keywords": ["apple", "swift", "swiftui", "uikit", "ios", "macos", "xcode", "wwdc", "mcp"]
+		}
+	]
+}

@@ -6,6 +6,7 @@ import { createRoute, z } from "@hono/zod-openapi";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { OAuthService } from "../services/oauth-service";
 import { createOpenAPIApp } from "../utils/openapi";
+import { normalizeSignupSource } from "../utils/validation";
 import { verifyWebToken } from "../utils/web-session";
 
 const app = createOpenAPIApp();
@@ -42,7 +43,9 @@ const oauthInitRoute = createRoute({
 		body: {
 			content: {
 				"application/json": {
-					schema: z.object({}),
+					schema: z.object({
+						signup_source: z.string().max(120).optional(),
+					}),
 				},
 			},
 		},
@@ -62,12 +65,14 @@ const oauthInitRoute = createRoute({
 
 app.openapi(oauthInitRoute, async (c) => {
 	const provider = c.req.valid("param").provider;
+	const body = c.req.valid("json");
+	const signupSource = normalizeSignupSource(body.signup_source ?? getCookie(c, "apple_rag_ref"));
 	const state = crypto.randomUUID();
 	const browserKey = crypto.randomUUID();
 	await c.env.DB.prepare(
-		"INSERT INTO oauth_attempts(state,provider,browser_key,expires_at) VALUES(?,?,?,unixepoch()+600)",
+		"INSERT INTO oauth_attempts(state,provider,browser_key,signup_source,expires_at) VALUES(?,?,?,?,unixepoch()+600)",
 	)
-		.bind(state, provider, browserKey)
+		.bind(state, provider, browserKey, signupSource)
 		.run();
 	setCookie(c, `oauth_state_${state}`, browserKey, {
 		httpOnly: true,
@@ -112,20 +117,22 @@ app.openapi(oauthCallbackRoute, async (c) => {
 	const cookieName = `oauth_state_${state}`;
 	const browserKey = getCookie(c, cookieName);
 	deleteCookie(c, cookieName, { path: "/api/oauth" });
-	if (
-		!browserKey ||
-		!(await c.env.DB.prepare(
-			"DELETE FROM oauth_attempts WHERE state=? AND provider=? AND browser_key=? AND expires_at>unixepoch() RETURNING state",
-		)
-			.bind(state, provider, browserKey)
-			.first()) ||
-		!code
-	)
-		return c.redirect("/login?error=oauth_failed");
+	const attempt = browserKey
+		? await c.env.DB.prepare(
+				"DELETE FROM oauth_attempts WHERE state=? AND provider=? AND browser_key=? AND expires_at>unixepoch() RETURNING state, signup_source",
+			)
+				.bind(state, provider, browserKey)
+				.first<{ state: string; signup_source?: string | null }>()
+		: null;
+	if (!attempt || !code) return c.redirect("/login?error=oauth_failed");
 	const origin = new URL(c.req.url).origin;
 	const oauthService = new OAuthService(c.env, origin);
 
-	const result = await oauthService.handleCallback(provider, code);
+	const result = await oauthService.handleCallback(
+		provider,
+		code,
+		normalizeSignupSource(attempt.signup_source ?? getCookie(c, "apple_rag_ref")),
+	);
 
 	if (result.success) {
 		setCookie(c, `oauth_handoff_${state}`, result.token, {

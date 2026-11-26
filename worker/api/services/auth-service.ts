@@ -20,6 +20,7 @@ interface RegisterRequest {
 	password: string;
 	name?: string;
 	terms_accepted: boolean;
+	signup_source?: string | null;
 }
 
 export class AuthService {
@@ -53,9 +54,18 @@ export class AuthService {
 			};
 			const insert = this.db
 				.prepare(
-					`INSERT INTO users (id,email,password_hash,name,provider,last_login,created_at,updated_at) VALUES(?,?,?,?,'email',?,?,?)`,
+					`INSERT INTO users (id,email,password_hash,name,provider,signup_source,last_login,created_at,updated_at) VALUES(?,?,?,?,'email',?,?,?,?)`,
 				)
-				.bind(user.id, user.email, user.password_hash!, user.name ?? null, now, now, now);
+				.bind(
+					user.id,
+					user.email,
+					user.password_hash!,
+					user.name ?? null,
+					request.signup_source ?? null,
+					now,
+					now,
+					now,
+				);
 			return await this.signedIn(user, "hobby", insert);
 		} catch (error) {
 			if (
