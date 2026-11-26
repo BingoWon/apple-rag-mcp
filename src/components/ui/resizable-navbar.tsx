@@ -101,13 +101,12 @@ export const NavBody = ({ children, className, visible }: NavBodyProps) => {
 	return (
 		<motion.div
 			animate={{
-				backdropFilter: visible ? "blur(10px)" : "none",
 				boxShadow: visible
-					? "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)"
+					? "0 8px 24px -4px rgba(0, 0, 0, 0.08), 0 2px 6px -1px rgba(0, 0, 0, 0.04)"
 					: "none",
 				borderRadius: visible ? "12px" : "0px",
-				width: visible ? "40%" : "100%",
-				y: visible ? 20 : 0,
+				width: visible ? "72%" : "100%",
+				y: visible ? 16 : 0,
 			}}
 			transition={{
 				type: "spring",
@@ -115,11 +114,11 @@ export const NavBody = ({ children, className, visible }: NavBodyProps) => {
 				damping: 50,
 			}}
 			style={{
-				minWidth: "800px",
+				minWidth: visible ? "min(920px, calc(100vw - 2rem))" : "800px",
 			}}
 			className={cn(
-				"relative z-[60] mx-auto hidden w-full max-w-7xl flex-row items-center justify-between self-start bg-transparent px-4 py-3 lg:flex",
-				visible && "bg-background/60 backdrop-blur-md border border-border",
+				"relative z-[60] mx-auto hidden w-full max-w-7xl flex-row items-center justify-between gap-4 self-start bg-transparent px-4 py-3 transition-[background-color,border-color] duration-150 lg:flex",
+				visible && "border border-border bg-background/92 backdrop-blur-md",
 				className,
 			)}
 		>
@@ -137,7 +136,7 @@ export const NavItems = ({ items, className, onItemClick }: NavItemsProps) => {
 		<motion.div
 			onMouseLeave={() => setHovered(null)}
 			className={cn(
-				"absolute inset-0 hidden flex-1 flex-row items-center justify-center space-x-2 text-md font-semibold text-muted transition duration-200 hover:text-foreground lg:flex lg:space-x-2",
+				"relative hidden min-w-0 flex-1 flex-row items-center justify-center gap-1 text-sm font-semibold text-muted transition-colors duration-200 hover:text-foreground lg:flex",
 				className,
 			)}
 		>
@@ -146,7 +145,7 @@ export const NavItems = ({ items, className, onItemClick }: NavItemsProps) => {
 					<Link
 						onMouseEnter={() => setHovered(idx)}
 						onClick={onItemClick}
-						className="relative px-4 py-2 text-muted"
+						className="relative whitespace-nowrap px-3.5 py-2 text-muted transition-colors hover:text-foreground"
 						key={`link-${idx}`}
 						to={item.link}
 					>
@@ -162,7 +161,7 @@ export const NavItems = ({ items, className, onItemClick }: NavItemsProps) => {
 					<a
 						onMouseEnter={() => setHovered(idx)}
 						onClick={onItemClick}
-						className="relative px-4 py-2 text-muted"
+						className="relative whitespace-nowrap px-3.5 py-2 text-muted transition-colors hover:text-foreground"
 						key={`link-${idx}`}
 						href={item.link}
 					>
@@ -328,12 +327,12 @@ export function AppNavbar() {
 			<NavBody>
 				<Link
 					to="/"
-					className="relative z-20 mr-4 flex items-center text-sm font-medium text-foreground transition-colors duration-150 hover:text-brand"
+					className="relative z-20 flex shrink-0 items-center text-sm font-medium text-foreground transition-colors duration-150 hover:text-brand"
 				>
 					<Brand />
 				</Link>
 				<NavItems items={navItems} onItemClick={handleMenuClose} />
-				<div className="flex items-center gap-3">
+				<div className="relative z-20 flex shrink-0 items-center gap-3">
 					<LanguageSwitcher />
 					<ThemeToggle variant="icon" />
 					{isAuthenticated ? (

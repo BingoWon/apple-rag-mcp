@@ -1155,7 +1155,7 @@
 		"source_modified_hint": "Apple 官方响应头 Last-Modified 日期",
 		"timeline_title": "实时变更时间线",
 		"timeline_count": "共 {{count}} 条符合条件的记录",
-		"search_placeholder": "搜索 API、框架或摘要...",
+		"search_placeholder": "搜索符号或框架",
 		"range_label": "时间范围",
 		"range_1d": "近 24 小时",
 		"range_7d": "近 7 天",
@@ -1171,6 +1171,10 @@
 		"cta_subtitle": "将 Apple RAG 通过 MCP 或 CLI 接入 Cursor、Claude Code、Codex 等智能体，检索结果与官方同步更新。",
 		"cta_button": "1 分钟接入智能体",
 		"digest_rules_engine": "规则归纳",
-		"load_error": "暂时无法加载更新记录，请重试。"
+		"load_error": "暂时无法加载更新记录，请重试。",
+		"pulse_label": "近 {{count}} 期变更脉冲",
+		"pulse_high_impact": "{{count}} 条高影响",
+		"clear_filters": "清除筛选",
+		"showing_of": "已显示 {{shown}} / {{total}} 条"
 	}
 }

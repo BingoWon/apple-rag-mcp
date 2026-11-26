@@ -1157,7 +1157,7 @@
 		"source_modified_hint": "Apple origin Last-Modified header",
 		"timeline_title": "Live change timeline",
 		"timeline_count": "{{count}} matching events",
-		"search_placeholder": "Search APIs, frameworks, or notes...",
+		"search_placeholder": "Search symbols or frameworks",
 		"range_label": "Time range",
 		"range_1d": "Last 24 hours",
 		"range_7d": "Last 7 days",
@@ -1173,6 +1173,10 @@
 		"cta_subtitle": "Connect Apple RAG via MCP or CLI in Cursor, Claude Code, or Codex so your agent always reads the latest official docs.",
 		"cta_button": "Connect in 1 minute",
 		"digest_rules_engine": "Rule Summary",
-		"load_error": "Unable to load updates right now. Please try again."
+		"load_error": "Unable to load updates right now. Please try again.",
+		"pulse_label": "{{count}}-period change pulse",
+		"pulse_high_impact": "{{count}} high-impact",
+		"clear_filters": "Clear",
+		"showing_of": "Showing {{shown}} of {{total}}"
 	}
 }
