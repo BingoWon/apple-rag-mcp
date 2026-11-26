@@ -16,6 +16,7 @@
 [![MCP 2026-07-28](https://img.shields.io/badge/MCP-2026--07--28-6366f1)](https://mcp.apple-rag.com/.well-known/mcp.json)
 [![License: MIT](https://img.shields.io/badge/License-MIT-22c55e)](./LICENSE)
 [![Listed on mcpservers.org](https://mcpservers.org/badge.svg)](https://mcpservers.org/servers/bingowon/apple-rag-mcp)
+[![Glama MCP](https://img.shields.io/badge/Glama-MCP_Server-111827)](https://glama.ai/mcp/servers/BingoWon/apple-rag-mcp)
 
 Powered by [<img src="./public/typesafe-logo.webp" alt="" width="16" height="16"> **Jev**](https://typesafe.ai/) &amp; RAG hybrid retrieval
 
@@ -102,6 +103,9 @@ apple-rag search "SwiftUI NavigationStack path binding" --limit 3 --json
 
 # Link your account via browser OAuth PKCE / Device Grant when needed
 apple-rag auth login
+
+# Or install the bundled apple-dev-docs Agent Skill directly
+npx skills add BingoWon/apple-rag-mcp
 ```
 
 See [`packages/cli/README.md`](./packages/cli/README.md) for exit codes, `--output`, unattended automation keys, and agent skill setup.

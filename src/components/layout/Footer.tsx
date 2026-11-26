@@ -22,6 +22,14 @@ export function Footer() {
 			{ name: t("nav.billing"), href: "/billing/" },
 			{ name: t("nav.usage"), href: "/usage/" },
 		],
+		guides: [
+			{ name: "Cursor MCP", href: "/connect/cursor" },
+			{ name: "Claude Code MCP", href: "/connect/claude-code" },
+			{ name: "Codex MCP", href: "/connect/codex" },
+			{ name: "SwiftUI Docs Radar", href: "/updates/framework/swiftui" },
+			{ name: "vs apple-docs-mcp", href: "/vs/apple-docs-mcp" },
+			{ name: "vs Xcode mcpbridge", href: "/vs/xcode-mcpbridge" },
+		],
 	};
 
 	return (
@@ -34,7 +42,7 @@ export function Footer() {
 						</div>
 						<p className="text-sm leading-6 text-muted">{t("footer.tagline")}</p>
 					</div>
-					<div className="mt-16 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">
+					<div className="mt-16 grid grid-cols-2 gap-8 sm:grid-cols-3 xl:col-span-2 xl:mt-0">
 						<div>
 							<h3 className="text-sm font-semibold leading-6 text-foreground">
 								{t("nav.product")}
@@ -78,6 +86,23 @@ export function Footer() {
 										>
 											{item.name}
 										</Link>
+									</li>
+								))}
+							</ul>
+						</div>
+						<div>
+							<h3 className="text-sm font-semibold leading-6 text-foreground">
+								{t("nav.guides", { defaultValue: "Guides" })}
+							</h3>
+							<ul className="mt-6 space-y-4">
+								{navigation.guides.map((item) => (
+									<li key={item.href}>
+										<a
+											href={item.href}
+											className="text-sm leading-6 text-muted hover:text-foreground"
+										>
+											{item.name}
+										</a>
 									</li>
 								))}
 							</ul>

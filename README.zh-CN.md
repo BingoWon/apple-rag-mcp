@@ -16,6 +16,7 @@
 [![MCP 2026-07-28](https://img.shields.io/badge/MCP-2026--07--28-6366f1)](https://mcp.apple-rag.com/.well-known/mcp.json)
 [![License: MIT](https://img.shields.io/badge/License-MIT-22c55e)](./LICENSE)
 [![Listed on mcpservers.org](https://mcpservers.org/badge.svg)](https://mcpservers.org/servers/bingowon/apple-rag-mcp)
+[![Glama MCP](https://img.shields.io/badge/Glama-MCP_Server-111827)](https://glama.ai/mcp/servers/BingoWon/apple-rag-mcp)
 
 由 [<img src="./public/typesafe-logo.webp" alt="" width="16" height="16"> **Jev**](https://typesafe.ai/) 与 RAG 混合检索驱动
 
@@ -102,6 +103,9 @@ apple-rag search "SwiftUI NavigationStack path binding" --limit 3 --json
 
 # 需要账号额度时通过浏览器完成 OAuth PKCE / 设备授权登录
 apple-rag auth login
+
+# 或直接安装内置的 apple-dev-docs 智能体技能
+npx skills add BingoWon/apple-rag-mcp
 ```
 
 完整命令参数、退出码、`--output` 导出、无人值守自动化密钥与 Skill 安装说明见 [`packages/cli/README.md`](./packages/cli/README.md)。

@@ -144,9 +144,13 @@ export function DigestPanel({
 					<div className="mt-5 min-h-[320px] space-y-6">
 						<div>
 							<div className="flex flex-wrap items-center gap-2 text-xs text-subtle">
-								<span className="rounded-md border border-border bg-surface px-2 py-0.5 font-mono">
-									{active.period_key}
-								</span>
+								<a
+									href={`/updates/digest/${active.period_type}/${encodeURIComponent(active.period_key)}`}
+									className="inline-flex items-center gap-1 rounded-md border border-border bg-surface px-2 py-0.5 font-mono text-foreground hover:border-brand/50 hover:text-brand"
+								>
+									<span>{active.period_key}</span>
+									<IconExternalLink className="h-3 w-3 shrink-0" aria-hidden="true" />
+								</a>
 								<span>
 									{t("updates.digest_sample_meta", {
 										events: active.stats.total_events,
